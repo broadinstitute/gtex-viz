@@ -1,0 +1,45 @@
+.expressmap-bordered {
+    stroke: #E6E6E6;
+    stroke-width: 1px;
+}
+rect.expressmap-bordered {
+    stroke: #E6E6E6;
+    stroke-width: 0px;
+}
+
+rect.expressmap-highlighted {
+    stroke: #D25C43;
+    stroke-width:2px;
+}
+
+text.highlighted {
+    fill: #D25C43;
+    font-family: 'Libre Franklin', sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+}
+
+text.normal {
+    fill: #111;
+    font-family: 'Libre Franklin', sans-serif;
+    font-weight: lighter;
+    font-size: 12px;
+}
+text.yLabel {
+    font-family: 'Libre Franklin', sans-serif;
+    font-weight: lighter;
+    font-size: 12px;
+}
+div.expressmap-tooltip {
+   min-width: 100px;
+   display: none;
+   background-color : rgba(32, 53, 73, 0.95);
+   padding: 10px;
+   text-align:left;
+   color: #ffffff;
+   position:absolute;
+    font-family: 'Libre Franklin', sans-serif;
+   font-size:12px;
+   z-index:4000;
+   border-radius:5px;
+}
