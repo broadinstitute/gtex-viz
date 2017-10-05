@@ -115,10 +115,10 @@ d3.json(jsonFile, function(error, data){
         .attr("x", 0)
         .attr("y", 0)
         .attr("class", (d, i) => `xLabel normal x${i}`)
-        .style("text-anchor", "end")
+        .style("text-anchor", "start")
         .attr("transform", (d) => {
-            let angle = -60;
-            let x = xScale(d) + 10;
+            let angle = 60;
+            let x = xScale(d);
             return `translate(${x}, ${yScale.range()[1] + (yScale.bandwidth()/2)}) rotate(${angle})`;
         });
     const yLabels = svg.selectAll(".yLabel")
