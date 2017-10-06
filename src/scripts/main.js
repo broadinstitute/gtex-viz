@@ -1,9 +1,7 @@
-
-
 // render the heatmap
 const containerId = "chart";
 const margin = {
-    left: 150,
+    left: 155,
     top: 150,
     right: 100,
     bottom: 200
@@ -25,17 +23,21 @@ const svgConfig = {
         divId: "#" + containerId,
         width: dim.width,
         height: dim.height,
-        colors: palette.reds,
+        colors: palette.ygb,
         nullColor: "#e6e6e6"
 };
 
 const svg = d3.select(svgConfig.divId).append("svg")
     .attr("width", svgConfig.width)
-    .attr("height", svgConfig.height)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    .attr("height", svgConfig.height);
 
+const mapg = svg.append("g")
+    .attr('id', 'mapgroup')
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+const leftg = svg.append("g")
+    .attr('id', 'leftgroup')
+    .attr("transform", `translate(0, ${margin.top})`);
 
 const tooltip = new Tooltip("tooltip");
 
@@ -55,6 +57,7 @@ const mouseover = function(d) {
     let column = d.y;
     tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
 };
+
 const mouseout = function(d){
     const selected = d3.select(this);
     const rowClass = selected.attr("row");
@@ -70,7 +73,36 @@ const mouseout = function(d){
     tooltip.hide();
 };
 
-// parse data
+// parse the gene dendrogram
+const newick = "(((((SLC25A21:1.47,GAS6-AS1:1.47):1.53,SLC27A6:2.99):0.84,TMEM229A:3.83):2.34,((TMEM255B:2.47,TMEM106B:2.47):0.62,GAS6-AS2:3.08):3.09):7.25,(TMEM167B:4.53,GAS6:4.53):8.89);"
+// var tree = new Dendrogram(newick);
+const tree = parseNewick(newick); // converts newick to json
+const root = d3.hierarchy(tree, (d) => d.branchset)
+      .sum((d) => d.data.branchset ? 0 : 1) // only leaf nodes
+      .sort((a, b) => (a.value - b.value) || d3.ascending(a.data.length, b.data.length));
+const getLength2Root = function(d){
+    return d.path(root).reduce((sum, d)=> d.data.length?sum+d.data.length:sum, 0)
+};
+const maxLength = getLength2Root(root.leaves()[0]);
+const treeXScale = d3.scaleLinear()
+    .domain([0, maxLength])
+    .range([0, 150]);
+const treeYScale = d3.scaleBand() // this scale should be the same as the heatmap yScale
+        .domain(root.leaves().map((d)=>d.data.name)) // sorted
+        .range([0, svgConfig.height - margin.top - margin.bottom])
+        .padding(.05);
+
+leftg.selectAll('.node')
+    .data(root.descendants())
+    .enter().append("circle")
+    .attr("cx", (d) => treeXScale(getLength2Root(d)))
+    .attr("cy", (d) => {
+        console.log(`${d.data.name} ${treeYScale(d.data.name)}`);
+        return treeYScale(d.data.name) + (treeYScale.bandwidth()/2);
+    })
+    .attr("r", 2)
+    .attr("fill", "red");
+// parse expression data
 const jsonFile = "genes.median.tpm.json";
 const useLog = true;
 
@@ -100,16 +132,17 @@ d3.json(jsonFile, function(error, data){
     const xScale = d3.scaleBand()
         .domain(xList)
         .range([0, svgConfig.width - margin.left - margin.right])
-        // .round(true)
-        .padding(.05);
-    const yScale = d3.scaleBand()
-        .domain(yList)
-        .range([0, svgConfig.height - margin.top - margin.bottom])
-        // .round(true)
         .padding(.05);
 
+    // const yScale = d3.scaleBand()
+    //     .domain(yList)
+    //     .range([0, svgConfig.height - margin.top - margin.bottom])
+    //     .padding(.05);
+    // y scale is determined by the gene clusters
+    const yScale = treeYScale;
+
     // text labels
-    const xLabels = svg.selectAll(".xLabel")
+    const xLabels = mapg.selectAll(".xLabel")
         .data(xList)
         .enter().append("text")
         .text((d) => d.replace(/_/g, " "))
@@ -122,7 +155,7 @@ d3.json(jsonFile, function(error, data){
             let x = xScale(d);
             return `translate(${x}, ${yScale.range()[1] + (yScale.bandwidth()/2)}) rotate(${angle})`;
         });
-    const yLabels = svg.selectAll(".yLabel")
+    const yLabels = mapg.selectAll(".yLabel")
         .data(yList)
         .enter().append("text")
         .text((d) => d)
@@ -132,7 +165,7 @@ d3.json(jsonFile, function(error, data){
         .style("text-anchor", "start");
 
     // heatmap cells
-    const cells = svg.selectAll(".cell")
+    const cells = mapg.selectAll(".cell")
         .data(data, (d) => d.value);
     cells.enter().append("rect")
         .attr("row", (d) => `x${xList.indexOf(d.x)}`)
@@ -151,9 +184,6 @@ d3.json(jsonFile, function(error, data){
         .transition()
         .duration(2000)
         .style("fill", (d) => d.originalValue==0?svgConfig.nullColor:colorScale(d.value));
-
-
-
 
 });
 

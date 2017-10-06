@@ -1,4 +1,4 @@
-export default class Tooltip {
+class Tooltip {
     constructor(id, offsetX=20, offsetY=-80, duration=200){
         this.id = id;
         this.verbose = true;

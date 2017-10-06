@@ -35,4 +35,3 @@ function parseNewick(s) {
     return tree;
 }
 
-export { parseNewick };
