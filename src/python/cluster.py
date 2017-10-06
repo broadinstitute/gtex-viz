@@ -12,10 +12,19 @@ def test_clustering(z, d):
     c, coph_dists = cophenet(z, pdist(d))
     sys.stderr.write("The Cophenetic Correlation Coefficient is " + str(c) + "\n")
 
-def get_newick(node, newick, parent_dist, leaf_names):
-    # reports the tree structure in the Newick format
-    # based on a method I found on stack overflow
-    # a recursive function: depth-first search, pre-order traversal
+
+def to_newick(node, newick, parent_dist, leaf_names):
+    '''
+    reports the tree structure in the Newick format.
+    a depth-first search, pre-order traversal
+
+    :param node: a tree node
+    :param newick: a string in newick format
+    :param parent_dist: the parent node distance
+    :param leaf_names: a list of leaf labels
+    :return: nothing
+    '''
+
     if node.is_leaf():  # leaf nodes
         return "%s:%.2f%s" % (leaf_names[node.id], parent_dist - node.dist, newick)
     else:
@@ -25,50 +34,62 @@ def get_newick(node, newick, parent_dist, leaf_names):
             newick = "):%.2f%s" %(parent_dist - node.dist, newick)
 
         # left child node
-        newick = get_newick(node.get_left(), newick, node.dist, leaf_names)
+        newick = to_newick(node.get_left(), newick, node.dist, leaf_names)
 
         # right child node
-        newick = get_newick(node.get_right(), "," + newick, node.dist, leaf_names)
+        newick = to_newick(node.get_right(), "," + newick, node.dist, leaf_names)
 
         newick = "(" + newick
 
         return newick
 
-def cluster(data_frame, label_column, data_column, n):
+
+def cluster(m, method = "ward"):
     '''
     performs the hierarchical clustering
-    reports the tree structure in Newick format in STDOUT
     '''
 
-    # makes sure the data frame is sorted by the label_column
-    d = data_frame.sort_values(by=[label_column])
-
-    # generates the input matrix
-    m = np.reshape(d.as_matrix(columns=[data_column]), (-1, n))
-
     # the Ward variance minimization algorithm.
-    clustering_method = "ward"
-    Z = linkage(m, clustering_method)
+    Z = linkage(m, method)
 
     # tests the clustering results
     test_clustering(Z, m)
-    leaf_labels = df[label_col].unique()
+    return Z
 
-    # parses the tree and generates the output in the Newick format
-    root = to_tree(Z, False)
-    print get_newick(root, "", root.dist, leaf_labels)
+def generate_matrix(df, value = "medianTPM", row = "geneSymbol", col= "tissueId", adjust = 1., logTransform = True ):
+    '''
+    generates the matrix for the clustering program
+    :param df: a pandas data frame
+    :param value: a column name in the df. the data of the matrix
+    :param row: a column name in the df. the rows of the matrix
+    :param col: a column name in the df. the columns of the matrix
+    :return: a data matrix
+    '''
+
+    # transform data values
+    df[value] = df[value] + adjust
+    if logTransform:
+        df[value] = np.log10(df[value])
+
+    df.sort_values(by=[row])
+    groups = df.groupby([col])
+    return (np.reshape(df.as_matrix(columns=[value]), (-1, len(groups))), df[row].unique())
 
 if __name__ == '__main__':
 
     data_file = "~/Sites/expressMap/genes.median.tpm.csv"
+    data_frame = pandas.read_csv(data_file, sep="\t")
 
-    df = pandas.read_csv(data_file, sep="\t")
-    data_col = "medianTPM"
-    label_col = "geneSymbol"
-    N = 53
-    cluster(df,label_col, data_col, N)
+    # first generates gene clusters based on expression in tissues
+    mat, leaf_labels = generate_matrix(data_frame)
+    clusters = cluster(mat, method="complete")
+    root = to_tree(clusters, False)
+    print to_newick(root, "", root.dist, leaf_labels)
 
-    data_col = "medianTPM"
-
+    # then generates tissue clusters based on expression of genes
+    mat, leaf_labels = generate_matrix(data_frame, row="tissueId", col="geneSymbol")
+    clusters = cluster(mat, method="complete")
+    root = to_tree(clusters, False)
+    print to_newick(root, "", root.dist, leaf_labels)
 
 
