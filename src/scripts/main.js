@@ -1,4 +1,5 @@
 
+
 // render the heatmap
 const containerId = "chart";
 const margin = {
