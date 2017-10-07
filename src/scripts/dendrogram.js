@@ -31,7 +31,7 @@
         }
  */
 
-
+const verbose = true;
 class Dendrogram {
 
     constructor(newick, orientation='h', dimensions={w:150, h: 200}){
@@ -72,19 +72,12 @@ class Dendrogram {
             node.x = this.xScale(this._getBranchLengthToRoot(node));
         };
 
-        // post-order: from the leaf level -> root
-        const nodes = this.root.descendants().sort((a, b) => (a.height - b.height) || d3.ascending(a.data.length, b.data.length));
+        // from the leaf level -> root
+        const nodes = this._sortNodesByLevel();
         nodes.forEach((node) => {
             setX(node);
             setY(node);
         });
-        dom.selectAll('.node')
-            .data(nodes)
-            .enter().append("circle")
-            .attr("cx", (d) => d.x)
-            .attr("cy", (d) => d.y + this.yScale.bandwidth()/2)
-            .attr("r", 2) // TODO: eliminate hard-coded value
-            .attr("fill", "#8DCDC1"); // TODO: eliminate hard-coded value
 
         dom.selectAll('.branch')
             .data(nodes)
@@ -108,9 +101,71 @@ class Dendrogram {
             .attr("stroke", "gray") // TODO: eliminate hard-coded value
             .attr("stroke-width", 1); // TODO: eliminate hard-coded value
 
+        dom.selectAll('.node')
+            .data(nodes)
+            .enter().append("circle")
+            .attr("cx", (d) => d.x)
+            .attr("cy", (d) => d.y + this.yScale.bandwidth()/2)
+            .attr("r", 2) // TODO: eliminate hard-coded value
+            .attr("fill", "#8DCDC1"); // TODO: eliminate hard-coded value
+
     }
 
-    _drawVTree(){console.info("to be implemented")} // TODO: to be implemented
+    _sortNodesByLevel(){
+        // returns a list of nodes ordered by ancestral level, then by branch length
+        return this.root.descendants().sort((a, b) => (a.height - b.height) || d3.ascending(a.data.length, b.data.length));
+    }
+
+    _drawVTree(dom){
+        const setX = (node) => {
+            if (node.children === undefined) {
+                // a leaf node
+                node.x = this.xScale(node.data.name);
+            } else {
+                // an internal node
+                // the y coordinate of an internal node is the average y from its children
+                node.x = node.children.reduce((sum, d)=>sum+d.x, 0)/node.children.length;
+            }
+        };
+        const setY = (node) => {
+            node.y = this.yScale(this._getBranchLengthToRoot(node));
+        };
+        // from the leaf level -> root
+        const nodes = this._sortNodesByLevel();
+        nodes.forEach((node) => {
+            setX(node);
+            setY(node);
+        });
+        dom.selectAll('.branch')
+            .data(nodes)
+            .enter().append("line")
+            .attr("y1", (d) => d.y)
+            .attr("y2", (d) => d.data.length?d.y - this.yScale(d.data.length):d.y)
+            .attr("x1", (d) => d.x + this.xScale.bandwidth()/2) // TODO: eliminate hard-coded adjustment
+            .attr("x2", (d) => d.x + this.xScale.bandwidth()/2)
+            .attr("stroke", "gray") // TODO: eliminate hard-coded value
+            .attr("stroke-width", 1); // TODO: eliminate hard-coded value
+
+        // for all internal nodes
+        const inodes = this.root.descendants().filter((d)=>d.height).sort((a,b)=>b.height-a.height);
+        dom.selectAll('.arm')
+            .data(inodes)
+            .enter().append("line")
+            .attr("y1", (d) => d.y)
+            .attr("y2", (d) => d.y)
+            .attr("x1", (d) => d.children[0].x + this.xScale.bandwidth()/2)
+            .attr("x2", (d) => d.children[1].x + this.xScale.bandwidth()/2)
+            .attr("stroke", "gray") // TODO: eliminate hard-coded value
+            .attr("stroke-width", 1); // TODO: eliminate hard-coded value
+
+        dom.selectAll('.node')
+            .data(nodes)
+            .enter().append("circle")
+            .attr("cx", (d) => d.x + this.xScale.bandwidth()/2)
+            .attr("cy", (d) => d.y)
+            .attr("r", 2) // TODO: eliminate hard-coded value
+            .attr("fill", "#8DCDC1"); // TODO: eliminate hard-coded value
+    }
 
     _getBranchLengthToRoot(node) {
         // node: a d3.hierarchy node
@@ -124,13 +179,6 @@ class Dendrogram {
         return this._getBranchLengthToRoot(node);
     }
 
-    _setXScale(){
-        if ('h' == this.orientation){
-            this.xScale = d3.scaleLinear()
-                .domain([0, this._getMaxBranchLength()])
-                .range([0, this.width])
-        }
-    }
     _assignPostorder(node){
         // assigns post-order of all leaf nodes
         if(node.children === undefined){
@@ -143,14 +191,34 @@ class Dendrogram {
             return;
         }
     }
+
+    _setXScale(){
+        if ('h' == this.orientation){
+            this.xScale = d3.scaleLinear()
+                .domain([0, this._getMaxBranchLength()])
+                .range([0, this.width])
+        } else {
+            this._assignPostorder(this.root);
+            if (verbose) console.log(this.postorder);
+            this.xScale = d3.scaleBand()
+                .domain(this.postorder.map((d) => d.data.name))
+                .range([0, this.width])
+                .padding(.05); // TODO: eliminate hard-coded value
+        }
+    }
+
     _setYScale(){
         if ('h' == this.orientation){
             this._assignPostorder(this.root);
-            console.log(this.postorder);
+            if (verbose) console.log(this.postorder);
             this.yScale = d3.scaleBand()
                 .domain(this.postorder.map((d) => d.data.name))
                 .range([0, this.height])
                 .padding(.05); // TODO: eliminate hard-coded value
+        } else {
+            this.yScale = d3.scaleLinear()
+                .domain([0, this._getMaxBranchLength()])
+                .range([0, this.height])
         }
     }
 
