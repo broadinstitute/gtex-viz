@@ -16,20 +16,16 @@ text.highlighted {
     fill: #D25C43;
     font-family: 'Libre Franklin', sans-serif;
     font-weight: 400;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 text.normal {
     fill: #111;
     font-family: 'Libre Franklin', sans-serif;
-    font-weight: lighter;
+    font-weight: 300;
     font-size: 12px;
 }
-text.yLabel {
-    font-family: 'Libre Franklin', sans-serif;
-    font-weight: lighter;
-    font-size: 12px;
-}
+
 div.expressmap-tooltip {
    min-width: 100px;
    display: none;
