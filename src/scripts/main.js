@@ -4,24 +4,24 @@ const containerId = "chart";
 // TODO: figure out the layout dimensions!
 const margin = {
     left: 160,
-    top: 200,
+    top: 100,
     right: 100,
-    bottom: 200
+    bottom: 0
 };
 const dim = {
     width: 1000,
-    height: 800
+    height: 600
 };
 
 const palette = {
     blues: d3.schemeBlues[9].concat(["#03142c"]),
-    gnbu: d3.schemeGnBu[9],
 
     // colorbrewer
     ylgnbu:["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58","#040e29"],
-    reds: ['#fff5f0','#fee0d2','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#a50f15','#67000d', "#340007"],
     orrd: ['#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#b30000','#7f0000','#4c0000'],
-    // reds: ["#FFE4DE", "#FFC6BA", "#F7866E", "#d9745e", "#D25C43", "#b6442c", "#9b3a25", "#562015"],
+    gnbu: ['#f7fcf0','#e0f3db','#ccebc5','#a8ddb5','#7bccc4','#4eb3d3','#2b8cbe','#0868ac','#084081','#052851'],
+    // other sources
+    reds: ["#FFE4DE", "#FFC6BA", "#F7866E", "#d9745e", "#D25C43", "#b6442c", "#9b3a25","#712a1c", "#562015", "#2d110b"],
     // ygb: ["#FFF09D", "#F0EFB4", "#E2E9A6", "#D3E397", "#BCDCA5", "#A4D4B3", "#8DCDC1", "#87B1A4","#829487", "#7C786A"],
 
 };
@@ -30,7 +30,7 @@ const svgConfig = {
         divId: "#" + containerId,
         width: dim.width,
         height: dim.height,
-        colors: palette.ylgnbu,
+        colors: palette.gnbu,
         nullColor: "#e6e6e6"
 };
 
@@ -40,11 +40,11 @@ const svg = d3.select(svgConfig.divId).append("svg")
 
 const mapg = svg.append("g")
     .attr('id', 'mapgroup')
-    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+    .attr("transform", `translate(${margin.left}, ${margin.top + 55})`);
 
 const leftg = svg.append("g")
     .attr('id', 'leftgroup')
-    .attr("transform", `translate(5, ${margin.top})`);
+    .attr("transform", `translate(5, ${margin.top + 55})`);
 
 const topg = svg.append("g")
     .attr('id', 'topgroup')
@@ -61,7 +61,7 @@ gene_tree.draw(leftg);
 
 // parse the tissue dendrogram
 const tissue_newick = "((((((((((Testis:0.68,Brain_Cerebellum:0.68):0.30,Prostate:0.98):0.17,(Brain_Nucleus_accumbens_basal_ganglia:0.78,Brain_Hypothalamus:0.78):0.36):0.31,Cervix_Ectocervix:1.45):0.35,Esophagus_Gastroesophageal_Junction:1.80):0.38,Pituitary:2.19):0.65,(((Brain_Putamen_basal_ganglia:0.83,Brain_Cortex:0.83):0.50,Skin_Not_Sun_Exposed_Suprapubic:1.32):0.51,Brain_Hippocampus:1.84):1.00):1.13,((((((Brain_Frontal_Cortex_BA9:0.47,Brain_Anterior_cingulate_cortex_BA24:0.47):0.20,Bladder:0.67):0.15,((Breast_Mammary_Tissue:0.47,Brain_Cerebellar_Hemisphere:0.47):0.15,Brain_Caudate_basal_ganglia:0.62):0.21):0.31,Esophagus_Mucosa:1.13):0.24,(Spleen:0.75,Colon_Sigmoid:0.75):0.63):0.48,(((Cells_Transformed_fibroblasts:0.26,Cells_EBV-transformed_lymphocytes:0.26):0.30,(Cervix_Endocervix:0.24,Brain_Spinal_cord_cervical_c-1:0.24):0.32):0.05,(((Brain_Substantia_nigra:0.15,Brain_Amygdala:0.15):0.09,Skin_Sun_Exposed_Lower_leg:0.25):0.24,Small_Intestine_Terminal_Ileum:0.48):0.13):1.24):2.11):2.90,(((Whole_Blood:1.14,Stomach:1.14):0.75,((((Uterus:0.66,Heart_Left_Ventricle:0.66):0.05,Kidney_Cortex:0.71):0.32,((Liver:0.38,Heart_Atrial_Appendage:0.38):0.19,Fallopian_Tube:0.57):0.45):0.06,Vagina:1.08):0.82):0.62,((Esophagus_Muscularis:1.25,Colon_Transverse:1.25):0.37,Thyroid:1.62):0.90):4.36):8.82,((((Artery_Coronary:1.04,Artery_Aorta:1.04):1.79,Adrenal_Gland:2.82):0.19,(Artery_Tibial:1.75,Adipose_Subcutaneous:1.75):1.27):1.19,(((((Pancreas:0.41,Adipose_Visceral_Omentum:0.41):0.22,Muscle_Skeletal:0.64):0.10,(Nerve_Tibial:0.51,Minor_Salivary_Gland:0.51):0.22):0.15,Ovary:0.88):0.91,Lung:1.79):2.41):11.48);";
-const tissue_tree = new Dendrogram(tissue_newick, orientation='v', dimentions={w:svgConfig.width - margin.left - margin.right, h: margin.top - 55});
+const tissue_tree = new Dendrogram(tissue_newick, orientation='v', dimentions={w:svgConfig.width - margin.left - margin.right, h: margin.top});
 tissue_tree.draw(topg);
 
 
@@ -71,7 +71,7 @@ const useLog = true;
 
 d3.json(jsonFile, function(error, data){
     data.forEach(function(d){
-        d.value = useLog?Math.log10(+d.medianTPM):+d.medianTPM;
+        d.value = useLog?Math.log2(+d.medianTPM):+d.medianTPM;
         d.x = d.tissueId;
         d.y = d.geneSymbol;
         d.originalValue = d.medianTPM;
@@ -90,7 +90,7 @@ d3.json(jsonFile, function(error, data){
     // set the scales
     const colorScale = d3.scaleQuantile() // scaleQuantile maps the continuous domain to a discrete range
         // .domain([0, Math.round(d3.max(data, (d) => d.value))])
-        .domain([0.01, 3])
+        .domain([0, 10])
         .range(svgConfig.colors);
 
     const xScale = tissue_tree.xScale;
@@ -111,16 +111,16 @@ d3.json(jsonFile, function(error, data){
 
     legendGroups.append("text")
         .attr("class", "normal")
-        .text((d) => d==0?">0":"≥ " + Math.round(Math.pow(10, d)))
+        .text((d) => d==0?">0":"≥ " + Math.round(Math.pow(2, d)))
         .attr("x", (d, i) => 50 * i) // TODO: hard-coded value
-        .attr("y", 15 + yScale.bandwidth()/2); // TODO: hard-coded value
+        .attr("y", 16 + yScale.bandwidth()/2); // TODO: hard-coded value
 
     if(useLog){
         legendGroups.append("text")
             .attr("class", "normal")
             .text("Median TPM")
             .attr("x", 50 * 10) // TODO: hard-coded value
-            .attr("y", 15 + yScale.bandwidth()/2) // TODO: hard-coded value
+            .attr("y", 16 + yScale.bandwidth()/2) // TODO: hard-coded value
     }
 
     // text labels
@@ -136,6 +136,10 @@ d3.json(jsonFile, function(error, data){
             let angle = 60;
             let x = xScale(d);
             return `translate(${x}, ${yScale.range()[1] + (yScale.bandwidth()/2)}) rotate(${angle})`;
+        })
+        .on('click', (d) => {
+            "use strict";
+
         });
 
     const yLabels = mapg.selectAll(".yLabel")
