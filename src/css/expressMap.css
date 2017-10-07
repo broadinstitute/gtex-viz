@@ -2,20 +2,6 @@ div{
     font-family: 'Libre Franklin', sans-serif;
 }
 
-.expressmap-bordered {
-    stroke: #E6E6E6;
-    stroke-width: 1px;
-}
-rect.expressmap-bordered {
-    stroke: #E6E6E6;
-    stroke-width: 0px;
-}
-
-rect.expressmap-highlighted {
-    stroke: #D25C43;
-    stroke-width:2px;
-}
-
 text.highlighted {
     fill: #D25C43;
     font-family: 'Libre Franklin', sans-serif;
@@ -46,12 +32,3 @@ div.expressmap-tooltip {
    border-radius:5px;
 }
 
-.axis line, .axis path{
-  fill: none;
-  stroke: #a9a9a9;
-  shape-rendering: crispEdges;
-}
-
-.axis text {
-    fill: #a9a9a9;
-}
