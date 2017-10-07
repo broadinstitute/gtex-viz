@@ -136,11 +136,8 @@ d3.json(jsonFile, function(error, data){
             let angle = 60;
             let x = xScale(d);
             return `translate(${x}, ${yScale.range()[1] + (yScale.bandwidth()/2)}) rotate(${angle})`;
-        })
-        .on('click', (d) => {
-            "use strict";
-
         });
+
 
     const yLabels = mapg.selectAll(".yLabel")
         .data(yList)
@@ -149,7 +146,9 @@ d3.json(jsonFile, function(error, data){
         .attr("x", xScale.range()[1] + (xScale.bandwidth()/2))
         .attr("y", (d) => yScale(d) + (yScale.bandwidth()/1.5))
         .attr("class", (d, i) => `yLabel normal y${i}`)
-        .style("text-anchor", "start");
+        .style("text-anchor", "start") .on('click', (d) => {
+            alert(`ouch, ${d} got clicked`)
+        });
 
     // heatmap cells
     const cells = mapg.selectAll(".cell")
