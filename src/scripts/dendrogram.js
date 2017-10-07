@@ -102,12 +102,15 @@ class Dendrogram {
             .attr("stroke-width", 1); // TODO: eliminate hard-coded value
 
         dom.selectAll('.node')
-            .data(nodes)
+            .data(inodes)
             .enter().append("circle")
             .attr("cx", (d) => d.x)
             .attr("cy", (d) => d.y + this.yScale.bandwidth()/2)
-            .attr("r", 2) // TODO: eliminate hard-coded value
-            .attr("fill", "#8DCDC1"); // TODO: eliminate hard-coded value
+            .attr("r", 2.5) // TODO: eliminate hard-coded value
+            // .attr("fill", "#8DCDC1"); // TODO: eliminate hard-coded value
+            // .attr("fill", "#4b8699")
+            .attr('fill', '#b30000')
+            .attr("opacity", 0.5)
 
     }
 
@@ -159,12 +162,16 @@ class Dendrogram {
             .attr("stroke-width", 1); // TODO: eliminate hard-coded value
 
         dom.selectAll('.node')
-            .data(nodes)
+            .data(inodes)
             .enter().append("circle")
             .attr("cx", (d) => d.x + this.xScale.bandwidth()/2)
             .attr("cy", (d) => d.y)
-            .attr("r", 2) // TODO: eliminate hard-coded value
-            .attr("fill", "#8DCDC1"); // TODO: eliminate hard-coded value
+            .attr("r", 2.5) // TODO: eliminate hard-coded value
+            // .attr("fill", "#8DCDC1"); // TODO: eliminate hard-coded value
+            // .attr("fill", "#4b8699")
+            .attr('fill', '#b30000')
+
+            .attr("opacity", 0.5)
     }
 
     _getBranchLengthToRoot(node) {
