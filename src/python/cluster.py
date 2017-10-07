@@ -56,6 +56,7 @@ def cluster(m, method = "ward"):
     test_clustering(Z, m)
     return Z
 
+
 def generate_matrix(df, value = "medianTPM", row = "geneSymbol", col= "tissueId", adjust = 1., logTransform = True ):
     '''
     generates the matrix for the clustering program
@@ -73,7 +74,7 @@ def generate_matrix(df, value = "medianTPM", row = "geneSymbol", col= "tissueId"
 
     df.sort_values(by=[row])
     groups = df.groupby([col])
-    return (np.reshape(df.as_matrix(columns=[value]), (-1, len(groups))), df[row].unique())
+    return np.reshape(df.as_matrix(columns=[value]), (-1, len(groups))), df[row].unique()
 
 if __name__ == '__main__':
 
