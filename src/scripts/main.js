@@ -10,22 +10,27 @@ const margin = {
 };
 const dim = {
     width: 1000,
-    height: 500
+    height: 800
 };
 
 const palette = {
-    blues: d3.schemeBlues[9],
+    blues: d3.schemeBlues[9].concat(["#03142c"]),
     gnbu: d3.schemeGnBu[9],
-    reds: ["#FFE4DE", "#FFC6BA", "#F7866E", "#d9745e", "#D25C43", "#b6442c", "#9b3a25", "#562015"],
-    ygb: ["#FFF09D", "#F0EFB4", "#E2E9A6", "#D3E397", "#BCDCA5", "#A4D4B3", "#8DCDC1", "#87B1A4","#829487", "#7C786A"],
-    
+
+    // colorbrewer
+    ylgnbu:["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58","#040e29"],
+    reds: ['#fff5f0','#fee0d2','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#a50f15','#67000d', "#340007"],
+    orrd: ['#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#b30000','#7f0000','#4c0000'],
+    // reds: ["#FFE4DE", "#FFC6BA", "#F7866E", "#d9745e", "#D25C43", "#b6442c", "#9b3a25", "#562015"],
+    // ygb: ["#FFF09D", "#F0EFB4", "#E2E9A6", "#D3E397", "#BCDCA5", "#A4D4B3", "#8DCDC1", "#87B1A4","#829487", "#7C786A"],
+
 };
 
 const svgConfig = {
         divId: "#" + containerId,
         width: dim.width,
         height: dim.height,
-        colors: palette.reds,
+        colors: palette.ylgnbu,
         nullColor: "#e6e6e6"
 };
 
@@ -84,7 +89,8 @@ d3.json(jsonFile, function(error, data){
 
     // set the scales
     const colorScale = d3.scaleQuantile() // scaleQuantile maps the continuous domain to a discrete range
-        .domain([0, Math.round(d3.max(data, (d) => d.value))])
+        // .domain([0, Math.round(d3.max(data, (d) => d.value))])
+        .domain([0.01, 3])
         .range(svgConfig.colors);
 
     const xScale = tissue_tree.xScale;
@@ -97,17 +103,25 @@ d3.json(jsonFile, function(error, data){
     const legendGroups = legend.enter().append("g")
         .attr("class", "legend");
     legendGroups.append("rect")
-        .attr("x", (d, i) => 40*i) // TODO: hard-coded value
+        .attr("x", (d, i) => 50*i) // TODO: hard-coded value
         .attr("y", 5)
-        .attr("width", 40) // TODO: hard-coded value
+        .attr("width", 50) // TODO: hard-coded value
         .attr("height", yScale.bandwidth()/2)
-        .style("fill", (d) => d==0?svgConfig.nullColor:colorScale(d));
+        .style("fill", (d) => colorScale(d));
 
     legendGroups.append("text")
         .attr("class", "normal")
-        .text((d) => "≥ " + d.toPrecision(2))
-        .attr("x", (d, i) => 40 * i) // TODO: hard-coded value
+        .text((d) => d==0?">0":"≥ " + Math.round(Math.pow(10, d)))
+        .attr("x", (d, i) => 50 * i) // TODO: hard-coded value
         .attr("y", 15 + yScale.bandwidth()/2); // TODO: hard-coded value
+
+    if(useLog){
+        legendGroups.append("text")
+            .attr("class", "normal")
+            .text("Median TPM")
+            .attr("x", 50 * 10) // TODO: hard-coded value
+            .attr("y", 15 + yScale.bandwidth()/2) // TODO: hard-coded value
+    }
 
     // text labels
     const xLabels = mapg.selectAll(".xLabel")
