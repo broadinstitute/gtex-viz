@@ -1,7 +1,7 @@
 // render the heatmap
 const containerId = "chart";
 const margin = {
-    left: 155,
+    left: 160,
     top: 150,
     right: 100,
     bottom: 200
@@ -23,7 +23,7 @@ const svgConfig = {
         divId: "#" + containerId,
         width: dim.width,
         height: dim.height,
-        colors: palette.ygb,
+        colors: palette.reds,
         nullColor: "#e6e6e6"
 };
 
@@ -37,7 +37,7 @@ const mapg = svg.append("g")
 
 const leftg = svg.append("g")
     .attr('id', 'leftgroup')
-    .attr("transform", `translate(0, ${margin.top})`);
+    .attr("transform", `translate(5, ${margin.top})`);
 
 const tooltip = new Tooltip("tooltip");
 
@@ -75,34 +75,8 @@ const mouseout = function(d){
 
 // parse the gene dendrogram
 const newick = "(((((SLC25A21:1.47,GAS6-AS1:1.47):1.53,SLC27A6:2.99):0.84,TMEM229A:3.83):2.34,((TMEM255B:2.47,TMEM106B:2.47):0.62,GAS6-AS2:3.08):3.09):7.25,(TMEM167B:4.53,GAS6:4.53):8.89);"
-// var tree = new Dendrogram(newick);
-const tree = parseNewick(newick); // converts newick to json
-const root = d3.hierarchy(tree, (d) => d.branchset)
-      .sum((d) => d.data.branchset ? 0 : 1) // only leaf nodes
-      .sort((a, b) => (a.value - b.value) || d3.ascending(a.data.length, b.data.length));
-const getLength2Root = function(d){
-    return d.path(root).reduce((sum, d)=> d.data.length?sum+d.data.length:sum, 0)
-};
-const maxLength = getLength2Root(root.leaves()[0]);
-const treeXScale = d3.scaleLinear()
-    .domain([0, maxLength])
-    .range([0, 150]);
-const treeYScale = d3.scaleBand() // this scale should be the same as the heatmap yScale
-        .domain(root.leaves().map((d)=>d.data.name)) // sorted
-        .range([0, svgConfig.height - margin.top - margin.bottom])
-        .padding(.05);
-
-leftg.selectAll('.node')
-    .data(root.descendants())
-    .enter().append("circle")
-    .attr("cx", (d) => treeXScale(getLength2Root(d)))
-    .attr("cy", (d) => {
-        console.log(`${d.data.name} ${treeYScale(d.data.name)}`);
-        return treeYScale(d.data.name) + (treeYScale.bandwidth()/2);
-    })
-    .attr("r", 2)
-    .attr("fill", "red");
-// parse expression data
+var tree = new Dendrogram(newick);
+tree.draw(leftg);
 const jsonFile = "genes.median.tpm.json";
 const useLog = true;
 
@@ -134,12 +108,7 @@ d3.json(jsonFile, function(error, data){
         .range([0, svgConfig.width - margin.left - margin.right])
         .padding(.05);
 
-    // const yScale = d3.scaleBand()
-    //     .domain(yList)
-    //     .range([0, svgConfig.height - margin.top - margin.bottom])
-    //     .padding(.05);
-    // y scale is determined by the gene clusters
-    const yScale = treeYScale;
+    const yScale = tree.yScale;
 
     // text labels
     const xLabels = mapg.selectAll(".xLabel")
