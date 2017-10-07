@@ -107,11 +107,20 @@ class Dendrogram {
             .attr("cx", (d) => d.x)
             .attr("cy", (d) => d.y + this.yScale.bandwidth()/2)
             .attr("r", 2.5) // TODO: eliminate hard-coded value
-            // .attr("fill", "#8DCDC1"); // TODO: eliminate hard-coded value
+            // .attr("fill", "#8DCDC1") // TODO: eliminate hard-coded value
             // .attr("fill", "#4b8699")
-            .attr('fill', '#b30000')
-            .attr("opacity", 0.5)
+            .attr('fill', '#fc8d59')
+            .attr("opacity", 0.5);
 
+        // axis
+        // Add the x Axis
+        dom.append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(0," + this.height + ")")
+            .call(
+                d3.axisBottom(this.xScale)
+                .tickValues([5, 10])
+            );
     }
 
     _sortNodesByLevel(){
@@ -167,11 +176,21 @@ class Dendrogram {
             .attr("cx", (d) => d.x + this.xScale.bandwidth()/2)
             .attr("cy", (d) => d.y)
             .attr("r", 2.5) // TODO: eliminate hard-coded value
-            // .attr("fill", "#8DCDC1"); // TODO: eliminate hard-coded value
+            // .attr("fill", "#8DCDC1") // TODO: eliminate hard-coded value
             // .attr("fill", "#4b8699")
-            .attr('fill', '#b30000')
+            .attr('fill', '#fc8d59')
+            .attr("opacity", 0.5);
 
-            .attr("opacity", 0.5)
+        // axis
+        // Add the x Axis
+        dom.append("g")
+            // .attr("transform", `translate(${this.width}, 0)`)
+            .attr("class", "axis")
+            .call(
+                d3.axisLeft(this.yScale)
+                .tickValues([5, 10])
+            );
+
     }
 
     _getBranchLengthToRoot(node) {

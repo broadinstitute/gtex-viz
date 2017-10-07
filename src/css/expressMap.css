@@ -1,3 +1,7 @@
+div{
+    font-family: 'Libre Franklin', sans-serif;
+}
+
 .expressmap-bordered {
     stroke: #E6E6E6;
     stroke-width: 1px;
@@ -38,4 +42,14 @@ div.expressmap-tooltip {
    font-size:12px;
    z-index:4000;
    border-radius:5px;
+}
+
+.axis line, .axis path{
+  fill: none;
+  stroke: #a9a9a9;
+  shape-rendering: crispEdges;
+}
+
+.axis text {
+    fill: #a9a9a9;
 }
