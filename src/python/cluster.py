@@ -57,7 +57,7 @@ def cluster(m, method = "ward"):
     return Z
 
 
-def generate_matrix(df, value = "medianTPM", row = "geneSymbol", col= "tissueId", adjust = 1., logTransform = True ):
+def generate_matrix(df, value="medianTPM", row="geneSymbol", col="tissueId", adjust=1.0, log_transform=True):
     '''
     generates the matrix for the clustering program
     :param df: a pandas data frame
@@ -69,7 +69,7 @@ def generate_matrix(df, value = "medianTPM", row = "geneSymbol", col= "tissueId"
 
     # transform data values
     df[value] = df[value] + adjust
-    if logTransform:
+    if log_transform:
         df[value] = np.log10(df[value])
 
     df.sort_values(by=[row])
@@ -88,8 +88,9 @@ if __name__ == '__main__':
     print to_newick(root, "", root.dist, leaf_labels)
 
     # then generates tissue clusters based on expression of genes
-    mat, leaf_labels = generate_matrix(data_frame, row="tissueId", col="geneSymbol")
-    clusters = cluster(mat, method="complete")
+    mat, leaf_labels = generate_matrix(data_frame, row="tissueId", col="geneSymbol", log_transform=False)
+    print mat.shape
+    clusters = cluster(mat, method="ward")
     root = to_tree(clusters, False)
     print to_newick(root, "", root.dist, leaf_labels)
 
