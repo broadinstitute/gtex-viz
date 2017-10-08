@@ -1,9 +1,11 @@
 /*
 TODO:
-- Allow providing customized mouse events to the rendering functions.
+- Allow passing customized mouse events to the rendering functions.
 - Add GTEx tissue colors.
+- Add a toggle option to switch between Tree clustering and Alphabetical order views
+- Click Event: internal tree node
+- Click Event: gene boxplot
 - Add and delete genes (may not be possible without the web service and on-the-fly reclustering)
-- Gene boxplot
 - Eliminate hard-coded values
  */
 
