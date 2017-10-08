@@ -1,3 +1,13 @@
+/*
+TODO:
+- Allow providing customized mouse events to the rendering functions.
+- Add GTEx tissue colors.
+- Add and delete genes (may not be possible without the web service and on-the-fly reclustering)
+- Gene boxplot
+- Eliminate hard-coded values
+ */
+
+
 // GTEx Gene Expression Dashboard
 
 // data
@@ -16,7 +26,8 @@ const legendPanel = { // the color legend panel
     x: 150,
     y: config.margin.top,
     height: 50,
-    width: window.innerWidth - (150 + 150)
+    width: window.innerWidth - (150 + 150),
+    cell: {width: 50}
 };
 const topTreePanel = { // the color legend panel
     x: 150,
@@ -66,7 +77,7 @@ d3.json(jsonFile, function(error, data){
     const legendG = svg.append("g")
         .attr('id', 'legendGroup')
         .attr("transform", `translate(${legendPanel.x}, ${legendPanel.y})`);
-    heatmap.drawLegend(legendG, cellWidth = 50);
+    heatmap.drawLegend(legendG, cellWidth = legendPanel.cell.width);
 
     // renders the heatmap panel
     const mapG = svg.append("g")
