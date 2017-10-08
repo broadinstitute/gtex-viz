@@ -5,20 +5,33 @@ class Heatmap {
         value: the rendered numerical value (transformed)
         originalValue: the original numerical value
      */
-    constructor(data, dimensions={w:1000, h:600}, colors=d3.schemeBlues[9]){
+
+    constructor(data, dimensions={w:1000, h:600}, colorScheme="gnbu"){
         this.data = data;
         this.width = dimensions.w;
         this.height = dimensions.h;
         this.nullColor = "#e6e6e6";
-        this.colors = colors;
         this.colorScale = undefined;
         this.xList = undefined;
         this.yList = undefined;
         this.xScale = undefined;
         this.yScale = undefined;
+
+        this.palette = {
+            blues: d3.schemeBlues[9].concat(["#03142c"]),
+            // colorbrewer
+            ylgnbu:["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58","#040e29"],
+            orrd: ['#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#b30000','#7f0000','#4c0000'],
+            gnbu: ['#f7fcf0','#e0f3db','#ccebc5','#a8ddb5','#7bccc4','#4eb3d3','#2b8cbe','#0868ac','#084081','#052851'],
+            // other sources
+            reds: ["#FFE4DE", "#FFC6BA", "#F7866E", "#d9745e", "#D25C43", "#b6442c", "#9b3a25","#712a1c", "#562015", "#2d110b"],
+        };
+
+        this.colors = this.palette[colorScheme]
     }
 
-    drawLegend(dom) {
+    // TODO: should the legend rendering be a separate class?
+    drawLegend(dom, cellWidth = 50, yAdjust = 16) {
         if (this.colorScale === undefined) this._setColorScale();
         if (this.yList === undefined) this._setYList();
 
@@ -29,31 +42,33 @@ class Heatmap {
             .attr("class", "legend");
 
         legendGroups.append("rect")
-            .attr("x", (d, i) => 50*i) // TODO: hard-coded value
+            .attr("x", (d, i) => cellWidth*i)
             .attr("y", 5)
-            .attr("width", 50) // TODO: hard-coded value
+            .attr("width", cellWidth)
             .attr("height", this.yScale.bandwidth()/2)
             .style("fill", (d) => this.colorScale(d));
 
         legendGroups.append("text")
             .attr("class", "normal")
             .text((d) => d==0?">0":"≥ " + Math.round(Math.pow(2, d)))
-            .attr("x", (d, i) => 50 * i) // TODO: hard-coded value
-            .attr("y", 16 + this.yScale.bandwidth()/2); // TODO: hard-coded value
+            .attr("x", (d, i) => cellWidth * i)
+            .attr("y", yAdjust + this.yScale.bandwidth()/2);
 
         if(useLog){
             legendGroups.append("text")
                 .attr("class", "normal")
                 .text("Median TPM")
-                .attr("x", 50 * 10) // TODO: hard-coded value
-                .attr("y", 16 + this.yScale.bandwidth()/2) // TODO: hard-coded value
+                .attr("x", cellWidth * 10)
+                .attr("y", yAdjust + this.yScale.bandwidth()/2)
         }
     }
 
-    draw(dom){
+    draw(dom, angle=60){
         if (this.xList === undefined) this._setXList();
         if (this.yList === undefined) this._setYList();
         if (this.colorScale === undefined) this._setColorScale();
+
+        // TODO: creates separate panels for text labels?
         // text labels
         const xLabels = dom.selectAll(".xLabel")
             .data(this.xList)
@@ -64,7 +79,6 @@ class Heatmap {
             .attr("class", (d, i) => `xLabel normal x${i}`)
             .style("text-anchor", "start")
             .attr("transform", (d) => {
-                let angle = 60; // TODO: hard-coded value
                 let x = this.xScale(d);
                 return `translate(${x}, ${this.yScale.range()[1] + (this.yScale.bandwidth()/2)}) rotate(${angle})`;
             });
@@ -73,41 +87,18 @@ class Heatmap {
             .data(this.yList)
             .enter().append("text")
             .text((d) => d)
-            .attr("x", this.xScale.range()[1] + (this.xScale.bandwidth()/2))
-            .attr("y", (d) => this.yScale(d) + (this.yScale.bandwidth()/1.5))
+            .attr("x", this.xScale.range()[1] + 5)
+            .attr("y", (d) => this.yScale(d) + 10)
             .attr("class", (d, i) => `yLabel normal y${i}`)
             .style("text-anchor", "start")
             .on('click', (d) => {
-                alert(`ouch, ${d} got clicked`)
+                alert(`${d} got clicked. To be implemented`)
             });
 
-        // heatmap cells
-        const cells = dom.selectAll(".cell")
-            .data(this.data, (d) => d.value);
-        cells.enter().append("rect")
-            .attr("row", (d) => `x${this.xList.indexOf(d.x)}`)
-            .attr("col", (d) => `y${this.yList.indexOf(d.y)}`)
-            .attr("x", (d) => this.xScale(d.x))
-            .attr("y", (d) => this.yScale(d.y))
-            .attr("rx", 2)
-            .attr('ry', 2)
-            .attr("class", (d) => `cell expressmap-bordered`)
-            .attr("width", this.xScale.bandwidth())
-            .attr("height", this.yScale.bandwidth())
-            .style("fill", (d) => this.colors[0])
+        // renders the heatmap cells
 
-            .merge(cells)
-            .transition()
-            .duration(2000)
-            .style("fill", (d) => d.originalValue==0?this.nullColor:this.colorScale(d.value));
-
-        this._addCellMouseEvents(cells);
-
-    }
-
-    _addCellMouseEvents(cells){
-        const tooltip = new Tooltip("tooltip");
-        // mouse events
+        // TODO: how to allow customized events?
+        const tooltip = new Tooltip("tooltip"); // TODO: hard-coded tooltip
         const mouseover = function(d) {
             const selected = d3.select(this);
             const rowClass = selected.attr("row");
@@ -123,6 +114,7 @@ class Heatmap {
             let column = d.y;
             tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
         };
+
         const mouseout = function(d){
             const selected = d3.select(this);
             const rowClass = selected.attr("row");
@@ -137,8 +129,27 @@ class Heatmap {
             selected.classed('expressmap-highlighted', false);
             tooltip.hide();
         };
-        cells.on('mouseover', mouseover)
-            .on('mouseout', mouseout)
+
+        const cells = dom.selectAll(".cell")
+            .data(this.data, (d) => d.value);
+        cells.enter().append("rect")
+            .attr("row", (d) => `x${this.xList.indexOf(d.x)}`)
+            .attr("col", (d) => `y${this.yList.indexOf(d.y)}`)
+            .attr("x", (d) => this.xScale(d.x))
+            .attr("y", (d) => this.yScale(d.y))
+            .attr("rx", 2)
+            .attr('ry', 2)
+            .attr("class", (d) => `cell expressmap-bordered`)
+            .attr("width", this.xScale.bandwidth())
+            .attr("height", this.yScale.bandwidth())
+            .style("fill", (d) => this.colors[0])
+            .on("mouseover", mouseover)
+            .on("mouseout", mouseout)
+            .merge(cells)
+            .transition()
+            .duration(2000)
+            .style("fill", (d) => d.originalValue==0?this.nullColor:this.colorScale(d.value))
+
     }
 
     _setXList() {

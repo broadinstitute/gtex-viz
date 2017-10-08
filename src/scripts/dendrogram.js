@@ -34,21 +34,25 @@
 const verbose = true;
 class Dendrogram {
 
-    constructor(newick, orientation='h', dimensions={w:150, h: 200}){
+    constructor(newick, orientation='h'){
         this.newick = newick;
         this.orientation = orientation;
-        this.width = dimensions.w;
-        this.height = dimensions.h;
+
         this.postorder = [];
         this.root = d3.hierarchy(parseNewick(newick), (d) => d.branchset)
             .sum((d)=>d.branchset?0:1)
             .sort((a,b)=>a.value-b.value||a.data.length-b.data.length);
         this.leaves = this.root.leaves().sort((a, b) => (a.value - b.value) || d3.ascending(a.data.length, b.data.length));
+
+        this.width = undefined;
+        this.height = undefined;
         this.xScale = undefined;
         this.yScale = undefined;
     }
 
-    draw(dom){
+    draw(dom, width, height){
+        this.width = width;
+        this.height = height;
         this._setXScale();
         this._setYScale();
         if ('h' == this.orientation) this._drawHTree(dom);
