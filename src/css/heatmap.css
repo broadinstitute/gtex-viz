@@ -11,3 +11,11 @@ rect.expressmap-highlighted {
     stroke: #D25C43;
     stroke-width:2px;
 }
+
+.legend .normal {
+    fill: #a9a9a9;
+    font-family: 'Libre Franklin', sans-serif;
+    font-weight: 300;
+    font-size: 11px;
+
+}
