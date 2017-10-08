@@ -1,7 +1,7 @@
 class Tooltip {
-    constructor(id, offsetX=20, offsetY=-80, duration=200){
+    constructor(id, offsetX=20, offsetY=-80, duration=200, verbose=true){
         this.id = id;
-        this.verbose = true;
+        this.verbose = verbose;
         this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.duration = duration;

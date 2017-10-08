@@ -1,3 +1,7 @@
+/*
+    Dependencies:
+    tooltip.js
+ */
 class Heatmap {
     /* data is a json with the following attributes:
         x: the x label
@@ -5,6 +9,7 @@ class Heatmap {
         value: the rendered numerical value (transformed)
         originalValue: the original numerical value
      */
+
 
     constructor(data, dimensions={w:1000, h:600}, colorScheme="gnbu"){
         this.data = data;
@@ -98,21 +103,19 @@ class Heatmap {
         // renders the heatmap cells
 
         // TODO: how to allow customized events?
-        const tooltip = new Tooltip("tooltip"); // TODO: hard-coded tooltip
+
         const mouseover = function(d) {
             const selected = d3.select(this);
             const rowClass = selected.attr("row");
             const colClass = selected.attr("col");
-            d3.selectAll(".xLabel").filter(`.${rowClass}`)
-                .classed('normal', false)
-                .classed('highlighted', true);
+             d3.selectAll(".xLabel").filter(`.${rowClass}`)
+            .classed('normal', false)
+            .classed('highlighted', true);
             d3.selectAll(".yLabel").filter(`.${colClass}`)
                 .classed('normal', false)
                 .classed('highlighted', true);
             selected.classed('expressmap-highlighted', true);
-            let row = d.x.replace(/_/g, " ");
-            let column = d.y;
-            tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
+            console.log(`Row: ${d.x}, Column: ${d.y}, Value: ${d.originalValue}`)
         };
 
         const mouseout = function(d){
@@ -127,9 +130,7 @@ class Heatmap {
                 .classed('normal', true)
                 .classed('highlighted', false);
             selected.classed('expressmap-highlighted', false);
-            tooltip.hide();
         };
-
         const cells = dom.selectAll(".cell")
             .data(this.data, (d) => d.value);
         cells.enter().append("rect")
@@ -151,6 +152,8 @@ class Heatmap {
             .style("fill", (d) => d.originalValue==0?this.nullColor:this.colorScale(d.value))
 
     }
+
+
 
     _setXList() {
         this.xList = d3.nest()
