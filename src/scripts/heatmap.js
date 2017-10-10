@@ -98,13 +98,21 @@ class Heatmap {
             .style("text-anchor", "start")
             .on('click', (d) => {
                 alert(`${d} got clicked. To be implemented`)
+            })
+            .on('mouseover', function(d){
+                d3.select(this)
+                    .classed('normal', false)
+                    .classed('highlighted', true);
+            })
+            .on('mouseout', function(d){
+                d3.select(this)
+                    .classed('normal', true)
+                    .classed('highlighted', false);
             });
 
         // renders the heatmap cells
 
-        // TODO: how to allow customized events?
-
-        const mouseover = function(d) {
+        const cellMouseover = function(d) {
             const selected = d3.select(this);
             const rowClass = selected.attr("row");
             const colClass = selected.attr("col");
@@ -118,7 +126,7 @@ class Heatmap {
             console.log(`Row: ${d.x}, Column: ${d.y}, Value: ${d.originalValue}`)
         };
 
-        const mouseout = function(d){
+        const cellMouseout = function(d){
             const selected = d3.select(this);
             const rowClass = selected.attr("row");
             const colClass = selected.attr("col");
@@ -144,8 +152,8 @@ class Heatmap {
             .attr("width", this.xScale.bandwidth())
             .attr("height", this.yScale.bandwidth())
             .style("fill", (d) => this.colors[0])
-            .on("mouseover", mouseover)
-            .on("mouseout", mouseout)
+            .on("mouseover", cellMouseover)
+            .on("mouseout", cellMouseout)
             .merge(cells)
             .transition()
             .duration(2000)
