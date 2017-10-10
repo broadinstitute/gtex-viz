@@ -14,8 +14,8 @@ rect.expressmap-highlighted {
 
 .legend .normal {
     fill: #a9a9a9;
-    font-family: 'Libre Franklin', sans-serif;
-    font-weight: 300;
-    font-size: 11px;
+}
 
+.yLabel {
+    cursor: pointer;
 }

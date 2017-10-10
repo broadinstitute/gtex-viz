@@ -1,12 +1,13 @@
 /*
 TODO:
-- Allow passing customized mouse events to the rendering functions.
+- Click Event: gene boxplot
 - Add GTEx tissue colors.
 - Add a toggle option to switch between Tree clustering and Alphabetical order views
 - Click Event: internal tree node
-- Click Event: gene boxplot
 - Add and delete genes (may not be possible without the web service and on-the-fly reclustering)
+- Backend web service and Gencode ID support
 - Eliminate hard-coded values
+- Rollup packaging
  */
 
 
@@ -124,6 +125,9 @@ function renderHeatmap(error, data){
     svg.selectAll(".cell")
         .on("mouseover", heatmapMouseover)
         .on("mouseout", heatmapMouseout);
+
+    svg.selectAll(".yLabel")
+        .on("click", (d) => {console.log(`Click even has changed for ${d}`)});
 }
 
 // customized heatmap mouse events
@@ -157,7 +161,6 @@ function heatmapMouseout(d){
         .classed('normal', true)
         .classed('highlighted', false);
     selected.classed('expressmap-highlighted', false);
-
     tooltip.hide();
 }
 
