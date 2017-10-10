@@ -6,6 +6,7 @@ TODO:
 - Click Event: internal tree node
 - Add and delete genes (may not be possible without the web service and on-the-fly reclustering)
 - Backend web service and Gencode ID support
+- Rewrite data retrieval methods and parsers
 - Eliminate hard-coded values
 - Rollup packaging
  */
@@ -19,52 +20,61 @@ const tissueNewick = "((((((((((Testis:0.68,Brain_Cerebellum:0.68):0.30,Prostate
 const geneNewick = "(((((SLC25A21:1.47,GAS6-AS1:1.47):1.53,SLC27A6:2.99):0.84,TMEM229A:3.83):2.34,((TMEM255B:2.47,TMEM106B:2.47):0.62,GAS6-AS2:3.08):3.09):7.25,(TMEM167B:4.53,GAS6:4.53):8.89);";
 
 // web services
+const geneUrl = "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=";
 
-// tooltip <div>
-var tooltip = new Tooltip("tooltip", false);
-
-const config = {
+/////// boxplot ///////
+const boxplotConfig = {
     useLog: true,
-    margin: {left: 10, top: 10},
+    divId: "#boxplot"
+};
+
+/////// heatmap rendering ///////
+// the tooltip <div>
+const tooltip = new Tooltip("tooltip", false);
+
+const heatmapConfig = {
+    useLog: true,
+    margin: {left: 10, top: 10, bottom: 250},
     divId: "#chart",
     cell: {height: 11},
 };
 
-var legendPanel = { // the color legend panel
+// -- heatmap panels
+
+let legendPanel = { // the color legend panel
     x: 150,
-    y: config.margin.top,
+    y: heatmapConfig.margin.top,
     height: 50,
     width: window.innerWidth - (150 + 150),
-    cell: {width: 50}
+    cell: {width: 60}
 };
 
-var topTreePanel = { // the color legend panel
+let topTreePanel = { // the color legend panel
     x: 150,
-    y: config.margin.top + legendPanel.height,
+    y: heatmapConfig.margin.top + legendPanel.height,
     height: 120,
     width: window.innerWidth - (150 + 150)
 };
 
-var leftTreePanel = { // the color legend panel
-    x: config.margin.left,
-    y: config.margin.top + legendPanel.height + topTreePanel.height + 5,
+let leftTreePanel = { // the color legend panel
+    x: heatmapConfig.margin.left,
+    y: heatmapConfig.margin.top + legendPanel.height + topTreePanel.height + 5,
     height: undefined,
-    width: 150 - (config.margin.left + 5)
+    width: 150 - (heatmapConfig.margin.left + 5)
 };
 
-var heatmapPanel = {
+let heatmapPanel = {
     x: 150,
-    y: config.margin.top + legendPanel.height + topTreePanel.height + 5,
+    y: heatmapConfig.margin.top + legendPanel.height + topTreePanel.height + 5,
     height: undefined,
     width: window.innerWidth - (150 + 150)
 };
 
 
 // initiates the svg
-var svg = d3.select(config.divId).append("svg")
-    .attr("width", window.innerWidth - config.margin.left)
-    .attr("height", config.margin.top + legendPanel.height); // initial height
-
+let svg = d3.select(heatmapConfig.divId).append("svg")
+    .attr("width", window.innerWidth - heatmapConfig.margin.left)
+    .attr("height", heatmapConfig.margin.top + legendPanel.height + heatmapConfig.margin.bottom);
 // renders the tissue tree
 const tissueTree = new Dendrogram(tissueNewick, orientation='v');
 renderTopTree(tissueTree);
@@ -83,18 +93,18 @@ function renderTopTree(tree){
         .attr('id', 'topTreeGroup')
         .attr("transform", `translate(${topTreePanel.x}, ${topTreePanel.y})`);
     tree.draw(topTreeG, topTreePanel.width, topTreePanel.height);
-    svg.attr("height", svg.attr("height") + topTreePanel.height);
+    svg.attr("height", parseFloat(svg.attr("height")) + topTreePanel.height);
 
 }
 
 function renderLeftTree(tree){
     // renders the gene dendrogram
-    leftTreePanel.height = config.cell.height * tree.leaves.length;
+    leftTreePanel.height = heatmapConfig.cell.height * tree.leaves.length;
     const leftTreeG = svg.append("g")
         .attr('id', 'leftTreeGroup')
         .attr("transform", `translate(${leftTreePanel.x}, ${leftTreePanel.y})`);
     tree.draw(leftTreeG, leftTreePanel.width, leftTreePanel.height);
-    svg.attr("height", svg.attr("height") + leftTreePanel.height);
+    svg.attr("height", parseFloat(svg.attr("height")) + leftTreePanel.height);
 }
 
 function renderHeatmap(error, data){
@@ -102,7 +112,7 @@ function renderHeatmap(error, data){
     // this heatmap is dependent of the dendrograms and must be rendered after the dendrograms
     // because the x and y scales are determined by the dendrograms.
 
-    const json = parseMedianTPM(data, useLog=config.useLog);
+    const json = parseMedianTPM(data, useLog=heatmapConfig.useLog);
     const heatmap = new Heatmap(json);
 
     // determined based on the dendrograms
@@ -115,7 +125,7 @@ function renderHeatmap(error, data){
     const legendG = svg.append("g")
         .attr('id', 'legendGroup')
         .attr("transform", `translate(${legendPanel.x}, ${legendPanel.y})`);
-    heatmap.drawLegend(legendG, cellWidth = legendPanel.cell.width);
+    heatmap.drawLegend(legendG, cellWidth=legendPanel.cell.width);
 
     // renders the heatmap panel
     const mapG = svg.append("g")
@@ -128,8 +138,19 @@ function renderHeatmap(error, data){
         .on("mouseover", heatmapMouseover)
         .on("mouseout", heatmapMouseout);
 
+    // id mapping
+    const geneLookupTable = {}; // constructs a symbol => gencode ID lookup table
+    d3.nest()
+        .key((d) => d.y)
+        .entries(json)
+        .forEach((d) => {geneLookupTable[d.key] = d.values[0].id});
+
+    console.log(geneLookupTable);
     svg.selectAll(".yLabel")
-        .on("click", heatmapYLabelClick);
+        .on("click", function(d){
+            const gencodeId = geneLookupTable[d];
+            heatmapYLabelClick(d, gencodeId);
+        });
 }
 
 // customized heatmap mouse events
@@ -144,7 +165,7 @@ function heatmapMouseover(d) {
         .classed('normal', false)
         .classed('highlighted', true);
     selected.classed('expressmap-highlighted', true);
-    let row = d.x.replace(/_/g, " ");
+    let row = d.x;
     let column = d.y;
 
     tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
@@ -166,9 +187,12 @@ function heatmapMouseout(d){
     tooltip.hide();
 }
 
-function heatmapYLabelClick(d){
+function heatmapYLabelClick(d, id){
    console.log(`Click even has changed for ${d}`);
-   d3.json()
+   const url = geneUrl + id;
+   d3.json(url, function(error, data){
+        parseGeneExpression(data, useLog=boxplotConfig.useLog);
+   } )
 }
 
 

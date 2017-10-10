@@ -11,8 +11,9 @@ class Heatmap {
      */
 
 
-    constructor(data, dimensions={w:1000, h:600}, colorScheme="gnbu"){
+    constructor(data, useLog=true, dimensions={w:1000, h:600}, colorScheme="gnbu"){
         this.data = data;
+        this.useLog = useLog;
         this.width = dimensions.w;
         this.height = dimensions.h;
         this.nullColor = "#e6e6e6";
@@ -26,8 +27,8 @@ class Heatmap {
             blues: d3.schemeBlues[9].concat(["#03142c"]),
             // colorbrewer
             ylgnbu:["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58","#040e29"],
-            orrd: ['#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#b30000','#7f0000','#4c0000'],
-            gnbu: ['#f7fcf0','#e0f3db','#ccebc5','#a8ddb5','#7bccc4','#4eb3d3','#2b8cbe','#0868ac','#084081','#052851'],
+            orrd: ["#edf8b1",'#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#b30000','#7f0000','#4c0000'],
+            gnbu: ['#fffffe','#f7fcf0','#e0f3db','#ccebc5','#a8ddb5','#7bccc4','#4eb3d3','#2b8cbe','#0868ac','#084081','#052851'],
             // other sources
             reds: ["#FFE4DE", "#FFC6BA", "#F7866E", "#d9745e", "#D25C43", "#b6442c", "#9b3a25","#712a1c", "#562015", "#2d110b"],
         };
@@ -36,13 +37,12 @@ class Heatmap {
     }
 
     // TODO: should the legend rendering be a separate class?
-    drawLegend(dom, cellWidth = 50, yAdjust = 16) {
+    drawLegend(dom, cellWidth = 70, yAdjust = 16) {
         if (this.colorScale === undefined) this._setColorScale();
         if (this.yList === undefined) this._setYList();
 
         const legend = dom.selectAll(".legend")
             .data([0].concat(this.colorScale.quantiles()), (d) => d);
-
         const legendGroups = legend.enter().append("g")
             .attr("class", "legend");
 
@@ -51,11 +51,11 @@ class Heatmap {
             .attr("y", 5)
             .attr("width", cellWidth)
             .attr("height", this.yScale.bandwidth()/2)
-            .style("fill", (d) => this.colorScale(d));
+            .style("fill", (d) => d==0?this.nullColor:this.colorScale(d));
 
         legendGroups.append("text")
             .attr("class", "normal")
-            .text((d) => d==0?">0":"≥ " + Math.round(Math.pow(2, d)))
+            .text((d) => d==0?"NA":"≥ " + Math.pow(2, d).toPrecision(2))
             .attr("x", (d, i) => cellWidth * i)
             .attr("y", yAdjust + this.yScale.bandwidth()/2);
 
@@ -63,7 +63,7 @@ class Heatmap {
             legendGroups.append("text")
                 .attr("class", "normal")
                 .text("Median TPM")
-                .attr("x", cellWidth * 10)
+                .attr("x", cellWidth * 11)
                 .attr("y", yAdjust + this.yScale.bandwidth()/2)
         }
     }
@@ -78,7 +78,7 @@ class Heatmap {
         const xLabels = dom.selectAll(".xLabel")
             .data(this.xList)
             .enter().append("text")
-            .text((d) => d.replace(/_/g, " ")) // TODO: eliminate gtex specific text modification
+            .text((d) => d)
             .attr("x", 0)
             .attr("y", 0)
             .attr("class", (d, i) => `xLabel normal x${i}`)
@@ -164,7 +164,7 @@ class Heatmap {
 
 
     _setXList() {
-        this.xList = d3.nest()
+        this.xList = replace()
             .key((d) => d.x)
             .entries(this.data)
             .map((d) => d.key);
@@ -186,9 +186,10 @@ class Heatmap {
     }
 
     _setColorScale() {
+        let min = Math.round(d3.min(this.data, (d) => d.value));
+        let max = Math.round(d3.max(this.data, (d) => d.value));
         this.colorScale = d3.scaleQuantile() // scaleQuantile maps the continuous domain to a discrete range
-            .domain([0, Math.round(d3.max(this.data, (d) => d.value))])
-            // .domain([0, 10])
+            .domain([min, max])
             .range(this.colors);
     }
 }
