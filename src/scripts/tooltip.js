@@ -23,12 +23,11 @@ class Tooltip {
         d3.select("#" + this.id)
             .transition()
             .duration(this.duration)
-            .style("opacity", 0.0)
+            .style("opacity", 0.0);
+        this.move(0,0);
     }
 
-    move() {
-        let x = d3.event.pageX;
-        let y = d3.event.pageY;
+    move(x = d3.event.pageX, y = d3.event.pageY) {
         if (this.verbose) {
             console.log(x);
             console.log(y);
