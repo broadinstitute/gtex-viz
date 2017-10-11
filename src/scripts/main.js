@@ -1,6 +1,6 @@
 /*
 TODO:
-- Click Event: gene boxplot
+- Tissue name to tissue id mapping.
 - Add GTEx tissue colors.
 - Add a toggle option to switch between Tree clustering and Alphabetical order views
 - Click Event: internal tree node
@@ -9,6 +9,9 @@ TODO:
 - Rewrite data retrieval methods and parsers
 - Eliminate hard-coded values
 - Rollup packaging
+
+- circos for trans-eQTL
+- boxplots for cis-eQTL
  */
 
 
@@ -24,9 +27,12 @@ const geneUrl = "https://gtexportal.org/rest/v1/dataset/featureExpression?featur
 
 /////// boxplot ///////
 const boxplotConfig = {
-    useLog: true,
-    divId: "#boxplot"
+    useLog: false,
+    divId: "#boxplot",
+    colors: ["#bb453e", "#1c677f", "#078c84", "#b4486b", "grey"]
 };
+
+let boxplotData = {};
 
 /////// heatmap rendering ///////
 // the tooltip <div>
@@ -34,7 +40,7 @@ const tooltip = new Tooltip("tooltip", false);
 
 const heatmapConfig = {
     useLog: true,
-    margin: {left: 10, top: 10, bottom: 250},
+    margin: {left: 10, top: 10, bottom: 150},
     divId: "#chart",
     cell: {height: 11},
 };
@@ -145,11 +151,20 @@ function renderHeatmap(error, data){
         .entries(json)
         .forEach((d) => {geneLookupTable[d.key] = d.values[0].id});
 
-    console.log(geneLookupTable);
+    // console.log(geneLookupTable);
     svg.selectAll(".yLabel")
-        .on("click", function(d){
+        .on("click", function(d, i){
+
+            // toggles the styling class
+            let selected = d3.select(this);
+            if (selected.classed("clicked")){
+                selected.classed("clicked", false)
+            } else{
+                selected.classed("clicked", true);
+            }
+
             const gencodeId = geneLookupTable[d];
-            heatmapYLabelClick(d, gencodeId);
+            heatmapYLabelClick(d, gencodeId, heatmap.xScale.domain());
         });
 }
 
@@ -161,6 +176,7 @@ function heatmapMouseover(d) {
     d3.selectAll(".xLabel").filter(`.${rowClass}`)
         .classed('normal', false)
         .classed('highlighted', true);
+
     d3.selectAll(".yLabel").filter(`.${colClass}`)
         .classed('normal', false)
         .classed('highlighted', true);
@@ -187,11 +203,41 @@ function heatmapMouseout(d){
     tooltip.hide();
 }
 
-function heatmapYLabelClick(d, id){
-   console.log(`Click even has changed for ${d}`);
+function heatmapYLabelClick(d, id, xorder){
+    console.log(`Click even has changed for ${d}`);
+    var layout = {
+        title: "",
+        font: {
+            family: 'Libre Franklin',
+            size:11
+        },
+        yaxis: {
+            title: 'TPM',
+            zeroline: false
+        },
+        boxmode: 'group',
+        margin: {
+            t:0,
+        }
+    };
+   // checks if the gene is already in boxplotData, if so, drops it:
+    if (boxplotData.hasOwnProperty(d)){
+        delete boxplotData[d];
+        d3.keys(boxplotData).forEach((d, i)=>{
+            boxplotData[d]["marker"]["color"] = boxplotConfig.colors[i] || "black";
+        });
+        Plotly.newPlot('boxplot', d3.values(boxplotData), layout);
+        return;
+    }
+
    const url = geneUrl + id;
    d3.json(url, function(error, data){
-        parseGeneExpression(data, useLog=boxplotConfig.useLog);
+        // let json = parseGeneExpression(data, boxplotConfig.useLog, xorder);
+       color = boxplotConfig.colors[d3.keys(boxplotData).length] || "black";
+       let json = parseGeneExpression(data, boxplotConfig.useLog, color);
+       boxplotData[d] = json;
+       Plotly.newPlot('boxplot', d3.values(boxplotData), layout);
+
    } )
 }
 

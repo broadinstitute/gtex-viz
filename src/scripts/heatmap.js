@@ -68,7 +68,7 @@ class Heatmap {
         }
     }
 
-    draw(dom, angle=60){
+    draw(dom, angle=30){
         if (this.xList === undefined) this._setXList();
         if (this.yList === undefined) this._setYList();
         if (this.colorScale === undefined) this._setColorScale();
@@ -85,7 +85,7 @@ class Heatmap {
             .style("text-anchor", "start")
             .attr("transform", (d) => {
                 let x = this.xScale(d);
-                return `translate(${x}, ${this.yScale.range()[1] + (this.yScale.bandwidth()/2)}) rotate(${angle})`;
+                return `translate(${x}, ${this.yScale.range()[1] + 10}) rotate(${angle})`;
             });
 
         const yLabels = dom.selectAll(".yLabel")
