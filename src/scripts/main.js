@@ -8,7 +8,7 @@ TODO:
 - Backend web service and Gencode ID support
 - Rewrite data retrieval methods and parsers
 - Eliminate hard-coded values
-- Rollup packaging
+- node.js => Rollup packaging
 
 - circos for trans-eQTL
 - boxplots for cis-eQTL
@@ -218,7 +218,8 @@ function heatmapYLabelClick(d, id, xorder){
         boxmode: 'group',
         margin: {
             t:0,
-        }
+        },
+        showlegend: true
     };
    // checks if the gene is already in boxplotData, if so, drops it:
     if (boxplotData.hasOwnProperty(d)){
