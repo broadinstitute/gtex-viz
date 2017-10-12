@@ -59,6 +59,7 @@ let leftTreePanel = { // the color legend panel
     width: 100 - (heatmapConfig.margin.left + 5)
 };
 
+let heatmap = undefined;
 let heatmapPanel = {
     x: 100,
     y: heatmapConfig.margin.top + topTreePanel.height + 5,
@@ -121,19 +122,19 @@ function renderHeatmap(data, tissues){
     // because the x and y scales are determined by the dendrograms.
 
     const json = parseMedianTPM(data, useLog=heatmapConfig.useLog);
-    const heatmap = new Heatmap(json);
-
-    // determined based on the dendrograms
-    heatmap.xList = tissueTree.leaves.map((d) => d.data.name);
-    heatmap.yList = geneTree.leaves.map((d) => d.data.name);
-    heatmap.xScale = tissueTree.xScale;
-    heatmap.yScale = geneTree.yScale;
-
-    // renders the heatmap panel
+    heatmap = new Heatmap(json, true, dimensions={w:topTreePanel.width, h:leftTreePanel.height});
+     // renders the heatmap panel
     const mapG = svg.append("g")
         .attr('id', 'mapGroup')
         .attr("transform", `translate(${heatmapPanel.x}, ${heatmapPanel.y})`);
-    heatmap.draw(mapG);
+    // heatmap.draw(mapG);
+    // determined based on the dendrograms
+    // let xList = tissueTree.leaves.map((d) => d.data.name);
+    let xList = tissueTree.xScale.domain();
+    let yList = geneTree.yScale.domain();
+    heatmap.update(mapG, xList, yList);
+
+
 
     // renders the legend panel
     legendPanel.y += leftTreePanel.height + 150; // adjusts legend panel's y pos.
@@ -275,12 +276,19 @@ d3.select("#sortTissuesByAlphabet")
         // hide the tissue dendrogram
         d3.select('#topTreeGroup')
             .style("display", "None");
+        let xlist = heatmap.xList.sort();
+        console.log(xlist);
+        let dom = d3.select('#mapGroup');
+        heatmap.update(dom, xlist, heatmap.yList);
     });
 d3.select("#sortTissuesByClusters")
     .on("click", function(){
          // show the tissue dendrogram
         d3.select('#topTreeGroup')
             .style("display", "Block");
+        let dom = d3.select('#mapGroup');
+        let xlist = tissueTree.xScale.domain();
+        heatmap.update(dom, xlist, heatmap.yList);
     });
 
 

@@ -67,6 +67,12 @@ class Heatmap {
 
     }
 
+    update(dom, xList, yList, angle=30){
+        this._setXList(xList);
+        this._setYList(yList);
+        this.draw(dom, angle);
+    }
+
     draw(dom, angle=30){
         if (this.xList === undefined) this._setXList();
         if (this.yList === undefined) this._setYList();
@@ -74,18 +80,35 @@ class Heatmap {
 
         // TODO: creates separate panels for text labels?
         // text labels
+        // data join
         const xLabels = dom.selectAll(".xLabel")
-            .data(this.xList)
-            .enter().append("text")
-            .text((d) => d)
+            .data(this.xList);
+
+        // update old elements
+        xLabels.attr("transform", (d) => {
+                let x = this.xScale(d)+(this.xScale.bandwidth()/2) + 1;
+                let y = this.yScale.range()[1] + 17;
+                return `translate(${x}, ${y}) rotate(${angle})`;
+            })
+            .attr("class", (d, i) => `xLabel normal x${i}`);
+
+
+        // enter new elements and update
+        xLabels.enter().append("text")
             .attr("x", 0)
             .attr("y", 0)
             .attr("class", (d, i) => `xLabel normal x${i}`)
             .style("text-anchor", "start")
             .attr("transform", (d) => {
-                let x = this.xScale(d);
-                return `translate(${x+ (this.xScale.bandwidth()/2) + 1}, ${this.yScale.range()[1] + 17}) rotate(${angle})`;
-            });
+                let x = this.xScale(d)+(this.xScale.bandwidth()/2) + 1;
+                let y = this.yScale.range()[1] + 17;
+                return `translate(${x}, ${y}) rotate(${angle})`;
+            })
+            .merge(xLabels)
+            .text((d) => d);
+
+        // exit -- removes old elements as needed
+        xLabels.exit().remove();
 
         const yLabels = dom.selectAll(".yLabel")
             .data(this.yList)
@@ -138,8 +161,15 @@ class Heatmap {
                 .classed('highlighted', false);
             selected.classed('expressmap-highlighted', false);
         };
+        // data join
         const cells = dom.selectAll(".cell")
             .data(this.data, (d) => d.value);
+
+        // update old elements
+        cells.attr("x", (d) => this.xScale(d.x))
+            .attr("y", (d) => this.yScale(d.y))
+
+        // enter new elements
         cells.enter().append("rect")
             .attr("row", (d) => `x${this.xList.indexOf(d.x)}`)
             .attr("col", (d) => `y${this.yList.indexOf(d.y)}`)
@@ -156,28 +186,41 @@ class Heatmap {
             .merge(cells)
             .transition()
             .duration(2000)
-            .style("fill", (d) => d.originalValue==0?this.nullColor:this.colorScale(d.value))
+            .style("fill", (d) => d.originalValue==0?this.nullColor:this.colorScale(d.value));
 
+        // exit and remove
+        cells.exit().remove();
     }
 
 
 
-    _setXList() {
-        this.xList = replace()
-            .key((d) => d.x)
-            .entries(this.data)
-            .map((d) => d.key);
+    _setXList(newList) {
+        if(newList !== undefined){
+            this.xList = newList
+        }
+        else {
+            this.xList = replace()
+                .key((d) => d.x)
+                .entries(this.data)
+                .map((d) => d.key);
+        }
+
         this.xScale = d3.scaleBand()
             .domain(this.xList)
             .range([0, this.width])
             .padding(.05); // TODO: eliminate hard-coded value
     }
 
-    _setYList() {
-        this.yList = d3.nest()
+    _setYList(newList) {
+        if(newList !== undefined){
+            this.yList = newList
+        }
+        else {
+           this.yList = d3.nest()
             .key((d) => d.y)
             .entries(this.data)
             .map((d) => d.key);
+        }
         this.yScale = d3.scaleBand()
                 .domain(this.yList)
                 .range([0, this.height])
