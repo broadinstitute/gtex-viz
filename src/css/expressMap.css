@@ -1,12 +1,12 @@
 div{
     font-family: 'Libre Franklin', sans-serif;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 text.highlighted {
     font-family: 'Libre Franklin', sans-serif;
     font-weight: 400;
-    font-size: 11px;
+    font-size: 12px;
     text-decoration: underline;
 }
 
@@ -14,7 +14,7 @@ text.normal {
     fill: #111;
     font-family: 'Libre Franklin', sans-serif;
     font-weight: 300;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 text.clicked {

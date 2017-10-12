@@ -45,35 +45,34 @@ const heatmapConfig = {
 
 // -- heatmap panels
 
-let legendPanel = { // the color legend panel
-    x: 100, // TODO: eliminate hard-coded value
-    y: heatmapConfig.margin.top,
-    height: 50,
-    width: window.innerWidth - (150 + 150),
-    cell: {width: 60}
-};
-
 let topTreePanel = { // the color legend panel
     x: 100,
-    y: heatmapConfig.margin.top + legendPanel.height,
+    y: heatmapConfig.margin.top,
     height: 80,
     width: window.innerWidth - (150 + 150) // TODO: hard-coded
 };
 
 let leftTreePanel = { // the color legend panel
     x: heatmapConfig.margin.left,
-    y: heatmapConfig.margin.top + legendPanel.height + topTreePanel.height + 5,
+    y: heatmapConfig.margin.top + topTreePanel.height + 5,
     height: undefined,
     width: 100 - (heatmapConfig.margin.left + 5)
 };
 
 let heatmapPanel = {
     x: 100,
-    y: heatmapConfig.margin.top + legendPanel.height + topTreePanel.height + 5,
+    y: heatmapConfig.margin.top + topTreePanel.height + 5,
     height: undefined,
     width: window.innerWidth - (150 + 150)
 };
 
+let legendPanel = { // the color legend panel
+    x: 100, // TODO: eliminate hard-coded value
+    y: heatmapConfig.margin.top + topTreePanel.height + 5,
+    height: 50,
+    width: window.innerWidth - (150 + 150),
+    cell: {width: 60}
+};
 
 // initiates the svg
 let svg = d3.select(heatmapConfig.divId).append("svg")
@@ -130,17 +129,18 @@ function renderHeatmap(data, tissues){
     heatmap.xScale = tissueTree.xScale;
     heatmap.yScale = geneTree.yScale;
 
-    // renders the legend panel
-    const legendG = svg.append("g")
-        .attr('id', 'legendGroup')
-        .attr("transform", `translate(${legendPanel.x}, ${legendPanel.y})`);
-    heatmap.drawLegend(legendG, cellWidth=legendPanel.cell.width);
-
     // renders the heatmap panel
     const mapG = svg.append("g")
         .attr('id', 'mapGroup')
         .attr("transform", `translate(${heatmapPanel.x}, ${heatmapPanel.y})`);
     heatmap.draw(mapG);
+
+    // renders the legend panel
+    legendPanel.y += leftTreePanel.height + 150; // adjusts legend panel's y pos.
+    const legendG = svg.append("g")
+        .attr('id', 'legendGroup')
+        .attr("transform", `translate(${legendPanel.x}, ${legendPanel.y})`);
+    heatmap.drawLegend(legendG, cellWidth=legendPanel.cell.width);
 
     /////// tissue label modifications ///////
     const tissueHash = {}; // tissue objects indexed by tissue_id
@@ -266,8 +266,22 @@ function heatmapYLabelClick(d, id, xorder){
        boxplotConfig.data[d] = json;
        Plotly.newPlot('boxplot', d3.values(boxplotConfig.data), layout);
 
-   } )
+   } );
 }
+
+/////// toolbar events ///////
+d3.select("#sortTissuesByAlphabet")
+    .on("click", function(){
+        // hide the tissue dendrogram
+        d3.select('#topTreeGroup')
+            .style("display", "None");
+    });
+d3.select("#sortTissuesByClusters")
+    .on("click", function(){
+         // show the tissue dendrogram
+        d3.select('#topTreeGroup')
+            .style("display", "Block");
+    });
 
 
 

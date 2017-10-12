@@ -12,10 +12,6 @@ rect.expressmap-highlighted {
     stroke-width:2px;
 }
 
-.legend .normal {
-    fill: #a9a9a9;
-}
-
 .yLabel {
     cursor: pointer;
 }

@@ -59,13 +59,12 @@ class Heatmap {
             .attr("x", (d, i) => cellWidth * i)
             .attr("y", yAdjust + this.yScale.bandwidth()/2);
 
-        if(useLog){
-            legendGroups.append("text")
-                .attr("class", "normal")
-                .text("Median TPM")
-                .attr("x", cellWidth * 11)
-                .attr("y", yAdjust + this.yScale.bandwidth()/2)
-        }
+        dom.append("text")
+            .attr("class", "legend normal")
+            .text("Median TPM") // TODO: eliminated hard-coded values
+            .attr("x", cellWidth * 11)
+            .attr("y", yAdjust + this.yScale.bandwidth()/2)
+
     }
 
     draw(dom, angle=30){
