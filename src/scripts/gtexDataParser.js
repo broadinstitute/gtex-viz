@@ -1,3 +1,8 @@
+function getTissueJson(){
+    "use strict";
+    return data/tissues.json
+}
+
 function getMedianTPMJson(){
     return "data/genes.median.tpm.json";
 }
@@ -14,9 +19,9 @@ function getGeneClusters(){
 
 function getGtexURLs(){
     return {
-        "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id="
+        "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
+        "tissue": "https://gtexportal.org/rest/v1/dataset/color"
     }
-
 }
 
 function parseMedianTPM(data, useLog=true){
@@ -30,6 +35,10 @@ function parseMedianTPM(data, useLog=true){
         d.id = d.gencodeId;
     });
     return data;
+}
+
+function parseTissue(data){
+    return data.color
 }
 
 function parseGeneExpression(data, useLog=false, color="grey", xlist = []){

@@ -85,7 +85,7 @@ class Heatmap {
             .style("text-anchor", "start")
             .attr("transform", (d) => {
                 let x = this.xScale(d);
-                return `translate(${x}, ${this.yScale.range()[1] + 10}) rotate(${angle})`;
+                return `translate(${x+ (this.xScale.bandwidth()/2) + 1}, ${this.yScale.range()[1] + 17}) rotate(${angle})`;
             });
 
         const yLabels = dom.selectAll(".yLabel")

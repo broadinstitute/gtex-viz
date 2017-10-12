@@ -21,10 +21,10 @@ const urls = getGtexURLs();
 const boxplotConfig = {
     useLog: false,
     divId: "#boxplot",
-    colors: ["#bb453e", "#1c677f", "#078c84", "#b4486b", "grey"]
+    colors: ["#bb453e", "#1c677f", "#078c84", "#b4486b", "grey"], // TODO: add more colors
+    data: {}
 };
 
-let boxplotData = {};
 
 /////// heatmap rendering ///////
 // the tooltip <div>
@@ -40,7 +40,7 @@ const heatmapConfig = {
 // -- heatmap panels
 
 let legendPanel = { // the color legend panel
-    x: 150,
+    x: 100, // TODO: eliminate hard-coded value
     y: heatmapConfig.margin.top,
     height: 50,
     width: window.innerWidth - (150 + 150),
@@ -48,21 +48,21 @@ let legendPanel = { // the color legend panel
 };
 
 let topTreePanel = { // the color legend panel
-    x: 150,
+    x: 100,
     y: heatmapConfig.margin.top + legendPanel.height,
-    height: 120,
-    width: window.innerWidth - (150 + 150)
+    height: 80,
+    width: window.innerWidth - (150 + 150) // TODO: hard-coded
 };
 
 let leftTreePanel = { // the color legend panel
     x: heatmapConfig.margin.left,
     y: heatmapConfig.margin.top + legendPanel.height + topTreePanel.height + 5,
     height: undefined,
-    width: 150 - (heatmapConfig.margin.left + 5)
+    width: 100 - (heatmapConfig.margin.left + 5)
 };
 
 let heatmapPanel = {
-    x: 150,
+    x: 100,
     y: heatmapConfig.margin.top + legendPanel.height + topTreePanel.height + 5,
     height: undefined,
     width: window.innerWidth - (150 + 150)
@@ -82,7 +82,12 @@ const geneTree = new Dendrogram(getGeneClusters(), orientation='h');
 renderLeftTree(geneTree);
 
 // renders the heatmap
-d3.json(getMedianTPMJson(), renderHeatmap);
+d3.json(urls.tissue, function(error, data){
+    const tissues = parseTissue(data);
+    d3.json(getMedianTPMJson(), function(error, data){
+        renderHeatmap(data, tissues)
+    });
+});
 
 /////// helper functions ///////
 function renderTopTree(tree){
@@ -105,7 +110,7 @@ function renderLeftTree(tree){
     svg.attr("height", parseFloat(svg.attr("height")) + leftTreePanel.height);
 }
 
-function renderHeatmap(error, data){
+function renderHeatmap(data, tissues){
     // renders the heatmap
     // this heatmap is dependent of the dendrograms and must be rendered after the dendrograms
     // because the x and y scales are determined by the dendrograms.
@@ -130,6 +135,25 @@ function renderHeatmap(error, data){
         .attr('id', 'mapGroup')
         .attr("transform", `translate(${heatmapPanel.x}, ${heatmapPanel.y})`);
     heatmap.draw(mapG);
+
+    /////// tissue label modifications ///////
+    const tissueHash = {}; // tissue objects indexed by tissue_id
+    tissues.forEach((d) => {tissueHash[d.tissue_id] = d});
+    // change text to tissue names
+    d3.selectAll(".xLabel")
+        .text((d) => tissueHash[d].tissue_name);
+    // indexing tissue objects by tissue_id
+    // add tissue colors to the tissue labels (the x labels)
+
+    d3.select("#mapGroup").selectAll(".xColor")
+        .data(heatmap.xList)
+        .enter().append("circle")
+        .attr('cx', (d) => heatmap.xScale(d) + heatmap.xScale.bandwidth()/2)
+        .attr('cy', heatmap.yScale.range()[1] + 10) // TODO: eliminate hard-coded values
+        .attr("r", 3)
+        .attr("fill", (d) => `#${tissueHash[d].tissue_color_hex}`)
+        .attr("opacity", 0.5) // more subdued color
+        .attr("class", "xColor");
 
     // overrides the mouse events of the heatmap cells
     svg.selectAll(".cell")
@@ -201,7 +225,8 @@ function heatmapMouseout(d){
 }
 
 function heatmapYLabelClick(d, id, xorder){
-    console.log(`Click even has changed for ${d}`);
+    // overrides the ylabel's click event
+    // renders the expression boxplot
     var layout = {
         title: "",
         font: {
@@ -218,23 +243,22 @@ function heatmapYLabelClick(d, id, xorder){
         },
         showlegend: true
     };
-   // checks if the gene is already in boxplotData, if so, drops it:
-    if (boxplotData.hasOwnProperty(d)){
-        delete boxplotData[d];
-        d3.keys(boxplotData).forEach((d, i)=>{
-            boxplotData[d]["marker"]["color"] = boxplotConfig.colors[i] || "black";
+   // checks if the gene is already in boxplot.data, if so, drops it:
+    if (boxplotConfig.data.hasOwnProperty(d)){
+        delete boxplotConfig.data[d];
+        d3.keys(boxplotConfig.data).forEach((d, i)=>{
+            boxplotConfig.data[d]["marker"]["color"] = boxplotConfig.colors[i] || "black";
         });
-        Plotly.newPlot('boxplot', d3.values(boxplotData), layout);
+        Plotly.newPlot('boxplot', d3.values(boxplotConfig.data), layout);
         return;
     }
 
    const url = urls.geneExp + id;
    d3.json(url, function(error, data){
-        // let json = parseGeneExpression(data, boxplotConfig.useLog, xorder);
-       color = boxplotConfig.colors[d3.keys(boxplotData).length] || "black";
+       color = boxplotConfig.colors[d3.keys(boxplotConfig.data).length] || "black";
        let json = parseGeneExpression(data, boxplotConfig.useLog, color);
-       boxplotData[d] = json;
-       Plotly.newPlot('boxplot', d3.values(boxplotData), layout);
+       boxplotConfig.data[d] = json;
+       Plotly.newPlot('boxplot', d3.values(boxplotConfig.data), layout);
 
    } )
 }
