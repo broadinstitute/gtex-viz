@@ -1,14 +1,20 @@
 /*
 TODO:
 - Add a toggle option to switch between Tree clustering and Alphabetical order views
-- Create a UI to add or delete genes
-- Tissue label click event: expression boxplot of the genes in the tissue
+---- hide the tree, transform the map upwards
+---- sort the tissues alphbetically (use d3.exit())
+
+- Use a different gene list with different clusters
+- Create a UI to add or delete genes (by Monday)
+- Tissue label click event: expression boxplot of the genes in the tissue (by Tuseday?)
+- Document the current progress
+- Heatmap cell click event: expression distribution of all genes in a tissue and where the gene falls
 - Click Event: internal tree node
 - Add and delete genes (may not be possible without the web service and on-the-fly reclustering)
 - Backend web service and Gencode ID support
 - Rewrite data retrieval methods and parsers
 - Eliminate hard-coded values
-- node.js => Rollup packaging
+- Code using Node.js => Rollup packaging
 
 - circos for trans-eQTL
 - boxplots for cis-eQTL
