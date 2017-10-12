@@ -1,8 +1,8 @@
 /*
 TODO:
-- Tissue name to tissue id mapping.
-- Add GTEx tissue colors.
 - Add a toggle option to switch between Tree clustering and Alphabetical order views
+- Create a UI to add or delete genes
+- Tissue label click event: expression boxplot of the genes in the tissue
 - Click Event: internal tree node
 - Add and delete genes (may not be possible without the web service and on-the-fly reclustering)
 - Backend web service and Gencode ID support
@@ -180,7 +180,7 @@ function renderHeatmap(data, tissues){
             }
 
             const gencodeId = geneLookupTable[d];
-            heatmapYLabelClick(d, gencodeId, heatmap.xScale.domain());
+            heatmapYLabelClick(d, gencodeId, heatmap.xScale.domain().map((d)=>tissueHash[d].tissue_name));
         });
 }
 
@@ -256,7 +256,7 @@ function heatmapYLabelClick(d, id, xorder){
    const url = urls.geneExp + id;
    d3.json(url, function(error, data){
        color = boxplotConfig.colors[d3.keys(boxplotConfig.data).length] || "black";
-       let json = parseGeneExpression(data, boxplotConfig.useLog, color);
+       let json = parseGeneExpression(data, boxplotConfig.useLog, color, xorder);
        boxplotConfig.data[d] = json;
        Plotly.newPlot('boxplot', d3.values(boxplotConfig.data), layout);
 
