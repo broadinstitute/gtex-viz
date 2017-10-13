@@ -167,7 +167,9 @@ class Heatmap {
 
         // update old elements
         cells.attr("x", (d) => this.xScale(d.x))
-            .attr("y", (d) => this.yScale(d.y));
+            .attr("y", (d) => this.yScale(d.y))
+            .attr("row", (d) => `x${this.xList.indexOf(d.x)}`)
+            .attr("col", (d) => `y${this.yList.indexOf(d.y)}`);
 
         // enter new elements
         cells.enter().append("rect")
