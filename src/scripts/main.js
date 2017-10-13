@@ -245,7 +245,7 @@ function heatmapMouseover(d) {
         .classed('normal', false)
         .classed('highlighted', true);
     selected.classed('expressmap-highlighted', true);
-    let row = d.x;
+    let row = tissueHash[d.x].tissue_name;
     let column = d.y;
 
     tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
