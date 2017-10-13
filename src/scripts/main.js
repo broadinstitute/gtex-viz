@@ -27,7 +27,7 @@ const urls = getGtexURLs();
 const boxplotConfig = {
     useLog: false,
     divId: "#boxplot",
-    colors: ["#bb453e", "#1c677f", "#078c84", "#b4486b", "grey"], // TODO: add more colors
+    colors: ["grey","#bb453e", "#1c677f", "#078c84", "#b4486b"], // TODO: add more colors
     data: {}
 };
 
@@ -41,7 +41,7 @@ const tooltip = new Tooltip("tooltip", false);
 
 const heatmapConfig = {
     useLog: true,
-    margin: {left: 10, top: 10, bottom: 150},
+    margin: {left: 10, top: 10, bottom: 170},
     divId: "#chart",
     cell: {height: 11},
 };
@@ -181,17 +181,36 @@ function renderHeatmap(data, tissues){
     // console.log(geneLookupTable);
     svg.selectAll(".yLabel")
         .on("click", function(d, i){
-
-            // toggles the styling class
             let selected = d3.select(this);
-            if (selected.classed("clicked")){
-                selected.classed("clicked", false)
-            } else{
-                selected.classed("clicked", true);
+            if (d3.event.altKey)  {
+                // an alt-click event
+                if (!selected.classed("clicked")){
+                    selected.classed("clicked", true);
+
+                }
+            }
+            else {
+                // a click event
+                // clears boxplot data
+                // selects or de-selects the gene
+                // toggles the styling class
+
+                if (selected.classed("clicked")){
+                    // d3.selectAll(".clicked").classed("clicked", false);
+                    selected.classed("clicked", false);
+                } else{
+                    boxplotConfig.data = {};
+                    d3.selectAll(".clicked").classed("clicked", false);
+                    selected.classed("clicked", true);
+
+                }
+
             }
 
+            // renders the boxplot
             const gencodeId = geneLookupTable[d];
             heatmapYLabelClick(d, gencodeId, heatmap.xScale.domain().map((d)=>tissueHash[d].tissue_name));
+
         });
 }
 
