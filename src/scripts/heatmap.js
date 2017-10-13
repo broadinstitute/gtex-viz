@@ -50,20 +50,20 @@ class Heatmap {
             .attr("x", (d, i) => cellWidth*i)
             .attr("y", 5)
             .attr("width", cellWidth)
-            .attr("height", this.yScale.bandwidth()/2)
+            .attr("height", this.yScale.bandwidth())
             .style("fill", (d) => d==0?this.nullColor:this.colorScale(d));
 
         legendGroups.append("text")
             .attr("class", "normal")
             .text((d) => d==0?"NA":"≥ " + Math.pow(2, d).toPrecision(2))
             .attr("x", (d, i) => cellWidth * i)
-            .attr("y", yAdjust + this.yScale.bandwidth()/2);
+            .attr("y", yAdjust + this.yScale.bandwidth());
 
         dom.append("text")
             .attr("class", "legend normal")
             .text("Median TPM") // TODO: eliminated hard-coded values
             .attr("x", cellWidth * 11)
-            .attr("y", yAdjust + this.yScale.bandwidth()/2)
+            .attr("y", yAdjust + this.yScale.bandwidth())
 
     }
 
@@ -167,7 +167,7 @@ class Heatmap {
 
         // update old elements
         cells.attr("x", (d) => this.xScale(d.x))
-            .attr("y", (d) => this.yScale(d.y))
+            .attr("y", (d) => this.yScale(d.y));
 
         // enter new elements
         cells.enter().append("rect")

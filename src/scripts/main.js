@@ -1,12 +1,9 @@
 /*
 TODO:
-- Add a toggle option to switch between Tree clustering and Alphabetical order views
----- hide the tree, transform the map upwards
----- sort the tissues alphbetically (use d3.exit())
-
-- Use a different gene list with different clusters
-- Create a UI to add or delete genes (by Monday)
-- Tissue label click event: expression boxplot of the genes in the tissue (by Tuseday?)
+- Use a different gene list with different clusters (today)
+- Json calls of the newick data
+- Tissue label click event: expression boxplot of the genes in the tissue (by Monday)
+- Create a UI to add or delete genes (by Tuesday)
 - Document the current progress
 - Heatmap cell click event: expression distribution of all genes in a tissue and where the gene falls
 - Click Event: internal tree node
@@ -37,7 +34,7 @@ const tissueHash = {}; // tissue objects indexed by tissue_id
 
 /////// heatmap rendering ///////
 // the tooltip <div>
-const tooltip = new Tooltip("tooltip", false);
+const tooltip = new Tooltip("tooltip", true);
 
 const heatmapConfig = {
     useLog: true,
@@ -82,6 +79,7 @@ let legendPanel = { // the color legend panel
 let svg = d3.select(heatmapConfig.divId).append("svg")
     .attr("width", window.innerWidth - heatmapConfig.margin.left)
     .attr("height", heatmapConfig.margin.top + legendPanel.height + heatmapConfig.margin.bottom);
+
 // renders the tissue tree
 const tissueTree = new Dendrogram(getTissueClusters(), orientation='v');
 renderTopTree(tissueTree);
@@ -156,15 +154,8 @@ function renderHeatmap(data, tissues){
         .text((d) => tissueHash[d].tissue_name);
 
     // add tissue colors to the tissue labels (the x labels)
-    d3.select("#mapGroup").selectAll(".xColor")
-        .data(heatmap.xList)
-        .enter().append("circle")
-        .attr('cx', (d) => heatmap.xScale(d) + heatmap.xScale.bandwidth()/2)
-        .attr('cy', heatmap.yScale.range()[1] + 10) // TODO: eliminate hard-coded values
-        .attr("r", 3)
-        .attr("fill", (d) => `#${tissueHash[d].tissue_color_hex}`)
-        .attr("opacity", 0.5) // more subdued color
-        .attr("class", "xColor");
+    addTissueColors();
+
 
     // overrides the mouse events of the heatmap cells
     svg.selectAll(".cell")
@@ -212,6 +203,19 @@ function renderHeatmap(data, tissues){
             heatmapYLabelClick(d, gencodeId, heatmap.xScale.domain().map((d)=>tissueHash[d].tissue_name));
 
         });
+}
+
+/////// customized heatmap components ///////
+function addTissueColors(){
+      d3.select("#mapGroup").selectAll(".xColor")
+        .data(heatmap.xList)
+        .enter().append("circle")
+        .attr('cx', (d) => heatmap.xScale(d) + heatmap.xScale.bandwidth()/2)
+        .attr('cy', heatmap.yScale.range()[1] + 10) // TODO: eliminate hard-coded values
+        .attr("r", 3)
+        .attr("fill", (d) => `#${tissueHash[d].tissue_color_hex}`)
+        .attr("opacity", 0.5) // more subdued color
+        .attr("class", "xColor");
 }
 
 /////// customized heatmap mouse events ///////

@@ -78,8 +78,10 @@ def generate_matrix(df, value="medianTPM", row="geneSymbol", col="tissueId", adj
 
 if __name__ == '__main__':
 
-    data_file = "~/Sites/expressMap/genes.median.tpm.csv"
-    data_frame = pandas.read_csv(data_file, sep="\t")
+    # data_file = "~/Sites/expressMap/genes.median.tpm.csv"
+    dfile = input("Enter a csv file:") # must have the medianTPM, geneSymbol, tissueId fields
+    print dfile
+    data_frame = pandas.read_csv(dfile, sep="\t")
 
     # first generates gene clusters based on expression in tissues
     mat, leaf_labels = generate_matrix(data_frame)
