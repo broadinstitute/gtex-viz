@@ -31,6 +31,9 @@ const boxplotConfig = {
     data: {}
 };
 
+/////// tissue related variables ///////
+const tissueHash = {}; // tissue objects indexed by tissue_id
+
 
 /////// heatmap rendering ///////
 // the tooltip <div>
@@ -134,8 +137,6 @@ function renderHeatmap(data, tissues){
     let yList = geneTree.yScale.domain();
     heatmap.update(mapG, xList, yList);
 
-
-
     // renders the legend panel
     legendPanel.y += leftTreePanel.height + 150; // adjusts legend panel's y pos.
     const legendG = svg.append("g")
@@ -144,14 +145,17 @@ function renderHeatmap(data, tissues){
     heatmap.drawLegend(legendG, cellWidth=legendPanel.cell.width);
 
     /////// tissue label modifications ///////
-    const tissueHash = {}; // tissue objects indexed by tissue_id
+    // the tree clusters and tpm expression data use tissue IDs
+    // the featureExpression web service, however, uses tissue names
+    // tissue ID <=> tissue name mapping is required
+
     tissues.forEach((d) => {tissueHash[d.tissue_id] = d});
-    // change text to tissue names
+
+    // change the tissue display to tissue names
     d3.selectAll(".xLabel")
         .text((d) => tissueHash[d].tissue_name);
-    // indexing tissue objects by tissue_id
-    // add tissue colors to the tissue labels (the x labels)
 
+    // add tissue colors to the tissue labels (the x labels)
     d3.select("#mapGroup").selectAll(".xColor")
         .data(heatmap.xList)
         .enter().append("circle")
@@ -266,6 +270,7 @@ function heatmapYLabelClick(d, id, xorder){
        let json = parseGeneExpression(data, boxplotConfig.useLog, color, xorder);
        boxplotConfig.data[d] = json;
        Plotly.newPlot('boxplot', d3.values(boxplotConfig.data), layout);
+       d3.select('#boxplot').style("opacity", 1.0);
 
    } );
 }
@@ -273,23 +278,40 @@ function heatmapYLabelClick(d, id, xorder){
 /////// toolbar events ///////
 d3.select("#sortTissuesByAlphabet")
     .on("click", function(){
-        // hide the tissue dendrogram
+        // hides the tissue dendrogram
         d3.select('#topTreeGroup')
             .style("display", "None");
         let xlist = heatmap.xList.sort();
-        console.log(xlist);
-        let dom = d3.select('#mapGroup');
-        heatmap.update(dom, xlist, heatmap.yList);
+        sortTissueClickHelper(xlist);
     });
+
 d3.select("#sortTissuesByClusters")
     .on("click", function(){
          // show the tissue dendrogram
         d3.select('#topTreeGroup')
             .style("display", "Block");
-        let dom = d3.select('#mapGroup');
         let xlist = tissueTree.xScale.domain();
-        heatmap.update(dom, xlist, heatmap.yList);
+        sortTissueClickHelper(xlist);
     });
+
+function sortTissueClickHelper(xlist){
+    // updates the heatmap
+    let dom = d3.select('#mapGroup');
+    heatmap.update(dom, xlist, heatmap.yList);
+
+    // changes the tissue display text to tissue names
+    d3.selectAll(".xLabel")
+        .text((d) => tissueHash[d].tissue_name);
+
+    // hides the boxplot
+    d3.select('#boxplot').style("opacity", 0.0);
+
+    // deselects genes
+    d3.selectAll(".yLabel").classed("clicked", false);
+    boxplotConfig.data = {};
+
+}
+
 
 
 
