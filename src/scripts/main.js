@@ -207,15 +207,24 @@ function renderHeatmap(data, tissues){
 
 /////// customized heatmap components ///////
 function addTissueColors(){
-      d3.select("#mapGroup").selectAll(".xColor")
-        .data(heatmap.xList)
-        .enter().append("circle")
+    // data joining
+    const dots = d3.select("#mapGroup").selectAll(".xColor")
+        .data(heatmap.xList);
+
+    // update old elements
+    dots.attr("fill", (d) => `#${tissueHash[d].tissue_color_hex}`);
+
+    // enter new elements
+    dots.enter().append("circle")
         .attr('cx', (d) => heatmap.xScale(d) + heatmap.xScale.bandwidth()/2)
         .attr('cy', heatmap.yScale.range()[1] + 10) // TODO: eliminate hard-coded values
         .attr("r", 3)
         .attr("fill", (d) => `#${tissueHash[d].tissue_color_hex}`)
-        .attr("opacity", 0.5) // more subdued color
+        .attr("opacity", 0.75) // more subdued color
         .attr("class", "xColor");
+
+    // exit and remove
+    dots.exit().remove();
 }
 
 /////// customized heatmap mouse events ///////
@@ -325,6 +334,7 @@ function sortTissueClickHelper(xlist){
     // changes the tissue display text to tissue names
     d3.selectAll(".xLabel")
         .text((d) => tissueHash[d].tissue_name);
+    addTissueColors();
 
     // hides the boxplot
     d3.select('#boxplot').style("opacity", 0.0);
