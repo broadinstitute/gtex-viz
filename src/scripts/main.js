@@ -1,21 +1,19 @@
 /*
 TODO:
-- Click Event: internal tree node
-- Top 100 expressed in each tissue
-- Tissue label click event: expression boxplot of the genes in the tissue (by Monday)
-- Document the current progress
+- Design tool bar icons.
+- Use Node.js,
+- then use Rollup for packaging the javascripts.
+
+- Tissue label click event: expression boxplot of the genes in the tissue, maybe?
+- Document the current progress.
 - Heatmap cell click event: expression distribution of all genes in a tissue and where the gene falls
-- Add and delete genes (may not be possible without the web service and on-the-fly reclustering)
-- Backend web service and Gencode ID support
-- Rewrite data retrieval methods and parsers
+
 - Eliminate hard-coded values
-- Code using Node.js => Rollup packaging
-- Json calls of the newick data
 
-- circos for trans-eQTL
-- boxplots for cis-eQTL
+--- API related ---
+- Need an API for re-clustering genes: this is required in order to edit the gene list.
+- Rewrite data retrieval methods and parsers
  */
-
 
 const urls = getGtexURLs();
 
