@@ -27,7 +27,7 @@ Then, you will be able to see the demo in a web browser at:
 - **Click** shows the gene's detailed expression boxplot.
 - **Alt-Click** adds the gene to the existing boxplot.
 #### Cell
-- **Mouseover** reports the underlying expresion data in the tooltip.
+- **Mouseover** reports the underlying expression data in the tooltip.
 
 ### Dendrogram
 #### Internal node:
