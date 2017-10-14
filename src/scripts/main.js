@@ -3,7 +3,6 @@ TODO:
 - Click Event: internal tree node
 - Top 100 expressed in each tissue
 - Tissue label click event: expression boxplot of the genes in the tissue (by Monday)
-- Create a UI to add or delete genes (by Tuesday)
 - Document the current progress
 - Heatmap cell click event: expression distribution of all genes in a tissue and where the gene falls
 - Add and delete genes (may not be possible without the web service and on-the-fly reclustering)
@@ -43,19 +42,19 @@ const heatmapConfig = {
     cell: {height: 11},
 };
 
-// -- heatmap panels
+// configures the heatmap panels
 
-let topTreePanel = { // the color legend panel
+let topTreePanel = { // the tissue dendrogram panel
     x: 100,
     y: heatmapConfig.margin.top,
     height: 80,
-    width: window.innerWidth - (150 + 150) // TODO: hard-coded
+    width: window.innerWidth - (150 + 150) // TODO: get rid of hard-coded values
 };
 
-let leftTreePanel = { // the color legend panel
+let leftTreePanel = { // the gene dendrogram panel
     x: heatmapConfig.margin.left,
     y: heatmapConfig.margin.top + topTreePanel.height + 5,
-    height: undefined,
+    height: undefined, // data-dependent
     width: 100 - (heatmapConfig.margin.left + 5)
 };
 
@@ -63,7 +62,7 @@ let heatmap = undefined;
 let heatmapPanel = {
     x: 100,
     y: heatmapConfig.margin.top + topTreePanel.height + 5,
-    height: undefined,
+    height: undefined, // data-dependent and should align with the gene dendrogram
     width: window.innerWidth - (150 + 150)
 };
 
@@ -151,59 +150,55 @@ function renderHeatmap(data, tissues){
     heatmap.drawLegend(legendG, cellWidth=legendPanel.cell.width);
 
     /////// tissue label modifications ///////
-    // the tree clusters and tpm expression data use tissue IDs
-    // the featureExpression web service, however, uses tissue names
-    // tissue ID <=> tissue name mapping is required
+    // the tree clusters and tpm expression data use tissue IDs.
+    // the featureExpression web service, however, uses tissue names.
+    // tissue ID <=> tissue name mapping is required.
+    // This is a temporary solution, the inconsistency of tissue ID/name should be a backend fix.
 
     tissues.forEach((d) => {tissueHash[d.tissue_id] = d});
 
-    // change the tissue display to tissue names
+    // displays tissue names in the heatmap
     d3.selectAll(".xLabel")
         .text((d) => tissueHash[d].tissue_name);
 
-    // add tissue colors to the tissue labels (the x labels)
+    // adds tissue colors to the tissue labels (the x labels)
     addTissueColors();
 
 
-    // overrides the mouse events of the heatmap cells
+    // overrides the mouse events of the cells
     svg.selectAll(".cell")
         .on("mouseover", heatmapMouseover)
         .on("mouseout", heatmapMouseout);
 
-    // id mapping
+    // gene symbol to gencode ID mapping: a preparation step for the gene APIs
     const geneLookupTable = {}; // constructs a symbol => gencode ID lookup table
-    d3.nest()
+    d3.nest() // TODO: change to a simple forEach loop to build the lookup table...
         .key((d) => d.y)
         .entries(json)
         .forEach((d) => {geneLookupTable[d.key] = d.values[0].id});
 
-    // console.log(geneLookupTable);
+    // overrides and customizes the click event of the gene labels
+    // click: render the gene's boxplot
+    // alt-click: add a gene to the current boxplot
     svg.selectAll(".yLabel")
         .on("click", function(d, i){
             let selected = d3.select(this);
             if (d3.event.altKey)  {
-                // an alt-click event
-                if (!selected.classed("clicked")){
+                // if alt key is pressed, it's an alt-click event
+                if (!selected.classed("clicked")){ // highlights the gene
                     selected.classed("clicked", true);
-
                 }
             }
             else {
                 // a click event
-                // clears boxplot data
-                // selects or de-selects the gene
-                // toggles the styling class
-
+                // toggles the css class: clicked
                 if (selected.classed("clicked")){
-                    // d3.selectAll(".clicked").classed("clicked", false);
-                    selected.classed("clicked", false);
+                    selected.classed("clicked", false); // deselects the gene
                 } else{
-                    boxplotConfig.data = {};
-                    d3.selectAll(".clicked").classed("clicked", false);
-                    selected.classed("clicked", true);
-
+                    boxplotConfig.data = {}; // clears the existing boxplot data
+                    d3.selectAll(".clicked").classed("clicked", false); // clears all clicked genes if any
+                    selected.classed("clicked", true); // selects the gene
                 }
-
             }
 
             // renders the boxplot
@@ -213,16 +208,16 @@ function renderHeatmap(data, tissues){
         });
 }
 
-/////// customized heatmap components ///////
+/////// defines heatmap components ///////
 function addTissueColors(){
     // data joining
-    const dots = d3.select("#mapGroup").selectAll(".xColor")
+    let dots = d3.select("#mapGroup").selectAll(".xColor")
         .data(heatmap.xList);
 
-    // update old elements
+    // updates old elements
     dots.attr("fill", (d) => `#${tissueHash[d].tissue_color_hex}`);
 
-    // enter new elements
+    // enters new elements
     dots.enter().append("circle")
         .attr('cx', (d) => heatmap.xScale(d) + heatmap.xScale.bandwidth()/2)
         .attr('cy', heatmap.yScale.range()[1] + 10) // TODO: eliminate hard-coded values
@@ -231,11 +226,11 @@ function addTissueColors(){
         .attr("opacity", 0.75) // more subdued color
         .attr("class", "xColor");
 
-    // exit and remove
+    // removes retired elements
     dots.exit().remove();
 }
 
-/////// customized tree mouse events ///////
+/////// defines tree mouse events ///////
 function treeMouseover(d){
     d3.select(this)
         .attr("r", 6)
@@ -250,7 +245,7 @@ function treeMouseout(d){
     const leaves = d.leaves().map((node)=>node.data.name);
     tooltip.hide();
 }
-/////// customized heatmap mouse events ///////
+/////// defines heatmap mouse events ///////
 function heatmapMouseover(d) {
     // overrides the heatmap cell's mouseover event
     // dependencies -- css classes
@@ -333,18 +328,16 @@ function heatmapYLabelClick(d, id, xorder){
 /////// toolbar events ///////
 d3.select("#sortTissuesByAlphabet")
     .on("click", function(){
-        // hides the tissue dendrogram
         d3.select('#topTreeGroup')
-            .style("display", "None");
+            .style("display", "None"); // hides the tissue dendrogram
         let xlist = heatmap.xList.sort();
         sortTissueClickHelper(xlist);
     });
 
 d3.select("#sortTissuesByClusters")
     .on("click", function(){
-         // show the tissue dendrogram
         d3.select('#topTreeGroup')
-            .style("display", "Block");
+            .style("display", "Block");  // shows the tissue dendrogram
         let xlist = tissueTree.xScale.domain();
         sortTissueClickHelper(xlist);
     });
