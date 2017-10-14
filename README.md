@@ -20,7 +20,9 @@ Then, you will be able to see the demo in a web browser at:
 
 ## UI features
 ### Toolbar
-- Tissue columns can be sorted alphabetically.
+#### Tissue columns 
+- By default, the tissue columns in the heatmap are arranged according to the tissue dendrogram (the leaf nodes). 
+- Alternatively, tissues can be sorted alphabetically. The tissue dendrogram is hidden in this view mode.
 
 ### Heatmap 
 #### Gene label 
