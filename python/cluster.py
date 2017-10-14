@@ -16,7 +16,7 @@ def test_clustering(z, d):
 def to_newick(node, newick, parent_dist, leaf_names):
     '''
     reports the tree structure in the Newick format.
-    a depth-first search, pre-order traversal
+    a depth-first search, postorder traversal
 
     :param node: a tree node
     :param newick: a string in newick format
@@ -49,7 +49,6 @@ def cluster(m, method = "ward"):
     performs the hierarchical clustering
     '''
 
-    # the Ward variance minimization algorithm.
     Z = linkage(m, method)
 
     # tests the clustering results
