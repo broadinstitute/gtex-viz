@@ -79,7 +79,7 @@ def generate_matrix(df, value="medianTPM", row="geneSymbol", col="tissueId", adj
 if __name__ == '__main__':
 
     # data_file = "~/Sites/expressMap/genes.median.tpm.csv"
-    dfile = input("Enter a csv file:") # must have the medianTPM, geneSymbol, tissueId fields
+    dfile = input("Enter a tsv file:") # must have the medianTPM, geneSymbol, tissueId fields
     print dfile
     data_frame = pandas.read_csv(dfile, sep="\t")
 
