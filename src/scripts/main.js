@@ -1,17 +1,17 @@
 /*
 TODO:
-- Use a different gene list with different clusters (today)
-- Json calls of the newick data
+- Click Event: internal tree node
+- Top 100 expressed in each tissue
 - Tissue label click event: expression boxplot of the genes in the tissue (by Monday)
 - Create a UI to add or delete genes (by Tuesday)
 - Document the current progress
 - Heatmap cell click event: expression distribution of all genes in a tissue and where the gene falls
-- Click Event: internal tree node
 - Add and delete genes (may not be possible without the web service and on-the-fly reclustering)
 - Backend web service and Gencode ID support
 - Rewrite data retrieval methods and parsers
 - Eliminate hard-coded values
 - Code using Node.js => Rollup packaging
+- Json calls of the newick data
 
 - circos for trans-eQTL
 - boxplots for cis-eQTL
@@ -104,7 +104,10 @@ function renderTopTree(tree){
         .attr("transform", `translate(${topTreePanel.x}, ${topTreePanel.y})`);
     tree.draw(topTreeG, topTreePanel.width, topTreePanel.height);
     svg.attr("height", parseFloat(svg.attr("height")) + topTreePanel.height);
-
+    // overrides mouse events
+    topTreeG.selectAll('.node')
+        .on('mouseover', treeMouseover)
+        .on('mouseout', treeMouseout);
 }
 
 function renderLeftTree(tree){
@@ -115,6 +118,11 @@ function renderLeftTree(tree){
         .attr("transform", `translate(${leftTreePanel.x}, ${leftTreePanel.y})`);
     tree.draw(leftTreeG, leftTreePanel.width, leftTreePanel.height);
     svg.attr("height", parseFloat(svg.attr("height")) + leftTreePanel.height);
+
+    // overrides mouse events
+    leftTreeG.selectAll('.node')
+        .on('mouseover', treeMouseover)
+        .on('mouseout', treeMouseout);
 }
 
 function renderHeatmap(data, tissues){
@@ -227,6 +235,21 @@ function addTissueColors(){
     dots.exit().remove();
 }
 
+/////// customized tree mouse events ///////
+function treeMouseover(d){
+    d3.select(this)
+        .attr("r", 6)
+        .attr("fill", "red");
+    const leaves = d.leaves().map((node)=>node.data.name);
+    tooltip.show(`${leaves.join("<br>")}`);
+}
+function treeMouseout(d){
+    d3.select(this)
+        .attr("r", 1.5)
+        .attr("fill", "#333");
+    const leaves = d.leaves().map((node)=>node.data.name);
+    tooltip.hide();
+}
 /////// customized heatmap mouse events ///////
 function heatmapMouseover(d) {
     // overrides the heatmap cell's mouseover event

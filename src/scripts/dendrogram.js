@@ -94,6 +94,7 @@ class Dendrogram {
             .attr("stroke-width", 1); // TODO: eliminate hard-coded value
 
         // for all internal nodes
+        // TODO: write a recursive function to draw the arms and nodes
         const inodes = this.root.descendants().filter((d)=>d.height).sort((a,b)=>b.height-a.height);
         dom.selectAll('.arm')
             .data(inodes)
@@ -110,11 +111,19 @@ class Dendrogram {
             .enter().append("circle")
             .attr("cx", (d) => d.x)
             .attr("cy", (d) => d.y + this.yScale.bandwidth()/2)
-            .attr("r", 2.5) // TODO: eliminate hard-coded value
-            // .attr("fill", "#8DCDC1") // TODO: eliminate hard-coded value
+            .attr("r", 1.5) // TODO: eliminate hard-coded value
+            // .attr("fill", "#8DCDC1") // TODO: eliminate hard-coded value, use css class
             // .attr("fill", "#4b8699")
-            .attr('fill', '#fc8d59')
-            .attr("opacity", 0.5);
+            .attr('fill', '#333')
+            .attr("opacity", 0.5)
+            .attr("class", "node")
+            .on("mouseover", function(d){
+                d3.select(this).attr("r", 3);
+                console.log(d.leaves());
+            })
+            .on("mouseout", function(d){
+                d3.select(this).attr("r", 1.5)
+            });
 
         // axis
         // Add the x Axis
@@ -179,11 +188,19 @@ class Dendrogram {
             .enter().append("circle")
             .attr("cx", (d) => d.x + this.xScale.bandwidth()/2)
             .attr("cy", (d) => d.y)
-            .attr("r", 2.5) // TODO: eliminate hard-coded value
+            .attr("r", 1.5) // TODO: eliminate hard-coded value
             // .attr("fill", "#8DCDC1") // TODO: eliminate hard-coded value
             // .attr("fill", "#4b8699")
-            .attr('fill', '#fc8d59')
-            .attr("opacity", 0.5);
+            .attr('fill', '#333')
+            .attr("opacity", 0.5)
+            .attr("class", "node")
+            .on("mouseover", function(d){
+                d3.select(this).attr("r", 3);
+                console.log(d.leaves());
+            })
+            .on("mouseout", function(d){
+                d3.select(this).attr("r", 1.5)
+            });
 
         // axis
         // Add the x Axis
