@@ -20,19 +20,19 @@ Then, you will be able to see the demo in a web browser at:
 
 ## UI features
 ### Toolbar
-#### Tissue columns 
+#### Tissue column sorting options 
 - By default, the tissue columns in the heatmap are arranged according to the tissue dendrogram (the leaf nodes). 
 - Alternatively, tissues can be sorted alphabetically. The tissue dendrogram is hidden in this view mode.
 
-### Heatmap 
-#### Gene label 
+### Heatmap mouse events
+#### Gene label
 - **Click** shows the gene's detailed expression boxplot.
 - **Alt-Click** adds the gene to the existing boxplot.
 #### Cell
 - **Mouseover** reports the underlying expression data in the tooltip.
 
-### Dendrogram
-#### Internal node:
+### Dendrogram mouse events
+#### Internal node
 - **Mouseover** reports the leaf nodes in the tooltip.
 
 
