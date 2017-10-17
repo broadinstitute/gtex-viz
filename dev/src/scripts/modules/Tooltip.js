@@ -1,4 +1,4 @@
-import {select} from "d3-selection";
+import {select, event} from "d3-selection";
 import {transition} from "d3-transition";
 export default class Tooltip {
     constructor(id, verbose=true, offsetX=20, offsetY=-80, duration=200){
