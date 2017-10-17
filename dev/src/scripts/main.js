@@ -1,4 +1,4 @@
-import {getGtexURLs, getTissueClusters} from './modules/gtexDataParser';
+import {getGtexURLs, getTissueClusters, getGeneClusters} from './modules/gtexDataParser';
 import {select} from "d3-selection";
 import Dendrogram from "./modules/Dendrogram";
 import Tooltip from "./modules/Tooltip";
@@ -45,18 +45,41 @@ let legendPanel = { // the color legend panel
 };
 
 // initiates the svg
-const tooltip = new Tooltip("tooltip", true);
 
 let svg = select(heatmapConfig.divId).append("svg")
     .attr("width", window.innerWidth - heatmapConfig.margin.left)
     .attr("height", heatmapConfig.margin.top + legendPanel.height + heatmapConfig.margin.bottom);
 
+// renders the tissue tree
 const tissueTree = new Dendrogram(getTissueClusters(), 'v');
 renderTopTree(tissueTree);
 
+// renders the gene tree
+const geneTree = new Dendrogram(getGeneClusters(), 'h');
+renderLeftTree(geneTree);
+
 let heatmap = undefined;
 
+/////// customized mouse events ///////
+const tooltip = new Tooltip("tooltip", true);
+
+function treeMouseover(d){
+    select(this)
+        .attr("r", 6)
+        .attr("fill", "red");
+    const leaves = d.leaves().map((node)=>node.data.name);
+    tooltip.show(`${leaves.join("<br>")}`);
+}
+function treeMouseout(d){
+    select(this)
+        .attr("r", 1.5)
+        .attr("fill", "#333");
+    const leaves = d.leaves().map((node)=>node.data.name);
+    tooltip.hide();
+}
+
 /////// visualization helper functions ///////
+
 function renderTopTree(tree){
     // renders the tissue dendrogram
     const topTreeG = svg.append("g")
@@ -64,22 +87,23 @@ function renderTopTree(tree){
         .attr("transform", `translate(${topTreePanel.x}, ${topTreePanel.y})`);
     tree.draw(topTreeG, topTreePanel.width, topTreePanel.height);
     svg.attr("height", parseFloat(svg.attr("height")) + topTreePanel.height);
-    // overrides mouse events
-    const treeMouseover = function(d){
-        select(this)
-            .attr("r", 6)
-            .attr("fill", "red");
-        const leaves = d.leaves().map((node)=>node.data.name);
-        tooltip.show(`${leaves.join("<br>")}`);
-    };
-    const treeMouseout = function(d){
-        select(this)
-            .attr("r", 1.5)
-            .attr("fill", "#333");
-        const leaves = d.leaves().map((node)=>node.data.name);
-        tooltip.hide();
-    };
+
     topTreeG.selectAll('.node')
+        .on('mouseover', treeMouseover)
+        .on('mouseout', treeMouseout);
+}
+
+function renderLeftTree(tree){
+    // renders the gene dendrogram
+    leftTreePanel.height = heatmapConfig.cell.height * tree.leaves.length;
+    const leftTreeG = svg.append("g")
+        .attr('id', 'leftTreeGroup')
+        .attr("transform", `translate(${leftTreePanel.x}, ${leftTreePanel.y})`);
+    tree.draw(leftTreeG, leftTreePanel.width, leftTreePanel.height);
+    svg.attr("height", parseFloat(svg.attr("height")) + leftTreePanel.height);
+
+    // overrides mouse events
+    leftTreeG.selectAll('.node')
         .on('mouseover', treeMouseover)
         .on('mouseout', treeMouseout);
 }
