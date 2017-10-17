@@ -1,7 +1,7 @@
-import {getGtexURLs} from './modules/gtexDataParser';
+import {getGtexURLs, getTissueClusters} from './modules/gtexDataParser';
 import {select} from "d3-selection";
-
-let heatmap = undefined;
+import Dendrogram from "./modules/Dendrogram";
+import Tooltip from "./modules/Tooltip";
 
 const urls = getGtexURLs();
 
@@ -45,6 +45,41 @@ let legendPanel = { // the color legend panel
 };
 
 // initiates the svg
+const tooltip = new Tooltip("tooltip", true);
+
 let svg = select(heatmapConfig.divId).append("svg")
     .attr("width", window.innerWidth - heatmapConfig.margin.left)
     .attr("height", heatmapConfig.margin.top + legendPanel.height + heatmapConfig.margin.bottom);
+
+const tissueTree = new Dendrogram(getTissueClusters(), 'v');
+renderTopTree(tissueTree);
+
+let heatmap = undefined;
+
+/////// visualization helper functions ///////
+function renderTopTree(tree){
+    // renders the tissue dendrogram
+    const topTreeG = svg.append("g")
+        .attr('id', 'topTreeGroup')
+        .attr("transform", `translate(${topTreePanel.x}, ${topTreePanel.y})`);
+    tree.draw(topTreeG, topTreePanel.width, topTreePanel.height);
+    svg.attr("height", parseFloat(svg.attr("height")) + topTreePanel.height);
+    // overrides mouse events
+    const treeMouseover = function(d){
+        select(this)
+            .attr("r", 6)
+            .attr("fill", "red");
+        const leaves = d.leaves().map((node)=>node.data.name);
+        tooltip.show(`${leaves.join("<br>")}`);
+    };
+    const treeMouseout = function(d){
+        select(this)
+            .attr("r", 1.5)
+            .attr("fill", "#333");
+        const leaves = d.leaves().map((node)=>node.data.name);
+        tooltip.hide();
+    };
+    topTreeG.selectAll('.node')
+        .on('mouseover', treeMouseover)
+        .on('mouseout', treeMouseout);
+}
