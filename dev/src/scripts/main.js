@@ -13,7 +13,8 @@ import {
     getGeneClusters,
     getMedianTPMJson,
     parseTissue,
-    parseMedianTPM
+    parseMedianTPM,
+    parseGeneExpression
 } from './modules/gtexDataParser';
 
 import Dendrogram from "./modules/Dendrogram";
@@ -61,6 +62,14 @@ let legendPanel = { // the color legend panel
     height: 50,
     width: window.innerWidth - (150 + 150),
     cell: {width: 60}
+};
+
+/////// boxplot ///////
+const boxplotConfig = {
+    useLog: false,
+    divId: "#boxplot",
+    colors: ["grey","#bb453e", "#1c677f", "#078c84", "#b4486b"], // TODO: add more colors
+    data: {}
 };
 
 // initiates the svg
@@ -175,7 +184,7 @@ function heatmapYLabelClick(d, id, xorder){
 
    const url = urls.geneExp + id;
    json(url, function(error, data){
-       color = boxplotConfig.colors[keys(boxplotConfig.data).length] || "black";
+       let color = boxplotConfig.colors[keys(boxplotConfig.data).length] || "black";
        let json = parseGeneExpression(data, boxplotConfig.useLog, color, xorder);
        boxplotConfig.data[d] = json;
        Plotly.newPlot('boxplot', values(boxplotConfig.data), layout);
@@ -318,4 +327,40 @@ function addTissueColors(){
 
     // removes retired elements
     dots.exit().remove();
+}
+
+/////// toolbar events ///////
+select("#sortTissuesByAlphabet")
+    .on("click", function(){
+        select('#topTreeGroup')
+            .style("display", "None"); // hides the tissue dendrogram
+        let xlist = heatmap.xList.sort();
+        sortTissueClickHelper(xlist);
+    });
+
+select("#sortTissuesByClusters")
+    .on("click", function(){
+        select('#topTreeGroup')
+            .style("display", "Block");  // shows the tissue dendrogram
+        let xlist = tissueTree.xScale.domain();
+        sortTissueClickHelper(xlist);
+    });
+
+function sortTissueClickHelper(xlist){
+    // updates the heatmap
+    let dom = select('#mapGroup');
+    heatmap.update(dom, xlist, heatmap.yList);
+
+    // changes the tissue display text to tissue names
+    selectAll(".xLabel")
+        .text((d) => tissueHash[d].tissue_name);
+    addTissueColors();
+
+    // hides the boxplot
+    select('#boxplot').style("opacity", 0.0);
+
+    // deselects genes
+    selectAll(".yLabel").classed("clicked", false);
+    boxplotConfig.data = {};
+
 }
