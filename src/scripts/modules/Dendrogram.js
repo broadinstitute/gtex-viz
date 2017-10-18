@@ -33,10 +33,7 @@
 
 // TODO: eliminate hard-coded values
 
-import {hierarchy} from "d3-hierarchy";
-import {ascending} from "d3-array";
-import {scaleLinear, scaleBand} from "d3-scale";
-import {axisLeft, axisBottom} from "d3-axis";
+import * as d4 from "d3";
 
 import {parseNewick} from "../external/newick";
 const verbose = true;
@@ -47,10 +44,10 @@ export default class Dendrogram {
         this.orientation = orientation;
 
         this.postorder = [];
-        this.root = hierarchy(parseNewick(newick), (d) => d.branchset)
+        this.root = d4.hierarchy(parseNewick(newick), (d) => d.branchset)
             .sum((d)=>d.branchset?0:1)
             .sort((a,b)=>a.value-b.value||a.data.length-b.data.length);
-        this.leaves = this.root.leaves().sort((a, b) => (a.value - b.value) || ascending(a.data.length, b.data.length));
+        this.leaves = this.root.leaves().sort((a, b) => (a.value - b.value) || d4.ascending(a.data.length, b.data.length));
 
         this.width = undefined;
         this.height = undefined;
@@ -139,14 +136,14 @@ export default class Dendrogram {
             .attr("class", "axis")
             .attr("transform", "translate(0," + this.height + ")")
             .call(
-                axisBottom(this.xScale)
+                d4.axisBottom(this.xScale)
                 .tickValues([5, 10])
             );
     }
 
     _sortNodesByLevel(){
         // returns a list of nodes ordered by ancestral level, then by branch length
-        return this.root.descendants().sort((a, b) => (a.height - b.height) || ascending(a.data.length, b.data.length));
+        return this.root.descendants().sort((a, b) => (a.height - b.height) || d4.ascending(a.data.length, b.data.length));
     }
 
     _drawVTree(dom){
@@ -216,7 +213,7 @@ export default class Dendrogram {
             // .attr("transform", `translate(${this.width}, 0)`)
             .attr("class", "axis")
             .call(
-                axisLeft(this.yScale)
+                d4.axisLeft(this.yScale)
                 .tickValues([5, 10])
             );
 
@@ -249,13 +246,13 @@ export default class Dendrogram {
 
     _setXScale(){
         if ('h' == this.orientation){
-            this.xScale = scaleLinear()
+            this.xScale = d4.scaleLinear()
                 .domain([0, this._getMaxBranchLength()])
                 .range([0, this.width])
         } else {
             this._assignPostorder(this.root);
             if (verbose) console.log(this.postorder);
-            this.xScale = scaleBand()
+            this.xScale = d4.scaleBand()
                 .domain(this.postorder.map((d) => d.data.name))
                 .range([0, this.width])
                 .padding(.05);
@@ -266,12 +263,12 @@ export default class Dendrogram {
         if ('h' == this.orientation){
             this._assignPostorder(this.root);
             if (verbose) console.log(this.postorder);
-            this.yScale = scaleBand()
+            this.yScale = d4.scaleBand()
                 .domain(this.postorder.map((d) => d.data.name))
                 .range([0, this.height])
                 .padding(.05);
         } else {
-            this.yScale = scaleLinear()
+            this.yScale = d4.scaleLinear()
                 .domain([0, this._getMaxBranchLength()])
                 .range([0, this.height])
         }

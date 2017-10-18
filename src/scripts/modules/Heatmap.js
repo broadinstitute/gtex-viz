@@ -3,10 +3,7 @@
     tooltip.js
  */
 
-import {scaleBand, scaleQuantile} from "d3-scale";
-import {min, max} from "d3-array";
-import {select, selectAll} from "d3-selection";
-import {nest} from "d3-collection";
+import * as d4 from "d3";
 
 export default class Heatmap {
     /* data is a json with the following attributes:
@@ -127,12 +124,12 @@ export default class Heatmap {
                 alert(`${d} got clicked. To be implemented`)
             })
             .on('mouseover', function(d){
-                select(this)
+                d4.select(this)
                     .classed('normal', false)
                     .classed('highlighted', true);
             })
             .on('mouseout', function(d){
-                select(this)
+                d4.select(this)
                     .classed('normal', true)
                     .classed('highlighted', false);
             });
@@ -140,13 +137,13 @@ export default class Heatmap {
         // renders the heatmap cells
 
         const cellMouseover = function(d) {
-            const selected = select(this);
+            const selected = d4.select(this);
             const rowClass = selected.attr("row");
             const colClass = selected.attr("col");
-             selectAll(".xLabel").filter(`.${rowClass}`)
+            d4.selectAll(".xLabel").filter(`.${rowClass}`)
             .classed('normal', false)
             .classed('highlighted', true);
-            selectAll(".yLabel").filter(`.${colClass}`)
+            d4.selectAll(".yLabel").filter(`.${colClass}`)
                 .classed('normal', false)
                 .classed('highlighted', true);
             selected.classed('expressmap-highlighted', true);
@@ -154,14 +151,14 @@ export default class Heatmap {
         };
 
         const cellMouseout = function(d){
-            const selected = select(this);
+            const selected = d4.select(this);
             const rowClass = selected.attr("row");
             const colClass = selected.attr("col");
 
-            selectAll(".xLabel").filter(`.${rowClass}`)
+            d4.selectAll(".xLabel").filter(`.${rowClass}`)
                 .classed('normal', true)
                 .classed('highlighted', false);
-            selectAll(".yLabel").filter(`.${colClass}`)
+            d4.selectAll(".yLabel").filter(`.${colClass}`)
                 .classed('normal', true)
                 .classed('highlighted', false);
             selected.classed('expressmap-highlighted', false);
@@ -212,7 +209,7 @@ export default class Heatmap {
                 .map((d) => d.key);
         }
 
-        this.xScale = scaleBand()
+        this.xScale = d4.scaleBand()
             .domain(this.xList)
             .range([0, this.width])
             .padding(.05); // TODO: eliminate hard-coded value
@@ -223,21 +220,21 @@ export default class Heatmap {
             this.yList = newList
         }
         else {
-           this.yList = nest()
+           this.yList = d4.nest()
             .key((d) => d.y)
             .entries(this.data)
             .map((d) => d.key);
         }
-        this.yScale = scaleBand()
+        this.yScale = d4.scaleBand()
                 .domain(this.yList)
                 .range([0, this.height])
                 .padding(.05); // TODO: eliminate hard-coded value
     }
 
     _setColorScale() {
-        let dmin = Math.round(min(this.data, (d) => d.value));
-        let dmax = Math.round(max(this.data, (d) => d.value));
-        this.colorScale = scaleQuantile() // scaleQuantile maps the continuous domain to a discrete range
+        let dmin = Math.round(d4.min(this.data, (d) => d.value));
+        let dmax = Math.round(d4.max(this.data, (d) => d.value));
+        this.colorScale = d4.scaleQuantile() // scaleQuantile maps the continuous domain to a discrete range
             .domain([dmin, dmax])
             .range(this.colors);
     }

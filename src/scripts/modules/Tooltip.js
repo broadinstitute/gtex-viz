@@ -1,5 +1,5 @@
-import {select, event} from "d3-selection";
-import {transition} from "d3-transition";
+import * as d4 from "d3";
+
 export default class Tooltip {
     constructor(id, verbose=true, offsetX=20, offsetY=-80, duration=200){
         this.id = id;
@@ -13,7 +13,7 @@ export default class Tooltip {
         if(this.verbose) console.log(info);
         this.edit(info);
         this.move();
-        select("#" + this.id)
+        d4.select("#" + this.id)
             .style("display", "inline")
             .transition()
             .duration(this.duration)
@@ -22,27 +22,27 @@ export default class Tooltip {
     }
 
     hide() {
-        select("#" + this.id)
+        d4.select("#" + this.id)
             .transition()
             .duration(this.duration)
             .style("opacity", 0.0);
         this.move(0,0);
     }
 
-    move(x = event.pageX, y = event.pageY) {
+    move(x = d4.event.pageX, y = d4.event.pageY) {
         if (this.verbose) {
             console.log(x);
             console.log(y);
         }
         x = x + this.offsetX; // TODO: get rid of the hard-coded adjustment
         y = y + this.offsetY;
-        select('#'+this.id)
+        d4.select('#'+this.id)
             .style("left", x + "px")
             .style("top", y + "px")
     }
 
     edit(info) {
-        select("#" + this.id)
+        d4.select("#" + this.id)
             .html(info)
     }
 }
