@@ -4,8 +4,6 @@
     - D3 APIs: https://github.com/d3/d3/blob/master/API.md
 */
 
-// TODO: import d4 and use d4 to call all d3 methods and APIs
-
 import * as d4 from "d3";
 
 import {

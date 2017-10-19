@@ -1,10 +1,11 @@
-div{
+body {
     font-family: 'Libre Franklin', sans-serif;
+}
+div{
     font-size: 12px;
 }
 
 text.highlighted {
-    font-family: 'Libre Franklin', sans-serif;
     font-weight: 400;
     font-size: 12px;
     text-decoration: underline;
@@ -12,7 +13,6 @@ text.highlighted {
 
 text.normal {
     fill: #111;
-    font-family: 'Libre Franklin', sans-serif;
     font-weight: 300;
     font-size: 12px;
 }
@@ -29,7 +29,6 @@ div.expressmap-tooltip {
    text-align:left;
    color: #ffffff;
    position:absolute;
-    font-family: 'Libre Franklin', sans-serif;
    font-size:12px;
    z-index:4000;
    border-radius:5px;
