@@ -10,7 +10,7 @@ def test_clustering(z, d):
     # this compares the actual pairwise distances to those implied by the hierarchical clustering.
     # the closer the value is to 1, the better the clustering preserves the original distances.
     c, coph_dists = cophenet(z, pdist(d))
-    sys.stderr.write("The Cophenetic Correlation Coefficient is " + str(c) + "\n")
+    print "The Cophenetic Correlation Coefficient is " + str(c)
 
 
 def to_newick(node, newick, parent_dist, leaf_names):
@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
     # then generates tissue clusters based on expression of genes
     mat, leaf_labels = generate_matrix(data_frame, row="tissueId", col="geneSymbol", log_transform=False)
-    print mat.shape
+    # print mat.shape
     clusters = cluster(mat, method="ward")
     root = to_tree(clusters, False)
     print to_newick(root, "", root.dist, leaf_labels)
