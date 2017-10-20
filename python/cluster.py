@@ -91,7 +91,7 @@ if __name__ == '__main__':
     # then generates tissue clusters based on expression of genes
     mat, leaf_labels = generate_matrix(data_frame, row="tissueId", col="geneSymbol", log_transform=False)
     # print mat.shape
-    clusters = cluster(mat, method="ward")
+    clusters = cluster(mat, method="complete")
     root = to_tree(clusters, False)
     print to_newick(root, "", root.dist, leaf_labels)
 

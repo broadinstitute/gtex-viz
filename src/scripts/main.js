@@ -16,6 +16,10 @@ import {
     parseGeneExpression
 } from './modules/gtexDataParser';
 
+import {
+    downloadSvg
+} from "./modules/utils";
+
 import Dendrogram from "./modules/Dendrogram";
 import Heatmap from "./modules/Heatmap";
 import Tooltip from "./modules/Tooltip";
@@ -334,12 +338,18 @@ function addTissueColors(){
 /////// toolbar events ///////
 function bindToolbarEvents(){
     d4.select("#sortTissuesByAlphabet")
-    .on("click", function(){
-        d4.select('#topTreeGroup')
-            .style("display", "None"); // hides the tissue dendrogram
-        let xlist = heatmap.xList.sort();
-        sortTissueClickHelper(xlist);
-    });
+        .on("click", function(){
+            d4.select('#topTreeGroup')
+                .style("display", "None"); // hides the tissue dendrogram
+            let xlist = heatmap.xList.sort();
+            sortTissueClickHelper(xlist);
+        })
+        .on("mouseover", function(){
+            tooltip.show("Sort Tissues Alphabetically");
+        })
+        .on("mouseout", function(){
+            tooltip.hide();
+        });
 
     d4.select("#sortTissuesByClusters")
         .on("click", function(){
@@ -347,7 +357,26 @@ function bindToolbarEvents(){
                 .style("display", "Block");  // shows the tissue dendrogram
             let xlist = tissueTree.xScale.domain();
             sortTissueClickHelper(xlist);
-    });
+        })
+        .on("mouseover", function(){
+            tooltip.show("Cluster Tissues");
+        })
+        .on("mouseout", function(){
+            tooltip.hide();
+        });
+
+    d4.select("#downloadHeatmap")
+        .on("click", function(){
+            // let svgElement = document.getElementById(heatmapConfig.divId.replace("#","")).firstChild;
+            let svgObj = $($($(`${heatmapConfig.divId} svg`))[0]); // jQuery dependent
+            downloadSvg(svgObj, "heatmap.svg", "downloadTempDiv");
+        })
+        .on("mouseover", function(){
+            tooltip.show("Download Heatmap");
+        })
+        .on("mouseout", function(){
+            tooltip.hide();
+        });
 }
 
 function sortTissueClickHelper(xlist){

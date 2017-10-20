@@ -34,3 +34,10 @@ div.expressmap-tooltip {
    border-radius:5px;
 }
 
+.btn-default {
+    border-color: #4eb3d3;
+}
+
+a {
+    color: #4eb3d3;
+}
