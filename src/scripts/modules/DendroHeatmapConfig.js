@@ -7,7 +7,7 @@ let margin = {
 
 let cell = { // are these used?
     width: undefined,
-    height: undefined
+    height: 8
 };
 
 let topTreePanel = { // the column dendrogram panel
@@ -22,7 +22,7 @@ let leftTreePanel = { // the row dendrogram panel
     x: margin.left,
     y: margin.top + topTreePanel.height + adjust,
     height: undefined, // data-dependent
-    width: 100 - (margin.left + adjust)
+    width: 100 - (adjust)
 };
 
 let heatmapPanel = {
@@ -44,10 +44,11 @@ export let heatmapConfig = {
     margin: margin,
     cell: cell,
     width: window.innerWidth,
-    height: window.innerWidth*3/4,
+    height: margin.top + topTreePanel.height + legendPanel.height + margin.bottom, // initial height
     panels: {
         top: topTreePanel,
         left: leftTreePanel,
-        main: heatmapPanel
+        main: heatmapPanel,
+        legend: legendPanel
     }
 };

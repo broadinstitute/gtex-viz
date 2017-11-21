@@ -22,15 +22,21 @@ export default class DendroHeatmap {
         this._setDimensions();
 
         let svg = createSvg(domId, this.config.width, this.config.height, this.config.margin);
-        this.renderColumnTree(svg);
+        this.renderTree(svg, 'topTree', this.tree.col, this.config.panels.top);
+        this.renderTree(svg, 'leftTree', this.tree.row, this.config.panels.left);
     }
 
-    renderColumnTree(svg){
-        const tree = this.tree.col;
-        const config = this.config.panels.top;
+    /**
+     * renders a newick tree
+     * @param svg {d3 Selection} a svg object
+     * @param id {String} the id of this tree DOM element
+     * @param tree {Dendrogram}
+     * @param config {Object} a panel config with attributes: x, y, width and height
+     */
+    renderTree(svg, id, tree, config){
         const tooltip = this.visualComponents.tooltip;
         const g = svg.append("g")
-            .attr('id', 'columnTree')
+            .attr('id', 'leftTree')
             .attr('transform', `translate(${config.x}, ${config.y})`);
         tree.draw(g, config.width, config.height);
 
@@ -52,13 +58,27 @@ export default class DendroHeatmap {
         g.selectAll('.node')
             .on('mouseover', mouseover)
             .on('mouseout', mouseout);
-
     }
+
+    // renderColumnTree(svg){
+    //     const tree = this.tree.col;
+    //     const config = this.config.panels.top;
+    //     const tooltip = this.visualComponents.tooltip;
+    //     const g = svg.append("g")
+    //         .attr('id', 'columnTree')
+    //         .attr('transform', `translate(${config.x}, ${config.y})`);
+    //     tree.draw(g, config.width, config.height);
+    //
+    //
+    // }
 
     _setDimensions(){
         const columns = this.tree.col.leaves.length;
         const rows = this.tree.row.leaves.length;
+        this.config.panels.left.height = this.config.cell.height * rows;
+        this.config.height += this.config.panels.left.height;
         // and what else?
+
 
     }
 }
