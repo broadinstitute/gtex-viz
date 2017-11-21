@@ -1,3 +1,28 @@
+/**
+ * Creates an SVG
+ * @param id {String} a DOM element ID that starts with a "#"
+ * @param width {Numeric}
+ * @param height {Numeric}
+ * @param margin {Object} with two attributes: width and height
+ * @return {Selection} the d3 selection object of the SVG
+ */
+
+import * as d4 from "d3";
+export function createSvg(id, width, height, margin){
+    "use strict";
+    return d4.select(id).append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`)
+}
+
+/**
+ *
+ * @param svgObj
+ * @param downloadFileName {String}
+ * @param tempDownloadDivId {String}
+ */
 export function downloadSvg(svgObj, downloadFileName, tempDownloadDivId){
     console.log(svgObj);
     var $svgCopy = svgObj.clone()
@@ -17,7 +42,12 @@ export function downloadSvg(svgObj, downloadFileName, tempDownloadDivId){
     // clear the temp download div
     $("#" + tempDownloadDivId).html('').hide();
 }
-
+/**
+ * A private function for parsing the CSS style sheet and including the style properties in the downloadable SVG.
+ * @param dom
+ * @returns {Element}
+ * @private
+ */
 function _parseCssStyles (dom) {
     var used = "";
     var sheets = document.styleSheets;

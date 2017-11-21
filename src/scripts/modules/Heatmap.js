@@ -38,7 +38,7 @@ export default class Heatmap {
         this.colors = this.palette[colorScheme]
     }
 
-    // TODO: should the legend rendering be a separate class?
+    // TODO: should the legend be a separate class?
     drawLegend(dom, cellWidth = 70, yAdjust = 16) {
         if (this.colorScale === undefined) this._setColorScale();
         if (this.yList === undefined) this._setYList();

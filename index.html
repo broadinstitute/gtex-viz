@@ -16,10 +16,18 @@
         <div id="downloadTempDiv" style="display:none;"></div> <!-- a hidden div for svg download, a temp solution-->
         <div id="tooltip" class="expressmap-tooltip"></div> <!--a hidden tooltip div-->
         <div>
-            <h4>GTEx Gene Expression Heatmap</h4>
+            <h4>Expression Heatmap</h4>
+        </div>
+        <div id="datasets">
+            <h5>Select a dataset:</h5>
+            <ul>
+                <li id="dataset1" class="link">Top 50 expressed genes in blood.</li>
+                <li id="dataset2" class="link">Differentially expressed genes in Mayo AD cerebellum.</li>
+            </ul>
         </div>
 
-        <div id="dashboardToolbar" style="margin-bottom:50px;"> <!-- the tool bar div -->
+        <!-- the tool bar div -->
+        <div id="dashboardToolbar" style="margin-bottom:50px; display:none;">
             <!-- fontawesome reference: http://fontawesome.io/examples/ -->
             <div class="btn-group btn-group-sm">
                 <a id="sortTissuesByAlphabet" class="btn btn-default" href="#">
