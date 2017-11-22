@@ -41,7 +41,12 @@ export default class Heatmap {
         this.colors = this.palette[colorScheme]
     }
 
-    // TODO: should the legend be a separate class?
+    /**
+     * draw the color legend
+     * @param dom {Selection} a d3 DOM
+     * @param cellWidth {Integer}
+     * @param yAdjust {Integer}
+     */
     drawLegend(dom, cellWidth = 70, yAdjust = 16) {
         if (this.colorScale === undefined) this._setColorScale();
         if (this.yList === undefined) this._setYList();

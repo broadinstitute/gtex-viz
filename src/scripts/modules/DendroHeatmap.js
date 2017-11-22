@@ -38,41 +38,46 @@ export default class DendroHeatmap {
         this._updateConfig(topTree, leftTree);
         let svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
 
-        this._renderTree(svg, "topTree", topTree, this.config.panels.top);
-        this._renderTree(svg, "leftTree", leftTree, this.config.panels.left);
-        this._renderHeatmap(svg, "heatMap", heatmap, topTree.xScale.domain(), leftTree.yScale.domain());
+        this._renderTree(svg, topTree, this.config.panels.top);
+        this._renderTree(svg, leftTree, this.config.panels.left);
+        this._renderHeatmap(svg, heatmap, topTree.xScale.domain(), leftTree.yScale.domain());
     }
 
     /**
      *
      * @param svg {Selection} a d3 selection object
-     * @param id {String} DOM ID of the heatmap
      * @param heatmap {Heatmap} a Heatmap object
      * @param xList {List} a list of x labels
      * @param yList {List} a list of y labels
      * @private
      */
-    _renderHeatmap(svg, id, heatmap, xList, yList){
-        let config = this.config.panels.main;
+    _renderHeatmap(svg, heatmap, xList, yList){
+        const config = this.config.panels.main;
         const g = svg.append("g")
-            .attr("id", id)
+            .attr("id", config.id)
             .attr("transform", `translate(${config.x}, ${config.y})`);
 
         heatmap.redraw(g, xList, yList, {w: config.w, h: config.h});
+
+        // the heatmap color legend panel
+        const legendConfig = this.config.panels.legend;
+        const legendG = svg.append("g")
+            .attr("id", legendConfig.id)
+            .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
+        heatmap.drawLegend(legendG, legendConfig.cell.w);
     }
 
     /**
      * renders a newick tree
      * @param svg {Selection} a d3 selection object
-     * @param id {String} the id of this tree DOM element
      * @param tree {Dendrogram} a Dendrogram object
      * @param config {Object} a panel config with attributes: x, y, width and height
      * @private
      */
-    _renderTree(svg, id, tree, config){
+    _renderTree(svg, tree, config){
         const tooltip = this.visualComponents.tooltip;
         const g = svg.append("g")
-            .attr("id", "leftTree")
+            .attr("id", config.id)
             .attr("transform", `translate(${config.x}, ${config.y})`);
         tree.draw(g, config.w, config.h);
 
@@ -108,6 +113,7 @@ export default class DendroHeatmap {
 
         // updates the left panel's height based on the data
         this.config.panels.left.h = this.config.cell.h * rows;
+        this.config.panels.legend.y += this.config.panels.left.h;
         this.config.h += this.config.panels.left.h;
         this.config.panels.main.h = this.config.panels.left.h;
 
