@@ -18,7 +18,8 @@ export default class DendroHeatmap {
         this.data = {
             columnTree: columnTree,
             rowTree: rowTree,
-            heatmap: heatmapData
+            heatmap: heatmapData,
+            external: undefined
         };
         this.objects = {
             columnTree: new Dendrogram(this.data.columnTree, "v"),

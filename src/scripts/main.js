@@ -1,6 +1,6 @@
 import * as d4 from "d3";
 import DendroHeatmap from "./modules/DendroHeatmap";
-import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedianTPM} from "./modules/gtexDataParser";
+import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedianTPM, parseGeneExpression} from "./modules/gtexDataParser";
 
 d4.select("#dataset1").on("click", function(){
     // top 50 expressed genes in liver
@@ -57,7 +57,6 @@ function customization(dmap, tissues){
     mapTissueIdToName(tissueDict);
     addTissueColors(dmap, tissueDict);
 
-    /***** NEXT STEP **************/
     changeHeatmapMouseEvents(dmap, tissueDict);
 }
 
@@ -110,6 +109,83 @@ function changeHeatmapMouseEvents(dmap, tissueDict) {
         .on("mouseover", heatmapMouseover)
         .on("mouseout", heatmapMouseout)
 
+
+    const geneDict = {}; // constructs a gene lookup table indexed by gene symbols
+    console.log(dmap.data.heatmap)
+    dmap.data.heatmap.forEach((d) => {geneDict[d.geneSymbol] = d})
+    const ylabelClick = function(d){
+        let s = d4.select(this)
+        if (d4.event.altKey) {
+            // if alt key is pressed -- additive selection
+            // highlights the selected label
+            if(!s.classed("clicked")) s.classed("clicked", true);
+        }
+        else {
+            // toggles the css class, clicked
+            if (s.classed("clicked")) s.classed("clicked", false);
+            else {
+                dmap.data.external = {}; // clears the existing data container
+                d4.selectAll("clicked").classed("clicked", false); // clears all clicked labels if any
+                s.classed("clicked", true); // highlights the clicked label
+            }
+        }
+
+        // renders the boxplot
+        let tissueNames = dmap.objects.heatmap.xScale.domain().map((d) => tissueDict[d].tissue_name);
+        renderBoxplot(d, geneDict, tissueNames, dmap)
+
+    }
+    svg.selectAll(".yLabel")
+        .on("click", ylabelClick);
+
+}
+
+function renderBoxplot(gene, geneDict, tissueOrder, dmap) {
+    const config = {
+        useLog: false,
+        id: "boxplot",
+        colors: ["grey","#bb453e", "#1c677f", "#078c84", "#b4486b"], // TODO: add more colors
+        data: {}
+    };
+    const layout = {
+        title: "",
+        font: {
+            family: 'Libre Franklin',
+            size:11
+        },
+        yaxis: {
+            title: 'TPM',
+            zeroline: false
+        },
+        boxmode: 'group',
+        margin: {
+            t:0,
+        },
+        showlegend: true
+    };
+
+    let data = dmap.data.external;
+
+    if (data.hasOwnProperty(gene)) {
+        // indicates that the user would like to delete the gene from the boxplot
+        delete data[gene];
+        d4.keys(data).forEach((d, i) => {
+            // updates the data colors
+            data[d]["marker"]["color"] = config.colors[i] || "black";
+        });
+        // redraws the box plot
+        Plotly.newPlot(config.id, d4.values(data), layout);
+        return;
+    }
+
+    const url = getGtexUrls().geneExp + geneDict[gene].id;
+    d4.json(url, function(error, d) {
+        let color = config.colors[d4.keys(data).length] || "black";
+        let json = parseGeneExpression(d, config.useLog, color, tissueOrder);
+        data[gene] = json;
+        Plotly.newPlot(config.id, d4.values(data), layout);
+        d4.select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
+    })
 }
 
 /**
