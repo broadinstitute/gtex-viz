@@ -66,7 +66,7 @@ function bindToolbarEvents(dmap, tissueDict){
     d4.select("#downloadHeatmap")
         .on("click", function(){
             // let svgElement = document.getElementById(heatmapConfig.divId.replace("#","")).firstChild;
-            let svgObj = $($($(`${dmap.config.panels.main.id} svg`))[0]); // jQuery dependent
+            let svgObj = $($($(`${"#" +dmap.config.id} svg`))[0]); // jQuery dependent
             downloadSvg(svgObj, "heatmap.svg", "downloadTempDiv");
         })
         .on("mouseover", function(){
@@ -96,8 +96,6 @@ function sortTissueClickHelper(xlist, dmap, tissueDict){
     dmap.data.external = {};
 
 }
-
-
 
 
 /**

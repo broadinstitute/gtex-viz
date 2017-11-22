@@ -45,6 +45,7 @@ let legendPanel = { // the color legend panel
 };
 
 export let heatmapConfig = {
+    id: "chart",
     margin: margin,
     cell: cell,
     w: window.innerWidth,
