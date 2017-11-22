@@ -13,12 +13,15 @@ export default class Heatmap {
         originalValue: the original numerical value
      */
 
-
-    constructor(data, useLog=true, dimensions={w:1000, h:600}, colorScheme="gnbu"){
+    /**
+     * constructor
+     * @param data {Object}, see above
+     * @param useLog {Boolean} performs log transformation
+     * @param colorScheme {String}: recognized terms are: gnbu, ylgnbu, orrd, reds
+     */
+    constructor(data, useLog=true, colorScheme="gnbu"){
         this.data = data;
         this.useLog = useLog;
-        this.width = dimensions.w;
-        this.height = dimensions.h;
         this.nullColor = "#e6e6e6";
         this.colorScale = undefined;
         this.xList = undefined;
@@ -69,18 +72,32 @@ export default class Heatmap {
 
     }
 
-    update(dom, xList, yList, angle=30){
-        this._setXList(xList);
-        this._setYList(yList);
-        this.draw(dom, angle);
+    /**
+     * redraws the heatmap: when the xlist and ylist are changed, redraw the heatmap
+     * @param dom {Selection} a d3 selection object
+     * @param xList {List} a list of x labels
+     * @param yList {List} a list of y labels
+     * @param dimensions {Dictionary} {w:Integer, h:integer} with two attributes: w and h
+     * @param angle {Integer} for the y text labels
+     */
+    redraw(dom, xList, yList, dimensions={w:1000, h:600}, angle=30){
+        this._setXList(dimensions.w, xList);
+        this._setYList(dimensions.h, yList);
+        this.draw(dom, dimensions, angle);
     }
 
-    draw(dom, angle=30){
-        if (this.xList === undefined) this._setXList();
-        if (this.yList === undefined) this._setYList();
+    /**
+     * draws the heatmap
+     * @param dom {Selection}
+     * @param angle {Integer} for the y text labels
+     * @param dimensions {Dictionary} {w:Integer, h:integer} of the heatmap
+     */
+
+    draw(dom, dimensions={w:1000, h:600}, angle=30){
+        if (this.xList === undefined) this._setXList(dimensions.w);
+        if (this.yList === undefined) this._setYList(dimensions.h);
         if (this.colorScale === undefined) this._setColorScale();
 
-        // TODO: creates separate panels for text labels?
         // text labels
         // data join
         const xLabels = dom.selectAll(".xLabel")
@@ -198,7 +215,7 @@ export default class Heatmap {
 
 
 
-    _setXList(newList) {
+    _setXList(width, newList) {
         if(newList !== undefined){
             this.xList = newList
         }
@@ -211,11 +228,11 @@ export default class Heatmap {
 
         this.xScale = d4.scaleBand()
             .domain(this.xList)
-            .range([0, this.width])
+            .range([0, width])
             .padding(.05); // TODO: eliminate hard-coded value
     }
 
-    _setYList(newList) {
+    _setYList(height, newList) {
         if(newList !== undefined){
             this.yList = newList
         }
@@ -227,7 +244,7 @@ export default class Heatmap {
         }
         this.yScale = d4.scaleBand()
                 .domain(this.yList)
-                .range([0, this.height])
+                .range([0, height])
                 .padding(.05); // TODO: eliminate hard-coded value
     }
 

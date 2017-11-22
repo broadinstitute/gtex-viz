@@ -1,44 +1,80 @@
 import {heatmapConfig} from "./DendroHeatmapConfig";
 import Dendrogram from "./Dendrogram";
+import Heatmap from "./Heatmap";
 import {createSvg} from "./utils";
 import Tooltip from "./Tooltip";
 import * as d4 from "d3";
 
 export default class DendroHeatmap {
-
+    /**
+     * Constructor
+     * @param columnTree {String} a newick tree
+     * @param rowTree {String} a newick tree
+     * @param heatmapData {Object} with attributes: x, y, value, originalValue, see the class Heatmap
+     * @param config
+     */
     constructor(columnTree, rowTree, heatmapData, config=heatmapConfig){
         this.config = config;
-        this.tree = {
-            col: new Dendrogram(columnTree, 'v'),
-            row: new Dendrogram(rowTree, 'h')
-        };
-        this.heatmap = heatmapData;
+        this.data = {
+            columnTree: columnTree,
+            rowTree: rowTree,
+            heatmap: heatmapData
+        }
         this.visualComponents = {
             tooltip: new Tooltip("tooltip", false)
         }
     }
 
+    /**
+     * visual rendering
+     * @param domId {String} the DOM id of the SVG
+     */
     render(domId){
-        this._setDimensions();
 
-        let svg = createSvg(domId, this.config.width, this.config.height, this.config.margin);
-        this.renderTree(svg, 'topTree', this.tree.col, this.config.panels.top);
-        this.renderTree(svg, 'leftTree', this.tree.row, this.config.panels.left);
+        const topTree = new Dendrogram(this.data.columnTree, "v");
+        const leftTree = new Dendrogram(this.data.rowTree, "h");
+        const heatmap = new Heatmap(this.data.heatmap, true);
+
+        this._updateConfig(topTree, leftTree);
+        let svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
+
+        this._renderTree(svg, "topTree", topTree, this.config.panels.top);
+        this._renderTree(svg, "leftTree", leftTree, this.config.panels.left);
+        this._renderHeatmap(svg, "heatMap", heatmap, topTree.xScale.domain(), leftTree.yScale.domain());
+    }
+
+    /**
+     *
+     * @param svg {Selection} a d3 selection object
+     * @param id {String} DOM ID of the heatmap
+     * @param heatmap {Heatmap} a Heatmap object
+     * @param xList {List} a list of x labels
+     * @param yList {List} a list of y labels
+     * @private
+     */
+    _renderHeatmap(svg, id, heatmap, xList, yList){
+        let config = this.config.panels.main;
+        const g = svg.append("g")
+            .attr("id", id)
+            .attr("transform", `translate(${config.x}, ${config.y})`);
+
+        heatmap.redraw(g, xList, yList, {w: config.w, h: config.h});
     }
 
     /**
      * renders a newick tree
-     * @param svg {d3 Selection} a svg object
+     * @param svg {Selection} a d3 selection object
      * @param id {String} the id of this tree DOM element
-     * @param tree {Dendrogram}
+     * @param tree {Dendrogram} a Dendrogram object
      * @param config {Object} a panel config with attributes: x, y, width and height
+     * @private
      */
-    renderTree(svg, id, tree, config){
+    _renderTree(svg, id, tree, config){
         const tooltip = this.visualComponents.tooltip;
         const g = svg.append("g")
-            .attr('id', 'leftTree')
-            .attr('transform', `translate(${config.x}, ${config.y})`);
-        tree.draw(g, config.width, config.height);
+            .attr("id", "leftTree")
+            .attr("transform", `translate(${config.x}, ${config.y})`);
+        tree.draw(g, config.w, config.h);
 
         // customized mouse events
         const mouseover = function(d){
@@ -55,30 +91,25 @@ export default class DendroHeatmap {
             const leaves = d.leaves().map((node)=>node.data.name);
             tooltip.hide();
         };
-        g.selectAll('.node')
-            .on('mouseover', mouseover)
-            .on('mouseout', mouseout);
+        g.selectAll(".node")
+            .on("mouseover", mouseover)
+            .on("mouseout", mouseout);
     }
 
-    // renderColumnTree(svg){
-    //     const tree = this.tree.col;
-    //     const config = this.config.panels.top;
-    //     const tooltip = this.visualComponents.tooltip;
-    //     const g = svg.append("g")
-    //         .attr('id', 'columnTree')
-    //         .attr('transform', `translate(${config.x}, ${config.y})`);
-    //     tree.draw(g, config.width, config.height);
-    //
-    //
-    // }
+    /**
+     * adjusts the layout dimensions based on the actual data
+     * @param colTree {Dendrogram} the column tree object
+     * @param rowTree {Dendrogram} the row tree object
+     * @private
+     */
+    _updateConfig(colTree, rowTree){
+        const columns = colTree.leaves.length;
+        const rows = rowTree.leaves.length;
 
-    _setDimensions(){
-        const columns = this.tree.col.leaves.length;
-        const rows = this.tree.row.leaves.length;
-        this.config.panels.left.height = this.config.cell.height * rows;
-        this.config.height += this.config.panels.left.height;
-        // and what else?
-
+        // updates the left panel's height based on the data
+        this.config.panels.left.h = this.config.cell.h * rows;
+        this.config.h += this.config.panels.left.h;
+        this.config.panels.main.h = this.config.panels.left.h;
 
     }
 }

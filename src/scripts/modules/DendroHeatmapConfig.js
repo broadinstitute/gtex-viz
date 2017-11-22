@@ -6,45 +6,45 @@ let margin = {
 };
 
 let cell = { // are these used?
-    width: undefined,
-    height: 8
+    w: undefined,
+    h: 12
 };
 
 let topTreePanel = { // the column dendrogram panel
     x: 100,
     y: 0,
-    height: 80,
-    width: window.innerWidth - (100 + 150) // hard-coded values?
+    h: 80,
+    w: window.innerWidth - (100 + 150) // hard-coded values?
 };
 
 let adjust = 5; // spacing adjustment
 let leftTreePanel = { // the row dendrogram panel
     x: margin.left,
-    y: margin.top + topTreePanel.height + adjust,
-    height: undefined, // data-dependent
-    width: 100 - (adjust)
+    y: margin.top + topTreePanel.h + adjust,
+    h: undefined, // data-dependent
+    w: 100 - (adjust)
 };
 
 let heatmapPanel = {
     x: 100,
-    y: margin.top + topTreePanel.height + adjust,
-    height: leftTreePanel.height,
-    width: topTreePanel.width
+    y: margin.top + topTreePanel.h + adjust,
+    h: leftTreePanel.h,
+    w: topTreePanel.w
 };
 
 let legendPanel = { // the color legend panel
     x: 100,
-    y: margin.top + topTreePanel.height + adjust,
-    height: 50,
-    width: topTreePanel.width,
-    cell: {width: 60}
+    y: margin.top + topTreePanel.h + adjust,
+    h: 50,
+    w: topTreePanel.w,
+    cell: {w: 60}
 };
 
 export let heatmapConfig = {
     margin: margin,
     cell: cell,
-    width: window.innerWidth,
-    height: margin.top + topTreePanel.height + legendPanel.height + margin.bottom, // initial height
+    w: window.innerWidth,
+    h: margin.top + topTreePanel.h + legendPanel.h + margin.bottom, // initial height
     panels: {
         top: topTreePanel,
         left: leftTreePanel,
