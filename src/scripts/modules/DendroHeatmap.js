@@ -10,7 +10,7 @@ export default class DendroHeatmap {
      * Constructor
      * @param columnTree {String} a newick tree
      * @param rowTree {String} a newick tree
-     * @param heatmapData {Object} with attributes: x, y, value, originalValue, see the class Heatmap
+     * @param heatmapData {List} of objects with attributes: x: String, y:String, value:Float, originalValue:Float, see the class Heatmap
      * @param config
      */
     constructor(columnTree, rowTree, heatmapData, config=heatmapConfig){
@@ -26,13 +26,15 @@ export default class DendroHeatmap {
             heatmap: new Heatmap(this.data.heatmap, true)
         }
         this.visualComponents = {
-            tooltip: new Tooltip("tooltip", false)
+            tooltip: new Tooltip("tooltip", false),
+            svg: undefined
         }
     }
 
     /**
      * visual rendering of the dendroHeatmap
      * @param domId {String} the DOM id of the SVG
+     * @return {Selection} the SVG object
      */
     render(domId){
 
@@ -42,6 +44,7 @@ export default class DendroHeatmap {
         this._renderTree(svg, this.objects.columnTree, this.config.panels.top);
         this._renderTree(svg, this.objects.rowTree, this.config.panels.left);
         this._renderHeatmap(svg, this.objects.heatmap, this.objects.columnTree.xScale.domain(), this.objects.rowTree.yScale.domain());
+        this.visualComponents.svg = svg;
     }
 
     /**

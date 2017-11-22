@@ -36,7 +36,7 @@
 import * as d4 from "d3";
 
 import {parseNewick} from "../external/newick";
-const verbose = true;
+const verbose = false;
 export default class Dendrogram {
 
     constructor(newick, orientation='h'){

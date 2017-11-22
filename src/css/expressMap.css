@@ -46,3 +46,7 @@ a {
     text-decoration: underline;
     cursor: pointer;
 }
+
+.inView {
+    color: #D25C43;
+}

@@ -10,7 +10,7 @@
 import * as d4 from "d3";
 export function createSvg(id, width, height, margin){
     "use strict";
-    return d4.select(id).append("svg")
+    return d4.select("#"+id).append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
