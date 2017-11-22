@@ -13,7 +13,7 @@ let cell = { // are these used?
 let topTreePanel = { // the column dendrogram panel
     x: 100,
     y: 0,
-    h: 80,
+    h: 50,
     w: window.innerWidth - (100 + 150), // hard-coded values?
     id: "topTree"
 };

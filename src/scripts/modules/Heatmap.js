@@ -199,6 +199,7 @@ export default class Heatmap {
         cells.enter().append("rect")
             .attr("row", (d) => `x${this.xList.indexOf(d.x)}`)
             .attr("col", (d) => `y${this.yList.indexOf(d.y)}`)
+
             .attr("x", (d) => this.xScale(d.x))
             .attr("y", (d) => this.yScale(d.y))
             .attr("rx", 2)

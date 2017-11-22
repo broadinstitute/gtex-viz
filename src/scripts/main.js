@@ -1,6 +1,7 @@
 import * as d4 from "d3";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedianTPM, parseGeneExpression} from "./modules/gtexDataParser";
+import {downloadSvg} from "./modules/utils";
 
 d4.select("#dataset1").on("click", function(){
     // top 50 expressed genes in liver
@@ -28,6 +29,76 @@ d4.select("#dataset1").on("click", function(){
 d4.select("#dataset2").on("click", function(){
     alert("datset2 clicked");
 });
+
+
+/////// toolbar events ///////
+function bindToolbarEvents(dmap, tissueDict){
+    d4.select("#dashboardToolbar").style("display", "block");
+    d4.select("#sortTissuesByAlphabet")
+        .on("click", function(){
+            d4.select("#" + dmap.config.panels.top.id)
+                .style("display", "None"); // hides the tissue dendrogram
+            let xlist = dmap.objects.heatmap.xList.sort();
+            console.log(xlist)
+            sortTissueClickHelper(xlist, dmap, tissueDict);
+        })
+        .on("mouseover", function(){
+            dmap.visualComponents.tooltip.show("Sort Tissues Alphabetically");
+        })
+        .on("mouseout", function(){
+            dmap.visualComponents.tooltip.hide();
+        });
+
+    d4.select("#sortTissuesByClusters")
+        .on("click", function(){
+            d4.select("#" + dmap.config.panels.top.id)
+                .style("display", "Block");  // shows the tissue dendrogram
+            let xlist = dmap.objects.columnTree.xScale.domain();
+            sortTissueClickHelper(xlist, dmap, tissueDict);
+        })
+        .on("mouseover", function(){
+            dmap.visualComponents.tooltip.show("Cluster Tissues");
+        })
+        .on("mouseout", function(){
+            dmap.visualComponents.tooltip.hide();
+        });
+
+    d4.select("#downloadHeatmap")
+        .on("click", function(){
+            // let svgElement = document.getElementById(heatmapConfig.divId.replace("#","")).firstChild;
+            let svgObj = $($($(`${dmap.config.panels.main.id} svg`))[0]); // jQuery dependent
+            downloadSvg(svgObj, "heatmap.svg", "downloadTempDiv");
+        })
+        .on("mouseover", function(){
+            dmap.visualComponents.tooltip.show("Download Heatmap");
+        })
+        .on("mouseout", function(){
+            dmap.visualComponents.tooltip.hide();
+        });
+}
+
+function sortTissueClickHelper(xlist, dmap, tissueDict){
+    // updates the heatmap
+    const dom = d4.select("#"+dmap.config.panels.main.id);
+    const dimensions = dmap.config.panels.main;
+    dmap.objects.heatmap.redraw(dom, xlist, dmap.objects.heatmap.yList, dimensions);
+
+    // changes the tissue display text to tissue names
+    d4.selectAll(".xLabel")
+        .text((d) => tissueDict[d].tissue_name);
+    addTissueColors(dmap, tissueDict);
+
+    // hides the boxplot
+    d4.select('#boxplot').style("opacity", 0.0);
+
+    // deselects genes
+    d4.selectAll(".yLabel").classed("clicked", false);
+    dmap.data.external = {};
+
+}
+
+
+
 
 /**
  * renders the dendroHeatmap
@@ -58,6 +129,9 @@ function customization(dmap, tissues){
     addTissueColors(dmap, tissueDict);
 
     changeHeatmapMouseEvents(dmap, tissueDict);
+
+    bindToolbarEvents(dmap, tissueDict);
+
 }
 
 /**
@@ -140,6 +214,13 @@ function changeHeatmapMouseEvents(dmap, tissueDict) {
 
 }
 
+/**
+ * renders the gene expression boxplot
+ * @param gene {String} gene symbol
+ * @param geneDict {Dictionary} gene symbol => gene object
+ * @param tissueOrder {List} a list of tissues in the displaying order
+ * @param dmap {DendroHeatmap}
+ */
 function renderBoxplot(gene, geneDict, tissueOrder, dmap) {
     const config = {
         useLog: false,
