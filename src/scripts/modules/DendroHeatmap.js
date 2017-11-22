@@ -19,6 +19,11 @@ export default class DendroHeatmap {
             columnTree: columnTree,
             rowTree: rowTree,
             heatmap: heatmapData
+        };
+        this.objects = {
+            columnTree: new Dendrogram(this.data.columnTree, "v"),
+            rowTree: new Dendrogram(this.data.rowTree, "h"),
+            heatmap: new Heatmap(this.data.heatmap, true)
         }
         this.visualComponents = {
             tooltip: new Tooltip("tooltip", false)
@@ -26,25 +31,21 @@ export default class DendroHeatmap {
     }
 
     /**
-     * visual rendering
+     * visual rendering of the dendroHeatmap
      * @param domId {String} the DOM id of the SVG
      */
     render(domId){
 
-        const topTree = new Dendrogram(this.data.columnTree, "v");
-        const leftTree = new Dendrogram(this.data.rowTree, "h");
-        const heatmap = new Heatmap(this.data.heatmap, true);
-
-        this._updateConfig(topTree, leftTree);
+        this._updateConfig(this.objects.columnTree, this.objects.rowTree);
         let svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
 
-        this._renderTree(svg, topTree, this.config.panels.top);
-        this._renderTree(svg, leftTree, this.config.panels.left);
-        this._renderHeatmap(svg, heatmap, topTree.xScale.domain(), leftTree.yScale.domain());
+        this._renderTree(svg, this.objects.columnTree, this.config.panels.top);
+        this._renderTree(svg, this.objects.rowTree, this.config.panels.left);
+        this._renderHeatmap(svg, this.objects.heatmap, this.objects.columnTree.xScale.domain(), this.objects.rowTree.yScale.domain());
     }
 
     /**
-     *
+     * renders the heatmap and color legend
      * @param svg {Selection} a d3 selection object
      * @param heatmap {Heatmap} a Heatmap object
      * @param xList {List} a list of x labels
