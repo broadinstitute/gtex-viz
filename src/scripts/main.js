@@ -6,9 +6,12 @@ import {downloadSvg} from "./modules/utils";
 d4.select("#dataset1").on("click", function(){
     // top 50 expressed genes in liver
     // - DOM
-    d4.select(this).attr("class", "inView")
-    const domId = "chart";
 
+    const domId = "chart";
+    d4.select("#" + domId).selectAll("*").remove();
+    d4.select("#dashboardToolbar").style("display", "none");
+    d4.select("#dataset2").classed("inView", false);
+    d4.select(this).classed("inView", true);
     // - gets data
     const tissueTree = getTissueClusters('top50Liver'),
           geneTree = getGeneClusters('top50Liver'),
@@ -27,8 +30,20 @@ d4.select("#dataset1").on("click", function(){
 });
 
 d4.select("#dataset2").on("click", function(){
-    alert("datset2 clicked");
+    // top 50 expressed genes in cerebellum Mayo-AD
+    const domId = "chart";
+    d4.select("#" + domId).selectAll("*").remove();
+    d4.select("#dashboardToolbar").style("display", "none");
+    d4.select("#dataset1").classed("inView", false);
+    d4.select(this).classed("inView", true);
+
+    // - gets data
+    const tissueTree = getTissueClusters('top50Cerebellum_AD'),
+          geneTree = getGeneClusters('top50Cerebellum_AD')
+    const dmap = render(domId, tissueTree, geneTree, []);
+
 });
+
 
 
 /////// toolbar events ///////
