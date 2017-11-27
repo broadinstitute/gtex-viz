@@ -1,4 +1,4 @@
-import {heatmapConfig} from "./DendroHeatmapConfig";
+import HeatmapConfig from "./DendroHeatmapConfig";
 import Dendrogram from "./Dendrogram";
 import Heatmap from "./Heatmap";
 import {createSvg} from "./utils";
@@ -13,8 +13,8 @@ export default class DendroHeatmap {
      * @param heatmapData {List} of objects with attributes: x: String, y:String, value:Float, originalValue:Float, see the class Heatmap
      * @param config
      */
-    constructor(columnTree, rowTree, heatmapData, config=heatmapConfig){
-        this.config = config;
+    constructor(columnTree, rowTree, heatmapData, config=new HeatmapConfig()){
+        this.config = config.get();
         this.data = {
             columnTree: columnTree,
             rowTree: rowTree,

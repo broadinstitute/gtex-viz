@@ -3,14 +3,13 @@ import DendroHeatmap from "./modules/DendroHeatmap";
 import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedianTPM, parseGeneExpression} from "./modules/gtexDataParser";
 import {downloadSvg} from "./modules/utils";
 
+
 d4.select("#dataset1").on("click", function(){
     // top 50 expressed genes in liver
     // - DOM
 
     const domId = "chart";
-    d4.select("#" + domId).selectAll("*").remove();
-    d4.select("#dashboardToolbar").style("display", "none");
-    d4.select("#dataset2").classed("inView", false);
+    reset();
     d4.select(this).classed("inView", true);
     // - gets data
     const tissueTree = getTissueClusters('top50Liver'),
@@ -19,8 +18,50 @@ d4.select("#dataset1").on("click", function(){
 
 
     d4.queue()
-        .defer(d4.json, urls.tissue)
-        .defer(d4.json, urls.medianGeneExp)
+        .defer(d4.json, urls.tissue) // get tissue colors
+        .defer(d4.json, urls.liverGeneExp) // get medianTPM json
+        .await(function(error, data1, data2){
+            const tissues = parseTissues(data1);
+            const expression = parseMedianTPM(data2, true);
+            const dmap = render(domId, tissueTree, geneTree, expression);
+            customization(dmap, tissues);
+        });
+});
+d4.select("#dataset3").on("click", function(){
+    // top 50 expressed genes in cerebellum Mayo-AD
+    const domId = "chart";
+    reset();
+    d4.select(this).classed("inView", true);
+
+    // - gets data
+    const tissueTree = getTissueClusters('top50Cerebellum_gtex'),
+          geneTree = getGeneClusters('top50Cerebellum_gtex'),
+          urls = getGtexUrls();
+
+    d4.queue()
+        .defer(d4.json, urls.tissue) // get tissue colors
+        .defer(d4.tsv, urls.cerebellumGeneExp)
+        .await(function(error, data1, data2){
+            const tissues = parseTissues(data1);
+            const expression = parseMedianTPM(data2, true);
+            const dmap = render(domId, tissueTree, geneTree, expression);
+            customization(dmap, tissues);
+        });
+});
+d4.select("#dataset2").on("click", function(){
+    // top 50 expressed genes in cerebellum Mayo-AD
+    const domId = "chart";
+    reset();
+    d4.select(this).classed("inView", true);
+
+    // - gets data
+    const tissueTree = getTissueClusters('top50Cerebellum_AD'),
+          geneTree = getGeneClusters('top50Cerebellum_AD'),
+          urls = getGtexUrls();
+
+    d4.queue()
+        .defer(d4.json, urls.tissue) // get tissue colors
+        .defer(d4.tsv, urls.mayoGeneExp)
         .await(function(error, data1, data2){
             const tissues = parseTissues(data1);
             const expression = parseMedianTPM(data2, true);
@@ -29,22 +70,12 @@ d4.select("#dataset1").on("click", function(){
         });
 });
 
-d4.select("#dataset2").on("click", function(){
-    // top 50 expressed genes in cerebellum Mayo-AD
-    const domId = "chart";
-    d4.select("#" + domId).selectAll("*").remove();
+function reset(){
+    d4.select("#chart").selectAll("*").remove();
+    d4.select("#boxplot").selectAll("*").remove();
     d4.select("#dashboardToolbar").style("display", "none");
-    d4.select("#dataset1").classed("inView", false);
-    d4.select(this).classed("inView", true);
-
-    // - gets data
-    const tissueTree = getTissueClusters('top50Cerebellum_AD'),
-          geneTree = getGeneClusters('top50Cerebellum_AD')
-    const dmap = render(domId, tissueTree, geneTree, []);
-
-});
-
-
+    d4.selectAll("*").classed("inView", false);
+}
 
 /////// toolbar events ///////
 function bindToolbarEvents(dmap, tissueDict){
@@ -54,7 +85,7 @@ function bindToolbarEvents(dmap, tissueDict){
             d4.select("#" + dmap.config.panels.top.id)
                 .style("display", "None"); // hides the tissue dendrogram
             let xlist = dmap.objects.heatmap.xList.sort();
-            console.log(xlist)
+            console.log(xlist);
             sortTissueClickHelper(xlist, dmap, tissueDict);
         })
         .on("mouseover", function(){
@@ -100,7 +131,7 @@ function sortTissueClickHelper(xlist, dmap, tissueDict){
 
     // changes the tissue display text to tissue names
     d4.selectAll(".xLabel")
-        .text((d) => tissueDict[d].tissue_name);
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
     addTissueColors(dmap, tissueDict);
 
     // hides the boxplot
@@ -172,7 +203,7 @@ function changeHeatmapMouseEvents(dmap, tissueDict) {
             .classed('normal', false)
             .classed('highlighted', true);
         selected.classed('expressmap-highlighted', true);
-        let row = tissueDict[d.x].tissue_name;
+        let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissue_name;
         let column = d.y;
 
         tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
@@ -194,14 +225,12 @@ function changeHeatmapMouseEvents(dmap, tissueDict) {
     };
     svg.selectAll(".cell")
         .on("mouseover", heatmapMouseover)
-        .on("mouseout", heatmapMouseout)
-
+        .on("mouseout", heatmapMouseout);
 
     const geneDict = {}; // constructs a gene lookup table indexed by gene symbols
-    console.log(dmap.data.heatmap)
-    dmap.data.heatmap.forEach((d) => {geneDict[d.geneSymbol] = d})
+    dmap.data.heatmap.forEach((d) => {geneDict[d.geneSymbol] = d});
     const ylabelClick = function(d){
-        let s = d4.select(this)
+        let s = d4.select(this);
         if (d4.event.altKey) {
             // if alt key is pressed -- additive selection
             // highlights the selected label
@@ -218,13 +247,12 @@ function changeHeatmapMouseEvents(dmap, tissueDict) {
         }
 
         // renders the boxplot
-        let tissueNames = dmap.objects.heatmap.xScale.domain().map((d) => tissueDict[d].tissue_name);
+        let tissueNames = dmap.objects.heatmap.xScale.domain().map((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
         renderBoxplot(d, geneDict, tissueNames, dmap)
 
-    }
+    };
     svg.selectAll(".yLabel")
         .on("click", ylabelClick);
-
 }
 
 /**
@@ -295,7 +323,7 @@ function mapTissueIdToName(tissueDict){
 
     // displays tissue names in the heatmap
     d4.selectAll(".xLabel")
-        .text((d) => tissueDict[d].tissue_name);
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
 }
 
 /**
@@ -311,14 +339,14 @@ function addTissueColors(dmap, tissueDict){
         .data(heatmap.xList);
 
      // updates old elements
-    dots.attr("fill", (d) => `#${tissueDict[d].tissue_color_hex}`);
+    dots.attr("fill", (d) => tissueDict[d]===undefined?"#000000":`#${tissueDict[d].tissue_color_hex}`);
 
     // enters new elements
     dots.enter().append("circle")
         .attr('cx', (d) => heatmap.xScale(d) + heatmap.xScale.bandwidth()/2)
         .attr('cy', heatmap.yScale.range()[1] + 10) // TODO: eliminate hard-coded values
         .attr("r", 3)
-        .attr("fill", (d) => `#${tissueDict[d].tissue_color_hex}`)
+        .attr("fill", (d) => tissueDict[d] === undefined? "#000000":`#${tissueDict[d].tissue_color_hex}`)
         .attr("opacity", 0.75) // more subdued color
         .attr("class", "xColor");
 
