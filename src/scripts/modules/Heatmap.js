@@ -117,7 +117,7 @@ export default class Heatmap {
             .attr("class", (d, i) => `xLabel normal x${i}`);
 
 
-        // enter new elements and update
+        // enters new elements
         xLabels.enter().append("text")
             .attr("x", 0)
             .attr("y", 0)
