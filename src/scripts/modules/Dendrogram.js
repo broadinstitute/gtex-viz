@@ -36,7 +36,7 @@
 import * as d4 from "d3";
 
 import {parseNewick} from "../external/newick";
-const verbose = true;
+const verbose = false;
 export default class Dendrogram {
 
     constructor(newick, orientation='h'){
@@ -137,7 +137,7 @@ export default class Dendrogram {
             .attr("transform", "translate(0," + this.height + ")")
             .call(
                 d4.axisBottom(this.xScale)
-                .tickValues([5, 10])
+                .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
             );
     }
 
@@ -214,7 +214,7 @@ export default class Dendrogram {
             .attr("class", "axis")
             .call(
                 d4.axisLeft(this.yScale)
-                .tickValues([5, 10])
+                .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
             );
 
     }

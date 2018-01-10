@@ -41,3 +41,12 @@ div.expressmap-tooltip {
 a {
     color: #4eb3d3;
 }
+
+.link:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.inView {
+    color: #D25C43;
+}

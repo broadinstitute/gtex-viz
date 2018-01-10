@@ -22,7 +22,7 @@ def to_newick(node, newick, parent_dist, leaf_names):
     :param newick: a string in newick format
     :param parent_dist: the parent node distance
     :param leaf_names: a list of leaf labels
-    :return: nothing
+    :return: newick string
     '''
 
     if node.is_leaf():  # leaf nodes
@@ -66,33 +66,48 @@ def generate_matrix(df, value="medianTPM", row="geneSymbol", col="tissueId", adj
     :return: a data matrix
     '''
 
+    df = df.sort_values(by=[row, col])
+
     # transform data values
     df[value] = df[value] + adjust
     if log_transform:
         df[value] = np.log10(df[value])
 
-    df.sort_values(by=[row])
-    groups = df.groupby([col])
+    # groups = df.groupby([col])
+    groups = df[col].unique()
+    print "Number of groups " + str(len(groups))
     return np.reshape(df.as_matrix(columns=[value]), (-1, len(groups))), df[row].unique()
-
+    # return np.reshape(df.as_matrix(columns=[value]), (-1, len(groups))), df[row]
 if __name__ == '__main__':
 
-    # data_file = "~/Sites/expressMap/genes.median.tpm.csv"
+    # test case: the Anderson's iris data
+
+    test_file = "data/iris.tsv"
+    iris_data_frame = pandas.read_csv(test_file, sep="\t")
+    mat = iris_data_frame.as_matrix(columns=["Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width"])
+    leaf_labels = iris_data_frame.Species
+    clusters = cluster(mat, method="average")
+    root = to_tree(clusters, False)
+    print to_newick(root, "", root.dist, leaf_labels)
+
     dfile = input("Enter a tsv file:") # must have the medianTPM, geneSymbol, tissueId fields
-    print dfile
+    # print dfile
     data_frame = pandas.read_csv(dfile, sep="\t")
 
     # first generates gene clusters based on expression in tissues
     mat, leaf_labels = generate_matrix(data_frame)
-    clusters = cluster(mat, method="complete")
+    clusters = cluster(mat, method="average")
     root = to_tree(clusters, False)
     print to_newick(root, "", root.dist, leaf_labels)
 
     # then generates tissue clusters based on expression of genes
-    mat, leaf_labels = generate_matrix(data_frame, row="tissueId", col="geneSymbol", log_transform=False)
-    # print mat.shape
-    clusters = cluster(mat, method="complete")
+    data_frame = pandas.read_csv(dfile, sep="\t")
+
+    mat, leaf_labels = generate_matrix(data_frame, row="tissueId", col="geneSymbol", log_transform=True)
+    print mat.shape
+    clusters = cluster(mat, method="average")
     root = to_tree(clusters, False)
+    print root
     print to_newick(root, "", root.dist, leaf_labels)
 
 

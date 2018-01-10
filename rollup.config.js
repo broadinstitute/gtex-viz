@@ -3,11 +3,13 @@ import uglify from 'rollup-plugin-uglify';
 import replace from 'rollup-plugin-replace';
 
 export default {
-    entry:'src/scripts/main.js',
-    dest: 'build/js/expressMap.bundle.min.js',
-    format: 'iife',
-    sourceMap: 'inline',
-    moduleName: 'expressMap',
+    input: 'src/scripts/main.js',
+    output: {
+        file: 'build/js/expressMap.bundle.min.js',
+        format: 'iife'
+    },
+    sourcemap: 'inline',
+    name: 'expressMap',
     plugins: [
         nodeResolve({jsnext: true, main: true}),
         replace({

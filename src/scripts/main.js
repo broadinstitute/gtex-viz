@@ -1,168 +1,275 @@
-/*
-    Dependencies: check node modules in package.json.
-    References:
-    - D3 APIs: https://github.com/d3/d3/blob/master/API.md
-*/
-
 import * as d4 from "d3";
+import DendroHeatmap from "./modules/DendroHeatmap";
+import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedianTPM, parseGeneExpression} from "./modules/gtexDataParser";
+import {downloadSvg} from "./modules/utils";
 
-import {
-    getGtexURLs,
-    getTissueClusters,
-    getGeneClusters,
-    getMedianTPMJson,
-    parseTissue,
-    parseMedianTPM,
-    parseGeneExpression
-} from './modules/gtexDataParser';
 
-import {
-    downloadSvg
-} from "./modules/utils";
+d4.select("#dataset1").on("click", function(){
+    // top 50 expressed genes in liver
+    // - DOM
 
-import Dendrogram from "./modules/Dendrogram";
-import Heatmap from "./modules/Heatmap";
-import Tooltip from "./modules/Tooltip";
+    const domId = "chart";
+    reset();
+    d4.select(this).classed("inView", true);
+    // - gets data
+    const tissueTree = getTissueClusters('top50Liver'),
+          geneTree = getGeneClusters('top50Liver'),
+          urls = getGtexUrls();
 
-// data
-const urls = getGtexURLs();
-const tissueHash = {}; // tissue objects indexed by tissue_id
 
-// global configuration of the heatmap dashboard
-const heatmapConfig = {
-    useLog: true,
-    margin: {left: 10, top: 10, bottom: 170},
-    divId: "#chart",
-    cell: {height: 11}
-};
+    d4.queue()
+        .defer(d4.json, urls.tissue) // get tissue colors
+        .defer(d4.json, urls.liverGeneExp) // get medianTPM json
+        .await(function(error, data1, data2){
+            const tissues = parseTissues(data1);
+            const expression = parseMedianTPM(data2, true);
+            const dmap = render(domId, tissueTree, geneTree, expression);
+            customization(dmap, tissues);
+        });
+});
+d4.select("#dataset3").on("click", function(){
+    // top 50 expressed genes in cerebellum Mayo-AD
+    const domId = "chart";
+    reset();
+    d4.select(this).classed("inView", true);
 
-// configures each heatmap panel
-// TODO: reorganize these panel configs, eliminate hard-coded values
-let topTreePanel = { // the tissue dendrogram panel
-    x: 100,
-    y: heatmapConfig.margin.top,
-    height: 80,
-    width: window.innerWidth - (150 + 150)
-};
+    // - gets data
+    const tissueTree = getTissueClusters('top50Cerebellum_gtex'),
+          geneTree = getGeneClusters('top50Cerebellum_gtex'),
+          urls = getGtexUrls();
 
-let leftTreePanel = { // the gene dendrogram panel
-    x: heatmapConfig.margin.left,
-    y: heatmapConfig.margin.top + topTreePanel.height + 5,
-    height: undefined, // data-dependent
-    width: 100 - (heatmapConfig.margin.left + 5)
-};
+    d4.queue()
+        .defer(d4.json, urls.tissue) // get tissue colors
+        .defer(d4.tsv, urls.cerebellumGeneExp)
+        .await(function(error, data1, data2){
+            const tissues = parseTissues(data1);
+            const expression = parseMedianTPM(data2, true);
+            const dmap = render(domId, tissueTree, geneTree, expression);
+            customization(dmap, tissues);
+        });
+});
+d4.select("#dataset2").on("click", function(){
+    // top 50 expressed genes in cerebellum Mayo-AD
+    const domId = "chart";
+    reset();
+    d4.select(this).classed("inView", true);
 
-let heatmapPanel = {
-    x: 100,
-    y: heatmapConfig.margin.top + topTreePanel.height + 5,
-    height: undefined, // data-dependent and should align with the gene dendrogram
-    width: window.innerWidth - (150 + 150)
-};
+    // - gets data
+    const tissueTree = getTissueClusters('top50Cerebellum_AD'),
+          geneTree = getGeneClusters('top50Cerebellum_AD'),
+          urls = getGtexUrls();
 
-let legendPanel = { // the color legend panel
-    x: 100,
-    y: heatmapConfig.margin.top + topTreePanel.height + 5,
-    height: 50,
-    width: window.innerWidth - (150 + 150),
-    cell: {width: 60}
-};
-
-/////// boxplot ///////
-const boxplotConfig = {
-    useLog: false,
-    divId: "#boxplot",
-    colors: ["grey","#bb453e", "#1c677f", "#078c84", "#b4486b"], // TODO: add more colors
-    data: {}
-};
-
-/////// toolbar ///////
-bindToolbarEvents();
-
-// initiates the svg
-
-let svg = d4.select(heatmapConfig.divId).append("svg")
-    .attr("width", window.innerWidth - heatmapConfig.margin.left)
-    .attr("height", heatmapConfig.margin.top + legendPanel.height + heatmapConfig.margin.bottom);
-
-// renders the tissue tree
-const tissueTree = new Dendrogram(getTissueClusters(), 'v');
-renderTopTree(tissueTree);
-
-// renders the gene tree
-const geneTree = new Dendrogram(getGeneClusters(), 'h');
-renderLeftTree(geneTree);
-
-// renders the heatmap
-let heatmap = undefined;
-d4.json(urls.tissue, function(error, data){
-    const tissues = parseTissue(data);
-    d4.json(getMedianTPMJson(), function(error, data){
-        renderHeatmap(data, tissues)
-    });
+    d4.queue()
+        .defer(d4.json, urls.tissue) // get tissue colors
+        .defer(d4.tsv, urls.mayoGeneExp)
+        .await(function(error, data1, data2){
+            const tissues = parseTissues(data1);
+            const expression = parseMedianTPM(data2, true);
+            const dmap = render(domId, tissueTree, geneTree, expression);
+            customization(dmap, tissues);
+        });
 });
 
-/////// customized mouse events ///////
-const tooltip = new Tooltip("tooltip", false);
-
-function treeMouseover(d){
-    d4.select(this)
-        .attr("r", 6)
-        .attr("fill", "red");
-    const leaves = d.leaves().map((node)=>node.data.name);
-    tooltip.show(`${leaves.join("<br>")}`);
+function reset(){
+    d4.select("#chart").selectAll("*").remove();
+    d4.select("#boxplot").selectAll("*").remove();
+    d4.select("#dashboardToolbar").style("display", "none");
+    d4.selectAll("*").classed("inView", false);
 }
 
-function treeMouseout(d){
-    d4.select(this)
-        .attr("r", 1.5)
-        .attr("fill", "#333");
-    const leaves = d.leaves().map((node)=>node.data.name);
-    tooltip.hide();
+/////// toolbar events ///////
+function bindToolbarEvents(dmap, tissueDict){
+    d4.select("#dashboardToolbar").style("display", "block");
+    d4.select("#sortTissuesByAlphabet")
+        .on("click", function(){
+            d4.select("#" + dmap.config.panels.top.id)
+                .style("display", "None"); // hides the tissue dendrogram
+            let xlist = dmap.objects.heatmap.xList.sort();
+            console.log(xlist);
+            sortTissueClickHelper(xlist, dmap, tissueDict);
+        })
+        .on("mouseover", function(){
+            dmap.visualComponents.tooltip.show("Sort Tissues Alphabetically");
+        })
+        .on("mouseout", function(){
+            dmap.visualComponents.tooltip.hide();
+        });
+
+    d4.select("#sortTissuesByClusters")
+        .on("click", function(){
+            d4.select("#" + dmap.config.panels.top.id)
+                .style("display", "Block");  // shows the tissue dendrogram
+            let xlist = dmap.objects.columnTree.xScale.domain();
+            sortTissueClickHelper(xlist, dmap, tissueDict);
+        })
+        .on("mouseover", function(){
+            dmap.visualComponents.tooltip.show("Cluster Tissues");
+        })
+        .on("mouseout", function(){
+            dmap.visualComponents.tooltip.hide();
+        });
+
+    d4.select("#downloadHeatmap")
+        .on("click", function(){
+            // let svgElement = document.getElementById(heatmapConfig.divId.replace("#","")).firstChild;
+            let svgObj = $($($(`${"#" +dmap.config.id} svg`))[0]); // jQuery dependent
+            downloadSvg(svgObj, "heatmap.svg", "downloadTempDiv");
+        })
+        .on("mouseover", function(){
+            dmap.visualComponents.tooltip.show("Download Heatmap");
+        })
+        .on("mouseout", function(){
+            dmap.visualComponents.tooltip.hide();
+        });
 }
 
-function heatmapMouseover(d) {
-    // overrides the heatmap cell's mouseover event
-    // dependencies -- css classes
-    // expressMap.css
-    // heatmap.css
+function sortTissueClickHelper(xlist, dmap, tissueDict){
+    // updates the heatmap
+    const dom = d4.select("#"+dmap.config.panels.main.id);
+    const dimensions = dmap.config.panels.main;
+    dmap.objects.heatmap.redraw(dom, xlist, dmap.objects.heatmap.yList, dimensions);
 
-    const selected = d4.select(this); // note: "this" refers to the dom element of d
-    const rowClass = selected.attr("row");
-    const colClass = selected.attr("col");
-    d4.selectAll(".xLabel").filter(`.${rowClass}`)
-        .classed('normal', false)
-        .classed('highlighted', true);
+    // changes the tissue display text to tissue names
+    d4.selectAll(".xLabel")
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
+    addTissueColors(dmap, tissueDict);
 
-    d4.selectAll(".yLabel").filter(`.${colClass}`)
-        .classed('normal', false)
-        .classed('highlighted', true);
-    selected.classed('expressmap-highlighted', true);
-    let row = tissueHash[d.x].tissue_name;
-    let column = d.y;
+    // hides the boxplot
+    d4.select('#boxplot').style("opacity", 0.0);
 
-    tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
+    // deselects genes
+    d4.selectAll(".yLabel").classed("clicked", false);
+    dmap.data.external = {};
+
 }
 
-function heatmapMouseout(d){
-    const selected = d4.select(this);
-    const rowClass = selected.attr("row");
-    const colClass = selected.attr("col");
 
-    d4.selectAll(".xLabel").filter(`.${rowClass}`)
-        .classed('normal', true)
-        .classed('highlighted', false);
-
-    d4.selectAll(".yLabel").filter(`.${colClass}`)
-        .classed('normal', true)
-        .classed('highlighted', false);
-    selected.classed('expressmap-highlighted', false);
-    tooltip.hide();
+/**
+ * renders the dendroHeatmap
+ * @param id {String} the ID of the SVG
+ * @param topTree {String} a Newick tree
+ * @param leftTree {String} a Newick tree
+ * @param heatmapData {List} of objects: {x: {String}, y: {String}, value: {Float}, originalValue: {Float}
+ * @returns {DendroHeatmap}
+ */
+function render(id, topTree, leftTree, heatmapData){
+    // - visualization
+    let dmap = new DendroHeatmap(topTree, leftTree, heatmapData);
+    dmap.render(id);
+    return dmap;
 }
 
-function heatmapYLabelClick(d, id, xorder){
-    // overrides the ylabel's click event
-    // renders the expression boxplot
-    var layout = {
+/**
+ * Customizes the dendroHeatmap specifically for the dataset
+ * @param dmap {DendroHeatmap}
+ * @param tissues [List] of GTEx tissue objects: {tissue_id: {String}, and a bunch of other attributes}
+ */
+function customization(dmap, tissues){
+    console.log(tissues)
+    let tissueDict = {};
+    tissues.forEach((d) => {tissueDict[d.tissue_id] = d});
+
+    mapTissueIdToName(tissueDict);
+    addTissueColors(dmap, tissueDict);
+
+    changeHeatmapMouseEvents(dmap, tissueDict);
+
+    bindToolbarEvents(dmap, tissueDict);
+
+}
+
+/**
+ * Overrides the heatmap mouse events
+ * @param dmap {DendroHeatmap}
+ * @param tissueDict {Dictionary} GTEx tissue objects indexed by tissue_id
+ */
+function changeHeatmapMouseEvents(dmap, tissueDict) {
+    const svg = dmap.visualComponents.svg;
+    const tooltip = dmap.visualComponents.tooltip;
+    const heatmapMouseover = function(d) {
+        // overrides the heatmap cell's mouseover event
+        // dependencies -- css classes
+        // expressMap.css
+        // heatmap.css
+
+        const selected = d4.select(this); // note: "this" refers to the dom element of d
+        const rowClass = selected.attr("row");
+        const colClass = selected.attr("col");
+        d4.selectAll(".xLabel").filter(`.${rowClass}`)
+            .classed('normal', false)
+            .classed('highlighted', true);
+
+        d4.selectAll(".yLabel").filter(`.${colClass}`)
+            .classed('normal', false)
+            .classed('highlighted', true);
+        selected.classed('expressmap-highlighted', true);
+        let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissue_name;
+        let column = d.y;
+
+        tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
+    };
+    const heatmapMouseout = function(d){
+        const selected = d4.select(this);
+        const rowClass = selected.attr("row");
+        const colClass = selected.attr("col");
+
+        d4.selectAll(".xLabel").filter(`.${rowClass}`)
+            .classed('normal', true)
+            .classed('highlighted', false);
+
+        d4.selectAll(".yLabel").filter(`.${colClass}`)
+            .classed('normal', true)
+            .classed('highlighted', false);
+        selected.classed('expressmap-highlighted', false);
+        tooltip.hide();
+    };
+    svg.selectAll(".cell")
+        .on("mouseover", heatmapMouseover)
+        .on("mouseout", heatmapMouseout);
+
+    const geneDict = {}; // constructs a gene lookup table indexed by gene symbols
+    dmap.data.heatmap.forEach((d) => {geneDict[d.geneSymbol] = d});
+    const ylabelClick = function(d){
+        let s = d4.select(this);
+        if (d4.event.altKey) {
+            // if alt key is pressed -- additive selection
+            // highlights the selected label
+            if(!s.classed("clicked")) s.classed("clicked", true);
+        }
+        else {
+            // toggles the css class, clicked
+            if (s.classed("clicked")) s.classed("clicked", false);
+            else {
+                dmap.data.external = {}; // clears the existing data container
+                d4.selectAll("clicked").classed("clicked", false); // clears all clicked labels if any
+                s.classed("clicked", true); // highlights the clicked label
+            }
+        }
+
+        // renders the boxplot
+        let tissueNames = dmap.objects.heatmap.xScale.domain().map((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
+        renderBoxplot(d, geneDict, tissueNames, dmap)
+
+    };
+    svg.selectAll(".yLabel")
+        .on("click", ylabelClick);
+}
+
+/**
+ * renders the gene expression boxplot
+ * @param gene {String} gene symbol
+ * @param geneDict {Dictionary} gene symbol => gene object
+ * @param tissueOrder {List} a list of tissues in the displaying order
+ * @param dmap {DendroHeatmap}
+ */
+function renderBoxplot(gene, geneDict, tissueOrder, dmap) {
+    const config = {
+        useLog: false,
+        id: "boxplot",
+        colors: ["grey","#bb453e", "#1c677f", "#078c84", "#b4486b"], // TODO: add more colors
+        data: {}
+    };
+    const layout = {
         title: "",
         font: {
             family: 'Libre Franklin',
@@ -178,222 +285,71 @@ function heatmapYLabelClick(d, id, xorder){
         },
         showlegend: true
     };
-   // checks if the gene is already in boxplot.data, if so, drops it:
-    if (boxplotConfig.data.hasOwnProperty(d)){
-        delete boxplotConfig.data[d];
-        d4.keys(boxplotConfig.data).forEach((d, i)=>{
-            boxplotConfig.data[d]["marker"]["color"] = boxplotConfig.colors[i] || "black";
+
+    let data = dmap.data.external;
+
+    if (data.hasOwnProperty(gene)) {
+        // indicates that the user would like to delete the gene from the boxplot
+        delete data[gene];
+        d4.keys(data).forEach((d, i) => {
+            // updates the data colors
+            data[d]["marker"]["color"] = config.colors[i] || "black";
         });
-        Plotly.newPlot('boxplot', d4.values(boxplotConfig.data), layout);
+        // redraws the box plot
+        Plotly.newPlot(config.id, d4.values(data), layout);
         return;
     }
 
-   const url = urls.geneExp + id;
-   d4.json(url, function(error, data){
-       let color = boxplotConfig.colors[d4.keys(boxplotConfig.data).length] || "black";
-       let gexJson = parseGeneExpression(data, boxplotConfig.useLog, color, xorder);
-       boxplotConfig.data[d] = gexJson;
-       Plotly.newPlot('boxplot', d4.values(boxplotConfig.data), layout);
-       d4.select('#boxplot').style("opacity", 1.0);
-
-   } );
+    const url = getGtexUrls().geneExp + geneDict[gene].id;
+    d4.json(url, function(error, d) {
+        let color = config.colors[d4.keys(data).length] || "black";
+        let json = parseGeneExpression(d, config.useLog, color, tissueOrder);
+        data[gene] = json;
+        Plotly.newPlot(config.id, d4.values(data), layout);
+        d4.select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
+    })
 }
 
-/////// visualization helper functions ///////
-
-function renderTopTree(tree){
-    // renders the tissue dendrogram
-    const topTreeG = svg.append("g")
-        .attr('id', 'topTreeGroup')
-        .attr("transform", `translate(${topTreePanel.x}, ${topTreePanel.y})`);
-    tree.draw(topTreeG, topTreePanel.width, topTreePanel.height);
-    svg.attr("height", parseFloat(svg.attr("height")) + topTreePanel.height);
-
-    topTreeG.selectAll('.node')
-        .on('mouseover', treeMouseover)
-        .on('mouseout', treeMouseout);
-}
-
-function renderLeftTree(tree){
-    // renders the gene dendrogram
-    leftTreePanel.height = heatmapConfig.cell.height * tree.leaves.length;
-    const leftTreeG = svg.append("g")
-        .attr('id', 'leftTreeGroup')
-        .attr("transform", `translate(${leftTreePanel.x}, ${leftTreePanel.y})`);
-    tree.draw(leftTreeG, leftTreePanel.width, leftTreePanel.height);
-    svg.attr("height", parseFloat(svg.attr("height")) + leftTreePanel.height);
-
-    // overrides mouse events
-    leftTreeG.selectAll('.node')
-        .on('mouseover', treeMouseover)
-        .on('mouseout', treeMouseout);
-}
-
-function renderHeatmap(data, tissues){
-    // renders the heatmap
-    // this heatmap is dependent of the dendrograms and must be rendered after the dendrograms
-    // because the x and y scales are determined by the dendrograms.
-
-    const json = parseMedianTPM(data, heatmapConfig.useLog);
-    heatmap = new Heatmap(json, true, {w:topTreePanel.width, h:leftTreePanel.height});
-     // renders the heatmap panel
-    const mapG = svg.append("g")
-        .attr('id', 'mapGroup')
-        .attr("transform", `translate(${heatmapPanel.x}, ${heatmapPanel.y})`);
-    // heatmap.draw(mapG);
-    // determined based on the dendrograms
-    // let xList = tissueTree.leaves.map((d) => d.data.name);
-    let xList = tissueTree.xScale.domain();
-    let yList = geneTree.yScale.domain();
-    heatmap.update(mapG, xList, yList);
-
-    // renders the legend panel
-    legendPanel.y += leftTreePanel.height + 150; // adjusts legend panel's y pos.
-    const legendG = svg.append("g")
-        .attr('id', 'legendGroup')
-        .attr("transform", `translate(${legendPanel.x}, ${legendPanel.y})`);
-    heatmap.drawLegend(legendG, legendPanel.cell.width);
-
+/**
+ * Maps GTEx tissue ID to tissue Names for improvement of readability
+ * @param tissueDict {Dictionary} GTEx tissue objects indexed by tissue_id
+ */
+function mapTissueIdToName(tissueDict){
     /////// tissue label modifications ///////
     // the tree clusters and tpm expression data use tissue IDs.
     // the featureExpression web service, however, uses tissue names.
     // tissue ID <=> tissue name mapping is required.
     // This is a temporary solution, the inconsistency of tissue ID/name should be a backend fix.
 
-    tissues.forEach((d) => {tissueHash[d.tissue_id] = d});
-
     // displays tissue names in the heatmap
     d4.selectAll(".xLabel")
-        .text((d) => tissueHash[d].tissue_name);
-
-    // adds tissue colors to the tissue labels (the x labels)
-    addTissueColors();
-
-
-    // overrides the mouse events of the cells
-    svg.selectAll(".cell")
-        .on("mouseover", heatmapMouseover)
-        .on("mouseout", heatmapMouseout);
-
-    // gene symbol to gencode ID mapping: a preparation step for the gene APIs
-    const geneLookupTable = {}; // constructs a symbol => gencode ID lookup table
-    d4.nest() // TODO: change to a simple forEach loop to build the lookup table...
-        .key((d) => d.y)
-        .entries(json)
-        .forEach((d) => {geneLookupTable[d.key] = d.values[0].id});
-
-    // overrides and customizes the click event of the gene labels
-    // click: render the gene's boxplot
-    // alt-click: add a gene to the current boxplot
-    svg.selectAll(".yLabel")
-        .on("click", function(d, i){
-            let selected = d4.select(this);
-            if (d4.event.altKey)  {
-                // if alt key is pressed, it's an alt-click event
-                if (!selected.classed("clicked")){ // highlights the gene
-                    selected.classed("clicked", true);
-                }
-            }
-            else {
-                // a click event
-                // toggles the css class: clicked
-                if (selected.classed("clicked")){
-                    selected.classed("clicked", false); // deselects the gene
-                } else{
-                    boxplotConfig.data = {}; // clears the existing boxplot data
-                    d4.selectAll(".clicked").classed("clicked", false); // clears all clicked genes if any
-                    selected.classed("clicked", true); // selects the gene
-                }
-            }
-
-            // renders the boxplot
-            const gencodeId = geneLookupTable[d];
-            heatmapYLabelClick(d, gencodeId, heatmap.xScale.domain().map((d)=>tissueHash[d].tissue_name));
-
-        });
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
 }
 
-/////// defines heatmap components ///////
-function addTissueColors(){
-    // data joining
-    let dots = d4.select("#mapGroup").selectAll(".xColor")
+/**
+ * Adds GTEx tissue colors to the tissue labels
+ * @param id:
+ * @param heatmap
+ * @param tissueDict
+ */
+function addTissueColors(dmap, tissueDict){
+    const id = dmap.config.panels.main.id;
+    const heatmap = dmap.objects.heatmap;
+    let dots = d4.select("#"+id).selectAll(".xColor")
         .data(heatmap.xList);
 
-    // updates old elements
-    dots.attr("fill", (d) => `#${tissueHash[d].tissue_color_hex}`);
+     // updates old elements
+    dots.attr("fill", (d) => tissueDict[d]===undefined?"#000000":`#${tissueDict[d].tissue_color_hex}`);
 
     // enters new elements
     dots.enter().append("circle")
         .attr('cx', (d) => heatmap.xScale(d) + heatmap.xScale.bandwidth()/2)
         .attr('cy', heatmap.yScale.range()[1] + 10) // TODO: eliminate hard-coded values
         .attr("r", 3)
-        .attr("fill", (d) => `#${tissueHash[d].tissue_color_hex}`)
+        .attr("fill", (d) => tissueDict[d] === undefined? "#000000":`#${tissueDict[d].tissue_color_hex}`)
         .attr("opacity", 0.75) // more subdued color
         .attr("class", "xColor");
 
     // removes retired elements
     dots.exit().remove();
-}
-
-/////// toolbar events ///////
-function bindToolbarEvents(){
-    d4.select("#sortTissuesByAlphabet")
-        .on("click", function(){
-            d4.select('#topTreeGroup')
-                .style("display", "None"); // hides the tissue dendrogram
-            let xlist = heatmap.xList.sort();
-            sortTissueClickHelper(xlist);
-        })
-        .on("mouseover", function(){
-            tooltip.show("Sort Tissues Alphabetically");
-        })
-        .on("mouseout", function(){
-            tooltip.hide();
-        });
-
-    d4.select("#sortTissuesByClusters")
-        .on("click", function(){
-            d4.select('#topTreeGroup')
-                .style("display", "Block");  // shows the tissue dendrogram
-            let xlist = tissueTree.xScale.domain();
-            sortTissueClickHelper(xlist);
-        })
-        .on("mouseover", function(){
-            tooltip.show("Cluster Tissues");
-        })
-        .on("mouseout", function(){
-            tooltip.hide();
-        });
-
-    d4.select("#downloadHeatmap")
-        .on("click", function(){
-            // let svgElement = document.getElementById(heatmapConfig.divId.replace("#","")).firstChild;
-            let svgObj = $($($(`${heatmapConfig.divId} svg`))[0]); // jQuery dependent
-            downloadSvg(svgObj, "heatmap.svg", "downloadTempDiv");
-        })
-        .on("mouseover", function(){
-            tooltip.show("Download Heatmap");
-        })
-        .on("mouseout", function(){
-            tooltip.hide();
-        });
-}
-
-function sortTissueClickHelper(xlist){
-    // updates the heatmap
-    let dom = d4.select('#mapGroup');
-    heatmap.update(dom, xlist, heatmap.yList);
-
-    // changes the tissue display text to tissue names
-    d4.selectAll(".xLabel")
-        .text((d) => tissueHash[d].tissue_name);
-    addTissueColors();
-
-    // hides the boxplot
-    d4.select('#boxplot').style("opacity", 0.0);
-
-    // deselects genes
-    d4.selectAll(".yLabel").classed("clicked", false);
-    boxplotConfig.data = {};
-
 }
