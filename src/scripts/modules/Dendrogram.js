@@ -116,7 +116,7 @@ export default class Dendrogram {
             .enter().append("circle")
             .attr("cx", (d) => d.x)
             .attr("cy", (d) => d.y + this.yScale.bandwidth()/2)
-            .attr("r", 1.5)
+            .attr("r", 2)
             // .attr("fill", "#8DCDC1") // TODO: eliminate hard-coded value, use css class
             // .attr("fill", "#4b8699")
             .attr('fill', '#333')
@@ -127,7 +127,7 @@ export default class Dendrogram {
                 console.log(d.leaves());
             })
             .on("mouseout", function(d){
-                d3.select(this).attr("r", 1.5)
+                d3.select(this).attr("r", 2)
             });
 
         // axis
@@ -193,7 +193,7 @@ export default class Dendrogram {
             .enter().append("circle")
             .attr("cx", (d) => d.x + this.xScale.bandwidth()/2)
             .attr("cy", (d) => d.y)
-            .attr("r", 1.5)
+            .attr("r", 2)
             // .attr("fill", "#8DCDC1")
             // .attr("fill", "#4b8699")
             .attr('fill', '#333')
@@ -204,7 +204,7 @@ export default class Dendrogram {
                 console.log(d.leaves());
             })
             .on("mouseout", function(d){
-                d3.select(this).attr("r", 1.5)
+                d3.select(this).attr("r", 2)
             });
 
         // axis
