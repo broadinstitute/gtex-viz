@@ -96,7 +96,7 @@ export default class DendroHeatmap {
         };
         const mouseout = function(d){
             d4.select(this)
-                .attr("r", 1.5)
+                .attr("r", 2)
                 .attr("fill", "#333");
             const leaves = d.leaves().map((node)=>node.data.name);
             tooltip.hide();
