@@ -1,6 +1,7 @@
 export function getGtexUrls(){
     return {
-        "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
+        // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
+        "geneExp": "https://gtexportal.org/rest/v1/expression/geneExpression?datasetId=gtex_v7&gencodeId=",
         "tissue": "https://gtexportal.org/rest/v1/dataset/color",
         "liverGeneExp": "data/top50.genes.liver.genomic.median.tpm.json", // top 50 genes in GTEx liver
         "cerebellumGeneExp": "data/top.gtex.cerebellum.genes.median.tpm.tsv",
@@ -44,23 +45,59 @@ export function parseMedianTPM(data, useLog=true){
     return data;
 }
 
-export function parseGeneExpression(data, useLog=false, color="grey", xlist = []){
-    let gene = data["featureExpression"][0];
+/*
+TODO: review and rewrite the parser for gene expression service
+task1: get the tissue list
+task2: build the data structure for plotly boxplot
+ */
+function parseGeneExpression(gencodeId, data){
+    /**
+     *
+     * @type {{exp: {}, geneSymbol: string}}
+     */
+    let lookupTable = {
+        exp: {}, // indexed by tissueId
+        geneSymbol: ""
+    };
+    data.geneExpression.forEach((d)=>{
+        if (d.gencodeId == gencodeId) {
+            // if the gencode ID matches the query gencodeId,
+            // add the expression data to the lookup table
+            lookupTable.exp[d.tissueId] = d.data;
+            if ("" == lookupTable.geneSymbol) lookupTable.geneSymbol = d.geneSymbol
+        }
+    });
+    return lookupTable
+}
+
+export function makeJsonForPlotly(gencodeId, data, useLog=false, color="grey", xlist){
+
+    // reference: https://plot.ly/javascript/box-plots/
+
+    let lookupTable = parseGeneExpression(gencodeId, data);
     let x = [];
     let y = [];
-    let xorder = xlist.length == 0? d3.keys(gene.genetpm):xlist;
-    xorder.forEach((d)=>{
-        // preparing for the plotly data structure of a grouped boxplot
-        // reference: https://plot.ly/javascript/box-plots/
-        // concatenates all the values of a tissue to the list values
-        // concatenates a list of the tissue label repeatedly
-        x = x.concat(Array(gene.genetpm[d]===undefined?0:gene.genetpm[d].length).fill(d));
-        y = y.concat(gene.genetpm[d]===undefined?-1:gene.genetpm[d])
+
+    // for each tissue
+    xlist.forEach((d)=>{
+
+        if (lookupTable.exp[d]===undefined){
+            // when the gene has no expression data in tissue d,
+            // provide dummy data
+            x = x.concat([d]);
+            y = y.concat([-1]);
+        } else {
+            // concatenate a list of the tissue label repeatedly (lookupTable.exp[d].length times) to x
+            // concatenate all the expression values to y
+            // the number of elements in x and y must match
+            x = x.concat(Array(lookupTable.exp[d].length).fill(d));
+            y = y.concat(lookupTable.exp[d]);
+        }
     });
     return {
         x: x,
         y: y,
-        name: gene.name,
+        name: lookupTable.geneSymbol,
         type: 'box',
         line: {width:1},
         marker: {color:color},
