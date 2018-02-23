@@ -1,6 +1,6 @@
 import * as d4 from "d3";
 import DendroHeatmap from "./modules/DendroHeatmap";
-import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedianTPM, parseGeneExpression} from "./modules/gtexDataParser";
+import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedianTPM, makeJsonForPlotly} from "./modules/gtexDataParser";
 import {downloadSvg} from "./modules/utils";
 
 
@@ -160,7 +160,7 @@ function render(id, topTree, leftTree, heatmapData){
 }
 
 /**
- * Customizes the dendroHeatmap specifically for the dataset
+ * Customizes the dendroHeatmap
  * @param dmap {DendroHeatmap}
  * @param tissues [List] of GTEx tissue objects: {tissue_id: {String}, and a bunch of other attributes}
  */
@@ -179,7 +179,7 @@ function customization(dmap, tissues){
 }
 
 /**
- * Overrides the heatmap mouse events
+ * Overrides the heatmap's mouse events
  * @param dmap {DendroHeatmap}
  * @param tissueDict {Dictionary} GTEx tissue objects indexed by tissue_id
  */
@@ -293,6 +293,7 @@ function renderBoxplot(gene, geneDict, tissueOrder, dmap) {
         delete data[gene];
         d4.keys(data).forEach((d, i) => {
             // updates the data colors
+            // TODO: need tp write a better color selector
             data[d]["marker"]["color"] = config.colors[i] || "black";
         });
         // redraws the box plot
@@ -303,7 +304,7 @@ function renderBoxplot(gene, geneDict, tissueOrder, dmap) {
     const url = getGtexUrls().geneExp + geneDict[gene].id;
     d4.json(url, function(error, d) {
         let color = config.colors[d4.keys(data).length] || "black";
-        let json = parseGeneExpression(d, config.useLog, color, tissueOrder);
+        let json = makeJsonForPlotly(geneDict[gene].id, d, config.useLog, color, tissueOrder);
         data[gene] = json;
         Plotly.newPlot(config.id, d4.values(data), layout);
         d4.select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
