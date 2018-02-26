@@ -1,17 +1,45 @@
 import * as d4 from "d3";
 import DendroHeatmap from "./modules/DendroHeatmap";
-import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedianTPM, makeJsonForPlotly} from "./modules/gtexDataParser";
+import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedianTPM, makeJsonForPlotly, parseMedianExpression} from "./modules/gtexDataParser";
 import {downloadSvg} from "./modules/utils";
 
 
+d4.select("#dataset0").on("click", function(){
+    // top 50 expressed genes in lung
+    // fetching data using the GTEx web service
+    // TODO: to be implemented
+    const domId = "chart";
+    reset(); // clear all existing DOM elements
+    d4.select(this).classed("inView", true); // the css class inView highlights the selected dataset's text in red
+
+    // getting data
+    const urls = getGtexUrls();
+    d4.json(urls.top50InTissue + "Lung", function(err, results){
+        const topGenes = results.medianGeneExpression,
+            topGeneList = topGenes.map(d=>d.gencodeId); // top 50 expressed in Lung
+        d4.queue()
+            .defer(d4.json, urls.tissue) // get tissue colors
+            .defer(d4.json, urls.medExpById + topGeneList.join(",")) // get all median express data of these 50 genes in all tissues
+            .await(function(err2, data1, data2){ // get all median express data of these 50 genes in all tissues
+                const tissues = parseTissues(data1),
+                    tissueTree = data2.clusters.tissue,
+                    geneTree = data2.clusters.gene,
+                    expression = parseMedianExpression(data2.medianGeneExpression);
+                const dmap = render(domId, tissueTree, geneTree, expression);
+                customization(dmap, tissues, topGenes);
+            });
+
+    });
+});
+
 d4.select("#dataset1").on("click", function(){
     // top 50 expressed genes in liver
-    // - DOM
+    // data are from a flat file
 
     const domId = "chart";
     reset();
     d4.select(this).classed("inView", true);
-    // - gets data
+    // get data
     const tissueTree = getTissueClusters('top50Liver'),
           geneTree = getGeneClusters('top50Liver'),
           urls = getGtexUrls();
@@ -122,7 +150,6 @@ function bindToolbarEvents(dmap, tissueDict){
             dmap.visualComponents.tooltip.hide();
         });
 }
-
 function sortTissueClickHelper(xlist, dmap, tissueDict){
     // updates the heatmap
     const dom = d4.select("#"+dmap.config.panels.main.id);
@@ -142,7 +169,6 @@ function sortTissueClickHelper(xlist, dmap, tissueDict){
     dmap.data.external = {};
 
 }
-
 
 /**
  * renders the dendroHeatmap
@@ -164,12 +190,14 @@ function render(id, topTree, leftTree, heatmapData){
  * @param dmap {DendroHeatmap}
  * @param tissues [List] of GTEx tissue objects: {tissue_id: {String}, and a bunch of other attributes}
  */
-function customization(dmap, tissues){
-    console.log(tissues)
-    let tissueDict = {};
+function customization(dmap, tissues, genes){
+    let tissueDict = {},
+        geneDict = {};
     tissues.forEach((d) => {tissueDict[d.tissue_id] = d});
+    genes.forEach((d) => {geneDict[d.gencodeId] = d});
 
     mapTissueIdToName(tissueDict);
+    if (genes !== undefined) mapGeneIdToSymbol(geneDict);
     addTissueColors(dmap, tissueDict);
 
     changeHeatmapMouseEvents(dmap, tissueDict);
@@ -206,7 +234,7 @@ function changeHeatmapMouseEvents(dmap, tissueDict) {
         let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissue_name;
         let column = d.y;
 
-        tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
+        tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median (${d.unit}): ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
     };
     const heatmapMouseout = function(d){
         const selected = d4.select(this);
@@ -325,6 +353,16 @@ function mapTissueIdToName(tissueDict){
     // displays tissue names in the heatmap
     d4.selectAll(".xLabel")
         .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
+}
+
+/**
+ * Maps gencode ID to gene symbol for readability
+ * @param geneDict {Dictionary} GTEx gene objects indexed by gencode ID
+ */
+function mapGeneIdToSymbol(geneDict){
+    // display gene symbol in the heatmap
+    d4.selectAll(".yLabel")
+        .text((d) => geneDict[d]==undefined?d:geneDict[d].geneSymbol);
 }
 
 /**
