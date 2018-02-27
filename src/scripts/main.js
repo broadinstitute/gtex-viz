@@ -52,7 +52,7 @@ d4.select("#dataset1").on("click", function(){
             const tissues = parseTissues(data1);
             const expression = parseMedianTPM(data2, true);
             const dmap = render(domId, tissueTree, geneTree, expression);
-            customization(dmap, tissues);
+            customization(dmap, tissues, dmap.data.heatmap);
         });
 });
 d4.select("#dataset3").on("click", function(){
@@ -73,7 +73,7 @@ d4.select("#dataset3").on("click", function(){
             const tissues = parseTissues(data1);
             const expression = parseMedianTPM(data2, true);
             const dmap = render(domId, tissueTree, geneTree, expression);
-            customization(dmap, tissues);
+            customization(dmap, tissues, dmap.data.heatmap);
         });
 });
 d4.select("#dataset2").on("click", function(){
@@ -94,7 +94,7 @@ d4.select("#dataset2").on("click", function(){
             const tissues = parseTissues(data1);
             const expression = parseMedianTPM(data2, true);
             const dmap = render(domId, tissueTree, geneTree, expression);
-            customization(dmap, tissues);
+            customization(dmap, tissues, dmap.data.heatmap);
         });
 });
 
@@ -189,15 +189,15 @@ function render(id, topTree, leftTree, heatmapData){
  * Customizes the dendroHeatmap
  * @param dmap {DendroHeatmap}
  * @param tissues [List] of GTEx tissue objects: {tissue_id: {String}, and a bunch of other attributes}
+ * @param genes [List] of gene objects: {gencodeId}
  */
 function customization(dmap, tissues, genes){
     let tissueDict = {},
         geneDict = {};
     tissues.forEach((d) => {tissueDict[d.tissue_id] = d});
     genes.forEach((d) => {geneDict[d.gencodeId] = d});
-
     mapTissueIdToName(tissueDict);
-    if (genes !== undefined) mapGeneIdToSymbol(geneDict);
+    mapGeneIdToSymbol(geneDict);
     addTissueColors(dmap, tissueDict);
 
     changeHeatmapMouseEvents(dmap, tissueDict, geneDict);
@@ -234,7 +234,7 @@ function changeHeatmapMouseEvents(dmap, tissueDict, geneDict) {
         let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissue_name;
         let column = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
-        tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median (${d.unit}): ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
+        tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median (${d.unit?d.unit:"TPM"}): ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
     };
     const heatmapMouseout = function(d){
         const selected = d4.select(this);
