@@ -25,11 +25,11 @@ export default class DendroHeatmap {
             columnTree: new Dendrogram(this.data.columnTree, "v"),
             rowTree: new Dendrogram(this.data.rowTree, "h"),
             heatmap: new Heatmap(this.data.heatmap, true)
-        }
+        };
         this.visualComponents = {
             tooltip: new Tooltip("tooltip", false),
             svg: undefined
-        }
+        };
     }
 
     /**
