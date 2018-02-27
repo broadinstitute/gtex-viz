@@ -61,11 +61,12 @@ export default class Heatmap {
             .attr("y", 5)
             .attr("width", cellWidth)
             .attr("height", this.yScale.bandwidth())
-            .style("fill", (d) => d==0?this.nullColor:this.colorScale(d));
+            .style("fill", (d) => this.colorScale(d));
 
         legendGroups.append("text")
             .attr("class", "normal")
-            .text((d) => d==0?"NA":"≥ " + Math.pow(2, d).toPrecision(2))
+            // .text((d) => d==0?"NA":"≥ " + Math.pow(2, d).toPrecision(2))
+            .text((d) => Math.pow(10, d).toPrecision(2))
             .attr("x", (d, i) => cellWidth * i)
             .attr("y", yAdjust + this.yScale.bandwidth());
 
@@ -213,7 +214,7 @@ export default class Heatmap {
             .merge(cells)
             .transition()
             .duration(2000)
-            .style("fill", (d) => d.originalValue==0?this.nullColor:this.colorScale(d.value));
+            .style("fill", (d) => this.colorScale(d.value));
 
         // exit and remove
         cells.exit().remove();
