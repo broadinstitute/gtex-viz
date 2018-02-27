@@ -200,9 +200,9 @@ function customization(dmap, tissues, genes){
     if (genes !== undefined) mapGeneIdToSymbol(geneDict);
     addTissueColors(dmap, tissueDict);
 
-    changeHeatmapMouseEvents(dmap, tissueDict);
+    changeHeatmapMouseEvents(dmap, tissueDict, geneDict);
 
-    bindToolbarEvents(dmap, tissueDict);
+    bindToolbarEvents(dmap, tissueDict, geneDict);
 
 }
 
@@ -211,7 +211,7 @@ function customization(dmap, tissues, genes){
  * @param dmap {DendroHeatmap}
  * @param tissueDict {Dictionary} GTEx tissue objects indexed by tissue_id
  */
-function changeHeatmapMouseEvents(dmap, tissueDict) {
+function changeHeatmapMouseEvents(dmap, tissueDict, geneDict) {
     const svg = dmap.visualComponents.svg;
     const tooltip = dmap.visualComponents.tooltip;
     const heatmapMouseover = function(d) {
@@ -232,7 +232,7 @@ function changeHeatmapMouseEvents(dmap, tissueDict) {
             .classed('highlighted', true);
         selected.classed('expressmap-highlighted', true);
         let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissue_name;
-        let column = d.y;
+        let column = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
         tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median (${d.unit}): ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
     };
@@ -255,8 +255,8 @@ function changeHeatmapMouseEvents(dmap, tissueDict) {
         .on("mouseover", heatmapMouseover)
         .on("mouseout", heatmapMouseout);
 
-    const geneDict = {}; // constructs a gene lookup table indexed by gene symbols
-    dmap.data.heatmap.forEach((d) => {geneDict[d.geneSymbol] = d});
+    // const geneDict = {}; // constructs a gene lookup table indexed by gene symbols
+    // dmap.data.heatmap.forEach((d) => {geneDict[d.geneSymbol] = d});
     const ylabelClick = function(d){
         let s = d4.select(this);
         if (d4.event.altKey) {
@@ -285,8 +285,8 @@ function changeHeatmapMouseEvents(dmap, tissueDict) {
 
 /**
  * renders the gene expression boxplot
- * @param gene {String} gene symbol
- * @param geneDict {Dictionary} gene symbol => gene object
+ * @param gene {String} gencode ID
+ * @param geneDict {Dictionary} gencode ID => gene object
  * @param tissueOrder {List} a list of tissues in the displaying order
  * @param dmap {DendroHeatmap}
  */
@@ -329,10 +329,10 @@ function renderBoxplot(gene, geneDict, tissueOrder, dmap) {
         return;
     }
 
-    const url = getGtexUrls().geneExp + geneDict[gene].id;
+    const url = getGtexUrls().geneExp + gene;
     d4.json(url, function(error, d) {
         let color = config.colors[d4.keys(data).length] || "black";
-        let json = makeJsonForPlotly(geneDict[gene].id, d, config.useLog, color, tissueOrder);
+        let json = makeJsonForPlotly(gene, d, config.useLog, color, tissueOrder);
         data[gene] = json;
         Plotly.newPlot(config.id, d4.values(data), layout);
         d4.select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
