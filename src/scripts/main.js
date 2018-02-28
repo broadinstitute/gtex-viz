@@ -209,7 +209,8 @@ function customization(dmap, tissues, genes){
 /**
  * Overrides the heatmap's mouse events
  * @param dmap {DendroHeatmap}
- * @param tissueDict {Dictionary} GTEx tissue objects indexed by tissue_id
+ * @param tissueDict {Dictionary}: tissue objects indexed by tissue_id
+ * @param geneDict {Dictionary}: gene objects indexed by gencode ID
  */
 function changeHeatmapMouseEvents(dmap, tissueDict, geneDict) {
     const svg = dmap.visualComponents.svg;
@@ -255,8 +256,6 @@ function changeHeatmapMouseEvents(dmap, tissueDict, geneDict) {
         .on("mouseover", heatmapMouseover)
         .on("mouseout", heatmapMouseout);
 
-    // const geneDict = {}; // constructs a gene lookup table indexed by gene symbols
-    // dmap.data.heatmap.forEach((d) => {geneDict[d.geneSymbol] = d});
     const ylabelClick = function(d){
         let s = d4.select(this);
         if (d4.event.altKey) {
@@ -276,7 +275,16 @@ function changeHeatmapMouseEvents(dmap, tissueDict, geneDict) {
 
         // renders the boxplot
         let tissueNames = dmap.objects.heatmap.xScale.domain().map((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
-        renderBoxplot(d, geneDict, tissueNames, dmap)
+
+        // temporarily solution
+        // eventually, genes should only be identified by gencode ID
+        if (d.startsWith("ENSG")) renderBoxplot(d, geneDict, tissueNames, dmap);
+        else{
+            // d is a gene symbol
+            let geneDictBySymbol = {};
+            Object.values(geneDict).forEach((d) => {geneDictBySymbol[d.geneSymbol] = d});
+            renderBoxplot(geneDictBySymbol[d].gencodeId, geneDict, tissueNames, dmap)
+        }
 
     };
     svg.selectAll(".yLabel")
