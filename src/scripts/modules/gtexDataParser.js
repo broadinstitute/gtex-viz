@@ -1,8 +1,12 @@
 export function getGtexUrls(){
+    const host = "https://gtexportal.org/rest/v1/";
     return {
         // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
-        "geneExp": "https://gtexportal.org/rest/v1/expression/geneExpression?datasetId=gtex_v7&gencodeId=",
-        "tissue": "https://gtexportal.org/rest/v1/dataset/color",
+        "geneExp": host + "expression/geneExpression?datasetId=gtex_v7&gencodeId=",
+        "tissue":  host + "dataset/color",
+        "top50InTissue": host + "expression/medianGeneExpression?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
+        "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&sort_by=median&sortDirection=desc&page_size=10000&gencodeId=",
+
         "liverGeneExp": "data/top50.genes.liver.genomic.median.tpm.json", // top 50 genes in GTEx liver
         "cerebellumGeneExp": "data/top.gtex.cerebellum.genes.median.tpm.tsv",
         "mayoGeneExp": "data/gtex+mayo.top.cerebellum_ad.genes.median.tpm.tsv" // the top 50 genes in Mayo Cerebellum_AD + their gtex expression values
@@ -31,11 +35,22 @@ export function parseTissues(data){
     return data.color
 }
 
-export function parseMedianTPM(data, useLog=true){
-    // parse GTEx median TPM json
+export function parseMedianExpression(data, useLog=true){
+    const adjust = 1;
+    // parse GTEx median gene expression
     data.forEach(function(d){
+        d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
+        d.x = d.tissueId;
+        d.y = d.gencodeId;
+        d.originalValue = Number(d.median);
+        d.id = d.gencodeId
+    });
+    return data;
+}
 
-        // d.value = useLog?(d.medianTPM==0?0:Math.log2(+d.medianTPM + 0.1)):+d.medianTPM;
+export function parseMedianTPM(data, useLog=true){
+    // parse GTEx median TPM json file
+    data.forEach(function(d){
         d.value = useLog?(d.medianTPM==0?0:Math.log10(+d.medianTPM + 1)):+d.medianTPM;
         d.x = d.tissueId;
         d.y = d.geneSymbol;
