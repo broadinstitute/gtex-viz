@@ -3,18 +3,40 @@ import DendroHeatmap from "./modules/DendroHeatmap";
 import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedianTPM, makeJsonForPlotly, parseMedianExpression} from "./modules/gtexDataParser";
 import {downloadSvg} from "./modules/utils";
 
+const urls = getGtexUrls();
+d4.json(urls.tissue, function(err, results){
+    let tissues = results.color;
+    tissues.forEach((d) => {
+        d.id = d.tissue_id;
+        d.text = d.tissue_name;
+    });
+    tissues.sort((a, b) => {
+        if(a.tissue_name < b.tissue_name) return -1;
+        if(a.tissue_name > b.tissue_name) return 1;
+        return 0;
+    });
 
-d4.select("#dataset0").on("click", function(){
-    // top 50 expressed genes in lung
+    $('#datasetSelector').select2({
+        placeholder: 'Select a data set',
+        data: tissues
+    });
+});
+
+$("#datasetSelector").change(function(){
+    const tissueId = $(this).val();
+    $('#spinner').show();
+    renderTopExpressed(tissueId);
+});
+
+function renderTopExpressed(tissueId){
+    // top 50 expressed genes in tissueId
     // fetching data using the GTEx web service
-    // TODO: to be implemented
     const domId = "chart";
     reset(); // clear all existing DOM elements
     d4.select(this).classed("inView", true); // the css class inView highlights the selected dataset's text in red
 
     // getting data
-    const urls = getGtexUrls();
-    d4.json(urls.top50InTissue + "Lung", function(err, results){
+    d4.json(urls.top50InTissue + tissueId, function(err, results){
         const topGenes = results.medianGeneExpression,
             topGeneList = topGenes.map(d=>d.gencodeId); // top 50 expressed in Lung
         d4.queue()
@@ -27,34 +49,12 @@ d4.select("#dataset0").on("click", function(){
                     expression = parseMedianExpression(data2.medianGeneExpression);
                 const dmap = render(domId, tissueTree, geneTree, expression);
                 customization(dmap, tissues, topGenes);
+                $('#spinner').hide();
             });
 
     });
-});
+}
 
-d4.select("#dataset1").on("click", function(){
-    // top 50 expressed genes in liver
-    // data are from a flat file
-
-    const domId = "chart";
-    reset();
-    d4.select(this).classed("inView", true);
-    // get data
-    const tissueTree = getTissueClusters('top50Liver'),
-          geneTree = getGeneClusters('top50Liver'),
-          urls = getGtexUrls();
-
-
-    d4.queue()
-        .defer(d4.json, urls.tissue) // get tissue colors
-        .defer(d4.json, urls.liverGeneExp) // get medianTPM json
-        .await(function(error, data1, data2){
-            const tissues = parseTissues(data1);
-            const expression = parseMedianTPM(data2, true);
-            const dmap = render(domId, tissueTree, geneTree, expression);
-            customization(dmap, tissues, dmap.data.heatmap);
-        });
-});
 d4.select("#dataset3").on("click", function(){
     // top 50 expressed genes in cerebellum Mayo-AD
     const domId = "chart";
