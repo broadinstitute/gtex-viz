@@ -293,16 +293,29 @@ function changeHeatmapMouseEvents(dmap, tissueDict, geneDict) {
         }
 
         // renders the boxplot
-        let tissueNames = dmap.objects.heatmap.xScale.domain().map((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
+        // tissueOrder is a list of tissue objects {id:display name} in the same order as the x axis of the heat map.
+        let tissueOrder = dmap.objects.heatmap.xScale.domain().map((d) => {
+            if (tissueDict[d] === undefined){
+                return {
+                    id: d,
+                    name: d
+                }
+            } else {
+                return {
+                    id: d,
+                    name: tissueDict[d].tissue_name
+                }
+            }
+        });
 
         // temporarily solution
         // eventually, genes should only be identified by gencode ID
-        if (d.startsWith("ENSG")) renderBoxplot(d, geneDict, tissueNames, dmap);
+        if (d.startsWith("ENSG")) renderBoxplot(d, geneDict, tissueOrder, dmap);
         else{
             // d is a gene symbol
             let geneDictBySymbol = {};
             Object.values(geneDict).forEach((d) => {geneDictBySymbol[d.geneSymbol] = d});
-            renderBoxplot(geneDictBySymbol[d].gencodeId, geneDict, tissueNames, dmap)
+            renderBoxplot(geneDictBySymbol[d].gencodeId, geneDict, tissueOrder, dmap)
         }
 
     };
@@ -356,7 +369,7 @@ function renderBoxplot(gene, geneDict, tissueOrder, dmap) {
         return;
     }
 
-    const url = getGtexUrls().geneExp + gene;
+    const url = urls.geneExp + gene;
     d4.json(url, function(error, d) {
         let color = config.colors[d4.keys(data).length] || "black";
         let json = makeJsonForPlotly(gene, d, config.useLog, color, tissueOrder);
