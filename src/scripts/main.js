@@ -4,29 +4,90 @@ import {getTissueClusters, getGeneClusters, getGtexUrls, parseTissues, parseMedi
 import {downloadSvg} from "./modules/utils";
 
 const urls = getGtexUrls();
-d4.json(urls.tissue, function(err, results){
-    let tissues = results.color;
-    tissues.forEach((d) => {
-        d.id = d.tissue_id;
-        d.text = d.tissue_name;
-    });
-    tissues.sort((a, b) => {
-        if(a.tissue_name < b.tissue_name) return -1;
-        if(a.tissue_name > b.tissue_name) return 1;
-        return 0;
-    });
+$(document).ready(function(){
 
-    $('#datasetSelector').select2({
-        placeholder: 'Select a data set',
-        data: tissues
+    ///// Tissue drop down menu for top expressed genes
+    buildDatasetDropDownMenu();
+
+    ///// Batch query form
+    batchQueryForm();
+
+    // special demo for Mayo
+    d4.select("#dataset2").on("click", function(){
+        // top 50 expressed genes in cerebellum Mayo-AD
+        const domId = "chart";
+        reset();
+        d4.select(this).classed("inView", true);
+
+        // - gets data
+        const tissueTree = getTissueClusters('top50Cerebellum_AD'),
+              geneTree = getGeneClusters('top50Cerebellum_AD'),
+              urls = getGtexUrls();
+
+        d4.queue()
+            .defer(d4.json, urls.tissue) // get tissue colors
+            .defer(d4.tsv, urls.mayoGeneExp)
+            .await(function(error, data1, data2){
+                const tissues = parseTissues(data1);
+                const expression = parseMedianTPM(data2, true);
+                const dmap = render(domId, tissueTree, geneTree, expression);
+                customization(dmap, tissues, dmap.data.heatmap);
+            });
     });
 });
 
-$("#datasetSelector").change(function(){
-    const tissueId = $(this).val();
-    $('#spinner').show();
-    renderTopExpressed(tissueId);
-});
+function batchQueryForm(){
+    const domId = "chart";
+    $('#searchExample').click(function(){
+        $('#genes').val("ENSG00000248746.1\nENSG00000065613.9\nENSG00000103034.10\nENSG00000133392.12\nENSG00000100345.16");
+    });
+    $('#batchSubmit').click(function(){
+        let glist = $('#genes').val().split("\n").filter((d) => {return d!=""});
+        if (glist.length == 0){
+            alert("Must provide at least one gene");
+            throw "Gene input error";
+        }
+        $('#spinner').show();
+        d4.queue()
+        .defer(d4.json, urls.tissue) // get tissue colors
+        .defer(d4.json, urls.medExpById + glist.join(",")) // get all median express data of these 50 genes in all tissues
+        .await(function(err2, data1, data2){ // get all median express data of these 50 genes in all tissues
+            const tissues = parseTissues(data1),
+                tissueTree = data2.clusters.tissue,
+                geneTree = data2.clusters.gene,
+                expression = parseMedianExpression(data2.medianGeneExpression);
+            const dmap = render(domId, tissueTree, geneTree, expression);
+            customization(dmap, tissues, dmap.data.heatmap);
+            $('#spinner').hide();
+        });
+    });
+}
+
+function buildDatasetDropDownMenu(){
+    d4.json(urls.tissue, function(err, results){
+        let tissues = results.color;
+        tissues.forEach((d) => {
+            d.id = d.tissue_id;
+            d.text = d.tissue_name;
+        });
+        tissues.sort((a, b) => {
+            if(a.tissue_name < b.tissue_name) return -1;
+            if(a.tissue_name > b.tissue_name) return 1;
+            return 0;
+        });
+
+        $('#datasetSelector').select2({
+            placeholder: 'Select a data set',
+            data: tissues
+        });
+
+    });
+    $("#datasetSelector").change(function(){
+        const tissueId = $(this).val();
+        $('#spinner').show();
+        renderTopExpressed(tissueId);
+    });
+}
 
 function renderTopExpressed(tissueId){
     // top 50 expressed genes in tissueId
@@ -48,55 +109,13 @@ function renderTopExpressed(tissueId){
                     geneTree = data2.clusters.gene,
                     expression = parseMedianExpression(data2.medianGeneExpression);
                 const dmap = render(domId, tissueTree, geneTree, expression);
-                customization(dmap, tissues, topGenes);
+                customization(dmap, tissues, dmap.data.heatmap);
                 $('#spinner').hide();
             });
 
     });
 }
 
-d4.select("#dataset3").on("click", function(){
-    // top 50 expressed genes in cerebellum Mayo-AD
-    const domId = "chart";
-    reset();
-    d4.select(this).classed("inView", true);
-
-    // - gets data
-    const tissueTree = getTissueClusters('top50Cerebellum_gtex'),
-          geneTree = getGeneClusters('top50Cerebellum_gtex'),
-          urls = getGtexUrls();
-
-    d4.queue()
-        .defer(d4.json, urls.tissue) // get tissue colors
-        .defer(d4.tsv, urls.cerebellumGeneExp)
-        .await(function(error, data1, data2){
-            const tissues = parseTissues(data1);
-            const expression = parseMedianTPM(data2, true);
-            const dmap = render(domId, tissueTree, geneTree, expression);
-            customization(dmap, tissues, dmap.data.heatmap);
-        });
-});
-d4.select("#dataset2").on("click", function(){
-    // top 50 expressed genes in cerebellum Mayo-AD
-    const domId = "chart";
-    reset();
-    d4.select(this).classed("inView", true);
-
-    // - gets data
-    const tissueTree = getTissueClusters('top50Cerebellum_AD'),
-          geneTree = getGeneClusters('top50Cerebellum_AD'),
-          urls = getGtexUrls();
-
-    d4.queue()
-        .defer(d4.json, urls.tissue) // get tissue colors
-        .defer(d4.tsv, urls.mayoGeneExp)
-        .await(function(error, data1, data2){
-            const tissues = parseTissues(data1);
-            const expression = parseMedianTPM(data2, true);
-            const dmap = render(domId, tissueTree, geneTree, expression);
-            customization(dmap, tissues, dmap.data.heatmap);
-        });
-});
 
 function reset(){
     d4.select("#chart").selectAll("*").remove();

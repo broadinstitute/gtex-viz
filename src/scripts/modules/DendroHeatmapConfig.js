@@ -17,7 +17,7 @@ export default class DendroHeatmapConfig {
             x: 100,
             y: 0,
             h: 60,
-            w: window.innerWidth - (100 + 150), // hard-coded values?
+            w: window.innerWidth - (100 + 150 + 300), // hard-coded values?
             id: "topTree"
         };
 
