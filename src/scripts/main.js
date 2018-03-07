@@ -41,7 +41,7 @@ function batchQueryForm(){
     $('#searchExample').click(function(){
         // $('#gids').val("ENSG00000248746.1\nENSG00000065613.9\nENSG00000103034.10\nENSG00000133392.12\nENSG00000100345.16");
         // $('#genes').val("PIK3CA, TP53, CDH1, GATA3, MAP3K1, NCOR1, SPEN");
-        $('#genes').val("ENSG00000121879.3, ENSG00000141510.11, ENSG00000039068.14, ENSG00000107485.11, ENSG00000095015.5, ENSG00000141027.16, ENSG00000065526.6, TP53")
+        $('#genes').val("ACTN3, SLK, ENSG00000121879.3, NDRG4, ENSG00000141510.11, ENSG00000039068.14, ENSG00000107485.11, ENSG00000095015.5, ENSG00000141027.16, ENSG00000065526.6, TP53")
     });
     $('#batchSubmit').click(function(){
         let glist = $('#genes').val().replace(/ /g, "").split(",").filter((d) => {return d!=""});
