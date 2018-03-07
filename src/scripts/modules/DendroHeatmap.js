@@ -13,7 +13,7 @@ export default class DendroHeatmap {
      * @param heatmapData {List} of objects with attributes: x: String, y:String, value:Float, originalValue:Float, see the class Heatmap
      * @param config
      */
-    constructor(columnTree, rowTree, heatmapData, config=new HeatmapConfig()){
+    constructor(columnTree, rowTree, heatmapData, color="gnbu", config=new HeatmapConfig()){
         this.config = config.get();
         this.data = {
             columnTree: columnTree,
@@ -24,7 +24,7 @@ export default class DendroHeatmap {
         this.objects = {
             columnTree: new Dendrogram(this.data.columnTree, "v"),
             rowTree: new Dendrogram(this.data.rowTree, "h"),
-            heatmap: new Heatmap(this.data.heatmap, true)
+            heatmap: new Heatmap(this.data.heatmap, true, color)
         };
         this.visualComponents = {
             tooltip: new Tooltip("tooltip", false),
@@ -37,14 +37,18 @@ export default class DendroHeatmap {
      * @param domId {String} the DOM id of the SVG
      * @return {Selection} the SVG object
      */
-    render(domId){
-
+    render(domId, showTopTree=true, showLeftTree=true){
+        // TODO: code cleanup... better implementation for optional trees
         this._updateConfig(this.objects.columnTree, this.objects.rowTree);
         let svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
 
-        this._renderTree(svg, this.objects.columnTree, this.config.panels.top);
-        this._renderTree(svg, this.objects.rowTree, this.config.panels.left);
-        this._renderHeatmap(svg, this.objects.heatmap, this.objects.columnTree.xScale.domain(), this.objects.rowTree.yScale.domain());
+        this._renderTree(svg, this.objects.columnTree, this.config.panels.top, showTopTree);
+        this._renderTree(svg, this.objects.rowTree, this.config.panels.left, showLeftTree);
+
+        const xlist = showTopTree?this.objects.columnTree.xScale.domain():this.objects.columnTree.xScale.domain().sort();
+        const ylist = showLeftTree?this.objects.rowTree.yScale.domain():this.objects.rowTree.yScale.domain().sort();
+        this._renderHeatmap(svg, this.objects.heatmap, xlist, ylist);
+
         this.visualComponents.svg = svg;
     }
 
@@ -79,12 +83,12 @@ export default class DendroHeatmap {
      * @param config {Object} a panel config with attributes: x, y, width and height
      * @private
      */
-    _renderTree(svg, tree, config){
+    _renderTree(svg, tree, config, show=true){
         const tooltip = this.visualComponents.tooltip;
         const g = svg.append("g")
             .attr("id", config.id)
             .attr("transform", `translate(${config.x}, ${config.y})`);
-        tree.draw(g, config.w, config.h);
+        tree.draw(g, config.w, config.h, show);
 
         // customized mouse events
         const mouseover = function(d){

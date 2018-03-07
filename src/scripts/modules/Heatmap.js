@@ -72,7 +72,7 @@ export default class Heatmap {
 
         dom.append("text")
             .attr("class", "legend normal")
-            .text("Median TPM") // TODO: eliminated hard-coded values
+            .text("Expression Value") // TODO: eliminated hard-coded values
             .attr("x", cellWidth * 11)
             .attr("y", yAdjust + this.yScale.bandwidth())
 

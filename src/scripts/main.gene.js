@@ -113,7 +113,7 @@ function renderTopExpressed(tissueId){
 
     // getting data
     d4.json(urls.topInTissue + tissueId, function(err, results){
-        const topGenes = results.medianGeneExpression,
+        const topGenes = results.topExpressedGene,
             topGeneList = topGenes.map(d=>d.gencodeId); // top 50 expressed in Lung
         console.info(urls.medExpById + topGeneList.join(","));
         d4.queue()

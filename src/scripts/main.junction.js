@@ -38,8 +38,8 @@ function searchJunctions(){
                 const tissueTree = juncJson.clusters.tissue,
                       junctionTree = juncJson.clusters.junction,
                       expression = parseJunctionExpression(juncJson);
-                const dmap = new DendroHeatmap(junctionTree, tissueTree, expression);
-                dmap.render(domId);
+                const dmap = new DendroHeatmap(junctionTree, tissueTree, expression, "gnbu");
+                dmap.render(domId, false, true); // false: no top tree, true: show left tree
                 $('#spinner').hide();
             });
         });

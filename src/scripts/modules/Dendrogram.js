@@ -55,13 +55,16 @@ export default class Dendrogram {
         this.yScale = undefined;
     }
 
-    draw(dom, width, height){
+    draw(dom, width, height, show=true){
         this.width = width;
         this.height = height;
         this._setXScale();
         this._setYScale();
-        if ('h' == this.orientation) this._drawHTree(dom);
-        else this._drawVTree(dom);
+        if (show){
+            if ('h' == this.orientation) this._drawHTree(dom);
+            else this._drawVTree(dom);
+        }
+
     }
 
     /////// private methods ///////

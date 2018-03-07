@@ -4,7 +4,7 @@ export default class DendroHeatmapConfig {
         let margin = {
             left: 10,
             top: 10,
-            right: 10,
+            right: 250,
             bottom: 170,
         };
 
