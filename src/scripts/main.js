@@ -39,26 +39,41 @@ $(document).ready(function(){
 function batchQueryForm(){
     const domId = "chart";
     $('#searchExample').click(function(){
-        $('#genes').val("ENSG00000248746.1\nENSG00000065613.9\nENSG00000103034.10\nENSG00000133392.12\nENSG00000100345.16");
+        // $('#gids').val("ENSG00000248746.1\nENSG00000065613.9\nENSG00000103034.10\nENSG00000133392.12\nENSG00000100345.16");
+        // $('#genes').val("PIK3CA, TP53, CDH1, GATA3, MAP3K1, NCOR1, SPEN");
+        $('#genes').val("ENSG00000121879.3, ENSG00000141510.11, ENSG00000039068.14, ENSG00000107485.11, ENSG00000095015.5, ENSG00000141027.16, ENSG00000065526.6, TP53")
     });
     $('#batchSubmit').click(function(){
-        let glist = $('#genes').val().split("\n").filter((d) => {return d!=""});
+        let glist = $('#genes').val().replace(/ /g, "").split(",").filter((d) => {return d!=""});
+        // evaluates gene ID input
+        // let illegal = glist.filter((d) => {return !d.startsWith("ENSG")});
+        // glist = glist.filter((d) => {return d.startsWith("ENSG")});
+        // if (illegal.length > 0) console.error(`These genes are not processed: ${illegal.join(", ")}`);
+
         if (glist.length == 0){
             alert("Must provide at least one gene");
             throw "Gene input error";
         }
+
+        // TODO: gene list less than 3 has no gene clustering, needs a way to handle these
+
         $('#spinner').show();
         d4.queue()
         .defer(d4.json, urls.tissue) // get tissue colors
-        .defer(d4.json, urls.medExpById + glist.join(",")) // get all median express data of these 50 genes in all tissues
+        .defer(d4.json, urls.geneId + glist.join(","))
+        // .defer(d4.json, urls.medExpById + glist.join(",")) // get all median express data of these 50 genes in all tissues
         .await(function(err2, data1, data2){ // get all median express data of these 50 genes in all tissues
-            const tissues = parseTissues(data1),
-                tissueTree = data2.clusters.tissue,
-                geneTree = data2.clusters.gene,
-                expression = parseMedianExpression(data2.medianGeneExpression);
-            const dmap = render(domId, tissueTree, geneTree, expression);
-            customization(dmap, tissues, dmap.data.heatmap);
-            $('#spinner').hide();
+            const tissues = parseTissues(data1);
+            const gencodeIds = data2.geneId.map((d) => d.gencodeId);
+            d4.json(urls.medExpById + gencodeIds.join(","), function(eData){
+                const tissueTree = eData.clusters.tissue,
+                      geneTree = eData.clusters.gene,
+                      expression = parseMedianExpression(eData.medianGeneExpression);
+                const dmap = render(domId, tissueTree, geneTree, expression);
+                customization(dmap, tissues, dmap.data.heatmap);
+                $('#spinner').hide();
+            });
+
         });
     });
 }
@@ -97,9 +112,10 @@ function renderTopExpressed(tissueId){
     d4.select(this).classed("inView", true); // the css class inView highlights the selected dataset's text in red
 
     // getting data
-    d4.json(urls.top50InTissue + tissueId, function(err, results){
+    d4.json(urls.topInTissue + tissueId, function(err, results){
         const topGenes = results.medianGeneExpression,
             topGeneList = topGenes.map(d=>d.gencodeId); // top 50 expressed in Lung
+        console.info(urls.medExpById + topGeneList.join(","));
         d4.queue()
             .defer(d4.json, urls.tissue) // get tissue colors
             .defer(d4.json, urls.medExpById + topGeneList.join(",")) // get all median express data of these 50 genes in all tissues

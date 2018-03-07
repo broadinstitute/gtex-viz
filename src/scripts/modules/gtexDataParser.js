@@ -1,11 +1,12 @@
 export function getGtexUrls(){
-    const host = "https://gtexportal.org/rest/v1/";
+    const host = "https://local.gtexportal.org/rest/v1/";
     return {
         // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
+        "geneId": host + "reference/geneId?format=json&geneId=",
         "geneExp": host + "expression/geneExpression?datasetId=gtex_v7&gencodeId=",
         "tissue":  host + "dataset/color",
-        "top50InTissue": host + "expression/medianGeneExpression?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
-        "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&sort_by=median&sortDirection=desc&page_size=10000&gencodeId=",
+        "topInTissue": host + "expression/medianGeneExpression?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
+        "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
 
         "liverGeneExp": "data/top50.genes.liver.genomic.median.tpm.json", // top 50 genes in GTEx liver
         "cerebellumGeneExp": "data/top.gtex.cerebellum.genes.median.tpm.tsv",
