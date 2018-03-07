@@ -43,6 +43,7 @@ export function parseMedianExpression(json, useLog=true){
     const adjust = 1;
     // parse GTEx median gene expression
     json.medianGeneExpression.forEach(function(d){
+        // TODO: error-checking of the attributes
         d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
         d.x = d.tissueId;
         d.y = d.gencodeId;
@@ -55,7 +56,7 @@ export function parseMedianExpression(json, useLog=true){
 export function parseMedianTPM(data, useLog=true){
     // parse GTEx median TPM json static file
     data.forEach(function(d){
-        d.value = useLog?(d.medianTPM==0?0:Math.log10(+d.medianTPM + 1)):+d.medianTPM;
+        d.value = useLog?Math.log10(+d.medianTPM + 1):+d.medianTPM;
         d.x = d.tissueId;
         d.y = d.geneSymbol;
         d.originalValue = parseFloat(d.medianTPM);
@@ -64,12 +65,16 @@ export function parseMedianTPM(data, useLog=true){
     return data;
 }
 
-
 export function parseJunctionExpression(json, useLog=true){
     if(!json.hasOwnProperty("junctionExpression")) throw("parseJunctionExpression input error");
     // parse GTEx median junction counts
+    const adjust = 1;
     json.junctionExpression.forEach(function(d){
-
+        d.value = useLog?Math.log10(Number(d.data) + adjust):+Number(d.data);
+        d.x = d.junctionId;
+        d.y = d.tissueId;
+        d.originalValue = Number(d.data);
+        d.id = d.gencodeId
     });
     return json.junctionExpression;
 }

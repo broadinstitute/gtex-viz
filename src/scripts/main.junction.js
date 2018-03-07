@@ -24,6 +24,8 @@ $(document).ready(function(){
 function searchJunctions(){
     // const input = $('#gene').val();
     const input = "SLK";
+    const domId = "chart";
+    reset();
     $('#spinner').show();
     d4.queue()
         .defer(d4.json, urls.tissue) // get tissue colors
@@ -36,14 +38,14 @@ function searchJunctions(){
                 const tissueTree = juncJson.clusters.tissue,
                       junctionTree = juncJson.clusters.junction,
                       expression = parseJunctionExpression(juncJson);
-                console.log(tissueTree);
+                const dmap = new DendroHeatmap(junctionTree, tissueTree, expression);
+                dmap.render(domId);
                 $('#spinner').hide();
-
             });
-
         });
 
 }
+
 function reset(){
     d4.select("#chart").selectAll("*").remove();
     d4.select("#boxplot").selectAll("*").remove();
