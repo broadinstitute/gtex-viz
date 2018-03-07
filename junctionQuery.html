@@ -16,47 +16,48 @@
         <div id="tooltip" class="expressmap-tooltip"></div> <!--a hidden div for the mouseover tooltip-->
 
         <div>
-            <h4>Top Expressed Genes</h4>
+            <h4>Junction Expression</h4>
         </div>
-        <div id="datasets">
-            <ul>
-                <li id="dataset2" class="link">Mayo cerebellum AD.</li>
-            </ul>
-        </div>
+
         <!-- the tissue menu -->
         <div class="row">
-            <div class="col-xs-12 col-md-6 col-lg-4">
-                <form>
-                    <div class="form-group">
-                         <select id="datasetSelector" name="datasetSelector" class="form-control">
-                             <option></option>
-                         </select>
-                    </div>
+            <div class="col-xs-12 col-md-2 col-lg-2">
+                <form id="junctionExpressForm" style="background:#f2f7fd; padding: 5px;">
+                     <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
+                        <label for="gene" class="align-top">Enter a gencode ID or gene name</label>
+                        <input id="gene" class="form-control" placeholder="Enter a gencode ID or gene name" style="font-size:12px;"></input>
+                     </div>
+                    <div id="junctionSubmit" class="btn btn-info btn-sm" style="margin-bottom:1em;">Search</div>
+
                 </form>
+                <div class="col-xs-1">
+                    <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
+                </div>
             </div>
-            <div class="col-xs-12 col-md-6">
-                <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
 
+            <div id="searchResult" class="col-xs-12 col-md-10">
+                 <!-- the tool bar div -->
+                <div id="dashboardToolbar" style="margin-bottom:50px; display:none;">
+                    <!-- fontawesome reference: http://fontawesome.io/examples/ -->
+                    <div class="btn-group btn-group-sm">
+                        <!--<a id="sortTissuesByAlphabet" class="btn btn-default" href="#">-->
+                            <!--<i class="fa fa-sort-alpha-down"></i>-->
+                        <!--</a>-->
+                        <!--<a id="sortTissuesByClusters" class="btn btn-default" href="#">-->
+                            <!--<i class="fa fa-code-branch"></i>-->
+                        <!--</a>-->
+                        <a id="downloadHeatmap" class="btn btn-default" href="#">
+                            <i class="fa fa-save"></i>
+                        </a>
+                    </div>
+                </div>
+                <div id="chart"></div> <!-- the heatmap Div -->
+                <div id="boxplot"></div> <!-- the boxplot DIV -->
             </div>
+
         </div>
 
-        <!-- the tool bar div -->
-        <div id="dashboardToolbar" style="margin-bottom:50px; display:none;">
-            <!-- fontawesome reference: http://fontawesome.io/examples/ -->
-            <div class="btn-group btn-group-sm">
-                <a id="sortTissuesByAlphabet" class="btn btn-default" href="#">
-                    <i class="fa fa-sort-alpha-down"></i>
-                </a>
-                <a id="sortTissuesByClusters" class="btn btn-default" href="#">
-                    <i class="fa fa-code-branch"></i>
-                </a>
-                <a id="downloadHeatmap" class="btn btn-default" href="#">
-                    <i class="fa fa-save"></i>
-                </a>
-            </div>
-        </div>
-        <div id="chart"></div> <!-- the heatmap Div -->
-        <div id="boxplot"></div> <!-- the boxplot DIV -->
+
 
     </body>
     <script defer src="build/external/fontawesome-free-5.0.7/svg-with-js/js/fontawesome-all.js"></script>
@@ -70,6 +71,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
     <script src="build/external/FileSaver/FileSaver.min.js"></script>
-    <script src="build/js/gene.expressMap.bundle.min.js"></script>
+    <script src="build/js/expressMap.bundle.min.js"></script>
 
 </html>
