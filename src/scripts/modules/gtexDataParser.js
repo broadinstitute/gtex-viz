@@ -8,6 +8,8 @@ export function getGtexUrls(){
         "topInTissue": host + "expression/medianGeneExpression?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
         "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
 
+        "junctionExp": host + "expression/junctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
+
         "liverGeneExp": "data/top50.genes.liver.genomic.median.tpm.json", // top 50 genes in GTEx liver
         "cerebellumGeneExp": "data/top.gtex.cerebellum.genes.median.tpm.tsv",
         "mayoGeneExp": "data/gtex+mayo.top.cerebellum_ad.genes.median.tpm.tsv" // the top 50 genes in Mayo Cerebellum_AD + their gtex expression values
@@ -36,21 +38,22 @@ export function parseTissues(data){
     return data.color
 }
 
-export function parseMedianExpression(data, useLog=true){
+export function parseMedianExpression(json, useLog=true){
+    if(!json.hasOwnProperty("medianGeneExpression")) throw "parseMedianExpression input error.";
     const adjust = 1;
     // parse GTEx median gene expression
-    data.forEach(function(d){
+    json.medianGeneExpression.forEach(function(d){
         d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
         d.x = d.tissueId;
         d.y = d.gencodeId;
         d.originalValue = Number(d.median);
         d.id = d.gencodeId
     });
-    return data;
+    return json.medianGeneExpression;
 }
 
 export function parseMedianTPM(data, useLog=true){
-    // parse GTEx median TPM json file
+    // parse GTEx median TPM json static file
     data.forEach(function(d){
         d.value = useLog?(d.medianTPM==0?0:Math.log10(+d.medianTPM + 1)):+d.medianTPM;
         d.x = d.tissueId;
@@ -61,11 +64,16 @@ export function parseMedianTPM(data, useLog=true){
     return data;
 }
 
-/*
-TODO: review and rewrite the parser for gene expression service
-task1: get the tissue list
-task2: build the data structure for plotly boxplot
- */
+
+export function parseJunctionExpression(json, useLog=true){
+    if(!json.hasOwnProperty("junctionExpression")) throw("parseJunctionExpression input error");
+    // parse GTEx median junction counts
+    json.junctionExpression.forEach(function(d){
+
+    });
+    return json.junctionExpression;
+}
+
 function parseGeneExpression(gencodeId, data){
     /**
      *

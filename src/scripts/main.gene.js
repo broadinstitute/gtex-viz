@@ -68,7 +68,7 @@ function batchQueryForm(){
             d4.json(urls.medExpById + gencodeIds.join(","), function(eData){
                 const tissueTree = eData.clusters.tissue,
                       geneTree = eData.clusters.gene,
-                      expression = parseMedianExpression(eData.medianGeneExpression);
+                      expression = parseMedianExpression(eData);
                 const dmap = render(domId, tissueTree, geneTree, expression);
                 customization(dmap, tissues, dmap.data.heatmap);
                 $('#spinner').hide();
@@ -123,7 +123,7 @@ function renderTopExpressed(tissueId){
                 const tissues = parseTissues(data1),
                     tissueTree = data2.clusters.tissue,
                     geneTree = data2.clusters.gene,
-                    expression = parseMedianExpression(data2.medianGeneExpression);
+                    expression = parseMedianExpression(data2);
                 const dmap = render(domId, tissueTree, geneTree, expression);
                 customization(dmap, tissues, dmap.data.heatmap);
                 $('#spinner').hide();
