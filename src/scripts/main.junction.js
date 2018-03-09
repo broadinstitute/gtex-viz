@@ -7,7 +7,7 @@ import {downloadSvg} from "./modules/utils";
 const urls = getGtexUrls();
 $(document).ready(function(){
     // developing
-    searchJunctions();
+    // searchJunctions();
 
     $('#gene').keypress(function(e){
         if(e.keyCode == 13){
@@ -22,8 +22,8 @@ $(document).ready(function(){
 });
 
 function searchJunctions(){
-    // const input = $('#gene').val();
-    const input = "SLK";
+    const input = $('#gene').val();
+    // const input = "SLK";
     const domId = "chart";
     reset();
     $('#spinner').show();
@@ -38,7 +38,7 @@ function searchJunctions(){
                 const tissueTree = juncJson.clusters.tissue,
                       junctionTree = juncJson.clusters.junction,
                       expression = parseJunctionExpression(juncJson);
-                const dmap = new DendroHeatmap(junctionTree, tissueTree, expression, "gnbu");
+                const dmap = new DendroHeatmap(junctionTree, tissueTree, expression, "reds2", 5);
                 dmap.render(domId, false, true); // false: no top tree, true: show left tree
                 $('#spinner').hide();
             });

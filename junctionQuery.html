@@ -11,21 +11,17 @@
 
     </head>
 
-    <body class="container-fluid" style="margin-top:20px;">
+    <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
         <div id="downloadTempDiv" style="display:none;"></div> <!-- a hidden div for svg download, a temp solution-->
         <div id="tooltip" class="expressmap-tooltip"></div> <!--a hidden div for the mouseover tooltip-->
-
-        <div>
-            <h4>Junction Expression</h4>
-        </div>
 
         <!-- the tissue menu -->
         <div class="row">
             <div class="col-xs-12">
+                <h4>Junction Expression</h4>
                 <form id="junctionExpressForm" style="padding: 5px;">
                      <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
-                        <label for="gene" class="align-top">Enter a gencode ID or gene name</label>
-                        <input id="gene" type="text" class="form-control" placeholder="Enter a gencode ID or gene name" style="font-size:12px;"></input>
+                        <input id="gene" type="text" class="form-control" placeholder="Enter a gencode ID or gene name" style="font-size:12px; text-transform:uppercase;"></input>
                      </div>
                 </form>
                 <div class="col-xs-1">
