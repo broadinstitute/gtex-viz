@@ -9,6 +9,7 @@ export function getGtexUrls(){
         "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
 
         "junctionExp": host + "expression/junctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
+        "geneModel": host + "reference/collapsedGeneModel?release=v7&gencode_id=",
 
         "liverGeneExp": "data/top50.genes.liver.genomic.median.tpm.json", // top 50 genes in GTEx liver
         "cerebellumGeneExp": "data/top.gtex.cerebellum.genes.median.tpm.tsv",
@@ -35,11 +36,20 @@ export function getGeneClusters(dataset){
 }
 
 export function parseTissues(data){
-    return data.color
+    const attr = "color";
+    if(!data.hasOwnProperty(attr)) throw "parseTissues input error.";
+    return data[attr];
+}
+
+export function parseExons(data){
+    const attr = "collapsedGeneModel";
+    if(!data.hasOwnProperty(attr)) throw "parseExons input error.";
+    return data[attr]
 }
 
 export function parseMedianExpression(json, useLog=true){
-    if(!json.hasOwnProperty("medianGeneExpression")) throw "parseMedianExpression input error.";
+    const attr = "medianGeneExpression";
+    if(!json.hasOwnProperty(attr)) throw "parseMedianExpression input error.";
     const adjust = 1;
     // parse GTEx median gene expression
     json.medianGeneExpression.forEach(function(d){
@@ -50,7 +60,7 @@ export function parseMedianExpression(json, useLog=true){
         d.originalValue = Number(d.median);
         d.id = d.gencodeId
     });
-    return json.medianGeneExpression;
+    return json[attr];
 }
 
 export function parseMedianTPM(data, useLog=true){
@@ -66,17 +76,19 @@ export function parseMedianTPM(data, useLog=true){
 }
 
 export function parseJunctionExpression(json, useLog=true){
-    if(!json.hasOwnProperty("junctionExpression")) throw("parseJunctionExpression input error");
+    const attr = "junctionExpression";
+    if(!json.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
     // parse GTEx median junction counts
     const adjust = 1;
     json.junctionExpression.forEach(function(d){
+        // TODO: add json attr error-checking
         d.value = useLog?Math.log10(Number(d.data) + adjust):+Number(d.data);
         d.x = d.junctionId;
         d.y = d.tissueId;
         d.originalValue = Number(d.data);
         d.id = d.gencodeId
     });
-    return json.junctionExpression;
+    return json[attr];
 }
 
 function parseGeneExpression(gencodeId, data){
