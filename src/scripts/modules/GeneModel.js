@@ -15,8 +15,11 @@ export default class GeneModel {
     constructor (gene, exons, junctions){
         this.gene = gene;
         this.exons = exons.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
-        this.junctions = junctions;
-
+        this.junctions = junctions.sort((a,b) => {
+            if (a.junctionId < b.junctionId) return -1;
+            if (a.junctionId > b.junctionId) return 1;
+            return 0;
+        }); // sorted by junction ID
         // hard-coded for now
         this.intronLength = 0; // fixed fake intron length in base pairs
         this.minExonWidth = 5; // minimum exon width in pixels
@@ -42,9 +45,9 @@ export default class GeneModel {
 
         // calculating x for each junction
         this.junctions.forEach((d) => {
-            const startExon = this._findExon(d.chromStart),
-                endExon = this._findExon(d.chromEnd);
-            if (startExon === undefined || endExon === undefined) {
+            d.startExon = this._findExon(d.chromStart);
+            d.endExon = this._findExon(d.chromEnd);
+            if (d.startExon === undefined || d.endExon === undefined) {
                 // TODO: figure out why some junctions can't map to the gene model
                 // check unfiltered gene model
                 // Temporary solution: set d.filtered to true and ignore rendering this junction
@@ -52,10 +55,10 @@ export default class GeneModel {
             }
             else {
                 d.filtered = false;
-                d.startX = startExon.x + startExon.w;
-                d.endX = endExon.x;
+                d.startX = d.startExon.x + d.startExon.w;
+                d.endX = d.endExon.x;
                 d.cx = d.startX + (d.endX - d.startX + 1)/2; // junction is rendered at the midpoint between startX and endX
-                d.cy = exonY - 5 * Math.abs(Number(endExon.exonNumber) - Number(startExon.exonNumber) + 1);
+                d.cy = exonY - 5 * Math.abs(Number(d.endExon.exonNumber) - Number(d.startExon.exonNumber) + 1);
                 if (d.cy < 5) d.cy = 5;
             }
 
@@ -71,6 +74,7 @@ export default class GeneModel {
 
         // entering new elements
         exonRects.enter().append("rect")
+            .attr("class", (d)=>`exon exon${d.exonNumber}`)
             .attr("y", exonY)
             .attr("rx", 2)
             .attr('ry', 2)
@@ -92,7 +96,6 @@ export default class GeneModel {
                 .forEach((d, i) => {
                     dom.append("path")
                     .datum([{x:d.startX, y:exonY}, {x:d.cx, y:d.cy}, {x:d.endX, y:exonY}]) // the input points to draw the curve
-                    .attr("class", "line")
                     .style("stroke", "#DDDDDD")
                     .style("fill", "none")
                     .attr("d", curve);
@@ -109,12 +112,13 @@ export default class GeneModel {
 
         // entering new elements
         juncDots.enter().append("circle")
+            .attr("class", (d) => `junc junc${d.junctionId}`)
             .attr("cx", (d) => d.cx)
             .attr("cy", (d) => d.cy)
             .attr("r", 1)
             .style("fill", "#eee")
             .merge(juncDots)
-            .attr("r", 3)
+            .attr("r", 4)
             .style("fill", "rgb(239, 59, 44)")
 
     }

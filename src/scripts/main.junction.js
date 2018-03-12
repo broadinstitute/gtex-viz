@@ -30,7 +30,6 @@ function init(){
     d4.json(urls.geneId + inputGene, function(json){  // get the gene object for the gencode ID
         const gene = json.geneId[0];
         process(gene.gencodeId);
-        customize();
 
     });
 }
@@ -49,7 +48,7 @@ function process(gencodeId){
                 exons = parseExons(data2),
                 junctions = parseJunctions(data3),
                 tissueTree = data3.clusters.tissue,
-                junctionTree = data3.clusters.junction,
+                junctionTree = data3.clusters.junction, // junction tree is not really useful
                 expression = parseJunctionExpression(data3);
             const dmap = new DendroHeatmap(junctionTree, tissueTree, expression, "reds2", 5);
             dmap.render(chartDomId, false, true); // false: no top tree, true: show left tree
@@ -66,10 +65,10 @@ function process(gencodeId){
                 }
             };
             let modelSvg = createSvg(modelDomId, modelConfig.w, modelConfig.h, modelConfig.margin);
-
             geneModel.render(modelSvg);
-
+            customize(modelSvg, dmap.visualComponents.svg);
             $('#spinner').hide();
+
         });
 }
 
@@ -81,6 +80,40 @@ function reset(){
     d4.selectAll("*").classed("inView", false);
 }
 
-function customize(){
+function customize(modelSvg, mapSvg){
+    // junction labels on the map
+    mapSvg.selectAll(".xLabel")
+        .each(function(d){
+            // add junction ID as a class
+            const jId = d4.select(this).text();
+            d4.select(this).classed(`junc${jId}`, true);
+        })
+        .on("mouseover", function(d){
+            const jId = d4.select(this).text();
+            d4.select(this).classed("highlighted", true);
+            let juncs = modelSvg.selectAll(".junc").filter(`.junc${jId}`);
+            juncs.classed("highlighted", true);
+            juncs.each((d) => {
+                d4.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);
+                d4.selectAll(".exon").filter(`.exon${d.endExon.exonNumber}`).classed("highlighted", true);
 
+            })
+        })
+        .on("mouseout", function(d){
+            d4.select(this).classed("highlighted", false);
+            modelSvg.selectAll(".junc").classed("highlighted", false);
+            modelSvg.selectAll(".exon").classed("highlighted", false);
+        });
+
+    modelSvg.selectAll(".junc")
+        .on("mouseover", function(d){
+            d4.selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
+            d4.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);
+            d4.selectAll(".exon").filter(`.exon${d.endExon.exonNumber}`).classed("highlighted", true);
+        })
+        .on("mouseout", function(d){
+            d4.selectAll(`.junc${d.junctionId}`).classed("highlighted", false);
+            modelSvg.selectAll(".exon").classed("highlighted", false);
+
+        })
 }

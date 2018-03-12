@@ -14,7 +14,7 @@ text.highlighted {
 text.normal {
     fill: #111;
     font-weight: 300;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 text.clicked {

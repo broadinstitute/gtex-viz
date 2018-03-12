@@ -150,7 +150,7 @@ export default class Heatmap {
             .attr("class", (d, i) => `yLabel normal y${i}`)
             .style("text-anchor", "start")
             .on('click', (d) => {
-                alert(`${d} got clicked. To be implemented`)
+                alert(`${d} is clicked. To be implemented`)
             })
             .on('mouseover', function(d){
                 d4.select(this)
