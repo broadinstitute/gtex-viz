@@ -47,6 +47,41 @@ export function parseExons(data){
     return data[attr]
 }
 
+export function parseJunctions(data){
+    // we do not store junction annotations in Mongo
+    // so here we use the junction expression web service to parse the junctions
+    // assuming that each tissue has the same junctions, to grab all the known
+    // junctions of a gene, we only need to look at one tissue
+    // here we use Liver
+    const attr = "junctionExpression";
+    return data[attr].filter((d)=>{return d.tissueId=="Liver"})
+                    .map((d) => {
+                        let pos = d.junctionId.split("_");
+                        return {
+                            chrom: pos[0],
+                            chromStart: pos[1],
+                            chromEnd: pos[2],
+                            junctionId: d.junctionId
+                        }
+                    });
+}
+
+export function parseJunctionExpression(json, useLog=true){
+    const attr = "junctionExpression";
+    if(!json.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
+    // parse GTEx median junction counts
+    const adjust = 1;
+    json.junctionExpression.forEach(function(d){
+        // TODO: add json attr error-checking
+        d.value = useLog?Math.log10(Number(d.data) + adjust):+Number(d.data);
+        d.x = d.junctionId;
+        d.y = d.tissueId;
+        d.originalValue = Number(d.data);
+        d.id = d.gencodeId
+    });
+    return json[attr];
+}
+
 export function parseMedianExpression(json, useLog=true){
     const attr = "medianGeneExpression";
     if(!json.hasOwnProperty(attr)) throw "parseMedianExpression input error.";
@@ -75,21 +110,7 @@ export function parseMedianTPM(data, useLog=true){
     return data;
 }
 
-export function parseJunctionExpression(json, useLog=true){
-    const attr = "junctionExpression";
-    if(!json.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
-    // parse GTEx median junction counts
-    const adjust = 1;
-    json.junctionExpression.forEach(function(d){
-        // TODO: add json attr error-checking
-        d.value = useLog?Math.log10(Number(d.data) + adjust):+Number(d.data);
-        d.x = d.junctionId;
-        d.y = d.tissueId;
-        d.originalValue = Number(d.data);
-        d.id = d.gencodeId
-    });
-    return json[attr];
-}
+
 
 function parseGeneExpression(gencodeId, data){
     /**
