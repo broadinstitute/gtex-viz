@@ -30,6 +30,7 @@ function init(){
     d4.json(urls.geneId + inputGene, function(json){  // get the gene object for the gencode ID
         const gene = json.geneId[0];
         process(gene.gencodeId);
+        customize();
 
     });
 }
@@ -58,10 +59,10 @@ function process(gencodeId){
             const geneModel = new GeneModel(gene, exons, junctions);
             const modelConfig = {
                 w: 1500,
-                h: 300,
+                h: 100,
                 margin: {
                     top: 20,
-                    left: 50
+                    left: 20
                 }
             };
             let modelSvg = createSvg(modelDomId, modelConfig.w, modelConfig.h, modelConfig.margin);
@@ -74,7 +75,12 @@ function process(gencodeId){
 
 function reset(){
     d4.select("#chart").selectAll("*").remove();
+    d4.select("#model").selectAll("*").remove();
     d4.select("#boxplot").selectAll("*").remove();
     d4.select("#dashboardToolbar").style("display", "none");
     d4.selectAll("*").classed("inView", false);
+}
+
+function customize(){
+
 }
