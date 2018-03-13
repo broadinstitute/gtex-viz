@@ -9,3 +9,7 @@
     stroke-width: 3px;
     fill: none;
 }
+
+.junc {
+    cursor: pointer;
+}

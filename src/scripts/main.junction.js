@@ -7,10 +7,10 @@ import {getGtexUrls, parseTissues, parseJunctionExpression, parseExons, parseJun
 import {createSvg} from "./modules/utils";
 
 /** TODO
- * 1. change how the tree is rendered, instead of using individual lines, use the d3.line.interpolate
  * 2. depict unfiltered gene model
- * 3. color the gene model with expression data
- * 4. delete top tree panel (space)
+ * 3. color the gene model with expression data when a tissue is clicked
+ * 4. add tissue colors
+ * 4.5 automatic filtering of tissues based on median gene expression?
  * 5. report individual isoforms
  * 6. gene information
  * 7. improve heatmap custom layout configuration
@@ -18,7 +18,11 @@ import {createSvg} from "./modules/utils";
  * 9. add exon text label
  * 10. add cell mouse events
  * 11. implement the tool bar (should it be a hamburger?
+ * 11.5 tree scale bug
+ * 11.9 rebuild spliceViz
  * 12. code review
+ * 13. Isoform Express Map
+ * 14. EpiMap
  */
 
 
@@ -78,7 +82,7 @@ function process(gencodeId){
             const gene = exons.shift(); // Note the 1st element in the exon array in the GTEx exon web service is actually the gene
             const geneModel = new GeneModel(gene, exons, junctions);
             const modelConfig = {
-                w: window.innerWidth - (100 + 250),
+                w: window.innerWidth,
                 h: 100,
                 margin: {
                     top: 20,
