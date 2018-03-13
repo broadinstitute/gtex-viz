@@ -8,6 +8,7 @@ export function getGtexUrls(){
         "topInTissue": host + "expression/topExpressedGenes?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
         "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
 
+        "exonExp": host + "expression/exonExpression?datasetId=gtex_v7&gencodeId=",
         "junctionExp": host + "expression/junctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
         "geneModel": host + "reference/collapsedGeneModel?unfiltered=false&release=v7&gencode_id=",
         "geneModelUnfiltered": host + "reference/collapsedGeneModel?unfiltered=true&release=v7&gencode_id=",
@@ -67,12 +68,27 @@ export function parseJunctions(data){
                     });
 }
 
+export function parseExonExpression(json, useLog=true){
+    const attr = "exonExpression";
+    if(!json.hasOwnProperty(attr)) throw("parseExonExpression input error");
+    // parse GTEx median exon counts
+    const adjust = 1;
+    json[attr].forEach((d) => {
+        d.value = useLog?Math.log10(Number(d.data) + adjust):+Number(d.data);
+        d.x = d.exonId;
+        d.y = d.tissueId;
+        d.originalValue = Number(d.data);
+        d.id = d.gencodeId
+    });
+    return json[attr]
+}
+
 export function parseJunctionExpression(json, useLog=true){
     const attr = "junctionExpression";
     if(!json.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
     // parse GTEx median junction counts
     const adjust = 1;
-    json.junctionExpression.forEach(function(d){
+    json[attr].forEach((d) => {
         // TODO: add json attr error-checking
         d.value = useLog?Math.log10(Number(d.data) + adjust):+Number(d.data);
         d.x = d.junctionId;

@@ -35,13 +35,26 @@ export default class GeneModel {
         this.minExonWidth = 5; // minimum exon width in pixels
     }
 
-    changeColor(dom, data, scale){
+    /**
+     *
+     * @param dom {Object} of D3
+     * @param jdata {List} of junction expression objects
+     * @param edata {List} of exon expression objects
+     * @param scale {D3 scale} of colors
+     */
+    changeColor(dom, jdata, edata, scale){
         dom.selectAll(".junc").style("fill", (d) => {
-            const v = data.filter((z)=>z.junctionId==d.junctionId)[0];
-            const color = scale(v.value)
-            dom.selectAll(".junc-curve").filter((`.junc${d.junctionId}`)).style("stroke", color);
-            return color;
+            const v = jdata.filter((z)=>z.junctionId==d.junctionId)[0];
+            const jcolor = scale(v.value);
+            dom.selectAll(".junc-curve").filter((`.junc${d.junctionId}`)).style("stroke", jcolor);
+            return jcolor;
         });
+        // console.log(edata);
+        // dom.selectAll(".exon-curated").style("fill", (d) => {
+        //     const v = edata.filter((z)=>z.exonId==d.exonId)[0];
+        //     const ecolor = scale(v.value);
+        //     return ecolor;
+        // });
     }
 
     /**
@@ -186,8 +199,8 @@ export default class GeneModel {
             .attr("width", (d) => d.w)
             .attr("height", 20) // TODO: remove hard-coded values
             .attr("x", (d) => d.x)
-            .merge(exonRects2);
-
+            .merge(exonRects2)
+            .style("fill", "rgb(75, 134, 153)");
     }
 
     setXscale(w){

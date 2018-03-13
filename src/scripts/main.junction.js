@@ -3,11 +3,12 @@ import * as d4 from "d3";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GeneModel from "./modules/GeneModel";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
-import {getGtexUrls, parseTissues, parseJunctionExpression, parseExons, parseJunctions} from "./modules/gtexDataParser";
+import {getGtexUrls, parseTissues, parseJunctionExpression, parseExonExpression, parseExons, parseJunctions} from "./modules/gtexDataParser";
 import {createSvg} from "./modules/utils";
 
 /** TODO
  * 3. color the gene model with expression data when a tissue is clicked
+ * 3.5. color vs value conversion, do I need a seperate scale for exons?
  * 4. add tissue colors
  * 4.1 do we set a threshold on tissues if the gene isn't expressed?
  * 4.5 automatic filtering of tissues based on median gene expression?
@@ -66,7 +67,8 @@ function process(gene){
         .defer(d4.json, urls.geneModelUnfiltered + gencodeId) // unfiltered collapsed gene model
         .defer(d4.json, urls.geneModel + gencodeId) // final collapsed gene model
         .defer(d4.json, urls.junctionExp + gencodeId) // junction expression data
-        .await(function(error, tissueJson, geneModelJson, curatedGeneModelJson, data){
+        .defer(d4.json, urls.exonExp + gencodeId) // exon expression data of the final collapsed model only
+        .await(function(error, tissueJson, geneModelJson, curatedGeneModelJson, data, data2){
             if (error !== null) throw "Web service error.";
             const tissues = parseTissues(tissueJson),
                 exons = parseExons(geneModelJson),
@@ -74,13 +76,15 @@ function process(gene){
                 junctions = parseJunctions(data),
                 tissueTree = data.clusters.tissue,
                 junctionTree = data.clusters.junction, // junction tree is not really useful
-                expression = parseJunctionExpression(data);
+                jExpress = parseJunctionExpression(data),
+                exonExpress = parseExonExpression(data2);
+
 
             // junction expression heat map
             let dmapConfig = new DendroHeatmapConfig("chart");
             dmapConfig.setMargin({left: 10, top: 20, right: 200, bottom: 200});
             dmapConfig.noTopTreePanel();
-            const dmap = new DendroHeatmap(junctionTree, tissueTree, expression, "reds2", 5, dmapConfig);
+            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig);
             dmap.render(chartDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
 
             // gene model rendering
@@ -97,7 +101,7 @@ function process(gene){
             modelG.attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
             geneModel.render(modelG, {w:modelConfig.w, h:modelConfig.h});
 
-            customize(geneModel, dmap, expression);
+            customize(geneModel, dmap, jExpress, exonExpress);
             $('#spinner').hide();
 
         });
@@ -111,7 +115,14 @@ function reset(){
     d4.selectAll("*").classed("inView", false);
 }
 
-function customize(geneModel, map, data){
+/**
+ * customizing the junciton expression visualization
+ * @param geneModel {Object} of gene
+ * @param map {Object} of DendropHeatmap
+ * @param jdata {List} of junction expression data objects
+ * @param edata {List} of exon expression data objects
+ */
+function customize(geneModel, map, jdata, edata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
     mapSvg.selectAll(".yLabel")
@@ -125,7 +136,9 @@ function customize(geneModel, map, data){
         .on("click", function(d){
             const tissue = d4.select(this).text();
             console.log(tissue);
-            geneModel.changeColor(mapSvg, data.filter((d)=>d.tissueId==tissue), map.objects.heatmap.colorScale);
+            const j = jdata.filter((d)=>d.tissueId==tissue);
+            const ex = edata.filter((d)=>d.tissueId==tissue)
+            geneModel.changeColor(mapSvg, j, ex, map.objects.heatmap.colorScale);
         })
 
     mapSvg.selectAll(".xLabel")
