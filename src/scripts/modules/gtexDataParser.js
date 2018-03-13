@@ -1,5 +1,5 @@
 export function getGtexUrls(){
-    const host = "https://dev.gtexportal.org/rest/v1/";
+    const host = "https://gtexportal.org/rest/v1/";
     return {
         // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
         "geneId": host + "reference/geneId?format=json&geneId=",
@@ -9,7 +9,8 @@ export function getGtexUrls(){
         "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
 
         "junctionExp": host + "expression/junctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
-        "geneModel": host + "reference/collapsedGeneModel?release=v7&gencode_id=",
+        "geneModel": host + "reference/collapsedGeneModel?unfiltered=false&release=v7&gencode_id=",
+        "geneModelUnfiltered": host + "reference/collapsedGeneModel?unfiltered=true&release=v7&gencode_id=",
 
         "liverGeneExp": "data/top50.genes.liver.genomic.median.tpm.json", // top 50 genes in GTEx liver
         "cerebellumGeneExp": "data/top.gtex.cerebellum.genes.median.tpm.tsv",
@@ -44,7 +45,7 @@ export function parseTissues(data){
 export function parseExons(data){
     const attr = "collapsedGeneModel";
     if(!data.hasOwnProperty(attr)) throw "parseExons input error.";
-    return data[attr]
+    return data[attr].filter((d)=>d.featureType == "exon");
 }
 
 export function parseJunctions(data){

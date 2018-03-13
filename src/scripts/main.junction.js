@@ -7,9 +7,12 @@ import {getGtexUrls, parseTissues, parseJunctionExpression, parseExons, parseJun
 import {createSvg} from "./modules/utils";
 
 /** TODO
- * 2. depict unfiltered gene model
+ * 2.1 NDRG4 bug?
+ * 2.5 any strand issues?
+ * 2.7 merge into one svg, so that the whole visualization can be downloaded as one image
  * 3. color the gene model with expression data when a tissue is clicked
  * 4. add tissue colors
+ * 4.1 do we set a threshold on tissues if the gene isn't expressed?
  * 4.5 automatic filtering of tissues based on median gene expression?
  * 5. report individual isoforms
  * 6. gene information
@@ -23,6 +26,7 @@ import {createSvg} from "./modules/utils";
  * 12. code review
  * 13. Isoform Express Map
  * 14. EpiMap
+ * 15. Create a new github repo and consolidate all of my d3.v4 viz tools there
  */
 
 
@@ -59,17 +63,19 @@ function process(gencodeId){
     const modelDomId = "model";
     $('#spinner').show();
     d4.queue()
-        .defer(d4.json, urls.tissue) // get tissue colors
-        .defer(d4.json, urls.geneModel + gencodeId)
-        .defer(d4.json, urls.junctionExp + gencodeId)
-        .await(function(error, data1, data2, data3){
+        .defer(d4.json, urls.tissue) // tissue colors
+        .defer(d4.json, urls.geneModelUnfiltered + gencodeId) // unfiltered collapsed gene model
+        .defer(d4.json, urls.geneModel + gencodeId) // final collapsed gene model
+        .defer(d4.json, urls.junctionExp + gencodeId) // junction expression data
+        .await(function(error, tissueJson, geneModelJson, curatedGeneModelJson, data){
             if (error !== null) throw "Web service error.";
-            const tissues = parseTissues(data1),
-                exons = parseExons(data2),
-                junctions = parseJunctions(data3),
-                tissueTree = data3.clusters.tissue,
-                junctionTree = data3.clusters.junction, // junction tree is not really useful
-                expression = parseJunctionExpression(data3);
+            const tissues = parseTissues(tissueJson),
+                exons = parseExons(geneModelJson),
+                exonsCurated = parseExons(curatedGeneModelJson),
+                junctions = parseJunctions(data),
+                tissueTree = data.clusters.tissue,
+                junctionTree = data.clusters.junction, // junction tree is not really useful
+                expression = parseJunctionExpression(data);
 
             // junction expression heat map
             let dmapConfig = new DendroHeatmapConfig("chart");
@@ -79,8 +85,7 @@ function process(gencodeId){
             dmap.render(chartDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
 
             // gene model rendering
-            const gene = exons.shift(); // Note the 1st element in the exon array in the GTEx exon web service is actually the gene
-            const geneModel = new GeneModel(gene, exons, junctions);
+            const geneModel = new GeneModel({gencodeId: gencodeId}, exons, exonsCurated, junctions);
             const modelConfig = {
                 w: window.innerWidth,
                 h: 100,

@@ -8,13 +8,20 @@ genomic positions, regardless of the strand and transcriptional direction.
 export default class GeneModel {
     /**
      * constructor
-     * @param gene {Object} with attributes: chrom, chromEnd, chromStart, strand, geneName, gencodeId
+     * @param geneId {String} gene ID
      * @param exons {List} of exon objects with attributes: chrom, chromStart, chromEnd, length, exonNumber, exonId
+     * @param exonsCurated {List} of exon objects in the final gene model. This is pretty specific to GTEx.
+     *        If this list isn't available for your data, then just pass in the same exon list again.
      * @param junctions {List} of junction objects with attributes: chrom, chromStart, chromEnd, junctionId
      */
-    constructor (gene, exons, junctions){
-        this.gene = gene;
+
+    /** NOTE: the exonNumber in exons & exonsCurated are not mappable
+     *  To map exons of curated gene model to the original model, use genomic positions.
+     */
+    constructor (geneId, exons, exonsCurated, junctions){
+        this.geneId = geneId; // not used?
         this.exons = exons.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
+        this.exonsCurated = exonsCurated.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
         this.junctions = junctions.sort((a,b) => {
             if (a.junctionId < b.junctionId) return -1;
             if (a.junctionId > b.junctionId) return 1;
@@ -23,24 +30,41 @@ export default class GeneModel {
         // hard-coded for now
         this.intronLength = 0; // fixed fake intron length in base pairs
         this.minExonWidth = 5; // minimum exon width in pixels
-
     }
 
     /**
      * render the SVG of the gene model
      * @param dom: an SVG dom object
      * @param dimensions
+
      */
     render(dom, dimensions={w: 1200, h: 100}) {
         this.setXscale(dimensions.w);
 
+        /* Note: exon.x, exon.w are in pixels for visual rendering */
+        /* Note: exon.length is in base pairs */
         // calculating x and w for each exon
         const exonY = 50; // TODO: remove hard-coded values
         this.exons.forEach((d, i) => {
             if (i == 0) d.x = 0;
             if(i > 0) d.x = this.exons[i-1].x + this.exons[i-1].w + this.xScale(this.intronLength);
-
             d.w = this.xScale(d.length)<this.minExonWidth?this.minExonWidth:this.xScale(d.length);
+        });
+
+        // calculaing x and w for each curated exon
+        this.exonsCurated.forEach((d, i) => {
+            // map curated exon to the original gene model--find the original exon
+            const oriExon = this._findExon(d.chromStart);
+
+            if (Number(oriExon.chromStart) == Number(d.chromStart)) d.x = oriExon.x;
+            else{
+                // this exon doesn't start from the oriExon start pos
+                const dist = Number(d.chromStart) - Number(oriExon.chromStart) + 1;
+                d.x += this.xScale(dist);
+            }
+            if (d.length === undefined) d.length = Number(d.chromEnd) - Number(d.chromStart) + 1;
+            d.w = this.xScale(d.length)<this.minExonWidth?this.minExonWidth:this.xScale(d.length);
+
         });
 
         // calculating x for each junction
@@ -64,29 +88,7 @@ export default class GeneModel {
 
         });
 
-        // rendering exons
-        const exonRects = dom.selectAll(".exon")
-            .data(this.exons);
-
-        // updating elements
-        exonRects.attr("x", (d) => d.x);
-        exonRects.attr("y", exonY);
-
-        // entering new elements
-        exonRects.enter().append("rect")
-            .attr("class", (d)=>`exon exon${d.exonNumber}`)
-            .attr("y", exonY)
-            .attr("rx", 2)
-            .attr('ry', 2)
-            .attr("width", (d) => d.w)
-            .attr("height", 20) // TODO: remove hard-coded values
-            .style("fill", "#eee")
-            .attr("x", (d) => d.x)
-            .merge(exonRects)
-            // .style("fill", "#6ca8b9");
-            .style("fill", "#889d99");
-
-        // render junctions
+        /***** render junctions */
         const curve = d4.line()
             .x((d) => d.x)
             .y((d) => d.y)
@@ -119,7 +121,44 @@ export default class GeneModel {
             .style("fill", "#eee")
             .merge(juncDots)
             .attr("r", 4)
-            .style("fill", "rgb(239, 59, 44)")
+            .style("fill", "rgb(239, 59, 44)");
+
+        /***** rendering exons */
+        const exonRects = dom.selectAll(".exon")
+            .data(this.exons);
+
+        // updating elements
+        exonRects.attr("x", (d) => d.x);
+        exonRects.attr("y", exonY);
+
+        // entering new elements
+        exonRects.enter().append("rect")
+            .attr("class", (d)=>`exon exon${d.exonNumber}`)
+            .attr("y", exonY)
+            .attr("rx", 2)
+            .attr('ry', 2)
+            .attr("width", (d) => d.w)
+            .attr("height", 20) // TODO: remove hard-coded values
+            .attr("x", (d) => d.x)
+            .merge(exonRects);
+
+        /***** rendering curated exons */
+        const exonRects2 = dom.selectAll(".exon-curated")
+            .data(this.exonsCurated);
+
+        // updating elements
+        exonRects2.attr("x", (d) => d.x);
+        exonRects2.attr("y", exonY);
+
+        // entering new elements
+        exonRects2.enter().append("rect")
+            .attr("class", (d)=>`exon-curated`)
+            .attr("y", exonY)
+            .attr("width", (d) => d.w)
+            .attr("height", 20) // TODO: remove hard-coded values
+            .attr("x", (d) => d.x)
+            .merge(exonRects2);
+
 
     }
 
@@ -134,7 +173,7 @@ export default class GeneModel {
         // ((max(exon length) * exon counts) - total exon length)/(exon counts - 1)
 
         // use a linear scale to
-        this.exons.forEach((d) => {d.length = d.chromEnd - d.chromStart + 1});
+        this.exons.forEach((d) => {d.length = Number(d.chromEnd) - Number(d.chromStart) + 1});
         const maxExonLength = d4.max(this.exons, (d)=>d.length);
 
         const domain = [0, maxExonLength*this.exons.length];
@@ -150,17 +189,22 @@ export default class GeneModel {
     }
 
     /**
-     * For a given position, find the overlapping exon
+     * For a given position, find the exon
      * @param pos {Integer}: a genomic position
      * @private
      */
     _findExon(pos){
         pos = Number(pos);
-        const results = this.exons.filter((d) => {return d.chromStart - 1 <= pos && d.chromEnd + 1 >= pos});
+        const results = this.exons.filter((d) => {return Number(d.chromStart) - 1 <= pos && Number(d.chromEnd) + 1 >= pos});
         if (results.length == 1) return results[0];
-        else {
-            console.warn("Find Exon Error for position: " + pos);
+        else if(results.length == 0) {
+            console.warn("No exon found for: " + pos);
             return undefined;
         }
+        else {
+            console.warn("More than one exons found for: " + pos);
+            return undefined;
+        }
+
     }
 }
