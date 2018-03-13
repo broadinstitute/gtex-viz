@@ -7,7 +7,6 @@ import {getGtexUrls, parseTissues, parseJunctionExpression, parseExons, parseJun
 import {createSvg} from "./modules/utils";
 
 /** TODO
- * 2.1 NDRG4 bugs
  * 2.7 merge into one svg, so that the whole visualization can be downloaded as one image
  * 3. color the gene model with expression data when a tissue is clicked
  * 4. add tissue colors
@@ -79,24 +78,25 @@ function process(gene){
 
             // junction expression heat map
             let dmapConfig = new DendroHeatmapConfig("chart");
-            dmapConfig.setMargin({left: 10, top: 20, right: 200, bottom: 20});
+            dmapConfig.setMargin({left: 10, top: 20, right: 200, bottom: 200});
             dmapConfig.noTopTreePanel();
             const dmap = new DendroHeatmap(junctionTree, tissueTree, expression, "reds2", 5, dmapConfig);
             dmap.render(chartDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
 
             // gene model rendering
             const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
+            const adjust = 100;
             const modelConfig = {
-                w: window.innerWidth,
-                h: 100,
-                margin: {
-                    top: 20,
-                    left: 110
-                }
+                x: dmap.config.panels.main.x,
+                y: dmap.config.panels.main.h + dmap.config.panels.main.y + adjust,
+                w: dmap.config.panels.main.w,
+                h: 100
             };
-            let modelSvg = createSvg(modelDomId, modelConfig.w, modelConfig.h, modelConfig.margin);
-            geneModel.render(modelSvg);
-            customize(geneModel, modelSvg, dmap.visualComponents.svg);
+            // let modelSvg = createSvg(modelDomId, modelConfig.w, modelConfig.h, modelConfig.margin);
+            const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel");
+            modelG.attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
+            geneModel.render(modelG, {w:modelConfig.w, h:modelConfig.h});
+            customize(geneModel, dmap.visualComponents.svg);
             $('#spinner').hide();
 
         });
@@ -110,7 +110,7 @@ function reset(){
     d4.selectAll("*").classed("inView", false);
 }
 
-function customize(geneModel, modelSvg, mapSvg){
+function customize(geneModel, mapSvg){
     // junction labels on the map
     mapSvg.selectAll(".xLabel")
         .each(function(d){
@@ -130,11 +130,11 @@ function customize(geneModel, modelSvg, mapSvg){
                 .classed("normal", false);
 
             // highlight the junction and its exons on the gene model
-            modelSvg.select(`.junc${jId}`).classed("highlighted", true);
+            mapSvg.selectAll(`.junc${jId}`).classed("highlighted", true);
             const junc = geneModel.junctions.filter((d)=>d.junctionId == jId && !d.filtered)[0];
             if (junc !== undefined) {
-                modelSvg.selectAll(`.exon${junc.startExon.exonNumber}`).classed("highlighted", true);
-                modelSvg.selectAll(`.exon${junc.endExon.exonNumber}`).classed("highlighted", true);
+                mapSvg.selectAll(`.exon${junc.startExon.exonNumber}`).classed("highlighted", true);
+                mapSvg.selectAll(`.exon${junc.endExon.exonNumber}`).classed("highlighted", true);
             }
         })
         .on("mouseout", function(d){
@@ -142,17 +142,17 @@ function customize(geneModel, modelSvg, mapSvg){
                 .classed("normal", true);
             d4.selectAll(".junc").classed("highlighted", false);
             d4.selectAll(".junc-curve").classed("highlighted", false);
-            modelSvg.selectAll(".exon").classed("highlighted", false);
+            mapSvg.selectAll(".exon").classed("highlighted", false);
         });
 
-    modelSvg.selectAll(".junc")
+    mapSvg.selectAll(".junc")
         .on("mouseover", function(d){
             d4.selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
             console.log(`Junction ${d.junctionId}: ${d.chromStart} - ${d.chromEnd}`)
 
             if (d.startExon !== undefined){
-                modelSvg.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);
-                modelSvg.selectAll(".exon").filter(`.exon${d.endExon.exonNumber}`).classed("highlighted", true);
+                mapSvg.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);
+                mapSvg.selectAll(".exon").filter(`.exon${d.endExon.exonNumber}`).classed("highlighted", true);
             }
 
 
@@ -162,11 +162,11 @@ function customize(geneModel, modelSvg, mapSvg){
         })
         .on("mouseout", function(d){
             d4.selectAll(`.junc${d.junctionId}`).classed("highlighted", false);
-            modelSvg.selectAll(".exon").classed("highlighted", false);
+            mapSvg.selectAll(".exon").classed("highlighted", false);
             mapSvg.selectAll(".xLabel").classed("highlighted", false)
                 .classed("normal", true);
         });
-    modelSvg.selectAll(".exon-curated")
+    mapSvg.selectAll(".exon-curated")
         .on('mouseover', function(d){
             d4.select(this).classed("highlighted", true);
             console.log(`Exon ${d.exonNumber}: ${d.chromStart} - ${d.chromEnd}`)
