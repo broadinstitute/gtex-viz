@@ -7,8 +7,7 @@ import {getGtexUrls, parseTissues, parseJunctionExpression, parseExons, parseJun
 import {createSvg} from "./modules/utils";
 
 /** TODO
- * 2.1 NDRG4 bug?
- * 2.5 any strand issues?
+ * 2.1 ACTN1, ACTN3, NDRG4 bugs
  * 2.7 merge into one svg, so that the whole visualization can be downloaded as one image
  * 3. color the gene model with expression data when a tissue is clicked
  * 4. add tissue colors
@@ -149,6 +148,8 @@ function customize(geneModel, modelSvg, mapSvg){
     modelSvg.selectAll(".junc")
         .on("mouseover", function(d){
             d4.selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
+            console.log(`Junction ${d.junctionId}: ${d.chromStart} - ${d.chromEnd}`)
+
             if (d.startExon !== undefined){
                 modelSvg.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);
                 modelSvg.selectAll(".exon").filter(`.exon${d.endExon.exonNumber}`).classed("highlighted", true);
@@ -164,5 +165,14 @@ function customize(geneModel, modelSvg, mapSvg){
             modelSvg.selectAll(".exon").classed("highlighted", false);
             mapSvg.selectAll(".xLabel").classed("highlighted", false)
                 .classed("normal", true);
+        });
+    modelSvg.selectAll(".exon-curated")
+        .on('mouseover', function(d){
+            d4.select(this).classed("highlighted", true);
+            console.log(`Exon ${d.exonNumber}: ${d.chromStart} - ${d.chromEnd}`)
         })
+        .on('mouseout', function(d){
+            d4.select(this).classed("highlighted", false);
+        });
+
 }

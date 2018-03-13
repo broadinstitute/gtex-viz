@@ -105,7 +105,7 @@ export default class GeneModel {
             // jitter
             if(counts[d.displayName] > 1){ // overlapping junctions
                 d.cx += Math.random()*20;
-                d.cy += Math.random()*20;
+                d.cy -= Math.random()*20;
             }
         });
 
@@ -178,7 +178,6 @@ export default class GeneModel {
             .attr("height", 20) // TODO: remove hard-coded values
             .attr("x", (d) => d.x)
             .merge(exonRects2);
-
 
     }
 
