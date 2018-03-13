@@ -8,7 +8,7 @@ genomic positions, regardless of the strand and transcriptional direction.
 export default class GeneModel {
     /**
      * constructor
-     * @param geneId {String} gene ID
+     * @param gene {Object}
      * @param exons {List} of exon objects with attributes: chrom, chromStart, chromEnd, length, exonNumber, exonId
      * @param exonsCurated {List} of exon objects in the final gene model. This is pretty specific to GTEx.
      *        If this list isn't available for your data, then just pass in the same exon list again.
@@ -18,8 +18,9 @@ export default class GeneModel {
     /** NOTE: the exonNumber in exons & exonsCurated are not mappable
      *  To map exons of curated gene model to the original model, use genomic positions.
      */
-    constructor (geneId, exons, exonsCurated, junctions){
-        this.geneId = geneId; // not used?
+    constructor (gene, exons, exonsCurated, junctions){
+        this.gene = gene;
+        console.log(this.gene); // for debugging
         this.exons = exons.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
         this.exonsCurated = exonsCurated.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
         this.junctions = junctions.sort((a,b) => {
@@ -71,21 +72,41 @@ export default class GeneModel {
         this.junctions.forEach((d) => {
             d.startExon = this._findExon(d.chromStart);
             d.endExon = this._findExon(d.chromEnd);
+            d.displayName = d.junctionId;
             if (d.startExon === undefined || d.endExon === undefined) {
                 // TODO: figure out why some junctions can't map to the gene model
                 // check unfiltered gene model
                 // Temporary solution: set d.filtered to true and ignore rendering this junction
                 d.filtered = true;
+                console.warn("Can't map junction to exons " + d.junctionId); // why the junction can't map
             }
             else {
+                d.displayName = `Exon ${d.startExon.exonNumber} - ${d.endExon.exonNumber}`;
+                if (d.startExon.exonNumber == d.endExon.exonNumber) {
+                    console.warn(d.junctionId + " is in Exon: " +d.startExon.chromStart + " - " + d.startExon.chromEnd );
+                } // what is happening
+
                 d.filtered = false;
-                d.startX = d.startExon.x + d.startExon.w;
-                d.endX = d.endExon.x;
+                const dist = Number(d.chromStart) - Number(d.startExon.chromStart) + 1;
+                const dist2 = Number(d.endExon.chromStart) - Number(d.chromEnd) + 1;
+
+                d.startX = d.startExon.x + this.xScale(dist);
+                d.endX = d.endExon.x + this.xScale(dist2);
                 d.cx = d.startX + (d.endX - d.startX + 1)/2; // junction is rendered at the midpoint between startX and endX
                 d.cy = exonY - 5 * Math.abs(Number(d.endExon.exonNumber) - Number(d.startExon.exonNumber) + 1);
                 if (d.cy < 5) d.cy = 5;
             }
+        });
 
+        // edge case: overlapping junctions, add jitter
+        // a.reduce((r,k)=>{r[k]=1+r[k]||1;return r},{})
+        const counts = this.junctions.reduce((r,d)=>{r[d.displayName]=1+r[d.displayName]||1;return r},{});
+        this.junctions.forEach((d) => {
+            // jitter
+            if(counts[d.displayName] > 1){ // overlapping junctions
+                d.cx += Math.random()*20;
+                d.cy += Math.random()*20;
+            }
         });
 
         /***** render junctions */
@@ -98,9 +119,8 @@ export default class GeneModel {
                 .forEach((d, i) => {
                     dom.append("path")
                     .datum([{x:d.startX, y:exonY}, {x:d.cx, y:d.cy}, {x:d.endX, y:exonY}]) // the input points to draw the curve
-                    .style("stroke", "#DDDDDD")
-                    .style("fill", "none")
-                    .attr("d", curve);
+                    .attr("class", `junc-curve junc${d.junctionId}`)
+                    .attr("d", curve)
 
                 });
 

@@ -111,8 +111,6 @@ export function parseMedianTPM(data, useLog=true){
     return data;
 }
 
-
-
 function parseGeneExpression(gencodeId, data){
     /**
      *
