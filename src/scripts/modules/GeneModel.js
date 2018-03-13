@@ -117,8 +117,8 @@ export default class GeneModel {
                 d.startX = d.startExon.x + this.xScale(dist);
                 d.endX = d.endExon.x + this.xScale(dist2);
                 d.cx = d.startX + (d.endX - d.startX + 1)/2; // junction is rendered at the midpoint between startX and endX
-                d.cy = exonY - 5 * Math.abs(Number(d.endExon.exonNumber) - Number(d.startExon.exonNumber) + 1);
-                if (d.cy < 5) d.cy = 5;
+                d.cy = exonY - 15 * Math.abs(Number(d.endExon.exonNumber) - Number(d.startExon.exonNumber) + 1);
+                if (d.cy < 0) d.cy = 0;
             }
         });
 
@@ -129,7 +129,7 @@ export default class GeneModel {
             // jitter
             if(counts[d.displayName] > 1){ // overlapping junctions
                 // d.cx += Math.random()*20;
-                d.cy -= Math.random()*30;
+                d.cy -= Math.random()*15;
             }
         });
 
@@ -200,7 +200,7 @@ export default class GeneModel {
             .attr("height", 20) // TODO: remove hard-coded values
             .attr("x", (d) => d.x)
             .merge(exonRects2)
-            .style("fill", "rgb(75, 134, 153)");
+            .style("fill", "#eee");
     }
 
     setXscale(w){

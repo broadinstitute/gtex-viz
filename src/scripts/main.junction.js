@@ -7,8 +7,9 @@ import {getGtexUrls, parseTissues, parseJunctionExpression, parseExonExpression,
 import {createSvg} from "./modules/utils";
 
 /** TODO
- * 3. color the gene model with expression data when a tissue is clicked
- * 3.5. color vs value conversion, do I need a seperate scale for exons?
+ * 2. bug: junction position on the gene model
+ * 3.5. bug: color vs value conversion, do I need a seperate scale for exons?
+ * 3.8 add clicked tissue name
  * 4. add tissue colors
  * 4.1 do we set a threshold on tissues if the gene isn't expressed?
  * 4.5 automatic filtering of tissues based on median gene expression?
