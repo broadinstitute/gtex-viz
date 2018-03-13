@@ -3,13 +3,13 @@
 }
 
 .junc.highlighted {
-    stroke: rgb(239, 59, 44);
+    stroke: rgb(201, 2, 13);
     stroke-width: 5px;
     fill: none;
 }
 
 .junc-curve {
-    stroke: #DDDDDD;
+    stroke: #92bcc9;
     stroke-width: 1px;
     fill: none;
 }

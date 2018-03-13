@@ -106,8 +106,8 @@ export default class GeneModel {
         this.junctions.forEach((d) => {
             // jitter
             if(counts[d.displayName] > 1){ // overlapping junctions
-                d.cx += Math.random()*20;
-                d.cy -= Math.random()*20;
+                // d.cx += Math.random()*20;
+                d.cy -= Math.random()*30;
             }
         });
 
