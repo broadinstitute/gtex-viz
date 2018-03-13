@@ -88,7 +88,7 @@ export default class GeneModel {
 
                 d.filtered = false;
                 const dist = Number(d.chromStart) - Number(d.startExon.chromStart) + 1;
-                const dist2 = Number(d.endExon.chromStart) - Number(d.chromEnd) + 1;
+                const dist2 = Number(d.chromEnd) - Number(d.endExon.chromStart) + 1;
 
                 d.startX = d.startExon.x + this.xScale(dist);
                 d.endX = d.endExon.x + this.xScale(dist2);
