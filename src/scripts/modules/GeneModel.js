@@ -20,8 +20,10 @@ export default class GeneModel {
      */
     constructor (gene, exons, exonsCurated, junctions){
         this.gene = gene;
-        console.log(this.gene); // for debugging
-        this.exons = exons.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
+        // console.log(this.gene); // for debugging
+        this.exons = exons;
+        if (this.gene.strand == "+") this.exons.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
+        else this.exons.sort((a, b)=>{return Number(b.exonNumber)-Number(a.exonNumber)});
         this.exonsCurated = exonsCurated.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
         this.junctions = junctions.sort((a,b) => {
             if (a.junctionId < b.junctionId) return -1;

@@ -7,7 +7,7 @@ import {getGtexUrls, parseTissues, parseJunctionExpression, parseExons, parseJun
 import {createSvg} from "./modules/utils";
 
 /** TODO
- * 2.1 ACTN1, ACTN3, NDRG4 bugs
+ * 2.1 NDRG4 bugs
  * 2.7 merge into one svg, so that the whole visualization can be downloaded as one image
  * 3. color the gene model with expression data when a tissue is clicked
  * 4. add tissue colors
