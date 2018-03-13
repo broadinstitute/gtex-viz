@@ -53,12 +53,13 @@ function init(){
     reset();
     d4.json(urls.geneId + inputGene, function(json){  // get the gene object for the gencode ID
         const gene = json.geneId[0];
-        process(gene.gencodeId);
+        process(gene);
 
     });
 }
 
-function process(gencodeId){
+function process(gene){
+    const gencodeId = gene.gencodeId;
     const chartDomId = "chart";
     const modelDomId = "model";
     $('#spinner').show();
@@ -85,7 +86,7 @@ function process(gencodeId){
             dmap.render(chartDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
 
             // gene model rendering
-            const geneModel = new GeneModel({gencodeId: gencodeId}, exons, exonsCurated, junctions);
+            const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
             const modelConfig = {
                 w: window.innerWidth,
                 h: 100,
@@ -141,12 +142,13 @@ function customize(geneModel, modelSvg, mapSvg){
             d4.select(this).classed("highlighted", false)
                 .classed("normal", true);
             d4.selectAll(".junc").classed("highlighted", false);
+            d4.selectAll(".junc-curve").classed("highlighted", false);
             modelSvg.selectAll(".exon").classed("highlighted", false);
         });
 
     modelSvg.selectAll(".junc")
         .on("mouseover", function(d){
-            d4.select(this).classed("highlighted", true);
+            d4.selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
             if (d.startExon !== undefined){
                 modelSvg.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);
                 modelSvg.selectAll(".exon").filter(`.exon${d.endExon.exonNumber}`).classed("highlighted", true);
@@ -158,7 +160,7 @@ function customize(geneModel, modelSvg, mapSvg){
                 .classed("normal", false);
         })
         .on("mouseout", function(d){
-            d4.select(this).classed("highlighted", false);
+            d4.selectAll(`.junc${d.junctionId}`).classed("highlighted", false);
             modelSvg.selectAll(".exon").classed("highlighted", false);
             mapSvg.selectAll(".xLabel").classed("highlighted", false)
                 .classed("normal", true);

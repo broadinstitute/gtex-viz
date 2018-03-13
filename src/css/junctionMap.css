@@ -8,6 +8,18 @@
     fill: none;
 }
 
+.junc-curve {
+    stroke: #DDDDDD;
+    stroke-width: 1px;
+    fill: none;
+}
+
+.junc-curve.highlighted {
+    stroke: rgb(239, 59, 44);
+    stroke-width: 2px;
+    fill: none;
+}
+
 .exon {
     cursor: pointer;
     stroke: rgb(75, 134, 153);
