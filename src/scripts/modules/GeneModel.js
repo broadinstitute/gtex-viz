@@ -35,6 +35,15 @@ export default class GeneModel {
         this.minExonWidth = 5; // minimum exon width in pixels
     }
 
+    changeColor(dom, data, scale){
+        dom.selectAll(".junc").style("fill", (d) => {
+            const v = data.filter((z)=>z.junctionId==d.junctionId)[0];
+            const color = scale(v.value)
+            dom.selectAll(".junc-curve").filter((`.junc${d.junctionId}`)).style("stroke", color);
+            return color;
+        });
+    }
+
     /**
      * render the SVG of the gene model
      * @param dom: an SVG dom object
@@ -100,7 +109,7 @@ export default class GeneModel {
             }
         });
 
-        // edge case: overlapping junctions, add jitter
+        // handling edge case: overlapping junctions, add jitter
         // a.reduce((r,k)=>{r[k]=1+r[k]||1;return r},{})
         const counts = this.junctions.reduce((r,d)=>{r[d.displayName]=1+r[d.displayName]||1;return r},{});
         this.junctions.forEach((d) => {
@@ -123,7 +132,7 @@ export default class GeneModel {
                     .datum([{x:d.startX, y:exonY}, {x:d.cx, y:d.cy}, {x:d.endX, y:exonY}]) // the input points to draw the curve
                     .attr("class", `junc-curve junc${d.junctionId}`)
                     .attr("d", curve)
-
+                    .style("stroke", "#92bcc9");
                 });
 
 
@@ -139,8 +148,6 @@ export default class GeneModel {
             .attr("class", (d) => `junc junc${d.junctionId}`)
             .attr("cx", (d) => d.cx)
             .attr("cy", (d) => d.cy)
-            .attr("r", 1)
-            .style("fill", "#eee")
             .merge(juncDots)
             .attr("r", 4)
             .style("fill", "rgb(239, 59, 44)");

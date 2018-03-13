@@ -5,11 +5,9 @@
 .junc.highlighted {
     stroke: rgb(201, 2, 13);
     stroke-width: 5px;
-    fill: none;
 }
 
 .junc-curve {
-    stroke: #92bcc9;
     stroke-width: 1px;
     fill: none;
 }

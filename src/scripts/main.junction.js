@@ -7,7 +7,6 @@ import {getGtexUrls, parseTissues, parseJunctionExpression, parseExons, parseJun
 import {createSvg} from "./modules/utils";
 
 /** TODO
- * 2.7 merge into one svg, so that the whole visualization can be downloaded as one image
  * 3. color the gene model with expression data when a tissue is clicked
  * 4. add tissue colors
  * 4.1 do we set a threshold on tissues if the gene isn't expressed?
@@ -21,7 +20,8 @@ import {createSvg} from "./modules/utils";
  * 11. implement the tool bar (should it be a hamburger?
  * 11.5 tree scale bug
  * 11.9 rebuild spliceViz
- * 12. code review
+ * 12.0 rewrite main.junction.js to a class
+ * 12.1 code review
  * 13. Isoform Express Map
  * 14. EpiMap
  * 15. Create a new github repo and consolidate all of my d3.v4 viz tools there
@@ -96,7 +96,8 @@ function process(gene){
             const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel");
             modelG.attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
             geneModel.render(modelG, {w:modelConfig.w, h:modelConfig.h});
-            customize(geneModel, dmap.visualComponents.svg);
+
+            customize(geneModel, dmap, expression);
             $('#spinner').hide();
 
         });
@@ -110,8 +111,23 @@ function reset(){
     d4.selectAll("*").classed("inView", false);
 }
 
-function customize(geneModel, mapSvg){
+function customize(geneModel, map, data){
     // junction labels on the map
+    const mapSvg = map.visualComponents.svg;
+    mapSvg.selectAll(".yLabel")
+        .on("mouseover", function(d){
+            const tissue = d4.select(this).text();
+             d4.select(this)
+                .classed('normal', false)
+                .classed('highlighted', true);
+
+        })
+        .on("click", function(d){
+            const tissue = d4.select(this).text();
+            console.log(tissue);
+            geneModel.changeColor(mapSvg, data.filter((d)=>d.tissueId==tissue), map.objects.heatmap.colorScale);
+        })
+
     mapSvg.selectAll(".xLabel")
         .each(function(d){
             // add junction ID as the dom id
