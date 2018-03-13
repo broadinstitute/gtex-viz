@@ -37,9 +37,9 @@ export default class DendroHeatmap {
      * @param domId {String} the DOM id of the SVG
      * @return {Selection} the SVG object
      */
-    render(domId, showTopTree=true, showLeftTree=true){
+    render(domId, showTopTree=true, showLeftTree=true, legendPos="bottom"){
         // TODO: code cleanup... better implementation for optional trees
-        this._updateConfig(this.objects.columnTree, this.objects.rowTree);
+        this._updateConfig(this.objects.columnTree, this.objects.rowTree, legendPos);
         let svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
 
         this._renderTree(svg, this.objects.columnTree, this.config.panels.top, showTopTree);
@@ -47,8 +47,9 @@ export default class DendroHeatmap {
 
         const xlist = showTopTree?this.objects.columnTree.xScale.domain():this.objects.columnTree.xScale.domain().sort();
         const ylist = showLeftTree?this.objects.rowTree.yScale.domain():this.objects.rowTree.yScale.domain().sort();
-        this._renderHeatmap(svg, this.objects.heatmap, xlist, ylist);
 
+        this._renderHeatmap(svg, this.objects.heatmap, xlist, ylist);
+        this._renderHeatmapLegend(svg, this.objects.heatmap);
         this.visualComponents.svg = svg;
     }
 
@@ -65,17 +66,17 @@ export default class DendroHeatmap {
         const g = svg.append("g")
             .attr("id", config.id)
             .attr("transform", `translate(${config.x}, ${config.y})`);
-
         heatmap.redraw(g, xList, yList, {w: config.w, h: config.h});
+    }
 
-        // the heatmap color legend panel
+    _renderHeatmapLegend(svg, heatmap){
+         // the heatmap color legend panel
         const legendConfig = this.config.panels.legend;
         const legendG = svg.append("g")
             .attr("id", legendConfig.id)
             .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
         heatmap.drawLegend(legendG, legendConfig.cell.w);
     }
-
     /**
      * renders a newick tree
      * @param svg {Selection} a d3 selection object
@@ -114,15 +115,16 @@ export default class DendroHeatmap {
      * adjusts the layout dimensions based on the actual data
      * @param colTree {Dendrogram} the column tree object
      * @param rowTree {Dendrogram} the row tree object
+     * @param legendPos {String} bottom or top
      * @private
      */
-    _updateConfig(colTree, rowTree){
+    _updateConfig(colTree, rowTree, legendPos){
         const columns = colTree.leaves.length;
         const rows = rowTree.leaves.length;
 
         // updates the left panel's height based on the data
         this.config.panels.left.h = this.config.cell.h * rows;
-        this.config.panels.legend.y += this.config.panels.left.h;
+        if(legendPos=="bottom") this.config.panels.legend.y += this.config.panels.left.h;
         this.config.h += this.config.panels.left.h;
         this.config.panels.main.h = this.config.panels.left.h;
 
