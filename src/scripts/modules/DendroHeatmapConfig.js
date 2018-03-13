@@ -1,5 +1,6 @@
 /**
  * TODO: a better way of handling layout configuration
+ * review all the position calculations
  */
 export default class DendroHeatmapConfig {
     constructor(id="chart"){
@@ -60,6 +61,7 @@ export default class DendroHeatmapConfig {
         this.topTreePanel = {x:0, y:0, h:20, w:0};
         this.leftTreePanel.y = this.margin.top*2;
         this.heatmapPanel.y = this.margin.top*2;
+        this.heatmapPanel.w = window.innerWidth - (100 + 250);
         this.legendPanel.y = 0; // in the margin top
     }
 

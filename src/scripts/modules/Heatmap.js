@@ -170,8 +170,8 @@ export default class Heatmap {
             const rowClass = selected.attr("row");
             const colClass = selected.attr("col");
             d4.selectAll(".xLabel").filter(`.${rowClass}`)
-            .classed('normal', false)
-            .classed('highlighted', true);
+                .classed('normal', false)
+                .classed('highlighted', true);
             d4.selectAll(".yLabel").filter(`.${colClass}`)
                 .classed('normal', false)
                 .classed('highlighted', true);

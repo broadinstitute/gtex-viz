@@ -69,7 +69,7 @@ function process(gencodeId){
 
             // junction expression heat map
             let dmapConfig = new DendroHeatmapConfig("chart");
-            dmapConfig.setMargin({left: 10, top: 20, right: 250, bottom: 20});
+            dmapConfig.setMargin({left: 10, top: 20, right: 200, bottom: 20});
             dmapConfig.noTopTreePanel();
             const dmap = new DendroHeatmap(junctionTree, tissueTree, expression, "reds2", 5, dmapConfig);
             dmap.render(chartDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
@@ -78,11 +78,11 @@ function process(gencodeId){
             const gene = exons.shift(); // Note the 1st element in the exon array in the GTEx exon web service is actually the gene
             const geneModel = new GeneModel(gene, exons, junctions);
             const modelConfig = {
-                w: 1500,
+                w: window.innerWidth - (100 + 250),
                 h: 100,
                 margin: {
                     top: 20,
-                    left: 20
+                    left: 110
                 }
             };
             let modelSvg = createSvg(modelDomId, modelConfig.w, modelConfig.h, modelConfig.margin);
@@ -117,7 +117,8 @@ function customize(geneModel, modelSvg, mapSvg){
         })
         .on("mouseover", function(d){
             const jId = d4.select(this).attr("id");
-            d4.select(this).classed("highlighted", true);
+            d4.select(this).classed("highlighted", true)
+                .classed("normal", false);
 
             // highlight the junction and its exons on the gene model
             modelSvg.select(`.junc${jId}`).classed("highlighted", true);
@@ -128,7 +129,8 @@ function customize(geneModel, modelSvg, mapSvg){
             }
         })
         .on("mouseout", function(d){
-            d4.select(this).classed("highlighted", false);
+            d4.select(this).classed("highlighted", false)
+                .classed("normal", true);
             d4.selectAll(".junc").classed("highlighted", false);
             modelSvg.selectAll(".exon").classed("highlighted", false);
         });
@@ -143,11 +145,13 @@ function customize(geneModel, modelSvg, mapSvg){
 
 
             // on the junction heat map, label the xlabel
-            mapSvg.select(`.junc${d.junctionId}`).classed("highlighted", true);
+            mapSvg.select(`.junc${d.junctionId}`).classed("highlighted", true)
+                .classed("normal", false);
         })
         .on("mouseout", function(d){
             d4.select(this).classed("highlighted", false);
             modelSvg.selectAll(".exon").classed("highlighted", false);
-            mapSvg.selectAll(".xLabel").classed("highlighted", false);
+            mapSvg.selectAll(".xLabel").classed("highlighted", false)
+                .classed("normal", true);
         })
 }
