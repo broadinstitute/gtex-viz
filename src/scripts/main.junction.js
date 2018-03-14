@@ -7,13 +7,13 @@ import {getGtexUrls, parseTissues, parseJunctionExpression, parseExonExpression,
 import {createSvg} from "./modules/utils";
 
 /** TODO
- * 2. bug: junction position on the gene model
- * 3.5. bug: color vs value conversion, do I need a seperate scale for exons?
- * 3.8 add clicked tissue name
+ * 3.6 add exon colors
+ * 3.8 show clicked tissue name
  * 4. add tissue colors
- * 4.1 do we set a threshold on tissues if the gene isn't expressed?
+ * 4.1 report individual isoforms
+ * 4.2 reset gene model
+ * 4.3 do we set a threshold on tissues if the gene isn't expressed?
  * 4.5 automatic filtering of tissues based on median gene expression?
- * 5. report individual isoforms
  * 6. gene information
  * 7. improve heatmap custom layout configuration
  * 8. inconsistent highlight visual effects
@@ -138,9 +138,9 @@ function customize(geneModel, map, jdata, edata){
             const tissue = d4.select(this).text();
             console.log(tissue);
             const j = jdata.filter((d)=>d.tissueId==tissue);
-            const ex = edata.filter((d)=>d.tissueId==tissue)
+            const ex = edata.filter((d)=>d.tissueId==tissue);
             geneModel.changeColor(mapSvg, j, ex, map.objects.heatmap.colorScale);
-        })
+        });
 
     mapSvg.selectAll(".xLabel")
         .each(function(d){

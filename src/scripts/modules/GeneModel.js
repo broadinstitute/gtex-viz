@@ -40,21 +40,21 @@ export default class GeneModel {
      * @param dom {Object} of D3
      * @param jdata {List} of junction expression objects
      * @param edata {List} of exon expression objects
-     * @param scale {D3 scale} of colors
+     * @param jscale {D3 scale} of colors of junction data
+     * @param escale {D3 scale} of colors of exon data
      */
-    changeColor(dom, jdata, edata, scale){
+    changeColor(dom, jdata, edata, jscale, escale){
         dom.selectAll(".junc").style("fill", (d) => {
             const v = jdata.filter((z)=>z.junctionId==d.junctionId)[0];
-            const jcolor = scale(v.value);
+            const jcolor = jscale(v.value);
             dom.selectAll(".junc-curve").filter((`.junc${d.junctionId}`)).style("stroke", jcolor);
             return jcolor;
         });
-        // console.log(edata);
-        // dom.selectAll(".exon-curated").style("fill", (d) => {
-        //     const v = edata.filter((z)=>z.exonId==d.exonId)[0];
-        //     const ecolor = scale(v.value);
-        //     return ecolor;
-        // });
+        dom.selectAll(".exon-curated").style("fill", (d) => {
+            const v = edata.filter((z)=>z.exonId==d.exonId)[0];
+            const ecolor = escale(v.value);
+            return ecolor;
+        });
     }
 
     /**
@@ -247,5 +247,19 @@ export default class GeneModel {
             return undefined;
         }
 
+    }
+
+    /**
+     *
+     * @param data {List} of data object with attr: value
+     * @param colors {List} of hexadecimal colors
+     */
+    setColorScale(data=this.data, colors=this.colors) {
+        if (colors === undefined) colors = ['#fffffe','#f7fcf0','#e0f3db','#ccebc5','#a8ddb5','#7bccc4','#4eb3d3','#2b8cbe','#0868ac','#084081','#052851'];
+        let dmin = Math.round(d4.min(data, (d) => d.value));
+        let dmax = Math.round(d4.max(data, (d) => d.value));
+        return d4.scaleQuantile() // scaleQuantile maps the continuous domain to a discrete range
+            .domain([dmin, dmax])
+            .range(colors);
     }
 }
