@@ -35,6 +35,9 @@ export default class GeneModel {
         this.minExonWidth = 5; // minimum exon width in pixels
     }
 
+    changeTextlabel(dom, label){
+        dom.select("#modelInfo").text(label);
+    }
     /**
      *
      * @param dom {Object} of D3
@@ -180,7 +183,7 @@ export default class GeneModel {
             .attr("rx", 2)
             .attr('ry', 2)
             .attr("width", (d) => d.w)
-            .attr("height", 20) // TODO: remove hard-coded values
+            .attr("height", 15) // TODO: remove hard-coded values
             .attr("x", (d) => d.x)
             .merge(exonRects);
 
@@ -197,10 +200,27 @@ export default class GeneModel {
             .attr("class", (d)=>`exon-curated`)
             .attr("y", exonY)
             .attr("width", (d) => d.w)
-            .attr("height", 20) // TODO: remove hard-coded values
+            .attr("height", 15) // TODO: remove hard-coded values
             .attr("x", (d) => d.x)
             .merge(exonRects2)
             .style("fill", "#eee");
+
+        /***** rendering text labels */
+
+        dom.append("text")
+            .attr("id", "modelLabel") // TODO: no hard-coded value
+            .style("text-anchor", "end")
+            .attr("x", this.xScale(0) - 20)
+            .attr("y", exonY)
+            .text(this.gene.geneSymbol);
+
+        dom.append("text")
+            .attr("id", "modelInfo") // TODO: no hard-coded value
+            .style("text-anchor", "start")
+            .attr("x", this.xScale(0))
+            .attr("y", exonY + 40) // TODO: eliminate hard-coded value
+            .text("Collaped Gene Model");
+
     }
 
     setXscale(w){

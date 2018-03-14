@@ -12,10 +12,11 @@ import {getColors, setColorScale} from "./modules/Colors";
  * 3.9 add color legends
  * 4. add tissue colors
  * 4.1 report individual isoforms
- * 4.2 reset gene model
+ * 4.2 reset gene model to no coloring
  * 4.3 do we set a threshold on tissues if the gene isn't expressed?
  * 4.5 automatic filtering of tissues based on median gene expression?
  * 6. gene information
+ * 6.5 exon expression map
  * 7. improve heatmap custom layout configuration
  * 8. inconsistent highlight visual effects
  * 9. add exon text label
@@ -93,12 +94,11 @@ function process(gene){
             const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
             const adjust = 100;
             const modelConfig = {
-                x: dmap.config.panels.main.x,
+                x: 100,
                 y: dmap.config.panels.main.h + dmap.config.panels.main.y + adjust,
                 w: dmap.config.panels.main.w,
                 h: 100
             };
-            // let modelSvg = createSvg(modelDomId, modelConfig.w, modelConfig.h, modelConfig.margin);
             const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel");
             modelG.attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
             geneModel.render(modelG, {w:modelConfig.w, h:modelConfig.h});
@@ -142,6 +142,7 @@ function customize(geneModel, map, jdata, edata){
             const j = jdata.filter((d)=>d.tissueId==tissue);
             const ex = edata.filter((d)=>d.tissueId==tissue);
             geneModel.changeColor(mapSvg, j, ex, map.objects.heatmap.colorScale, ecolorScale);
+            geneModel.changeTextlabel(mapSvg, "Expression in " + tissue);
         });
 
     mapSvg.selectAll(".xLabel")
