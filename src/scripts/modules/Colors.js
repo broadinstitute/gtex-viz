@@ -1,3 +1,5 @@
+import * as d4 from "d3";
+
 export function getColors(theme){
     const palette = {
         // colorbrewer
@@ -13,4 +15,17 @@ export function getColors(theme){
     };
     if(!palette.hasOwnProperty(theme)) throw "Color theme not found: " + theme;
     return palette[theme]
+}
+
+/**
+ * scaleQuantile maps the continuous domain to a discrete range of colors
+ * @param data {List} of numerical data
+ * @param colors {List} of hexadecimal colors
+ */
+export function setColorScale(data, colors) {
+    let dmin = Math.round(d4.min(data));
+    let dmax = Math.round(d4.max(data));
+    return d4.scaleQuantile()
+        .domain([dmin, dmax])
+        .range(colors);
 }

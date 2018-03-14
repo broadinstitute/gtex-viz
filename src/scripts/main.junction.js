@@ -5,10 +5,11 @@ import GeneModel from "./modules/GeneModel";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import {getGtexUrls, parseTissues, parseJunctionExpression, parseExonExpression, parseExons, parseJunctions} from "./modules/gtexDataParser";
 import {createSvg} from "./modules/utils";
+import {getColors, setColorScale} from "./modules/Colors";
 
 /** TODO
- * 3.6 add exon colors
  * 3.8 show clicked tissue name
+ * 3.9 add color legends
  * 4. add tissue colors
  * 4.1 report individual isoforms
  * 4.2 reset gene model
@@ -126,6 +127,7 @@ function reset(){
 function customize(geneModel, map, jdata, edata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
+    const ecolorScale = setColorScale(edata.map(d=>d.value), getColors("gnbu"));
     mapSvg.selectAll(".yLabel")
         .on("mouseover", function(d){
             const tissue = d4.select(this).text();
@@ -139,7 +141,7 @@ function customize(geneModel, map, jdata, edata){
             console.log(tissue);
             const j = jdata.filter((d)=>d.tissueId==tissue);
             const ex = edata.filter((d)=>d.tissueId==tissue);
-            geneModel.changeColor(mapSvg, j, ex, map.objects.heatmap.colorScale);
+            geneModel.changeColor(mapSvg, j, ex, map.objects.heatmap.colorScale, ecolorScale);
         });
 
     mapSvg.selectAll(".xLabel")

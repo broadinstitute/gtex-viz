@@ -4,7 +4,7 @@
  */
 
 import * as d4 from "d3";
-import {getColors} from "./Colors";
+import {getColors, setColorScale} from "./Colors";
 export default class Heatmap {
     /* data is a json with the following attributes:
         x: the x label
@@ -39,7 +39,7 @@ export default class Heatmap {
      * @param yAdjust {Integer}
      */
     drawLegend(dom, cellWidth = 70, yAdjust = 16) {
-        if (this.colorScale === undefined) this.colorScale = this._setColorScale();
+        if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value), this.colors);
         if (this.yList === undefined) this._setYList();
 
         const legend = dom.selectAll(".legend")
@@ -93,7 +93,7 @@ export default class Heatmap {
     draw(dom, dimensions={w:1000, h:600}, angle=30){
         if (this.xList === undefined) this._setXList(dimensions.w);
         if (this.yList === undefined) this._setYList(dimensions.h);
-        if (this.colorScale === undefined) this.colorScale = this._setColorScale();
+        if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value), this.colors);
 
         // text labels
         // data join
@@ -244,11 +244,5 @@ export default class Heatmap {
                 .padding(.05); // TODO: eliminate hard-coded value
     }
 
-    _setColorScale(data=this.data, colors=this.colors) {
-        let dmin = Math.round(d4.min(data, (d) => d.value));
-        let dmax = Math.round(d4.max(data, (d) => d.value));
-        return d4.scaleQuantile() // scaleQuantile maps the continuous domain to a discrete range
-            .domain([dmin, dmax])
-            .range(colors);
-    }
+
 }

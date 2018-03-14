@@ -249,17 +249,4 @@ export default class GeneModel {
 
     }
 
-    /**
-     *
-     * @param data {List} of data object with attr: value
-     * @param colors {List} of hexadecimal colors
-     */
-    setColorScale(data=this.data, colors=this.colors) {
-        if (colors === undefined) colors = ['#fffffe','#f7fcf0','#e0f3db','#ccebc5','#a8ddb5','#7bccc4','#4eb3d3','#2b8cbe','#0868ac','#084081','#052851'];
-        let dmin = Math.round(d4.min(data, (d) => d.value));
-        let dmax = Math.round(d4.max(data, (d) => d.value));
-        return d4.scaleQuantile() // scaleQuantile maps the continuous domain to a discrete range
-            .domain([dmin, dmax])
-            .range(colors);
-    }
 }
