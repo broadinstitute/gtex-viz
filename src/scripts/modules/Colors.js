@@ -39,7 +39,7 @@ export function setColorScale(data, colors, dmin = 0) {
  * @param useLog {Boolean}
  * @param cell
  */
-export function drawColorLegend(title, dom, scale, config, useLog, cell={h:20, w:50}){
+export function drawColorLegend(title, dom, scale, config, useLog, cell={h:5, w:50}){
 
     const data = [0].concat(scale.quantiles()); // add 0 to the list of values
     // legend title

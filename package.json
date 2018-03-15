@@ -1,19 +1,19 @@
 {
-  "name": "expressmap",
-  "version": "0.0.1",
-  "description": "GTEx Gene Expression Dashboard",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Katherine Huang",
-  "license": "ISC",
-  "dependencies": {
-    "d3": "^4.11.0"
-  },
-  "devDependencies": {
-    "rollup-plugin-node-resolve": "^3.0.0",
-    "rollup-plugin-replace": "^2.0.0",
-    "rollup-plugin-uglify": "^2.0.1"
-  }
+    "name": "expressmap",
+    "version": "0.0.1",
+    "description": "GTEx Gene Expression Dashboard",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Katherine Huang",
+    "license": "ISC",
+    "dependencies": {
+        "d3": "^4.11.0"
+    },
+    "devDependencies": {
+        "rollup-plugin-node-resolve": "^3.0.0",
+        "rollup-plugin-replace": "^2.0.0",
+        "rollup-plugin-uglify": "^2.0.1"
+    }
 }

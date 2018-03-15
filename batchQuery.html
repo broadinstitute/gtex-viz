@@ -9,6 +9,7 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Franklin:300,400" >
         <link rel="stylesheet" type="text/css" href="build/external/select2-4.0.4/css/select2.min.css">
 
+
     </head>
 
     <body class="container-fluid" style="margin-top:20px;">
@@ -16,22 +17,23 @@
         <div id="tooltip" class="expressmap-tooltip"></div> <!--a hidden div for the mouseover tooltip-->
 
         <div>
-            <h4>Gene Expression</h4>
+            <h4>Batch Gene Expression Query</h4>
         </div>
 
         <!-- the tissue menu -->
         <div class="row">
-            <div class="col-xs-12 col-md-2 col-lg-2">
+            <div class="col-xs-12 col-lg-2">
                 <ul style="font-size:12px; ">
                     <li>Limited to 50 entries.</li>
                     <li><a href="#" id="searchExample">A search example</a></li>
                 </ul>
 
                 <hr>
-                <form id="geneExpressForm" style="background:#f2f7fd; padding: 5px;">
+                <div id="messageBox" style="color: #CB181D;"></div>
+                <form id="geneExpressForm" style="background:#f2f7fd; padding: 15px;">
                      <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
-                        <label for="genes" class="align-top">Enter Gencode IDs</label>
-                        <textarea id="genes" rows="10" class="form-control" placeholder="Enter Gene Symbols" style="font-size:12px;"></textarea>
+                        <label for="genes" class="align-top">Enter Gencode IDs or Gene Names</label>
+                        <textarea id="genes" rows="20" class="form-control" style="font-size:12px;"></textarea>
 
                      </div>
                     <div id="batchSubmit" class="btn btn-info btn-sm" style="margin-bottom:1em;">Search</div>
@@ -41,7 +43,13 @@
                     <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
                 </div>
             </div>
-
+            <div id="todo" class="col-xs-12">
+                <h6>To Do</h6>
+                <ul>
+                    <li>how to package the gene expression batch search?</li>
+                    <li>handling the scenario when the n(gene) <=3, then no gene tree</li>
+                </ul>
+            </div>
             <div id="searchResult" class="col-xs-12 col-md-10">
                  <!-- the tool bar div -->
                 <div id="dashboardToolbar" style="margin-bottom:50px; display:none;">
@@ -78,6 +86,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
     <script src="build/external/FileSaver/FileSaver.min.js"></script>
-    <script src="build/js/gene.expressMap.bundle.min.js"></script>
+    <script src="build/js/batch-gene-expression-search.bundle.dev.js"></script>
+    <script>
+        $(document).ready(function(){
+            batchGeneQuery();
+        });
+        function batchGeneQuery(){
+            const domId = "chart";
+            $('#searchExample').click(function(){
+                const examples = ["FOO", "ACTN3, SLK, ENSG00000121879.3, NDRG4, ENSG00000141510.11, ENSG00000039068.14, ENSG00000107485.11, ENSG00000095015.5, ENSG00000141027.16, ENSG00000065526.6, TP53"];
+                $('#genes').val(examples);
+            });
+            $('#batchSubmit').click(function(){
+                let glist = $('#genes').val().replace(/ /g, "").split(",").filter((d) => {return d!=""});
+                if (glist.length == 0){
+                    alert("Must provide at least one gene");
+                    throw "Gene input error";
+                }
+
+                $('#spinner').show();
+                const searchMessage = BatchGeneExpressionSearch.init(glist, domId);
+                warn(searchMessage);
+
+            });
+        }
+        function warn(message){
+            $("messageBox").text(message);
+        }
+
+    </script>
 
 </html>
