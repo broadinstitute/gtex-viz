@@ -5,18 +5,18 @@ import GeneModel from "./modules/GeneModel";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import {getGtexUrls, parseTissues, parseJunctionExpression, parseExonExpression, parseExons, parseJunctions} from "./modules/gtexDataParser";
 import {createSvg} from "./modules/utils";
-import {getColors, setColorScale} from "./modules/Colors";
+import {getColors, setColorScale, drawColorLegend} from "./modules/Colors";
 
 /** TODO
- * 3.8 show clicked tissue name
- * 3.9 add color legends
- * 4. add tissue colors
  * 4.1 report individual isoforms
+ *  * 6.5 exon expression map
+ * 13. Isoform Express Map
+
+ * 4. add tissue colors
  * 4.2 reset gene model to no coloring
  * 4.3 do we set a threshold on tissues if the gene isn't expressed?
  * 4.5 automatic filtering of tissues based on median gene expression?
  * 6. gene information
- * 6.5 exon expression map
  * 7. improve heatmap custom layout configuration
  * 8. inconsistent highlight visual effects
  * 9. add exon text label
@@ -26,7 +26,6 @@ import {getColors, setColorScale} from "./modules/Colors";
  * 11.9 rebuild spliceViz
  * 12.0 rewrite main.junction.js to a class
  * 12.1 code review
- * 13. Isoform Express Map
  * 14. EpiMap
  * 15. Create a new github repo and consolidate all of my d3.v4 viz tools there
  */
@@ -35,8 +34,7 @@ import {getColors, setColorScale} from "./modules/Colors";
 const urls = getGtexUrls();
 $(document).ready(function(){
     // developing
-    // searchJunctions();
-
+    init();
     $('#gene').keypress(function(e){
         if(e.keyCode == 13){
             // bind the enter key
@@ -50,8 +48,8 @@ $(document).ready(function(){
 });
 
 function init(){
-    const inputGene = $('#gene').val();
-    // const input = "SLK";
+    // const inputGene = $('#gene').val();
+    const inputGene = "ACTN3";
     reset();
     d4.json(urls.geneId + inputGene, function(json){  // get the gene object for the gencode ID
         const gene = json.geneId[0];
@@ -103,6 +101,7 @@ function process(gene){
             modelG.attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
             geneModel.render(modelG, {w:modelConfig.w, h:modelConfig.h});
 
+            // temporarily
             customize(geneModel, dmap, jExpress, exonExpress);
             $('#spinner').hide();
 
@@ -128,6 +127,7 @@ function customize(geneModel, map, jdata, edata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
     const ecolorScale = setColorScale(edata.map(d=>d.value), getColors("gnbu"));
+    drawColorLegend("Exon median read count", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y}, true);// TODO: remove hard-coded positions
     mapSvg.selectAll(".yLabel")
         .on("mouseover", function(d){
             const tissue = d4.select(this).text();

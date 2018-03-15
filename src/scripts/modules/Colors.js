@@ -5,7 +5,7 @@ export function getColors(theme){
         // colorbrewer
         ylgnbu:["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58","#040e29"],
         orrd: ["#edf8b1",'#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#b30000','#7f0000','#4c0000'],
-        gnbu: ['#fffffe','#f7fcf0','#e0f3db','#ccebc5','#a8ddb5','#7bccc4','#4eb3d3','#2b8cbe','#0868ac','#084081','#052851'],
+        gnbu: ['#f0f0f0','#f7fcf0','#e0f3db','#ccebc5','#a8ddb5','#7bccc4','#4eb3d3','#2b8cbe','#0868ac','#084081','#052851'],
         rdpu: ['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177','#49006a'],
 
         // other sources
@@ -22,10 +22,52 @@ export function getColors(theme){
  * @param data {List} of numerical data
  * @param colors {List} of hexadecimal colors
  */
-export function setColorScale(data, colors) {
-    let dmin = Math.round(d4.min(data));
+export function setColorScale(data, colors, dmin = 0) {
+    // let dmin = Math.round(d4.min(data));
     let dmax = Math.round(d4.max(data));
     return d4.scaleQuantile()
         .domain([dmin, dmax])
         .range(colors);
+}
+
+/**
+ *
+ * @param title {String}
+ * @param dom {object} D3 dom object
+ * @param scale {Object} D3 scale of the color
+ * @param config {Object} with attr: x, y
+ * @param useLog {Boolean}
+ * @param cell
+ */
+export function drawColorLegend(title, dom, scale, config, useLog, cell={h:20, w:50}){
+
+    const data = [0].concat(scale.quantiles()); // add 0 to the list of values
+    // legend title
+    dom.append("text")
+        .attr("class", "legend normal")
+        .text(title)
+        .attr("x", -10)
+        .attr("text-anchor", "end")
+        .attr("y", cell.h)
+        .attr("transform", `translate(${config.x}, ${config.y})`);
+
+    // legend groups
+    const legends = dom.append("g").attr("transform", `translate(${config.x}, ${config.y})`)
+                    .selectAll(".legend").data(data);
+
+    const g = legends.enter().append("g").classed("legend", true);
+    g.append("rect")
+        .attr("x", (d, i) => cell.w*i)
+        .attr("y", 5)
+        .attr("width", cell.w)
+        .attr("height", cell.h)
+        .style("fill", (d) => scale(d));
+
+    g.append("text")
+        .attr("class", "normal")
+        .text((d) => useLog?(Math.pow(10, d)-1).toPrecision(2):d) // TODO: assuming log is base 10
+        .attr("x", (d, i) => cell.w * i)
+        .attr("y", 0);
+
+
 }

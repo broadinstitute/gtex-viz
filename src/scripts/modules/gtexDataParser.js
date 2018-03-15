@@ -1,5 +1,5 @@
 export function getGtexUrls(){
-    const host = "https://gtexportal.org/rest/v1/";
+    const host = "https://dev.gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
     return {
         // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
         "geneId": host + "reference/geneId?format=json&geneId=",

@@ -49,7 +49,7 @@ export default class DendroHeatmap {
         const ylist = showLeftTree?this.objects.rowTree.yScale.domain():this.objects.rowTree.yScale.domain().sort();
 
         this._renderHeatmap(svg, this.objects.heatmap, xlist, ylist);
-        this._renderHeatmapLegend(svg, this.objects.heatmap);
+        // this._renderHeatmapLegend(svg, this.objects.heatmap);
         this.visualComponents.svg = svg;
     }
 
@@ -67,16 +67,17 @@ export default class DendroHeatmap {
             .attr("id", config.id)
             .attr("transform", `translate(${config.x}, ${config.y})`);
         heatmap.redraw(g, xList, yList, {w: config.w, h: config.h});
+        heatmap.drawColorLegend(svg, this.config.panels.legend);
     }
-
-    _renderHeatmapLegend(svg, heatmap){
-         // the heatmap color legend panel
-        const legendConfig = this.config.panels.legend;
-        const legendG = svg.append("g")
-            .attr("id", legendConfig.id)
-            .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
-        heatmap.drawLegend(legendG, legendConfig.cell.w);
-    }
+    //
+    // _renderHeatmapLegend(svg, heatmap){
+    //      // the heatmap color legend panel
+    //     const legendConfig = this.config.panels.legend;
+    //     const legendG = svg.append("g")
+    //         .attr("id", legendConfig.id)
+    //         .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
+    //     heatmap.drawLegend(legendG, legendConfig.cell.w);
+    // }
     /**
      * renders a newick tree
      * @param svg {Selection} a d3 selection object

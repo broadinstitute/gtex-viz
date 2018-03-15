@@ -4,7 +4,7 @@
  */
 
 import * as d4 from "d3";
-import {getColors, setColorScale} from "./Colors";
+import {getColors, setColorScale, drawColorLegend} from "./Colors";
 export default class Heatmap {
     /* data is a json with the following attributes:
         x: the x label
@@ -33,43 +33,6 @@ export default class Heatmap {
     }
 
     /**
-     * draw the color legend
-     * @param dom {Selection} a d3 DOM
-     * @param cellWidth {Integer}
-     * @param yAdjust {Integer}
-     */
-    drawLegend(dom, cellWidth = 70, yAdjust = 16) {
-        if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value), this.colors);
-        if (this.yList === undefined) this._setYList();
-
-        const legend = dom.selectAll(".legend")
-            .data([0].concat(this.colorScale.quantiles()), (d) => d);
-
-        const legendGroups = legend.enter().append("g")
-            .attr("class", "legend");
-
-        legendGroups.append("rect")
-            .attr("x", (d, i) => cellWidth*i)
-            .attr("y", 5)
-            .attr("width", cellWidth)
-            .attr("height", this.yScale.bandwidth())
-            .style("fill", (d) => this.colorScale(d));
-
-        legendGroups.append("text")
-            .attr("class", "normal")
-            // .text((d) => d==0?"NA":"≥ " + Math.pow(2, d).toPrecision(2))
-            .text((d) => this.useLog?Math.pow(10, d).toPrecision(2):d)
-            .attr("x", (d, i) => cellWidth * i)
-            .attr("y", yAdjust + this.yScale.bandwidth());
-
-        dom.append("text")
-            .attr("class", "legend normal")
-            .text("Expression Value") // TODO: eliminated hard-coded values
-            .attr("x", cellWidth * 10)
-            .attr("y", yAdjust + this.yScale.bandwidth())
-    }
-
-    /**
      * redraws the heatmap: when the xlist and ylist are changed, redraw the heatmap
      * @param dom {Selection} a d3 selection object
      * @param xList {List} a list of x labels
@@ -83,6 +46,15 @@ export default class Heatmap {
         this.draw(dom, dimensions, angle);
     }
 
+    /**
+     * draw color legend for the heat map
+     * @param dom {Selection} a d3 selection object
+     * @param legendConfig {Object} with attr: x, y
+     */
+
+    drawColorLegend(dom, legendConfig={x:0, y:0}){
+        drawColorLegend(this.data[0].unit||"Value", dom, this.colorScale, legendConfig, this.useLog);
+    }
     /**
      * draws the heatmap
      * @param dom {Selection}
