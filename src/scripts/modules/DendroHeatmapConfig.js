@@ -1,12 +1,11 @@
+/**
+ * TODO: a better way of handling layout configuration
+ * review all the position calculations
+ */
 export default class DendroHeatmapConfig {
     constructor(id="chart"){
         this.id = id;
-        let margin = {
-            left: 10,
-            top: 10,
-            right: 250,
-            bottom: 170,
-        };
+        this.margin = {left: 10, top: 10, right: 250, bottom: 170};
 
         this.cell = { // are these used?
             w: undefined,
@@ -24,8 +23,8 @@ export default class DendroHeatmapConfig {
         let adjust = 15; // spacing adjustment
 
         this.leftTreePanel = { // the row dendrogram panel
-            x: margin.left,
-            y: margin.top + this.topTreePanel.h,
+            x: this.margin.left,
+            y: this.margin.top + this.topTreePanel.h,
             h: undefined, // data-dependent
             w: 100 - (adjust),
             id: "leftTree"
@@ -33,7 +32,7 @@ export default class DendroHeatmapConfig {
 
         this.heatmapPanel = {
             x: 100,
-            y: margin.top + this.topTreePanel.h,
+            y: this.margin.top + this.topTreePanel.h,
             h: this.leftTreePanel.h,
             w: this.topTreePanel.w,
             id: "heatmap"
@@ -41,14 +40,29 @@ export default class DendroHeatmapConfig {
 
         this.legendPanel = { // the color legend panel
             x: 100,
-            y: margin.top + this.topTreePanel.h + 150,
+            y: this.margin.top + this.topTreePanel.h + 150,
             h: 50,
             w: this.topTreePanel.w,
             cell: {w: 60},
             id: "legend"
         };
-        this.margin = margin;
 
+    }
+
+    setId(id="chart"){
+        this.id = id;
+    }
+
+    setMargin(margin={left: 10, top: 10, right: 250, bottom: 170}){
+        this.margin = margin;
+    }
+
+    noTopTreePanel(){
+        this.topTreePanel = {x:0, y:0, h:20, w:0};
+        this.leftTreePanel.y = this.margin.top*2;
+        this.heatmapPanel.y = this.margin.top*2;
+        this.heatmapPanel.w = window.innerWidth - (100 + 250);
+        this.legendPanel.y = 0; // in the margin top
     }
 
     get(){

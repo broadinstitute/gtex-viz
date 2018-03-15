@@ -6,6 +6,7 @@
         <link rel="stylesheet" type="text/css" href="src/css/heatmap.css">
         <link rel="stylesheet" type="text/css" href="src/css/dendrogram.css">
         <link rel="stylesheet" type="text/css" href="src/css/expressMap.css">
+        <link rel="stylesheet" type="text/css" href="src/css/junctionMap.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Franklin:300,400" >
         <link rel="stylesheet" type="text/css" href="build/external/select2-4.0.4/css/select2.min.css">
 
@@ -17,18 +18,23 @@
 
         <!-- the tissue menu -->
         <div class="row">
-            <div class="col-xs-12">
+            <div class="col-xs-12 col-sm-2">
                 <h4>Junction Expression</h4>
                 <form id="junctionExpressForm" style="padding: 5px;">
                      <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
                         <input id="gene" type="text" class="form-control" placeholder="Enter a gencode ID or gene name" style="font-size:12px; text-transform:uppercase;"></input>
+                         e.g. ACTN1, ACTN3, NDRG4, SLK, ENGASE,
                      </div>
                 </form>
                 <div class="col-xs-1">
                     <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
                 </div>
             </div>
-
+            <div class="col-xs-12 col-sm-10">
+                Gene Info: To be implemented.
+            </div>
+        </div>
+        <div class="row">
             <div id="searchResult" class="col-xs-12">
                  <!-- the tool bar div -->
                 <div id="dashboardToolbar" style="margin-bottom:50px; display:none;">
@@ -46,7 +52,7 @@
                     </div>
                 </div>
                 <div id="chart"></div> <!-- the heatmap Div -->
-                <div id="boxplot"></div> <!-- the boxplot DIV -->
+                <!--<div id="boxplot"></div> &lt;!&ndash; the boxplot DIV &ndash;&gt;-->
             </div>
 
         </div>
