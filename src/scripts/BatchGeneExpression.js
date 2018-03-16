@@ -1,6 +1,7 @@
 import * as d4 from "d3";
 "use strict";
-import {getGtexUrls, parseTissues, parseMedianExpression} from "./modules/gtex/gtexDataParser";
+import {getGtexUrls, parseTissues, parseMedianExpression, makeJsonForPlotly} from "./modules/gtex/gtexDataParser";
+import {colorChart} from "./modules/Colors";
 import DendroHeatmap from "./modules/DendroHeatmap";
 export function searchById(glist, domId){
     // TODO: figure out what this line does...
@@ -39,14 +40,14 @@ export function searchById(glist, domId){
 function customization(dmap, tissues){
     const genes = dmap.data.heatmap;
     const tissueDict = tissues.reduce((a, d)=>{a[d.tissue_id] = d; return a;}, {});
-    const geneDict = genes.reduce((a, d)=>{a[d.gencodeId]=d; return a;}, {});
+    const geneDict = genes.reduce((a, d, i)=>{a[d.gencodeId]=d; return a;}, {});
 
     /***** Change row labels to tissue names *****/
-    d4.select("#" + dmap.config.panels.main.id).selectAll(".xLabel")
+    d4.select("#" + dmap.config.panels.main.id).selectAll(".exp-map-xlabel")
         .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
 
     /***** Change column labels to gene symbols *****/
-    d4.select("#" + dmap.config.panels.main.id).selectAll(".yLabel")
+    d4.select("#" + dmap.config.panels.main.id).selectAll(".exp-map-ylabel")
         .text((d) => geneDict[d]===undefined?d:geneDict[d].geneSymbol);
 
 
@@ -66,7 +67,7 @@ function addTissueColors(dmap, tissueDict){
 
     const id = dmap.config.panels.main.id;
     const heatmap = dmap.objects.heatmap;
-    let dots = d4.select("#"+id).selectAll(".xColor").data(heatmap.xList);
+    let dots = d4.select("#"+id).selectAll(".exp-map-xcolor").data(heatmap.xList);
 
      // updates old elements
     dots.attr("fill", (d) => tissueDict[d]===undefined?"#000000":`#${tissueDict[d].tissue_color_hex}`);
@@ -78,7 +79,7 @@ function addTissueColors(dmap, tissueDict){
         .attr("r", 3)
         .attr("fill", (d) => tissueDict[d] === undefined? "#000000":`#${tissueDict[d].tissue_color_hex}`)
         .attr("opacity", 0.75)
-        .attr("class", "xColor");
+        .attr("class", "exp-map-xcolor");
 
     // removes retired elements
     dots.exit().remove();
@@ -87,8 +88,8 @@ function addTissueColors(dmap, tissueDict){
 /**
  * Customize the heatmap's mouse events
  * @param dmap {DendroHeatmap}
- * @param tissueDict {Dictionary}: tissue objects indexed by tissue_id
- * @param geneDict {Dictionary}: gene objects indexed by gencode ID
+ * @param tissueDict {Dictionary}: tissue objects indexed by tissue_id, with attr: tissue_name
+ * @param geneDict {Dictionary}: gene objects indexed by gencode ID, with attr: geneSymbol
  */
 function customizeHeatmapMouseEvents(dmap, tissueDict, geneDict) {
     const svg = dmap.visualComponents.svg;
@@ -99,17 +100,15 @@ function customizeHeatmapMouseEvents(dmap, tissueDict, geneDict) {
         // expressMap.css
 
         const selected = d4.select(this); // note: "this" refers to the dom element of d
-        selected.classed('expressmap-highlighted', true);
+        selected.classed('highlighted', true);
 
         // highlight the row and column labels
         const rowClass = selected.attr("row");
         const colClass = selected.attr("col");
-        svg.selectAll(".xLabel").filter(`.${rowClass}`)
-            .classed('normal', false)
+        svg.selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
             .classed('highlighted', true);
 
-        d4.selectAll(".yLabel").filter(`.${colClass}`)
-            .classed('normal', false)
+        d4.selectAll(".exp-map-ylabel").filter(`.${colClass}`)
             .classed('highlighted', true);
 
         let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissue_name;
@@ -118,71 +117,119 @@ function customizeHeatmapMouseEvents(dmap, tissueDict, geneDict) {
         tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median (${d.unit?d.unit:"TPM"}): ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
     };
 
-    const heatmapMouseout = function(d){
-        const selected = d4.select(this);
-        const rowClass = selected.attr("row");
-        const colClass = selected.attr("col");
-
-        d4.selectAll(".xLabel").filter(`.${rowClass}`)
-            .classed('normal', true)
-            .classed('highlighted', false);
-
-        d4.selectAll(".yLabel").filter(`.${colClass}`)
-            .classed('normal', true)
-            .classed('highlighted', false);
-        selected.classed('expressmap-highlighted', false);
+    const cellMouseout = function(d){
+        svg.selectAll("*").classed('highlighted', false);
         tooltip.hide();
     };
-    svg.selectAll(".cell")
-        .on("mouseover", cellMouseover)
-        .on("mouseout", heatmapMouseout);
 
+    // gene boxplot prep: assign a colorIndex to each gene
+    const colors = colorChart();
+    d4.keys(geneDict).forEach((d, i)=>{geneDict[d].color = colors[i]});
     const ylabelClick = function(d){
         let s = d4.select(this);
-        if (d4.event.altKey) {
-            // if alt key is pressed -- additive selection
+        let action = "";
+        if (d4.event.altKey) { // if alt key is pressed -- i.e. adding an additional gene to boxplot
             // highlights the selected label
             if(!s.classed("clicked")) s.classed("clicked", true);
+            action = "add";
         }
         else {
-            // toggles the css class, clicked
-            if (s.classed("clicked")) s.classed("clicked", false);
+            // toggles click/unclick events
+            // if the DOM has the class "clicked", then unclick it
+            if (s.classed("clicked")) {
+                s.classed("clicked", false);
+                action = "delete";
+            }
             else {
-                dmap.data.external = {}; // clears the existing data container
-                d4.selectAll("clicked").classed("clicked", false); // clears all clicked labels if any
-                s.classed("clicked", true); // highlights the clicked label
+                // else click it
+                d4.selectAll(".clicked").classed("clicked", false); // first clears all clicked labels if any
+                s.classed("clicked", true); // click this DOM element
+                dmap.data.external = {}; // clears the data storage
+                action = "add";
             }
         }
-
-        // renders the boxplot
-        // tissueOrder is a list of tissue objects {id:display name} in the same order as the x axis of the heat map.
-        let tissueOrder = dmap.objects.heatmap.xScale.domain().map((d) => {
-            if (tissueDict[d] === undefined){
-                return {
-                    id: d,
-                    name: d
-                }
-            } else {
-                return {
-                    id: d,
-                    name: tissueDict[d].tissue_name
-                }
-            }
-        });
-
-        // temporarily solution
-        // eventually, genes should only be identified by gencode ID
-        if (d.startsWith("ENSG")) renderBoxplot(d, geneDict, tissueOrder, dmap);
-        else{
-            // d is a gene symbol
-            let geneDictBySymbol = {};
-            Object.values(geneDict).forEach((d) => {geneDictBySymbol[d.geneSymbol] = d});
-            renderBoxplot(geneDictBySymbol[d].gencodeId, geneDict, tissueOrder, dmap)
-        }
-
+        console.log(geneDict[d].color); // debugging
+        renderBoxplot(action, d, geneDict, tissueDict, dmap);
     };
-    svg.selectAll(".yLabel")
-        .on("click", ylabelClick);
+
+    svg.selectAll(".exp-map-cell")
+        .on("mouseover", cellMouseover)
+        .on("mouseout", cellMouseout);
+
+    svg.selectAll(".exp-map-ylabel").on("click", ylabelClick);
 }
+
+/**
+ * renders the gene expression boxplot
+ * @param action {ENUM} add, new, or delete
+ * @param gene {String} gencode ID
+ * @param geneDict {Dictionary} gencode ID => gene object with attribute: index
+ * @param tissueDict {Dictionary} tissue objects indexed by tissue ID
+ * @param dmap {DendroHeatmap}
+ */
+function renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
+    // tissueOrder is a list of tissue objects {id:display name} in the same order as the x axis of the heat map.
+    let tissueOrder = dmap.objects.heatmap.xScale.domain().map((d, i) => {return {id:d, name:tissueDict[d].tissue_name}});
+    // get gene expression data
+    let data = dmap.data.external;
+
+    // plotly boxplot configurations
+    const config = {
+        useLog: false,
+        id: "boxplot",
+    };
+    const layout = {
+        title: "",
+        font: {
+            family: 'Libre Franklin',
+            size:11
+        },
+        yaxis: {
+            title: 'TPM',
+            zeroline: false
+        },
+        boxmode: 'group',
+        margin: {
+            t:0,
+        },
+        showlegend: true
+    };
+
+    // action
+    switch(action){
+        case "delete": {
+            delete data[gene];
+            Plotly.newPlot(config.id, d4.values(data), layout);
+            if (d4.keys(data).length == 0){
+                d4.select("#" + config.id).style("opacity", 0.0); // makes the boxplot section visible
+            }else {
+                d4.select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
+            }
+            break;
+        }
+        case "add": {
+            const url = getGtexUrls().geneExp + gene;
+            d4.json(url, function(error, d) {
+                let color = geneDict[gene].color || "black";
+                data[gene] = makeJsonForPlotly(gene, d, config.useLog, color, tissueOrder);
+                Plotly.newPlot(config.id, d4.values(data), layout);
+                d4.select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
+            });
+            break;
+        }
+        default: {
+            console.warn("action not understood.");
+            break;
+        }
+    }
+
+
+
+
+
+
+
+}
+
 
 

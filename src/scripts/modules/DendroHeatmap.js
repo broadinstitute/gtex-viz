@@ -27,7 +27,7 @@ export default class DendroHeatmap {
             heatmap: new Heatmap(this.data.heatmap, true, color, r)
         };
         this.visualComponents = {
-            tooltip: new Tooltip("tooltip", false), // TODO: remove hard-coded tooltip DOM ID
+            tooltip: new Tooltip("tooltip", true), // TODO: remove hard-coded tooltip DOM ID
             svg: undefined
         };
     }

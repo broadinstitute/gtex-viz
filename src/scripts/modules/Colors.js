@@ -1,5 +1,44 @@
 import * as d4 from "d3";
 
+export function colorChart(){
+    return shuffle([
+        "lightpink", "palevioletred", "hotpink", "mediumvioletred", "orchid",
+        "crimson", "darkmagenta", "mediumorchid", "indigo", "mediumslateblue",
+        "lightskyblue", "darkslateblue", "cornflowerblue", "lightslategray", "dodgerblue",
+        "steelblue","deepskyblue","cadetblue", "darkturquoise", "paleturquoise",
+        "mediumaquamarine","teal", "medianturquoise", "darkseagreen","limegreen",
+        "palegreen", "forestgreen", "darkgreen", "yellowgreen", "wheat",
+        "olivedrab","olive", "darkkhaki", "khaki", "gold",
+        "goldenrod", "darkgoldenrod", "orange", "tan", "peru",
+        "sandybrown", "chocolate","saddlebrown", "sienna", "lightsalmon",
+        "coral","orangered", "darksalmon", "tomato", "salmon",
+        "lightcoral", "rosybrown", "indianred", "red", "firebrick",
+        "darkred", "gainsboro", "silver", "darkgray", "gray", "dimgray"
+    ]);
+
+}
+
+function shuffle(array) {
+    // Fisher-Yates shuffle
+    let counter = array.length;
+
+    // While there are elements in the array
+    while (counter > 0) {
+        // Pick a random index
+        let index = Math.floor(Math.random() * counter);
+
+        // Decrease counter by 1
+        counter--;
+
+        // And swap the last element with it
+        let temp = array[counter];
+        array[counter] = array[index];
+        array[index] = temp;
+    }
+
+    return array;
+}
+
 export function getColors(theme){
     const palette = {
         // colorbrewer
