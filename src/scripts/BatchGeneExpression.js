@@ -3,7 +3,7 @@ import * as d4 from "d3";
 import {getGtexUrls, parseTissues, parseMedianExpression, makeJsonForPlotly} from "./modules/gtex/gtexDataParser";
 import {colorChart} from "./modules/Colors";
 import DendroHeatmap from "./modules/DendroHeatmap";
-export function searchById(glist, domId){
+export function searchById(glist, domId, infoId){
     // TODO: figure out what this line does...
     d4.selectAll("*").classed("inView", false);
 
@@ -15,20 +15,33 @@ export function searchById(glist, domId){
     .defer(d4.json, urls.geneId + glist.join(",")) // get gene objects
     .await(function(err2, data1, data2){
         const tissues = parseTissues(data1);
-        const gencodeIds = data2.geneId.map((d) => d.gencodeId);
-        if (gencodeIds.length <= glist.length){
-            message = "Warning: Not all genes are found";
+        const max = 50;
+        let gencodeIds = data2.geneId.map((d) => d.gencodeId);
+        if (gencodeIds.length == 0){
+            message = "Fatal Error: the gene list is empty.<br/>";
         }
-        d4.json(urls.medExpById + gencodeIds.join(","), function(eData){ // get all median express data of these genes in all tissues
-            const tissueTree = eData.clusters.tissue,
-                  geneTree = eData.clusters.gene,
-                  expression = parseMedianExpression(eData);
-            const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
-            dmap.render(domId);
-            customization(dmap, tissues);
-            $('#spinner').hide();
-            return message;
-        });
+        else {
+            if (gencodeIds.length <= glist.length){
+                message = "Warning: Not all genes are found.<br/>";
+            }
+            if (gencodeIds.length > max){
+                message += `Warning: Too many genes. Input list truncated to the first ${max}.<br/>`;
+                gencodeIds = gencodeIds.slice(0, max);
+            }
+            d4.json(urls.medExpById + gencodeIds.join(","), function(eData){ // get all median express data of these genes in all tissues
+                const tissueTree = eData.clusters.tissue,
+                      geneTree = eData.clusters.gene,
+                      expression = parseMedianExpression(eData);
+                const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
+                dmap.render(domId);
+                customization(dmap, tissues);
+                
+            });
+        }
+        $(`#${infoId}`).html(message);
+        $('#spinner').hide();
+
+
     });
 }
 

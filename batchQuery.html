@@ -118,13 +118,9 @@
                 }
 
                 $('#spinner').show();
-                const searchMessage = BatchGeneExpression.searchById(glist, domId);
-                warn(searchMessage);
+                const searchMessage = BatchGeneExpression.searchById(glist, domId, "messageBox");
 
             });
-        }
-        function warn(message){
-            $("messageBox").text(message);
         }
 
         function reset(){
