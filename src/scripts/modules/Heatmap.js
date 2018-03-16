@@ -86,7 +86,10 @@ export default class Heatmap {
             .attr("x", 0)
             .attr("y", 0)
             .attr("class", (d, i) => `xLabel normal x${i}`)
+            .style("cursor", "pointer")
             .style("text-anchor", "start")
+            .style("font-family", "Libre Franklin")
+            .style("font-size", 9)
             .attr("transform", (d) => {
                 let x = this.xScale(d)+(this.xScale.bandwidth()/2) + 1;
                 let y = this.yScale.range()[1] + 17;
@@ -105,7 +108,10 @@ export default class Heatmap {
             .attr("x", this.xScale.range()[1] + 5)
             .attr("y", (d) => this.yScale(d) + 10)
             .attr("class", (d, i) => `yLabel normal y${i}`)
+            .style("cursor", "pointer")
             .style("text-anchor", "start")
+            .style("font-family", "Libre Franklin")
+            .style("font-size", 9)
             .on('click', (d) => {
                 alert(`${d} is clicked. To be implemented`)
             })

@@ -1,52 +1,51 @@
-body {
-    font-family: 'Libre Franklin', sans-serif;
-}
-div{
-    font-size: 12px;
-}
 
-text.highlighted {
-    font-weight: 400;
-    font-size: 12px;
-    text-decoration: underline;
-}
 
-text.normal {
-    fill: #111;
-    font-weight: 300;
-    font-size: 11px;
-}
+/*text.highlighted {*/
+    /*font-weight: 400;*/
+    /*font-size: 12px;*/
+    /*text-decoration: underline;*/
+/*}*/
 
-text.clicked {
-    fill: #D25C43;
-}
+/*text.normal {*/
+    /*fill: #111;*/
+    /*font-weight: 300;*/
+    /*font-size: 11px;*/
+/*}*/
 
-div.expressmap-tooltip {
-   min-width: 100px;
-   display: none;
-   background-color : rgba(32, 53, 73, 0.95);
-   padding: 10px;
-   text-align:left;
-   color: #ffffff;
-   position:absolute;
-   font-size:12px;
-   z-index:4000;
-   border-radius:5px;
-}
+/*text.clicked {*/
+    /*fill: #D25C43;*/
+/*}*/
 
-.btn-default {
-    border-color: #4eb3d3;
-}
+/*div.expressmap-tooltip {*/
+   /*min-width: 100px;*/
+   /*display: none;*/
+   /*background-color : rgba(32, 53, 73, 0.95);*/
+   /*padding: 10px;*/
+   /*text-align:left;*/
+   /*color: #ffffff;*/
+   /*position:absolute;*/
+   /*font-size:12px;*/
+   /*z-index:4000;*/
+   /*border-radius:5px;*/
+/*}*/
 
-a {
-    color: #4eb3d3;
-}
 
-.link:hover {
-    text-decoration: underline;
-    cursor: pointer;
-}
 
-.inView {
-    color: #D25C43;
-}
+/*.inView {*/
+    /*color: #D25C43;*/
+/*}*/
+
+/*.expressmap-bordered {*/
+    /*stroke: #E6E6E6;*/
+    /*stroke-width: 1px;*/
+/*}*/
+/*rect.expressmap-bordered {*/
+    /*stroke: #E6E6E6;*/
+    /*stroke-width: 1px;*/
+/*}*/
+
+/*rect.expressmap-highlighted {*/
+    /*stroke: #D25C43;*/
+    /*stroke-width:2px;*/
+/*}*/
+

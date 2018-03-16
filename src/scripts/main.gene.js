@@ -254,7 +254,6 @@ function changeHeatmapMouseEvents(dmap, tissueDict, geneDict) {
         // overrides the heatmap cell's mouseover event
         // dependencies -- css classes
         // expressMap.css
-        // heatmap.css
 
         const selected = d4.select(this); // note: "this" refers to the dom element of d
         const rowClass = selected.attr("row");
@@ -418,7 +417,7 @@ function mapTissueIdToName(tissueDict){
 function mapGeneIdToSymbol(geneDict){
     // display gene symbol in the heatmap
     d4.selectAll(".yLabel")
-        .text((d) => geneDict[d]==undefined?d:geneDict[d].geneSymbol);
+        .text((d) => geneDict[d]===undefined?d:geneDict[d].geneSymbol);
 }
 
 /**
