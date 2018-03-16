@@ -8,11 +8,11 @@ in a terminal window (bash)
 export NODE_ENV="development"
 echo $NODE_ENV
  */
-const name= 'BatchGeneExpressionSearch';
+const name= 'BatchGeneExpression';
 export default {
     input: 'src/scripts/' + name + '.js',
     output: {
-        file: process.env.NODE_ENV=='production'?'build/js/batch-gene-expression-search.bundle.min.js':'build/js/batch-gene-expression-search.bundle.dev.js',
+        file: process.env.NODE_ENV=='production'?'build/js/batch-gene-expression.bundle.min.js':'build/js/batch-gene-expression.bundle.dev.js',
         format: 'iife'
     },
     sourcemap: 'inline',

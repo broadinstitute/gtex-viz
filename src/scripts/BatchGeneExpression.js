@@ -1,9 +1,9 @@
 import * as d4 from "d3";
 "use strict";
 import {getGtexUrls, parseTissues, parseMedianExpression} from "./modules/gtex/gtexDataParser";
-
-export function init(glist, domId){
-    if (d4.select(`#domId`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
+import DendroHeatmap from "./modules/DendroHeatmap";
+export function searchById(glist, domId){
+    if (d4.select(`#${domId}`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
     const urls = getGtexUrls();
     let message = "";
     d4.queue()
@@ -19,7 +19,7 @@ export function init(glist, domId){
             const tissueTree = eData.clusters.tissue,
                   geneTree = eData.clusters.gene,
                   expression = parseMedianExpression(eData);
-            const dmap = new DendroHeatmap(geneTree, tissueTree, expression);
+            const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
             dmap.render(domId);
             // customization(dmap, tissues, dmap.data.heatmap);
             $('#spinner').hide();

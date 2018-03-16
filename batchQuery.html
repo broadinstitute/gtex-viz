@@ -21,8 +21,9 @@
         </div>
 
         <!-- the tissue menu -->
+
         <div class="row">
-            <div class="col-xs-12 col-lg-2">
+            <div class="col-xs-12 col-md-2">
                 <ul style="font-size:12px; ">
                     <li>Limited to 50 entries.</li>
                     <li><a href="#" id="searchExample">A search example</a></li>
@@ -43,13 +44,7 @@
                     <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
                 </div>
             </div>
-            <div id="todo" class="col-xs-12">
-                <h6>To Do</h6>
-                <ul>
-                    <li>how to package the gene expression batch search?</li>
-                    <li>handling the scenario when the n(gene) <=3, then no gene tree</li>
-                </ul>
-            </div>
+
             <div id="searchResult" class="col-xs-12 col-md-10">
                  <!-- the tool bar div -->
                 <div id="dashboardToolbar" style="margin-bottom:50px; display:none;">
@@ -86,7 +81,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
     <script src="build/external/FileSaver/FileSaver.min.js"></script>
-    <script src="build/js/batch-gene-expression-search.bundle.dev.js"></script>
+    <script src="build/js/batch-gene-expression.bundle.dev.js"></script>
     <script>
         $(document).ready(function(){
             batchGeneQuery();
@@ -105,7 +100,7 @@
                 }
 
                 $('#spinner').show();
-                const searchMessage = BatchGeneExpressionSearch.init(glist, domId);
+                const searchMessage = BatchGeneExpression.searchById(glist, domId);
                 warn(searchMessage);
 
             });
