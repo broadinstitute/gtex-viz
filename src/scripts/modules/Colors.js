@@ -1,24 +1,27 @@
 import * as d4 from "d3";
 
-export function colorChart(){
-    return shuffle([
-        "lightpink", "palevioletred", "hotpink", "mediumvioletred", "orchid",
+export function colorChart(shuffle=true){
+    // ref: http://cloford.com/resources/colours/namedcol.htm
+    const colors = [
+        "darkturquoise","palevioletred","cornflowerblue", "sandybrown", "darkseagreen","burlywood","steelblue",
+        "lightpink",  "hotpink", "mediumvioletred", "orchid",
         "crimson", "darkmagenta", "mediumorchid", "indigo", "mediumslateblue",
-        "lightskyblue", "darkslateblue", "cornflowerblue", "lightslategray", "dodgerblue",
-        "steelblue","deepskyblue","cadetblue", "darkturquoise", "paleturquoise",
-        "mediumaquamarine","teal", "medianturquoise", "darkseagreen","limegreen",
+        "lightskyblue", "darkslateblue", "lightslategray", "dodgerblue",
+        "deepskyblue","cadetblue",  "paleturquoise",
+        "mediumaquamarine","teal", "medianturquoise", "limegreen",
         "palegreen", "forestgreen", "darkgreen", "yellowgreen", "wheat",
         "olivedrab","olive", "darkkhaki", "khaki", "gold",
         "goldenrod", "darkgoldenrod", "orange", "tan", "peru",
-        "sandybrown", "chocolate","saddlebrown", "sienna", "lightsalmon",
+        "chocolate","saddlebrown", "sienna", "lightsalmon",
         "coral","orangered", "darksalmon", "tomato", "salmon",
         "lightcoral", "rosybrown", "indianred", "red", "firebrick",
         "darkred", "gainsboro", "silver", "darkgray", "gray", "dimgray"
-    ]);
-
+    ];
+    if (shuffle) return shuffleColors(colors);
+    return colors;
 }
 
-function shuffle(array) {
+function shuffleColors(array) {
     // Fisher-Yates shuffle
     let counter = array.length;
 
@@ -83,7 +86,7 @@ export function drawColorLegend(title, dom, scale, config, useLog, cell={h:5, w:
     const data = [0].concat(scale.quantiles()); // add 0 to the list of values
     // legend title
     dom.append("text")
-        .attr("class", "legend normal")
+        .attr("class", "color-legend")
         .text(title)
         .attr("x", -10)
         .attr("text-anchor", "end")
@@ -103,7 +106,7 @@ export function drawColorLegend(title, dom, scale, config, useLog, cell={h:5, w:
         .style("fill", (d) => scale(d));
 
     g.append("text")
-        .attr("class", "normal")
+        .attr("class", "color-legend")
         .text((d) => useLog?(Math.pow(10, d)-1).toPrecision(2):d) // TODO: assuming log is base 10
         .attr("x", (d, i) => cell.w * i)
         .attr("y", 0);

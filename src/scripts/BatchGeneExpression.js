@@ -67,8 +67,6 @@ function customization(dmap, tissues, toolbarId){
     addTissueColors(dmap, tissueDict);
     customizeHeatmapMouseEvents(dmap, tissueDict, geneDict);
     createToolbar(toolbarId, dmap, tissueDict);
-    bindToolbarEvents(dmap, tissueDict, geneDict);
-
 }
 
 /**
