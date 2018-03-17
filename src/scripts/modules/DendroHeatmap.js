@@ -1,4 +1,4 @@
-import HeatmapConfig from "./DendroHeatmapConfig";
+import DendroHeatmapConfig from "./DendroHeatmapConfig";
 import Dendrogram from "./Dendrogram";
 import Heatmap from "./Heatmap";
 import {createSvg} from "./utils";
@@ -13,7 +13,7 @@ export default class DendroHeatmap {
      * @param heatmapData {List} of objects with attributes: x: String, y:String, value:Float, originalValue:Float, see the class Heatmap
      * @param config
      */
-    constructor(columnTree, rowTree, heatmapData, color="gnbu", r=2, config=new HeatmapConfig()){
+    constructor(columnTree, rowTree, heatmapData, color="gnbu", r=2, config=new DendroHeatmapConfig()){
         this.config = config.get();
         this.data = {
             columnTree: columnTree,
@@ -27,7 +27,7 @@ export default class DendroHeatmap {
             heatmap: new Heatmap(this.data.heatmap, true, color, r)
         };
         this.visualComponents = {
-            tooltip: new Tooltip("tooltip", false),
+            tooltip: new Tooltip("tooltip", true), // TODO: remove hard-coded tooltip DOM ID
             svg: undefined
         };
     }

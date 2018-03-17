@@ -1,27 +1,39 @@
-body {
-    font-family: 'Libre Franklin', sans-serif;
-}
-div{
-    font-size: 12px;
+text.color-legend {
+    font-family: "Libre Franklin", sans-serif;
+    font-size: 8px;
 }
 
-text.highlighted {
+text.exp-map-xlabel {
+    font-family: "Libre Franklin", sans-serif;
+    font-size: 9px;
+}
+text.exp-map-xlabel.highlighted {
     font-weight: 400;
     font-size: 12px;
     text-decoration: underline;
 }
-
-text.normal {
-    fill: #111;
-    font-weight: 300;
-    font-size: 11px;
+text.exp-map-ylabel {
+    font-family: "Libre Franklin", sans-serif;
+    font-size: 9px;
 }
-
-text.clicked {
+text.exp-map-ylabel.highlighted {
+    font-weight: 400;
+    font-size: 12px;
+    text-decoration: underline;
+}
+text.exp-map-ylabel.clicked {
     fill: #D25C43;
 }
 
-div.expressmap-tooltip {
+rect.exp-map-cell {
+    stroke-width:0px;
+}
+rect.exp-map-cell.highlighted {
+    stroke: #D25C43;
+    stroke-width:2px;
+}
+
+div.exp-map-tooltip {
    min-width: 100px;
    display: none;
    background-color : rgba(32, 53, 73, 0.95);
@@ -34,19 +46,5 @@ div.expressmap-tooltip {
    border-radius:5px;
 }
 
-.btn-default {
-    border-color: #4eb3d3;
-}
 
-a {
-    color: #4eb3d3;
-}
 
-.link:hover {
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-.inView {
-    color: #D25C43;
-}

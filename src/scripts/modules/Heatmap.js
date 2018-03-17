@@ -1,7 +1,3 @@
-/*
-    Dependencies:
-    tooltip.js
- */
 
 import * as d4 from "d3";
 import {getColors, setColorScale, drawColorLegend} from "./Colors";
@@ -69,7 +65,7 @@ export default class Heatmap {
 
         // text labels
         // data join
-        const xLabels = dom.selectAll(".xLabel")
+        const xLabels = dom.selectAll(".exp-map-xlabel")
             .data(this.xList);
 
         // update old elements
@@ -77,15 +73,16 @@ export default class Heatmap {
                 let x = this.xScale(d)+(this.xScale.bandwidth()/2) + 1;
                 let y = this.yScale.range()[1] + 17;
                 return `translate(${x}, ${y}) rotate(${angle})`;
-            })
-            .attr("class", (d, i) => `xLabel normal x${i}`);
+            });
+            // .attr("class", (d, i) => `exp-map-xlabel x${i}`);
 
 
         // enters new elements
         xLabels.enter().append("text")
+            .attr("class", (d, i) => `exp-map-xlabel x${i}`)
             .attr("x", 0)
             .attr("y", 0)
-            .attr("class", (d, i) => `xLabel normal x${i}`)
+            .style("cursor", "pointer")
             .style("text-anchor", "start")
             .attr("transform", (d) => {
                 let x = this.xScale(d)+(this.xScale.bandwidth()/2) + 1;
@@ -98,13 +95,14 @@ export default class Heatmap {
         // exit -- removes old elements as needed
         xLabels.exit().remove();
 
-        const yLabels = dom.selectAll(".yLabel")
+        const yLabels = dom.selectAll(".exp-map-ylabel")
             .data(this.yList)
             .enter().append("text")
             .text((d) => d)
             .attr("x", this.xScale.range()[1] + 5)
             .attr("y", (d) => this.yScale(d) + 10)
-            .attr("class", (d, i) => `yLabel normal y${i}`)
+            .attr("class", (d, i) => `exp-map-ylabel y${i}`)
+            .style("cursor", "pointer")
             .style("text-anchor", "start")
             .on('click', (d) => {
                 alert(`${d} is clicked. To be implemented`)
@@ -126,31 +124,19 @@ export default class Heatmap {
             const selected = d4.select(this);
             const rowClass = selected.attr("row");
             const colClass = selected.attr("col");
-            d4.selectAll(".xLabel").filter(`.${rowClass}`)
-                .classed('normal', false)
+            d4.selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
                 .classed('highlighted', true);
-            d4.selectAll(".yLabel").filter(`.${colClass}`)
-                .classed('normal', false)
+            d4.selectAll(".exp-map-ylabel").filter(`.${colClass}`)
                 .classed('highlighted', true);
-            selected.classed('expressmap-highlighted', true);
+            selected.classed('highlighted', true);
             console.log(`Row: ${d.x}, Column: ${d.y}, Value: ${d.originalValue}`)
         };
 
         const cellMouseout = function(d){
-            const selected = d4.select(this);
-            const rowClass = selected.attr("row");
-            const colClass = selected.attr("col");
-
-            d4.selectAll(".xLabel").filter(`.${rowClass}`)
-                .classed('normal', true)
-                .classed('highlighted', false);
-            d4.selectAll(".yLabel").filter(`.${colClass}`)
-                .classed('normal', true)
-                .classed('highlighted', false);
-            selected.classed('expressmap-highlighted', false);
+            dom.selectAll("*").classed('highlighted', false);
         };
         // data join
-        const cells = dom.selectAll(".cell")
+        const cells = dom.selectAll(".exp-map-cell")
             .data(this.data, (d) => d.value);
 
         // update old elements
@@ -168,7 +154,7 @@ export default class Heatmap {
             .attr("y", (d) => this.yScale(d.y))
             .attr("rx", this.r)
             .attr('ry', this.r)
-            .attr("class", (d) => `cell expressmap-bordered`)
+            .attr("class", (d) => `exp-map-cell`)
             .attr("width", this.xScale.bandwidth())
             .attr("height", this.yScale.bandwidth())
             .style("fill", (d) => this.colors[0])
