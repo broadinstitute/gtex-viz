@@ -315,55 +315,13 @@ function createToolbar(domId, dmap, tissueDict){
 
 }
 
-/////// customized toolbar events ///////
 /**
- *
+ * update the heatmap based on the order of the xlist
+ * @param xlist {Heatmap XList}
  * @param dmap {DendroHeatmap}
- * @param tissueDict {Dictionary} of tissue objects indexed by tissue ID
+ * @param tissueDict {Dictionary} of tissue objects indexed by tissue ID with attr, tissue_name
  */
-// function bindToolbarEvents(dmap, tissueDict){
-//     dmap.toolBar = {};
-
-    // d4.select("#sortTissues")
-    //     .on("click", function(){
-    //         sortTissuesByAlphabet(dmap, tissueDict);
-    //     })
-    //     .on("mouseover", function(){
-    //         dmap.visualComponents.tooltip.show("Sort Tissues Alphabetically");
-    //     })
-    //     .on("mouseout", function(){
-    //         dmap.visualComponents.tooltip.hide();
-    //     });
-    //
-    // d4.select("#sortTissuesByClusters")
-    //     .on("click", function(){
-    //         d4.select("#" + dmap.config.panels.top.id)
-    //             .style("display", "Block");  // shows the tissue dendrogram
-    //         let xlist = dmap.objects.columnTree.xScale.domain();
-    //         sortTissueClickHelper(xlist, dmap, tissueDict);
-    //     })
-    //     .on("mouseover", function(){
-    //         dmap.visualComponents.tooltip.show("Cluster Tissues");
-    //     })
-    //     .on("mouseout", function(){
-    //         dmap.visualComponents.tooltip.hide();
-    //     });
-
-//     d4.select("#downloadHeatmap")
-//         .on("click", function(){
-//             let svgObj = $($($(`${"#" +dmap.config.id} svg`))[0]); // jQuery dependent
-//             downloadSvg(svgObj, "heatmap.svg", "downloadTempDiv");
-//         })
-//         .on("mouseover", function(){
-//             dmap.visualComponents.tooltip.show("Download Heatmap");
-//         })
-//         .on("mouseout", function(){
-//             dmap.visualComponents.tooltip.hide();
-//         });
-// }
-
 function sortTissues (xlist, dmap, tissueDict){
-
     // updates the heatmap
     const dom = d4.select("#"+dmap.config.panels.main.id);
     const dimensions = dmap.config.panels.main;
