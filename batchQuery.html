@@ -64,19 +64,18 @@
 
             <div id="searchResult" class="col-xs-12 col-md-10">
                  <!-- the tool bar div -->
-                <div id="dashboardToolbar" style="margin-bottom:50px; display:none;">
-                    <!-- fontawesome reference: http://fontawesome.io/examples/ -->
-                    <div class="btn-group btn-group-sm">
-                        <a id="sortTissuesByAlphabet" class="btn btn-default" href="#">
-                            <i class="fa fa-sort-alpha-down"></i>
-                        </a>
-                        <a id="sortTissuesByClusters" class="btn btn-default" href="#">
-                            <i class="fa fa-code-branch"></i>
-                        </a>
-                        <a id="downloadHeatmap" class="btn btn-default" href="#">
-                            <i class="fa fa-save"></i>
-                        </a>
-                    </div>
+                <div id="expMapToolbar" style="display:none;">
+                    <!--<div class="btn-group btn-group-sm">-->
+                        <!--<a id="sortTissuesByAlphabet" class="btn btn-default" href="#">-->
+                            <!--<i class="fa fa-sort-alpha-down"></i>-->
+                        <!--</a>-->
+                        <!--<a id="sortTissuesByClusters" class="btn btn-default" href="#">-->
+                            <!--<i class="fa fa-code-branch"></i>-->
+                        <!--</a>-->
+                        <!--<a id="downloadHeatmap" class="btn btn-default" href="#">-->
+                            <!--<i class="fa fa-save"></i>-->
+                        <!--</a>-->
+                    <!--</div>-->
                 </div>
                 <div id="chart"></div> <!-- the heatmap Div -->
                 <div id="boxplot"></div> <!-- the boxplot DIV -->
@@ -118,7 +117,7 @@
                 }
 
                 $('#spinner').show();
-                const searchMessage = BatchGeneExpression.searchById(glist, domId, "messageBox");
+                BatchGeneExpression.searchById(glist, domId, "messageBox", "expMapToolbar");
 
             });
         }
