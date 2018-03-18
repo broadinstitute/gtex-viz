@@ -270,20 +270,20 @@ function renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
     };
 
     // action
-    switch(action){
+    switch(action) {
         case "delete": {
             delete data[gene];
             Plotly.newPlot(config.id, d4.values(data), layout);
-            if (d4.keys(data).length == 0){
+            if (d4.keys(data).length == 0) {
                 d4.select("#" + config.id).style("opacity", 0.0); // makes the boxplot section visible
-            }else {
+            } else {
                 d4.select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
             }
             break;
         }
         case "add": {
             const url = getGtexUrls().geneExp + gene;
-            d4.json(url, function(error, d) {
+            d4.json(url, function (error, d) {
                 let color = geneDict[gene].color || "black";
                 data[gene] = makeJsonForPlotly(gene, d, config.useLog, color, tissueOrder);
                 Plotly.newPlot(config.id, d4.values(data), layout);
@@ -296,13 +296,6 @@ function renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
             break;
         }
     }
-
-
-
-
-
-
-
 }
 
 /**
