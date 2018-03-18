@@ -35,11 +35,12 @@
         <div>
             <h4>Top Expressed Genes</h4>
         </div>
-        <!--<div id="datasets">-->
-            <!--<ul>-->
-                <!--<li id="dataset2" class="link">Mayo cerebellum AD.</li>-->
-            <!--</ul>-->
-        <!--</div>-->
+        <!--mayo data set-->
+        <div id="external-datasets">
+            <ul>
+                <li id="dataset2" class="link">Mayo cerebellum AD.</li>
+            </ul>
+        </div>
 
         <!-- the tissue menu -->
         <div class="row">
@@ -86,10 +87,17 @@
             BatchGeneExpression.renderTopExpressed(tissueId, "chart", "expMapToolbar");
         });
 
+        // mayo
+        $("#dataset2").click(function(){
+            $('#spinner').show();
+            reset();
+            BatchGeneExpression.renderMayo("chart", "expMapToolbar");
+        });
+
         function reset(){
             $("#chart").empty();
             $("#boxplot").empty();
-            $("#expMapToolbar").hide();
+            $("#expMapToolbar").empty();
         }
 
     </script>

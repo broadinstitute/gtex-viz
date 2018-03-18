@@ -1,9 +1,28 @@
 import * as d4 from "d3";
 "use strict";
-import {getGtexUrls, parseTissues, parseMedianExpression, makeJsonForPlotly} from "./modules/gtex/gtexDataParser";
+import {getGtexUrls, getTissueClusters, getGeneClusters, parseMedianTPM, parseTissues, parseMedianExpression, makeJsonForPlotly} from "./modules/gtex/gtexDataParser";
 import {colorChart} from "./modules/Colors";
 import {downloadSvg} from "./modules/utils";
 import DendroHeatmap from "./modules/DendroHeatmap";
+
+export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
+    // - gets static data
+    const tissueTree = getTissueClusters('top50Cerebellum_AD'),
+          geneTree = getGeneClusters('top50Cerebellum_AD');
+
+    d4.queue()
+        .defer(d4.json, urls.tissue) // get tissue colors
+        .defer(d4.tsv, urls.mayoGeneExp)
+        .await(function(error, data1, data2){
+            const tissues = parseTissues(data1);
+            const expression = parseMedianTPM(data2, true);
+            const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
+            dmap.render(domId);
+            customization(dmap, tissues, toolbarId);
+            $('#spinner').hide();
+        });
+}
+
 
 export function createDatasetMenu(domId, urls = getGtexUrls()){
     d4.json(urls.tissue, function(err, results){
