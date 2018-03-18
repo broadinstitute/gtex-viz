@@ -23,6 +23,11 @@ export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
         });
 }
 
+/**
+ * creates the tissue (dataset) dropdown menu using select2
+ * @param domId {String} the dom ID of the menu
+ * @param urls {Object} of web service urls with attr: tissue
+ */
 
 export function createDatasetMenu(domId, urls = getGtexUrls()){
     d4.json(urls.tissue, function(err, results){
@@ -50,23 +55,8 @@ export function createDatasetMenu(domId, urls = getGtexUrls()){
 export function renderTopExpressed(tissueId, domId, toolbarId, urls=getGtexUrls()){
     // getting data
     d4.json(urls.topInTissue + tissueId, function(err, results){ // top 50 expressed genes in tissueId
-
-        const topGenes = results.topExpressedGene,
-            topGeneList = topGenes.map(d=>d.gencodeId);
-        d4.queue()
-            .defer(d4.json, urls.tissue) // get tissue colors
-            .defer(d4.json, urls.medExpById + topGeneList.join(",")) // get all median express data of these 50 genes in all tissues
-            .await(function(err2, data1, data2){ // get all median express data of these 50 genes in all tissues
-                const tissues = parseTissues(data1),
-                    tissueTree = data2.clusters.tissue,
-                    geneTree = data2.clusters.gene,
-                    expression = parseMedianExpression(data2);
-                const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
-                dmap.render(domId);
-                customization(dmap, tissues, toolbarId);
-                $('#spinner').hide();
-            });
-
+        const topGeneList = results.topExpressedGene.map(d=>d.gencodeId);
+        searchById(topGeneList, domId, toolbarId, undefined, urls);
     });
 }
 
@@ -80,7 +70,7 @@ export function renderTopExpressed(tissueId, domId, toolbarId, urls=getGtexUrls(
  * @returns {*}
  */
 
-export function searchById(glist, domId, infoboxId, toolbarId, urls = getGtexUrls()){
+export function searchById(glist, domId, toolbarId, infoboxId, urls = getGtexUrls()){
 
     if (d4.select(`#${domId}`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
     let message = "";
