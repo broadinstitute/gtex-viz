@@ -5,11 +5,66 @@ import {colorChart} from "./modules/Colors";
 import {downloadSvg} from "./modules/utils";
 import DendroHeatmap from "./modules/DendroHeatmap";
 
+export function createDatasetMenu(domId, urls = getGtexUrls()){
+    d4.json(urls.tissue, function(err, results){
+        let tissues = results.color;
+        tissues.forEach((d) => {
+            d.id = d.tissue_id;
+            d.text = d.tissue_name;
+        });
+        tissues.sort((a, b) => {
+            if(a.tissue_name < b.tissue_name) return -1;
+            if(a.tissue_name > b.tissue_name) return 1;
+            return 0;
+        });
+
+        // external library dependency: select2
+        $(`#${domId}`).select2({
+            placeholder: 'Select a data set',
+            data: tissues
+        });
+
+    });
+
+}
+
+export function renderTopExpressed(tissueId, domId, toolbarId, urls=getGtexUrls()){
+    // getting data
+    d4.json(urls.topInTissue + tissueId, function(err, results){ // top 50 expressed genes in tissueId
+
+        const topGenes = results.topExpressedGene,
+            topGeneList = topGenes.map(d=>d.gencodeId);
+        d4.queue()
+            .defer(d4.json, urls.tissue) // get tissue colors
+            .defer(d4.json, urls.medExpById + topGeneList.join(",")) // get all median express data of these 50 genes in all tissues
+            .await(function(err2, data1, data2){ // get all median express data of these 50 genes in all tissues
+                const tissues = parseTissues(data1),
+                    tissueTree = data2.clusters.tissue,
+                    geneTree = data2.clusters.gene,
+                    expression = parseMedianExpression(data2);
+                const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
+                dmap.render(domId);
+                customization(dmap, tissues, toolbarId);
+                $('#spinner').hide();
+            });
+
+    });
+}
+
+/**
+ *
+ * @param glist {List} of gencode IDs or gene IDs
+ * @param domId {String} the DOM ID of the svg
+ * @param infoboxId {String} the DOM ID of the message info box
+ * @param toolbarId {String} the DOM ID of the toolbar
+ * @param urls {Object} of web service urls with attr: tissue, geneId, medExpById
+ * @returns {*}
+ */
+
 export function searchById(glist, domId, infoboxId, toolbarId, urls = getGtexUrls()){
 
     if (d4.select(`#${domId}`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
     let message = "";
-    let dmap;
     d4.queue()
     .defer(d4.json, urls.tissue) // get tissue colors
     .defer(d4.json, urls.geneId + glist.join(",")) // get gene objects
@@ -32,7 +87,7 @@ export function searchById(glist, domId, infoboxId, toolbarId, urls = getGtexUrl
                 const tissueTree = eData.clusters.tissue,
                       geneTree = eData.clusters.gene,
                       expression = parseMedianExpression(eData);
-                dmap = new DendroHeatmap(tissueTree, geneTree, expression);
+                const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
                 dmap.render(domId);
                 customization(dmap, tissues, toolbarId);
                 
@@ -41,7 +96,6 @@ export function searchById(glist, domId, infoboxId, toolbarId, urls = getGtexUrl
         $(`#${infoboxId}`).html(message);
         $('#spinner').hide();
     });
-    return dmap;
 }
 
 /**
