@@ -97,6 +97,8 @@ function customize(geneModel, map, jdata, edata){
 
         })
         .on("click", function(d){
+            mapSvg.selectAll(".exp-map-ylabel").classed("clicked", false);
+            d4.select(this).classed("clicked", true);
             const tissue = d4.select(this).text();
             const j = jdata.filter((d)=>d.tissueId==tissue);
             const ex = edata.filter((d)=>d.tissueId==tissue);
