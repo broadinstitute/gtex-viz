@@ -3,7 +3,7 @@ import * as d4 from "d3";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GeneModel from "./modules/GeneModel";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
-import {getGtexUrls, parseTissues, parseJunctionExpression, parseExonExpression, parseExons, parseJunctions} from "./modules/gtexDataParser";
+import {getGtexUrls, parseTissues, parseJunctionExpression, parseExonExpression, parseExons, parseJunctions} from "./modules/gtex/gtexDataParser";
 import {createSvg} from "./modules/utils";
 import {getColors, setColorScale, drawColorLegend} from "./modules/Colors";
 
@@ -48,8 +48,8 @@ $(document).ready(function(){
 });
 
 function init(){
-    // const inputGene = $('#gene').val();
-    const inputGene = "ACTN3";
+    const inputGene = $('#gene').val();
+    // const inputGene = "ACTN3";
     reset();
     d4.json(urls.geneId + inputGene, function(json){  // get the gene object for the gencode ID
         const gene = json.geneId[0];
