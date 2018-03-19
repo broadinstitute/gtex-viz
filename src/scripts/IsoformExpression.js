@@ -1,68 +1,36 @@
+"use strict";
 import * as d4 from "d3";
-
+import {getGtexUrls, parseTissues, parseExons, parseJunctions, parseJunctionExpression, parseExonExpression} from "./modules/gtex/gtexDataParser";
+import {setColorScale, getColors, drawColorLegend} from "./modules/Colors";
+import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GeneModel from "./modules/GeneModel";
-import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
-import {getGtexUrls, parseTissues, parseJunctionExpression, parseExonExpression, parseExons, parseJunctions} from "./modules/gtex/gtexDataParser";
-import {createSvg} from "./modules/utils";
-import {getColors, setColorScale, drawColorLegend} from "./modules/Colors";
 
-/** TODO
- * 4.1 report individual isoforms
- *  * 6.5 exon expression map
- * 13. Isoform Express Map
-
- * 4. add tissue colors
- * 4.2 reset gene model to no coloring
- * 4.3 do we set a threshold on tissues if the gene isn't expressed?
- * 4.5 automatic filtering of tissues based on median gene expression?
- * 6. gene information
- * 7. improve heatmap custom layout configuration
- * 8. inconsistent highlight visual effects
- * 9. add exon text label
- * 10. add cell mouse events
- * 11. implement the tool bar (should it be a hamburger?
- * 11.5 tree scale bug
- * 11.9 rebuild spliceViz
- * 12.0 rewrite main.junction.js to a class
- * 12.1 code review
- * 14. EpiMap
- * 15. Create a new github repo and consolidate all of my d3.v4 viz tools there
+/**
+ *
+ * @param geneId {String} a gene name or gencode ID
+ * @param domId {String} the DOM ID of the SVG
+ * @param toolbarId {String} the DOM ID of the tool bar DIV
+ * @param urls {Object} of the GTEx web service urls with attr: geneId, tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
  */
-
-
-const urls = getGtexUrls();
-$(document).ready(function(){
-    // developing
-    init();
-    $('#gene').keypress(function(e){
-        if(e.keyCode == 13){
-            // bind the enter key
-            e.preventDefault(); // or else, hitting the enter key's default is refreshing the page
-            init();
-        }
-    });
-    $('#junctionSubmit').click(function(){
-        init();
-    })
-});
-
-function init(){
-    const inputGene = $('#gene').val();
-    // const inputGene = "ACTN3";
-    reset();
-    d4.json(urls.geneId + inputGene, function(json){  // get the gene object for the gencode ID
+export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
+     d4.json(urls.geneId + geneId, function(json){  // get the gene object
         const gene = json.geneId[0];
-        process(gene);
-
+        if (gene === undefined) throw "Fatal Error: gene not found";
+        _renderJunctions(gene, domId, urls);
     });
 }
 
-function process(gene){
+/**
+ *
+ * @param gene {Object} with attr: gencodeId
+ * @param heatmapDomId {String}
+ * @param urls {Object} of the GTEx web service urls with attr: tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
+ * @private
+ */
+function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
     const gencodeId = gene.gencodeId;
-    const chartDomId = "chart";
     const modelDomId = "model";
-    $('#spinner').show();
     d4.queue()
         .defer(d4.json, urls.tissue) // tissue colors
         .defer(d4.json, urls.geneModelUnfiltered + gencodeId) // unfiltered collapsed gene model
@@ -86,7 +54,7 @@ function process(gene){
             dmapConfig.setMargin({left: 10, top: 20, right: 200, bottom: 200});
             dmapConfig.noTopTreePanel();
             const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig);
-            dmap.render(chartDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
+            dmap.render(heatmapDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
 
             // gene model rendering
             const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
@@ -108,16 +76,9 @@ function process(gene){
         });
 }
 
-function reset(){
-    d4.select("#chart").selectAll("*").remove();
-    d4.select("#model").selectAll("*").remove();
-    d4.select("#boxplot").selectAll("*").remove();
-    d4.select("#dashboardToolbar").style("display", "none");
-    d4.selectAll("*").classed("inView", false);
-}
-
 /**
  * customizing the junciton expression visualization
+ * dependencies: CSS classes from expressMap.css, junctionMap.css
  * @param geneModel {Object} of gene
  * @param map {Object} of DendropHeatmap
  * @param jdata {List} of junction expression data objects

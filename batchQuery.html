@@ -84,9 +84,7 @@
     <script src="build/external/FileSaver/FileSaver.min.js"></script>
     <script src="build/js/batch-gene-expression.bundle.dev.js"></script>
     <script>
-        $(document).ready(function(){
-            batchGeneQuery();
-        });
+        $(document).ready(batchGeneQuery);
         function batchGeneQuery(){
             const domId = "chart";
             $('#searchExample').click(function(){
@@ -110,7 +108,7 @@
         function reset(){
             $("#chart").empty();
             $("#boxplot").empty();
-            $("#expMapToolbar").hide();
+            $("#expMapToolbar").empty();
         }
 
     </script>
