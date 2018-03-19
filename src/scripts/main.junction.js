@@ -128,24 +128,22 @@ function customize(geneModel, map, jdata, edata){
     const mapSvg = map.visualComponents.svg;
     const ecolorScale = setColorScale(edata.map(d=>d.value), getColors("gnbu"));
     drawColorLegend("Exon median read count", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y}, true);// TODO: remove hard-coded positions
-    mapSvg.selectAll(".yLabel")
+    mapSvg.selectAll(".exp-map-ylabel")
         .on("mouseover", function(d){
             const tissue = d4.select(this).text();
              d4.select(this)
-                .classed('normal', false)
                 .classed('highlighted', true);
 
         })
         .on("click", function(d){
             const tissue = d4.select(this).text();
-            console.log(tissue);
             const j = jdata.filter((d)=>d.tissueId==tissue);
             const ex = edata.filter((d)=>d.tissueId==tissue);
             geneModel.changeColor(mapSvg, j, ex, map.objects.heatmap.colorScale, ecolorScale);
             geneModel.changeTextlabel(mapSvg, "Expression in " + tissue);
         });
 
-    mapSvg.selectAll(".xLabel")
+    mapSvg.selectAll(".exp-map-xlabel")
         .each(function(d){
             // add junction ID as the dom id
             const xlabel = d4.select(this);
@@ -160,7 +158,6 @@ function customize(geneModel, map, jdata, edata){
         .on("mouseover", function(d){
             const jId = d4.select(this).attr("id");
             d4.select(this).classed("highlighted", true)
-                .classed("normal", false);
 
             // highlight the junction and its exons on the gene model
             mapSvg.selectAll(`.junc${jId}`).classed("highlighted", true);
@@ -172,7 +169,6 @@ function customize(geneModel, map, jdata, edata){
         })
         .on("mouseout", function(d){
             d4.select(this).classed("highlighted", false)
-                .classed("normal", true);
             d4.selectAll(".junc").classed("highlighted", false);
             d4.selectAll(".junc-curve").classed("highlighted", false);
             mapSvg.selectAll(".exon").classed("highlighted", false);
@@ -181,7 +177,7 @@ function customize(geneModel, map, jdata, edata){
     mapSvg.selectAll(".junc")
         .on("mouseover", function(d){
             d4.selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
-            console.log(`Junction ${d.junctionId}: ${d.chromStart} - ${d.chromEnd}`)
+            console.log(`Junction ${d.junctionId}: ${d.chromStart} - ${d.chromEnd}`);
 
             if (d.startExon !== undefined){
                 mapSvg.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);
