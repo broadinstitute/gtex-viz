@@ -1,6 +1,6 @@
 "use strict";
 import * as d4 from "d3";
-import {getGtexUrls, parseTissues, parseExons, parseJunctions, parseIsoforms, parseJunctionExpression, parseExonExpression} from "./modules/gtex/gtexDataParser";
+import {getGtexUrls, parseTissues, parseExons, parseJunctions, parseIsoforms, parseIsoformExons, parseJunctionExpression, parseExonExpression, parseIsoformExpression} from "./modules/gtex/gtexDataParser";
 import {setColorScale, getColors, drawColorLegend} from "./modules/Colors";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
@@ -63,17 +63,20 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
         .defer(d4.json, urls.isoform + gencodeId) // isoform structures
         .defer(d4.json, urls.junctionExp + gencodeId) // junction expression data
         .defer(d4.json, urls.exonExp + gencodeId) // exon expression data of the final collapsed model only
-        .await(function(error, tissueJson, geneModelJson, curatedGeneModelJson, isoformJson, data, data2){
+        .defer(d4.json, urls.isoformExp + gencodeId)
+        .await(function(error, tissueJson, geneModelJson, curatedGeneModelJson, isoformJson, data, data2, data3){
             if (error !== null) throw "Web service error.";
             const tissues = parseTissues(tissueJson),
                 exons = parseExons(geneModelJson),
                 exonsCurated = parseExons(curatedGeneModelJson),
                 junctions = parseJunctions(data),
                 isoforms = parseIsoforms(isoformJson),
+                isoformExons = parseIsoformExons(isoformJson),
                 tissueTree = data.clusters.tissue,
                 junctionTree = data.clusters.junction, // junction tree is not really useful
                 jExpress = parseJunctionExpression(data),
-                exonExpress = parseExonExpression(data2,  exonsCurated);
+                exonExpress = parseExonExpression(data2,  exonsCurated),
+                isoformExpress = parseIsoformExpression(data3);
 
             // junction expression heat map
             let dmapConfig = new DendroHeatmapConfig("chart");
@@ -96,11 +99,9 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
             geneModel.render(modelG, modelConfig);
 
             // render isoform structures, ignoring intron lengths
-            d4.keys(isoforms).forEach((id, i)=>{
-                let transcript = gene;
-                transcript["transcriptId"] = id; // TODO: or grab the actual transcript object through the web service
-                const isoformModel = new GeneModel(transcript, exons, isoforms[id], [], true);
-                const isoformG = dmap.visualComponents.svg.append("g").attr("id", id);
+            isoforms.forEach((isoform, i)=>{
+                const isoformModel = new GeneModel(isoform, exons, isoformExons[isoform.transcriptId], [], true);
+                const isoformG = dmap.visualComponents.svg.append("g").attr("id", isoform.transcriptId);
                 const h = 20;
                 const config = {
                     x: modelConfig.x,
@@ -115,7 +116,6 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
             // temporarily
             customize(geneModel, dmap, jExpress, exonExpress);
             $('#spinner').hide();
-
         });
 }
 
