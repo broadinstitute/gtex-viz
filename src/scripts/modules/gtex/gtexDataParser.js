@@ -12,6 +12,8 @@ export function getGtexUrls(){
 
         "exonExp": host + "expression/exonExpression?datasetId=gtex_v7&gencodeId=",
         "junctionExp": host + "expression/junctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
+        "isoformExp": host + "expression/isoformExpression?datasetId=gtex_v7&boxplotDetail=median&gencodeId=",
+
         "geneModel": host + "reference/collapsedGeneModel?unfiltered=false&release=v7&gencode_id=",
         "geneModelUnfiltered": host + "reference/collapsedGeneModel?unfiltered=true&release=v7&gencode_id=",
         "isoform": host + "reference/transcript?release=v7&gencode_id=",
@@ -76,7 +78,7 @@ export function parseJunctions(data){
  * @param data {Json}
  * returns a dictionary of transcript exon object lists indexed by ENST IDs
  */
-export function parseIsoforms(data){
+export function parseIsoformExons(data){
     const attr = "transcript";
     if(!data.hasOwnProperty(attr)) throw("parseIsoforms input error");
     return data[attr].filter((d)=>{return "exon" == d.featureType})
@@ -86,6 +88,18 @@ export function parseIsoforms(data){
         return a;
     }, {});
 
+}
+
+/**
+ * parse transcript isoforms
+ * @param data {Json} from GTEx web service "reference/transcript?release=v7&gencode_id="
+ * returns a list of isoform objects
+ */
+
+export function parseIsoforms(data){
+    const attr = "transcript";
+    if(!data.hasOwnProperty(attr)) throw("parseIsoforms input error");
+    return data[attr].filter((d)=>{return "transcript" == d.featureType});
 }
 
 /**
@@ -127,6 +141,18 @@ export function parseJunctionExpression(json){
         d.originalValue = Number(d.data);
         d.id = d.gencodeId
     });
+    return json[attr];
+}
+
+export function parseIsoformExpression(json){
+    const attr = "isoformExpression";
+    if(!json.hasOwnProperty(attr)) throw("parseIsoformExpression input error");
+    // parse GTEx isoform median TPM
+    json[attr].forEach((d) => {
+        d.value = Number(d.data);
+        d.originalValue = Number(d.data);
+    });
+
     return json[attr];
 }
 
