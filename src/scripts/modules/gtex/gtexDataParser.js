@@ -1,3 +1,5 @@
+"use strict";
+
 export function getGtexUrls(){
     const host = "https://dev.gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
     return {
@@ -10,8 +12,11 @@ export function getGtexUrls(){
 
         "exonExp": host + "expression/exonExpression?datasetId=gtex_v7&gencodeId=",
         "junctionExp": host + "expression/junctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
+        "isoformExp": host + "expression/isoformExpression?datasetId=gtex_v7&boxplotDetail=median&gencodeId=",
+
         "geneModel": host + "reference/collapsedGeneModel?unfiltered=false&release=v7&gencode_id=",
         "geneModelUnfiltered": host + "reference/collapsedGeneModel?unfiltered=true&release=v7&gencode_id=",
+        "isoform": host + "reference/transcript?release=v7&gencode_id=",
 
         "liverGeneExp": "data/top50.genes.liver.genomic.median.tpm.json", // top 50 genes in GTEx liver
         "cerebellumGeneExp": "data/top.gtex.cerebellum.genes.median.tpm.tsv",
@@ -68,34 +73,86 @@ export function parseJunctions(data){
                     });
 }
 
-export function parseExonExpression(json, useLog=true){
+/**
+ * parse transcript isoforms from the GTEx web service: "reference/transcript?release=v7&gencode_id="
+ * @param data {Json}
+ * returns a dictionary of transcript exon object lists indexed by ENST IDs
+ */
+export function parseIsoformExons(data){
+    const attr = "transcript";
+    if(!data.hasOwnProperty(attr)) throw("parseIsoforms input error");
+    return data[attr].filter((d)=>{return "exon" == d.featureType})
+        .reduce((a, d)=>{
+        if (a[d.transcriptId] === undefined) a[d.transcriptId] = [];
+        a[d.transcriptId].push(d);
+        return a;
+    }, {});
+
+}
+
+/**
+ * parse transcript isoforms
+ * @param data {Json} from GTEx web service "reference/transcript?release=v7&gencode_id="
+ * returns a list of isoform objects
+ */
+
+export function parseIsoforms(data){
+    const attr = "transcript";
+    if(!data.hasOwnProperty(attr)) throw("parseIsoforms input error");
+    return data[attr].filter((d)=>{return "transcript" == d.featureType});
+}
+
+/**
+ * parse final gene model exon expression
+ * expression is normalized to reads per kb
+ * @param json
+ * @param exons
+ * @param useLog
+ * @returns {*}
+ */
+export function parseExonExpression(json, exons){
+    const exonDict = exons.reduce((a, d)=>{a[d.exonId] = d; return a;}, {});
     const attr = "exonExpression";
     if(!json.hasOwnProperty(attr)) throw("parseExonExpression input error");
     // parse GTEx median exon counts
     const adjust = 1;
     json[attr].forEach((d) => {
-        d.value = useLog?Math.log10(Number(d.data) + adjust):+Number(d.data);
+        const exon = exonDict[d.exonId]; // for retrieving exon positions
+        if(!exon.hasOwnProperty("chromEnd")||!exon.hasOwnProperty("chromStart")) throw("parseExonExpression: data input error")
+        d.l = exon.chromEnd - exon.chromStart + 1;
+        d.value = Number(d.data)/d.l;
         d.x = d.exonId;
         d.y = d.tissueId;
-        d.originalValue = Number(d.data);
+        d.originalValue = Number(d.data)/d.l;
         d.id = d.gencodeId
     });
     return json[attr]
 }
 
-export function parseJunctionExpression(json, useLog=true){
+export function parseJunctionExpression(json){
     const attr = "junctionExpression";
     if(!json.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
     // parse GTEx median junction counts
-    const adjust = 1;
     json[attr].forEach((d) => {
         // TODO: add json attr error-checking
-        d.value = useLog?Math.log10(Number(d.data) + adjust):+Number(d.data);
+        d.value = Number(d.data);
         d.x = d.junctionId;
         d.y = d.tissueId;
         d.originalValue = Number(d.data);
         d.id = d.gencodeId
     });
+    return json[attr];
+}
+
+export function parseIsoformExpression(json){
+    const attr = "isoformExpression";
+    if(!json.hasOwnProperty(attr)) throw("parseIsoformExpression input error");
+    // parse GTEx isoform median TPM
+    json[attr].forEach((d) => {
+        d.value = Number(d.data);
+        d.originalValue = Number(d.data);
+    });
+
     return json[attr];
 }
 

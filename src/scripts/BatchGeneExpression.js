@@ -1,4 +1,4 @@
-import * as d4 from "d3";
+import * as d4 from "d3"; // TODO: import specific API functions instead?
 "use strict";
 import {getGtexUrls, getTissueClusters, getGeneClusters, parseMedianTPM, parseTissues, parseMedianExpression, makeJsonForPlotly} from "./modules/gtex/gtexDataParser";
 import {colorChart} from "./modules/Colors";
@@ -19,7 +19,7 @@ export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
             const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
             dmap.render(domId);
             customization(dmap, tissues, toolbarId);
-            $('#spinner').hide();
+            $('#spinner').hide(); // TODO: remove hard-coded dom ID
         });
 }
 
@@ -161,6 +161,7 @@ function addTissueColors(dmap, tissueDict){
 
 /**
  * Customize the heatmap's mouse events
+ * dependencies: CSS classes from expressMap.css
  * @param dmap {DendroHeatmap}
  * @param tissueDict {Dictionary}: tissue objects indexed by tissue_id, with attr: tissue_name
  * @param geneDict {Dictionary}: gene objects indexed by gencode ID, with attr: geneSymbol
@@ -366,11 +367,11 @@ function createToolbar(domId, dmap, tissueDict){
         .on("mouseout", function(){
             dmap.visualComponents.tooltip.hide();
         });
-
 }
 
 /**
  * update the heatmap based on the order of the xlist
+ * dependencies: CSS classes from expressMap.css
  * @param xlist {Heatmap XList}
  * @param dmap {DendroHeatmap}
  * @param tissueDict {Dictionary} of tissue objects indexed by tissue ID with attr, tissue_name

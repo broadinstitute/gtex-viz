@@ -1,14 +1,14 @@
+"use strict";
 import * as d4 from "d3";
-
+import {getGtexUrls, parseTissues, parseExons, parseJunctions, parseIsoforms, parseIsoformExons, parseJunctionExpression, parseExonExpression, parseIsoformExpression} from "./modules/gtex/gtexDataParser";
+import {setColorScale, getColors, drawColorLegend} from "./modules/Colors";
+import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GeneModel from "./modules/GeneModel";
-import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
-import {getGtexUrls, parseTissues, parseJunctionExpression, parseExonExpression, parseExons, parseJunctions} from "./modules/gtex/gtexDataParser";
-import {createSvg} from "./modules/utils";
-import {getColors, setColorScale, drawColorLegend} from "./modules/Colors";
 
 /** TODO
  * 4.1 report individual isoforms
+ * 4.2 mouseover exons should report the normalized read counts in a tissue
  *  * 6.5 exon expression map
  * 13. Isoform Express Map
 
@@ -31,62 +31,59 @@ import {getColors, setColorScale, drawColorLegend} from "./modules/Colors";
  */
 
 
-const urls = getGtexUrls();
-$(document).ready(function(){
-    // developing
-    init();
-    $('#gene').keypress(function(e){
-        if(e.keyCode == 13){
-            // bind the enter key
-            e.preventDefault(); // or else, hitting the enter key's default is refreshing the page
-            init();
-        }
-    });
-    $('#junctionSubmit').click(function(){
-        init();
-    })
-});
-
-function init(){
-    const inputGene = $('#gene').val();
-    // const inputGene = "ACTN3";
-    reset();
-    d4.json(urls.geneId + inputGene, function(json){  // get the gene object for the gencode ID
+/**
+ *
+ * @param geneId {String} a gene name or gencode ID
+ * @param domId {String} the DOM ID of the SVG
+ * @param toolbarId {String} the DOM ID of the tool bar DIV
+ * @param urls {Object} of the GTEx web service urls with attr: geneId, tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
+ */
+export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
+     d4.json(urls.geneId + geneId, function(json){  // get the gene object
         const gene = json.geneId[0];
-        process(gene);
-
+        if (gene === undefined) throw "Fatal Error: gene not found";
+        _renderJunctions(gene, domId, urls);
     });
 }
 
-function process(gene){
+/**
+ *
+ * @param gene {Object} with attr: gencodeId
+ * @param heatmapDomId {String}
+ * @param urls {Object} of the GTEx web service urls with attr: tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
+ * @private
+ */
+function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
     const gencodeId = gene.gencodeId;
-    const chartDomId = "chart";
     const modelDomId = "model";
-    $('#spinner').show();
     d4.queue()
         .defer(d4.json, urls.tissue) // tissue colors
         .defer(d4.json, urls.geneModelUnfiltered + gencodeId) // unfiltered collapsed gene model
         .defer(d4.json, urls.geneModel + gencodeId) // final collapsed gene model
+        .defer(d4.json, urls.isoform + gencodeId) // isoform structures
         .defer(d4.json, urls.junctionExp + gencodeId) // junction expression data
         .defer(d4.json, urls.exonExp + gencodeId) // exon expression data of the final collapsed model only
-        .await(function(error, tissueJson, geneModelJson, curatedGeneModelJson, data, data2){
+        .defer(d4.json, urls.isoformExp + gencodeId)
+        .await(function(error, tissueJson, geneModelJson, curatedGeneModelJson, isoformJson, data, data2, data3){
             if (error !== null) throw "Web service error.";
             const tissues = parseTissues(tissueJson),
                 exons = parseExons(geneModelJson),
                 exonsCurated = parseExons(curatedGeneModelJson),
                 junctions = parseJunctions(data),
+                isoforms = parseIsoforms(isoformJson),
+                isoformExons = parseIsoformExons(isoformJson),
                 tissueTree = data.clusters.tissue,
                 junctionTree = data.clusters.junction, // junction tree is not really useful
                 jExpress = parseJunctionExpression(data),
-                exonExpress = parseExonExpression(data2);
-
+                exonExpress = parseExonExpression(data2,  exonsCurated),
+                isoformExpress = parseIsoformExpression(data3);
 
             // junction expression heat map
             let dmapConfig = new DendroHeatmapConfig("chart");
-            dmapConfig.setMargin({left: 10, top: 20, right: 200, bottom: 200});
-            dmapConfig.noTopTreePanel();
-            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig);
-            dmap.render(chartDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
+            dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 2000}); // TODO: figure out a better way to extend the SVG height
+            dmapConfig.noTopTreePanel(1250);
+            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig, false);
+            dmap.render(heatmapDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
 
             // gene model rendering
             const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
@@ -99,25 +96,32 @@ function process(gene){
             };
             const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel");
             modelG.attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
-            geneModel.render(modelG, {w:modelConfig.w, h:modelConfig.h});
+            geneModel.render(modelG, modelConfig);
+
+            // render isoform structures, ignoring intron lengths
+            isoforms.forEach((isoform, i)=>{
+                const isoformModel = new GeneModel(isoform, exons, isoformExons[isoform.transcriptId], [], true);
+                const isoformG = dmap.visualComponents.svg.append("g").attr("id", isoform.transcriptId);
+                const h = 20;
+                const config = {
+                    x: modelConfig.x,
+                    y: modelConfig.y + modelConfig.h + ((i) * h),
+                    w: modelConfig.w,
+                    h: h
+                };
+                isoformG.attr("transform", `translate(${config.x}, ${config.y})`);
+                isoformModel.render(isoformG, config)
+            });
 
             // temporarily
             customize(geneModel, dmap, jExpress, exonExpress);
             $('#spinner').hide();
-
         });
-}
-
-function reset(){
-    d4.select("#chart").selectAll("*").remove();
-    d4.select("#model").selectAll("*").remove();
-    d4.select("#boxplot").selectAll("*").remove();
-    d4.select("#dashboardToolbar").style("display", "none");
-    d4.selectAll("*").classed("inView", false);
 }
 
 /**
  * customizing the junciton expression visualization
+ * dependencies: CSS classes from expressMap.css, junctionMap.css
  * @param geneModel {Object} of gene
  * @param map {Object} of DendropHeatmap
  * @param jdata {List} of junction expression data objects
@@ -127,25 +131,25 @@ function customize(geneModel, map, jdata, edata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
     const ecolorScale = setColorScale(edata.map(d=>d.value), getColors("gnbu"));
-    drawColorLegend("Exon median read count", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y}, true);// TODO: remove hard-coded positions
-    mapSvg.selectAll(".yLabel")
+    drawColorLegend("Exon median read counts per base", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y});// TODO: remove hard-coded positions
+    mapSvg.selectAll(".exp-map-ylabel")
         .on("mouseover", function(d){
             const tissue = d4.select(this).text();
              d4.select(this)
-                .classed('normal', false)
                 .classed('highlighted', true);
 
         })
         .on("click", function(d){
+            mapSvg.selectAll(".exp-map-ylabel").classed("clicked", false);
+            d4.select(this).classed("clicked", true);
             const tissue = d4.select(this).text();
-            console.log(tissue);
             const j = jdata.filter((d)=>d.tissueId==tissue);
             const ex = edata.filter((d)=>d.tissueId==tissue);
-            geneModel.changeColor(mapSvg, j, ex, map.objects.heatmap.colorScale, ecolorScale);
-            geneModel.changeTextlabel(mapSvg, "Expression in " + tissue);
+            geneModel.changeTextlabel(mapSvg.select("#geneModel"), "Expression in " + tissue);
+            geneModel.addData(mapSvg.select("#geneModel"), j, ex, map.objects.heatmap.colorScale, ecolorScale);
         });
 
-    mapSvg.selectAll(".xLabel")
+    mapSvg.selectAll(".exp-map-xlabel")
         .each(function(d){
             // add junction ID as the dom id
             const xlabel = d4.select(this);
@@ -159,8 +163,7 @@ function customize(geneModel, map, jdata, edata){
         })
         .on("mouseover", function(d){
             const jId = d4.select(this).attr("id");
-            d4.select(this).classed("highlighted", true)
-                .classed("normal", false);
+            d4.select(this).classed("highlighted", true);
 
             // highlight the junction and its exons on the gene model
             mapSvg.selectAll(`.junc${jId}`).classed("highlighted", true);
@@ -171,8 +174,7 @@ function customize(geneModel, map, jdata, edata){
             }
         })
         .on("mouseout", function(d){
-            d4.select(this).classed("highlighted", false)
-                .classed("normal", true);
+            d4.select(this).classed("highlighted", false);
             d4.selectAll(".junc").classed("highlighted", false);
             d4.selectAll(".junc-curve").classed("highlighted", false);
             mapSvg.selectAll(".exon").classed("highlighted", false);
@@ -181,7 +183,7 @@ function customize(geneModel, map, jdata, edata){
     mapSvg.selectAll(".junc")
         .on("mouseover", function(d){
             d4.selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
-            console.log(`Junction ${d.junctionId}: ${d.chromStart} - ${d.chromEnd}`)
+            console.log(`Junction ${d.junctionId}: ${d.chromStart} - ${d.chromEnd}`);
 
             if (d.startExon !== undefined){
                 mapSvg.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);
@@ -202,7 +204,7 @@ function customize(geneModel, map, jdata, edata){
     mapSvg.selectAll(".exon-curated")
         .on('mouseover', function(d){
             d4.select(this).classed("highlighted", true);
-            console.log(`Exon ${d.exonNumber}: ${d.chromStart} - ${d.chromEnd}`)
+            console.log(`Exon ${d.exonNumber}: ${d.chromStart} - ${d.chromEnd}. RPK: ${d.originalValue}`)
         })
         .on('mouseout', function(d){
             d4.select(this).classed("highlighted", false);

@@ -1,10 +1,10 @@
 text.color-legend {
-    font-family: "Libre Franklin", sans-serif;
+    font-family: "Libre Franklin", "Helvetica", "Arial", sans-serif;
     font-size: 8px;
 }
 
 text.exp-map-xlabel {
-    font-family: "Libre Franklin", sans-serif;
+    font-family: "Libre Franklin", "Helvetica", "Arial", sans-serif;
     font-size: 9px;
 }
 text.exp-map-xlabel.highlighted {
@@ -13,7 +13,7 @@ text.exp-map-xlabel.highlighted {
     text-decoration: underline;
 }
 text.exp-map-ylabel {
-    font-family: "Libre Franklin", sans-serif;
+    font-family: "Libre Franklin", "Helvetica", "Arial", sans-serif;
     font-size: 9px;
 }
 text.exp-map-ylabel.highlighted {
