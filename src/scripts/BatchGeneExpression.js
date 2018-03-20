@@ -367,7 +367,6 @@ function createToolbar(domId, dmap, tissueDict){
         .on("mouseout", function(){
             dmap.visualComponents.tooltip.hide();
         });
-
 }
 
 /**

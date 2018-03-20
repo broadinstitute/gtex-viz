@@ -1,10 +1,35 @@
 "use strict";
 import * as d4 from "d3";
-import {getGtexUrls, parseTissues, parseExons, parseJunctions, parseJunctionExpression, parseExonExpression} from "./modules/gtex/gtexDataParser";
+import {getGtexUrls, parseTissues, parseExons, parseJunctions, parseIsoforms, parseJunctionExpression, parseExonExpression} from "./modules/gtex/gtexDataParser";
 import {setColorScale, getColors, drawColorLegend} from "./modules/Colors";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GeneModel from "./modules/GeneModel";
+
+/** TODO
+ * 4.1 report individual isoforms
+ * 4.2 mouseover exons should report the normalized read counts in a tissue
+ *  * 6.5 exon expression map
+ * 13. Isoform Express Map
+
+ * 4. add tissue colors
+ * 4.2 reset gene model to no coloring
+ * 4.3 do we set a threshold on tissues if the gene isn't expressed?
+ * 4.5 automatic filtering of tissues based on median gene expression?
+ * 6. gene information
+ * 7. improve heatmap custom layout configuration
+ * 8. inconsistent highlight visual effects
+ * 9. add exon text label
+ * 10. add cell mouse events
+ * 11. implement the tool bar (should it be a hamburger?
+ * 11.5 tree scale bug
+ * 11.9 rebuild spliceViz
+ * 12.0 rewrite main.junction.js to a class
+ * 12.1 code review
+ * 14. EpiMap
+ * 15. Create a new github repo and consolidate all of my d3.v4 viz tools there
+ */
+
 
 /**
  *
@@ -35,24 +60,26 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
         .defer(d4.json, urls.tissue) // tissue colors
         .defer(d4.json, urls.geneModelUnfiltered + gencodeId) // unfiltered collapsed gene model
         .defer(d4.json, urls.geneModel + gencodeId) // final collapsed gene model
+        .defer(d4.json, urls.isoform + gencodeId) // isoform structures
         .defer(d4.json, urls.junctionExp + gencodeId) // junction expression data
         .defer(d4.json, urls.exonExp + gencodeId) // exon expression data of the final collapsed model only
-        .await(function(error, tissueJson, geneModelJson, curatedGeneModelJson, data, data2){
+        .await(function(error, tissueJson, geneModelJson, curatedGeneModelJson, isoformJson, data, data2){
             if (error !== null) throw "Web service error.";
             const tissues = parseTissues(tissueJson),
                 exons = parseExons(geneModelJson),
                 exonsCurated = parseExons(curatedGeneModelJson),
                 junctions = parseJunctions(data),
+                isoforms = parseIsoforms(isoformJson),
                 tissueTree = data.clusters.tissue,
                 junctionTree = data.clusters.junction, // junction tree is not really useful
                 jExpress = parseJunctionExpression(data),
-                exonExpress = parseExonExpression(data2);
+                exonExpress = parseExonExpression(data2,  exonsCurated, true); // TODO: remove hard-coded useLog boolean value
 
 
             // junction expression heat map
             let dmapConfig = new DendroHeatmapConfig("chart");
-            dmapConfig.setMargin({left: 10, top: 20, right: 200, bottom: 200});
-            dmapConfig.noTopTreePanel();
+            dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 1000});
+            dmapConfig.noTopTreePanel(1250);
             const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig);
             dmap.render(heatmapDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
 
@@ -67,7 +94,24 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
             };
             const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel");
             modelG.attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
-            geneModel.render(modelG, {w:modelConfig.w, h:modelConfig.h});
+            geneModel.render(modelG, modelConfig);
+
+            // render isoform structures, ignoring intron lengths
+            d4.keys(isoforms).forEach((id, i)=>{
+                let transcript = gene;
+                transcript["transcriptId"] = id; // TODO: or grab the actual transcript object through the web service
+                const isoformModel = new GeneModel(transcript, exons, isoforms[id], [], true);
+                const isoformG = dmap.visualComponents.svg.append("g").attr("id", id);
+                const h = 30;
+                const config = {
+                    x: modelConfig.x,
+                    y: modelConfig.y + modelConfig.h + ((i) * h),
+                    w: modelConfig.w,
+                    h: h
+                };
+                isoformG.attr("transform", `translate(${config.x}, ${config.y})`);
+                isoformModel.render(isoformG, config)
+            });
 
             // temporarily
             customize(geneModel, dmap, jExpress, exonExpress);
@@ -88,7 +132,7 @@ function customize(geneModel, map, jdata, edata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
     const ecolorScale = setColorScale(edata.map(d=>d.value), getColors("gnbu"));
-    drawColorLegend("Exon median read count", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y}, true);// TODO: remove hard-coded positions
+    drawColorLegend("Exon median read count per 1kb", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y}, true);// TODO: remove hard-coded positions
     mapSvg.selectAll(".exp-map-ylabel")
         .on("mouseover", function(d){
             const tissue = d4.select(this).text();
@@ -102,8 +146,8 @@ function customize(geneModel, map, jdata, edata){
             const tissue = d4.select(this).text();
             const j = jdata.filter((d)=>d.tissueId==tissue);
             const ex = edata.filter((d)=>d.tissueId==tissue);
-            geneModel.changeColor(mapSvg, j, ex, map.objects.heatmap.colorScale, ecolorScale);
             geneModel.changeTextlabel(mapSvg, "Expression in " + tissue);
+            geneModel.addData(mapSvg, j, ex, map.objects.heatmap.colorScale, ecolorScale);
         });
 
     mapSvg.selectAll(".exp-map-xlabel")
@@ -120,7 +164,7 @@ function customize(geneModel, map, jdata, edata){
         })
         .on("mouseover", function(d){
             const jId = d4.select(this).attr("id");
-            d4.select(this).classed("highlighted", true)
+            d4.select(this).classed("highlighted", true);
 
             // highlight the junction and its exons on the gene model
             mapSvg.selectAll(`.junc${jId}`).classed("highlighted", true);
@@ -131,7 +175,7 @@ function customize(geneModel, map, jdata, edata){
             }
         })
         .on("mouseout", function(d){
-            d4.select(this).classed("highlighted", false)
+            d4.select(this).classed("highlighted", false);
             d4.selectAll(".junc").classed("highlighted", false);
             d4.selectAll(".junc-curve").classed("highlighted", false);
             mapSvg.selectAll(".exon").classed("highlighted", false);
@@ -161,7 +205,7 @@ function customize(geneModel, map, jdata, edata){
     mapSvg.selectAll(".exon-curated")
         .on('mouseover', function(d){
             d4.select(this).classed("highlighted", true);
-            console.log(`Exon ${d.exonNumber}: ${d.chromStart} - ${d.chromEnd}`)
+            console.log(`Exon ${d.exonNumber}: ${d.chromStart} - ${d.chromEnd}. RPK: ${d.originalValue}`)
         })
         .on('mouseout', function(d){
             d4.select(this).classed("highlighted", false);

@@ -18,6 +18,12 @@
     fill: none;
 }
 
+.intron {
+    stroke: rgb(75, 134, 153);
+    stroke-width: 1px;
+    stroke-dasharray: 3, 3;
+}
+
 .exon {
     stroke: rgb(75, 134, 153);
     fill: none;

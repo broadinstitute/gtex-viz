@@ -1,3 +1,5 @@
+"use strict";
+
 export function getGtexUrls(){
     const host = "https://dev.gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
     return {
@@ -12,6 +14,7 @@ export function getGtexUrls(){
         "junctionExp": host + "expression/junctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
         "geneModel": host + "reference/collapsedGeneModel?unfiltered=false&release=v7&gencode_id=",
         "geneModelUnfiltered": host + "reference/collapsedGeneModel?unfiltered=true&release=v7&gencode_id=",
+        "isoform": host + "reference/transcript?release=v7&gencode_id=",
 
         "liverGeneExp": "data/top50.genes.liver.genomic.median.tpm.json", // top 50 genes in GTEx liver
         "cerebellumGeneExp": "data/top.gtex.cerebellum.genes.median.tpm.tsv",
@@ -68,16 +71,45 @@ export function parseJunctions(data){
                     });
 }
 
-export function parseExonExpression(json, useLog=true){
+/**
+ * parse transcript isoforms from the GTEx web service: "reference/transcript?release=v7&gencode_id="
+ * @param data {Json}
+ * returns a dictionary of transcript exon object lists indexed by ENST IDs
+ */
+export function parseIsoforms(data){
+    const attr = "transcript";
+    if(!data.hasOwnProperty(attr)) throw("parseIsoforms input error");
+    return data[attr].filter((d)=>{return "exon" == d.featureType})
+        .reduce((a, d)=>{
+        if (a[d.transcriptId] === undefined) a[d.transcriptId] = [];
+        a[d.transcriptId].push(d);
+        return a;
+    }, {});
+
+}
+
+/**
+ * parse final gene model exon expression
+ * expression is normalized to reads per kb
+ * @param json
+ * @param exons
+ * @param useLog
+ * @returns {*}
+ */
+export function parseExonExpression(json, exons, useLog=true){
+    const exonDict = exons.reduce((a, d)=>{a[d.exonId] = d; return a;}, {});
     const attr = "exonExpression";
     if(!json.hasOwnProperty(attr)) throw("parseExonExpression input error");
     // parse GTEx median exon counts
     const adjust = 1;
     json[attr].forEach((d) => {
-        d.value = useLog?Math.log10(Number(d.data) + adjust):+Number(d.data);
+        const exon = exonDict[d.exonId]; // for retrieving exon positions
+        if(!exon.hasOwnProperty("chromEnd")||!exon.hasOwnProperty("chromStart")) throw("parseExonExpression: data input error")
+        d.l = exon.chromEnd - exon.chromStart + 1;
+        d.value = useLog?Math.log10(Number(1000*d.data/d.l) + adjust):+Number(1000*d.data/d.l);
         d.x = d.exonId;
         d.y = d.tissueId;
-        d.originalValue = Number(d.data);
+        d.originalValue = Number(1000*d.data/d.l);
         d.id = d.gencodeId
     });
     return json[attr]

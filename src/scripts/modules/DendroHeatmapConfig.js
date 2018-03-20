@@ -57,11 +57,15 @@ export default class DendroHeatmapConfig {
         this.margin = margin;
     }
 
-    noTopTreePanel(){
+    setMainPanelWidth(w){
+        this.heatmapPanel.w = w;
+    }
+
+    noTopTreePanel(mainPanelWidth = window.innerWidth - (100 + 250)){
         this.topTreePanel = {x:0, y:0, h:20, w:0};
         this.leftTreePanel.y = this.margin.top*2;
         this.heatmapPanel.y = this.margin.top*2;
-        this.heatmapPanel.w = window.innerWidth - (100 + 250);
+        this.heatmapPanel.w = mainPanelWidth;
         this.legendPanel.y = 0; // in the margin top
     }
 

@@ -18,7 +18,7 @@ export default class GeneModel {
     /** NOTE: the exonNumber in exons & exonsCurated are not mappable
      *  To map exons of curated gene model to the original model, use genomic positions.
      */
-    constructor (gene, exons, exonsCurated, junctions){
+    constructor (gene, exons, exonsCurated, junctions, isIsoform=false){
         this.gene = gene;
         // console.log(this.gene); // for debugging
         this.exons = exons;
@@ -30,13 +30,14 @@ export default class GeneModel {
             if (a.junctionId > b.junctionId) return 1;
             return 0;
         }); // sorted by junction ID
+        this.isIsoform = isIsoform;
         // hard-coded for now
         this.intronLength = 0; // fixed fake intron length in base pairs
         this.minExonWidth = 5; // minimum exon width in pixels
     }
 
     changeTextlabel(dom, label){
-        dom.select("#modelInfo").text(label);
+        dom.selectAll("#modelInfo").text(label);
     }
     /**
      *
@@ -46,7 +47,7 @@ export default class GeneModel {
      * @param jscale {D3 scale} of colors of junction data
      * @param escale {D3 scale} of colors of exon data
      */
-    changeColor(dom, jdata, edata, jscale, escale){
+    addData(dom, jdata, edata, jscale, escale){
         dom.selectAll(".junc").style("fill", (d) => {
             const v = jdata.filter((z)=>z.junctionId==d.junctionId)[0];
             const jcolor = jscale(v.value);
@@ -72,7 +73,7 @@ export default class GeneModel {
         /* Note: exon.x, exon.w are in pixels for visual rendering */
         /* Note: exon.length is in base pairs */
         // calculating x and w for each exon
-        const exonY = 50; // TODO: remove hard-coded values
+        const exonY = dimensions.h/2; // TODO: remove hard-coded values
         this.exons.forEach((d, i) => {
             if (i == 0) d.x = 0;
             if(i > 0) d.x = this.exons[i-1].x + this.exons[i-1].w + this.xScale(this.intronLength);
@@ -81,113 +82,139 @@ export default class GeneModel {
 
         // calculaing x and w for each curated exon
         this.exonsCurated.forEach((d, i) => {
-            // map curated exon to the original gene model--find the original exon
-            const oriExon = this._findExon(d.chromStart);
-
-            if (Number(oriExon.chromStart) == Number(d.chromStart)) d.x = oriExon.x;
+            // map each curated exon to the original gene model--find the original exon
+            d.oriExon = this._findExon(d.chromStart)||this._findExon(d.chromEnd);
+            if (d.oriExon === undefined) throw `${this.gene.transcriptId}-${d.exonId} can't map to full gene model`;
+            if (Number(d.oriExon.chromStart) == Number(d.chromStart)) d.x = d.oriExon.x;
             else{
                 // this exon doesn't start from the oriExon start pos
-                const dist = Number(d.chromStart) - Number(oriExon.chromStart) + 1;
-                d.x += this.xScale(dist);
+                const dist = Number(d.chromStart) - Number(d.oriExon.chromStart) + 1;
+                d.x = d.oriExon.x + this.xScale(dist);
             }
             if (d.length === undefined) d.length = Number(d.chromEnd) - Number(d.chromStart) + 1;
             d.w = this.xScale(d.length)<this.minExonWidth?this.minExonWidth:this.xScale(d.length);
 
         });
 
-        // calculating x for each junction
-        this.junctions.forEach((d) => {
-            d.startExon = this._findExon(d.chromStart);
-            d.endExon = this._findExon(d.chromEnd);
-            d.displayName = d.junctionId;
-            if (d.startExon === undefined || d.endExon === undefined) {
-                // TODO: figure out why some junctions can't map to the gene model
-                // check unfiltered gene model
-                // Temporary solution: set d.filtered to true and ignore rendering this junction
-                d.filtered = true;
-                console.warn("Can't map junction to exons " + d.junctionId); // why the junction can't map
-            }
-            else {
-                d.displayName = `Exon ${d.startExon.exonNumber} - ${d.endExon.exonNumber}`;
-                if (d.startExon.exonNumber == d.endExon.exonNumber) {
-                    console.warn(d.junctionId + " is in Exon: " +d.startExon.chromStart + " - " + d.startExon.chromEnd );
-                } // what is happening
+        // evaluates whether it's an isoform or gene model
+        if(!this.isIsoform){
+            // NOTE: the rendering order is important. Do not casually change it.
+            // if this is a gene model, not an isoform
+            // calculating x for each junction
+            this.junctions.forEach((d) => {
+                d.startExon = this._findExon(d.chromStart);
+                d.endExon = this._findExon(d.chromEnd);
+                d.displayName = d.junctionId;
+                if (d.startExon === undefined || d.endExon === undefined) {
+                    // TODO: figure out why some junctions can't map to the gene model
+                    // check unfiltered gene model
+                    // Temporary solution: set d.filtered to true and ignore rendering this junction
+                    d.filtered = true;
+                    console.warn("Can't map junction to exons " + d.junctionId); // why the junction can't map
+                }
+                else {
+                    d.displayName = `Exon ${d.startExon.exonNumber} - ${d.endExon.exonNumber}`;
+                    if (d.startExon.exonNumber == d.endExon.exonNumber) {
+                        console.warn(d.junctionId + " is in Exon: " +d.startExon.chromStart + " - " + d.startExon.chromEnd );
+                    } // what is happening
 
-                d.filtered = false;
-                const dist = Number(d.chromStart) - Number(d.startExon.chromStart) + 1;
-                const dist2 = Number(d.chromEnd) - Number(d.endExon.chromStart) + 1;
+                    d.filtered = false;
+                    const dist = Number(d.chromStart) - Number(d.startExon.chromStart) + 1;
+                    const dist2 = Number(d.chromEnd) - Number(d.endExon.chromStart) + 1;
 
-                d.startX = d.startExon.x + this.xScale(dist);
-                d.endX = d.endExon.x + this.xScale(dist2);
-                d.cx = d.startX + (d.endX - d.startX + 1)/2; // junction is rendered at the midpoint between startX and endX
-                d.cy = exonY - 15 * Math.abs(Number(d.endExon.exonNumber) - Number(d.startExon.exonNumber) + 1);
-                if (d.cy < 0) d.cy = 0;
-            }
-        });
+                    d.startX = d.startExon.x + this.xScale(dist);
+                    d.endX = d.endExon.x + this.xScale(dist2);
+                    d.cx = d.startX + (d.endX - d.startX + 1)/2; // junction is rendered at the midpoint between startX and endX
+                    d.cy = exonY - 15 * Math.abs(Number(d.endExon.exonNumber) - Number(d.startExon.exonNumber) + 1);
+                    if (d.cy < 0) d.cy = 0;
+                }
+            });
 
-        // handling edge case: overlapping junctions, add jitter
-        // a.reduce((r,k)=>{r[k]=1+r[k]||1;return r},{})
-        const counts = this.junctions.reduce((r,d)=>{r[d.displayName]=1+r[d.displayName]||1;return r},{});
-        this.junctions.forEach((d) => {
-            // jitter
-            if(counts[d.displayName] > 1){ // overlapping junctions
-                // d.cx += Math.random()*20;
-                d.cy -= Math.random()*15;
-            }
-        });
+            // handling edge case: overlapping junctions, add jitter
+            // a.reduce((r,k)=>{r[k]=1+r[k]||1;return r},{})
+            const counts = this.junctions.reduce((r,d)=>{r[d.displayName]=1+r[d.displayName]||1;return r},{});
+            this.junctions.forEach((d) => {
+                // jitter
+                if(counts[d.displayName] > 1){ // overlapping junctions
+                    // d.cx += Math.random()*20;
+                    d.cy -= Math.random()*15;
+                }
+            });
 
-        /***** render junctions */
-        const curve = d4.line()
-            .x((d) => d.x)
-            .y((d) => d.y)
-            .curve(d4.curveCardinal);
+            /***** render junctions */
+            const curve = d4.line()
+                .x((d) => d.x)
+                .y((d) => d.y)
+                .curve(d4.curveCardinal);
 
-        this.junctions.filter((d) => !d.filtered)
-                .forEach((d, i) => {
-                    dom.append("path")
-                    .datum([{x:d.startX, y:exonY}, {x:d.cx, y:d.cy}, {x:d.endX, y:exonY}]) // the input points to draw the curve
-                    .attr("class", `junc-curve junc${d.junctionId}`)
-                    .attr("d", curve)
-                    .style("stroke", "#92bcc9");
-                });
+            this.junctions.filter((d) => !d.filtered)
+                    .forEach((d, i) => {
+                        dom.append("path")
+                        .datum([{x:d.startX, y:exonY}, {x:d.cx, y:d.cy}, {x:d.endX, y:exonY}]) // the input points to draw the curve
+                        .attr("class", `junc-curve junc${d.junctionId}`)
+                        .attr("d", curve)
+                        .style("stroke", "#92bcc9");
+                    });
 
 
-        const juncDots = dom.selectAll(".junc")
-            .data(this.junctions.filter((d)=>!d.filtered));
+            const juncDots = dom.selectAll(".junc")
+                .data(this.junctions.filter((d)=>!d.filtered));
 
-        // updating elements
-        juncDots.attr("cx", (d) => d.cx);
-        juncDots.attr("cy", (d) => d.cy); // TODO: remove hard-coded values
+            // updating elements
+            juncDots.attr("cx", (d) => d.cx);
+            juncDots.attr("cy", (d) => d.cy); // TODO: remove hard-coded values
 
-        // entering new elements
-        juncDots.enter().append("circle")
-            .attr("class", (d) => `junc junc${d.junctionId}`)
-            .attr("cx", (d) => d.cx)
-            .attr("cy", (d) => d.cy)
-            .merge(juncDots)
-            .attr("r", 4)
-            .style("fill", "rgb(239, 59, 44)");
+            // entering new elements
+            juncDots.enter().append("circle")
+                .attr("class", (d) => `junc junc${d.junctionId}`)
+                .attr("cx", (d) => d.cx)
+                .attr("cy", (d) => d.cy)
+                .merge(juncDots)
+                .attr("r", 4)
+                .style("fill", "rgb(239, 59, 44)");
 
-        /***** rendering exons */
-        const exonRects = dom.selectAll(".exon")
+            /***** rendering full gene model exons */
+            const exonRects = dom.selectAll(".exon")
             .data(this.exons);
 
-        // updating elements
-        exonRects.attr("x", (d) => d.x);
-        exonRects.attr("y", exonY);
+            // updating elements
+            exonRects.attr("x", (d) => d.x);
+            exonRects.attr("y", exonY);
 
-        // entering new elements
-        exonRects.enter().append("rect")
-            .attr("class", (d)=>`exon exon${d.exonNumber}`)
-            .attr("y", exonY)
-            .attr("rx", 2)
-            .attr('ry', 2)
-            .attr("width", (d) => d.w)
-            .attr("height", 15) // TODO: remove hard-coded values
-            .attr("x", (d) => d.x)
-            .merge(exonRects);
+            // entering new elements
+            exonRects.enter().append("rect")
+                .attr("class", (d)=>`exon exon${d.exonNumber}`)
+                .attr("y", exonY)
+                .attr("rx", 2)
+                .attr('ry', 2)
+                .attr("width", (d) => d.w)
+                .attr("height", 15) // TODO: remove hard-coded values
+                .attr("x", (d) => d.x)
+                .merge(exonRects);
 
-        /***** rendering curated exons */
+            // model info text label
+            dom.append("text")
+                .attr("id", "modelInfo") // TODO: no hard-coded value
+                .style("text-anchor", "start")
+                .attr("x", this.exons[this.exons.length -1].x + this.exons[this.exons.length-1].w + 15)
+                .attr("y", exonY + 15)
+                .style("font-size", 9)
+                .text(this.gene.transcriptId===undefined?"Gene Model":"");
+
+        }
+        else{
+            // if this is an isoform, render the intron lines
+            const intronLines = dom.selectAll(".intron")
+                .data(this.exonsCurated.filter((d, i) => i !== this.exonsCurated.length-1)); // filter the last element
+            intronLines.enter().append("line")
+                .attr("x1", (d) => d.x + d.w)
+                .attr("x2", (d, i) => this.exonsCurated[i+1].x)
+                .attr("y1", exonY + (15/2))
+                .attr("y2", exonY + (15/2))
+                .classed("intron", true)
+        }
+
+        /***** rendering curated exons or isoform exons */
         const exonRects2 = dom.selectAll(".exon-curated")
             .data(this.exonsCurated);
 
@@ -205,21 +232,18 @@ export default class GeneModel {
             .merge(exonRects2)
             .style("fill", "#eee");
 
+
+
         /***** rendering text labels */
 
         dom.append("text")
             .attr("id", "modelLabel") // TODO: no hard-coded value
             .style("text-anchor", "end")
             .attr("x", this.xScale(0) - 20)
-            .attr("y", exonY)
-            .text(this.gene.geneSymbol);
+            .attr("y", exonY + 15)
+            .style("font-size", 9)
+            .text(this.gene.transcriptId===undefined?`${this.gene.geneSymbol}`:this.gene.transcriptId);
 
-        dom.append("text")
-            .attr("id", "modelInfo") // TODO: no hard-coded value
-            .style("text-anchor", "start")
-            .attr("x", this.xScale(0))
-            .attr("y", exonY + 40) // TODO: eliminate hard-coded value
-            .text("Collaped Gene Model");
 
     }
 
