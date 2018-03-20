@@ -101,7 +101,7 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
                 transcript["transcriptId"] = id; // TODO: or grab the actual transcript object through the web service
                 const isoformModel = new GeneModel(transcript, exons, isoforms[id], [], true);
                 const isoformG = dmap.visualComponents.svg.append("g").attr("id", id);
-                const h = 30;
+                const h = 20;
                 const config = {
                     x: modelConfig.x,
                     y: modelConfig.y + modelConfig.h + ((i) * h),
@@ -145,8 +145,8 @@ function customize(geneModel, map, jdata, edata){
             const tissue = d4.select(this).text();
             const j = jdata.filter((d)=>d.tissueId==tissue);
             const ex = edata.filter((d)=>d.tissueId==tissue);
-            geneModel.changeTextlabel(mapSvg, "Expression in " + tissue);
-            geneModel.addData(mapSvg, j, ex, map.objects.heatmap.colorScale, ecolorScale);
+            geneModel.changeTextlabel(mapSvg.select("#geneModel"), "Expression in " + tissue);
+            geneModel.addData(mapSvg.select("#geneModel"), j, ex, map.objects.heatmap.colorScale, ecolorScale);
         });
 
     mapSvg.selectAll(".exp-map-xlabel")

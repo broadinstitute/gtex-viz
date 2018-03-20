@@ -40,6 +40,7 @@ export default class GeneModel {
     changeTextlabel(dom, label){
         dom.selectAll("#modelInfo").text(label);
     }
+
     /**
      *
      * @param dom {Object} of D3
@@ -49,6 +50,7 @@ export default class GeneModel {
      * @param escale {D3 scale} of colors of exon data
      */
     addData(dom, jdata, edata, jscale, escale){
+        // TODO: bind data to the dom elements?
         dom.selectAll(".junc").style("fill", (d) => {
             const v = jdata.filter((z)=>z.junctionId==d.junctionId)[0];
             const jcolor = jscale(v.value);
@@ -57,6 +59,7 @@ export default class GeneModel {
         });
         dom.selectAll(".exon-curated").style("fill", (d) => {
             const v = edata.filter((z)=>z.exonId==d.exonId)[0];
+            if (v === undefined) throw `${d.exonId} has no data`;
             const ecolor = escale(v.value);
             return ecolor;
         });
