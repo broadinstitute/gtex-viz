@@ -13,7 +13,7 @@ export default class DendroHeatmap {
      * @param heatmapData {List} of objects with attributes: x: String, y:String, value:Float, originalValue:Float, see the class Heatmap
      * @param config
      */
-    constructor(columnTree, rowTree, heatmapData, color="gnbu", r=2, config=new DendroHeatmapConfig()){
+    constructor(columnTree, rowTree, heatmapData, color="gnbu", r=2, config=new DendroHeatmapConfig(), useLog=true){
         this.config = config.get();
         this.data = {
             columnTree: columnTree,
@@ -24,7 +24,7 @@ export default class DendroHeatmap {
         this.objects = {
             columnTree: new Dendrogram(this.data.columnTree, "v"),
             rowTree: new Dendrogram(this.data.rowTree, "h"),
-            heatmap: new Heatmap(this.data.heatmap, true, color, r)
+            heatmap: new Heatmap(this.data.heatmap, useLog, color, r)
         };
         this.visualComponents = {
             tooltip: new Tooltip("tooltip", true), // TODO: remove hard-coded tooltip DOM ID

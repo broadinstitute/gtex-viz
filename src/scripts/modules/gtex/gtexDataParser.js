@@ -96,7 +96,7 @@ export function parseIsoforms(data){
  * @param useLog
  * @returns {*}
  */
-export function parseExonExpression(json, exons, useLog=true){
+export function parseExonExpression(json, exons){
     const exonDict = exons.reduce((a, d)=>{a[d.exonId] = d; return a;}, {});
     const attr = "exonExpression";
     if(!json.hasOwnProperty(attr)) throw("parseExonExpression input error");
@@ -106,23 +106,22 @@ export function parseExonExpression(json, exons, useLog=true){
         const exon = exonDict[d.exonId]; // for retrieving exon positions
         if(!exon.hasOwnProperty("chromEnd")||!exon.hasOwnProperty("chromStart")) throw("parseExonExpression: data input error")
         d.l = exon.chromEnd - exon.chromStart + 1;
-        d.value = useLog?Math.log10(Number(1000*d.data/d.l) + adjust):+Number(1000*d.data/d.l);
+        d.value = Number(d.data)/d.l;
         d.x = d.exonId;
         d.y = d.tissueId;
-        d.originalValue = Number(1000*d.data/d.l);
+        d.originalValue = Number(d.data)/d.l;
         d.id = d.gencodeId
     });
     return json[attr]
 }
 
-export function parseJunctionExpression(json, useLog=true){
+export function parseJunctionExpression(json){
     const attr = "junctionExpression";
     if(!json.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
     // parse GTEx median junction counts
-    const adjust = 1;
     json[attr].forEach((d) => {
         // TODO: add json attr error-checking
-        d.value = useLog?Math.log10(Number(d.data) + adjust):+Number(d.data);
+        d.value = Number(d.data);
         d.x = d.junctionId;
         d.y = d.tissueId;
         d.originalValue = Number(d.data);

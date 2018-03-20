@@ -107,7 +107,7 @@ export function drawColorLegend(title, dom, scale, config, useLog, cell={h:5, w:
 
     g.append("text")
         .attr("class", "color-legend")
-        .text((d) => useLog?(Math.pow(10, d)-1).toPrecision(2):d) // TODO: assuming log is base 10
+        .text((d) => useLog?(Math.pow(10, d)-1).toPrecision(2):d.toPrecision(2)) // TODO: assuming log is base 10
         .attr("x", (d, i) => cell.w * i)
         .attr("y", 0);
 

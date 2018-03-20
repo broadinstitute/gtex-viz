@@ -73,14 +73,13 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
                 tissueTree = data.clusters.tissue,
                 junctionTree = data.clusters.junction, // junction tree is not really useful
                 jExpress = parseJunctionExpression(data),
-                exonExpress = parseExonExpression(data2,  exonsCurated, true); // TODO: remove hard-coded useLog boolean value
-
+                exonExpress = parseExonExpression(data2,  exonsCurated);
 
             // junction expression heat map
             let dmapConfig = new DendroHeatmapConfig("chart");
-            dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 1000});
+            dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 2000}); // TODO: figure out a better way to extend the SVG height
             dmapConfig.noTopTreePanel(1250);
-            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig);
+            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig, false);
             dmap.render(heatmapDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
 
             // gene model rendering
@@ -132,7 +131,7 @@ function customize(geneModel, map, jdata, edata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
     const ecolorScale = setColorScale(edata.map(d=>d.value), getColors("gnbu"));
-    drawColorLegend("Exon median read count per 1kb", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y}, true);// TODO: remove hard-coded positions
+    drawColorLegend("Exon median read counts per base", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y});// TODO: remove hard-coded positions
     mapSvg.selectAll(".exp-map-ylabel")
         .on("mouseover", function(d){
             const tissue = d4.select(this).text();

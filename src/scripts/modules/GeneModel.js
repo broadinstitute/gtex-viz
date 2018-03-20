@@ -1,7 +1,7 @@
 import * as d4 from "d3"
 
 /*
-This class defines a gene model, rendering the exons and junctions of a given gene. The model is rendered based on
+This class defines a gene model (or isoform), rendering the exons and junctions of a given gene. The model is rendered based on
 genomic positions, regardless of the strand and transcriptional direction.
  */
 
@@ -13,6 +13,7 @@ export default class GeneModel {
      * @param exonsCurated {List} of exon objects in the final gene model. This is pretty specific to GTEx.
      *        If this list isn't available for your data, then just pass in the same exon list again.
      * @param junctions {List} of junction objects with attributes: chrom, chromStart, chromEnd, junctionId
+     * @param isIsoform {Boolean}
      */
 
     /** NOTE: the exonNumber in exons & exonsCurated are not mappable
@@ -240,7 +241,7 @@ export default class GeneModel {
             .attr("id", "modelLabel") // TODO: no hard-coded value
             .style("text-anchor", "end")
             .attr("x", this.xScale(0) - 20)
-            .attr("y", exonY + 15)
+            .attr("y", exonY + 15/2)
             .style("font-size", 9)
             .text(this.gene.transcriptId===undefined?`${this.gene.geneSymbol}`:this.gene.transcriptId);
 
