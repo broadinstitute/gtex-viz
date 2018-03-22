@@ -77,29 +77,39 @@ export function searchById(glist, domId, toolbarId, infoboxId, urls = getGtexUrl
     d4.queue()
     .defer(d4.json, urls.tissue) // get tissue colors
     .defer(d4.json, urls.geneId + glist.join(",")) // get gene objects
-    .await(function(err2, data1, data2){
-        const tissues = parseTissues(data1);
-        const max = 50;
-        let gencodeIds = data2.geneId.map((d) => d.gencodeId);
-        if (gencodeIds.length == 0){
+    .await(function(err2, tJson, gJson){
+        const tissues = parseTissues(tJson),
+            max = 50,
+            attr = "geneId";
+        if (!gJson.hasOwnProperty(attr)) throw "gene web service parsing error";
+        let geneObjects = gJson[attr];
+        if (geneObjects.length == 0) {
+            // validate if gene list is empty
             message = "Fatal Error: the gene list is empty.<br/>";
-        }
-        else {
-            if (gencodeIds.length < glist.length){
-                message = "Warning: Not all genes are found.<br/>";
+        } else {
+            // more input validation
+            if (geneObjects.length < glist.length) { // validate if all input genes are found
+                const allIds = geneObjects.map((d)=>d.gencodeId).concat(geneObjects.map((d)=>d.geneSymbolUpper)); // gather all gencodeIds and gene symbols in retrieved geneObjects
+                const missingGenes = glist.filter((d) => !allIds.includes(d));
+                message = `Warning: Not all genes are found: ${missingGenes.join(",")}<br/>`;
             }
-            if (gencodeIds.length > max){
+            if (geneObjects.length > max) { // validate if the number of input genes exceeds the maximum
+                //language=HTML
                 message += `Warning: Too many genes. Input list truncated to the first ${max}.<br/>`;
-                gencodeIds = gencodeIds.slice(0, max);
+                geneObjects = geneObjects.slice(0, max); // slice the input gene list to the maximum allowed entries
             }
-            d4.json(urls.medExpById + gencodeIds.join(","), function(eData){ // get all median express data of these genes in all tissues
+
+            // visualization rendering
+            // get all median express data of these genes in all tissues
+            const gencodeIds = geneObjects.map((d) => d.gencodeId);
+            d4.json(urls.medExpById + gencodeIds.join(","), function (eData) {
                 const tissueTree = eData.clusters.tissue,
-                      geneTree = eData.clusters.gene,
-                      expression = parseMedianExpression(eData);
-                const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
+                    geneTree = eData.clusters.gene,
+                    expression = parseMedianExpression(eData),
+                    dmap = new DendroHeatmap(tissueTree, geneTree, expression);
                 dmap.render(domId);
                 customization(dmap, tissues, toolbarId);
-                
+
             });
         }
         $(`#${infoboxId}`).html(message);
