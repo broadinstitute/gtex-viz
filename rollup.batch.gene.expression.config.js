@@ -12,7 +12,7 @@ const name= 'BatchGeneExpression';
 export default {
     input: 'src/scripts/' + name + '.js',
     output: {
-        file: process.env.NODE_ENV=='production'?'build/js/batch-gene-expression.bundle.min.js':'build/js/batch-gene-expression.bundle.dev.js',
+        file: process.env.NODE_ENV=='prod'?'build/js/batch-gene-expression.bundle.min.js':'build/js/batch-gene-expression.bundle.dev.js',
         format: 'iife'
     },
     sourcemap: 'inline',
@@ -20,8 +20,8 @@ export default {
     plugins: [
         nodeResolve({jsnext: true, main: true}),
         replace({
-          ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
+          ENV: JSON.stringify(process.env.NODE_ENV || 'dev'),
         }),
-        (process.env.NODE_ENV === 'production' && uglify({}, minify)) // uglify for production: NODE_ENV=production rollup -c
+        (process.env.NODE_ENV === 'prod' && uglify({}, minify)) // uglify for production: NODE_ENV=production rollup -c
     ]
 }

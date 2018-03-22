@@ -49,7 +49,7 @@
                 <form id="geneExpressForm" style="background:#f2f7fd; padding: 15px;">
                      <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
                         <label for="genes" class="align-top">Enter Gencode IDs or Gene Names</label>
-                        <textarea id="genes" rows="20" class="form-control" style="font-size:12px;"></textarea>
+                        <textarea id="genes" rows="20" class="form-control" style="font-size:12px; text-transform:uppercase;"></textarea>
 
                      </div>
                     <div id="batchSubmit" class="btn btn-info btn-sm" style="margin-bottom:1em;">Search</div>
@@ -93,7 +93,7 @@
             });
             $('#batchSubmit').click(function(){
                 reset();
-                let glist = $('#genes').val().replace(/ /g, "").split(",").filter((d) => {return d!=""});
+                let glist = $('#genes').val().replace(/ /g, "").toUpperCase().split(",").filter((d) => {return d!=""});
                 if (glist.length == 0){
                     alert("Must provide at least one gene");
                     throw "Gene input error";
