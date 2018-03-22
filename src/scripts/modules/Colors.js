@@ -1,21 +1,23 @@
 import * as d4 from "d3";
 
-export function colorChart(shuffle=true){
+export function colorChart(shuffle=false){
     // ref: http://cloford.com/resources/colours/namedcol.htm
     const colors = [
-        "darkturquoise","palevioletred","cornflowerblue", "sandybrown", "darkseagreen","burlywood","steelblue",
-        "lightpink",  "hotpink", "mediumvioletred", "orchid",
+        "darkred", "darkslateblue", "darkgray", "red", "sienna","darkgoldenrod",
+        "olive","sandybrown", "deepskyblue","cadetblue","forestgreen",
+        "dimgray", "darkturquoise","palevioletred","cornflowerblue", "dodgerblue",
+        "darkseagreen","burlywood","steelblue","darkgreen","darkkhaki",
+        "hotpink", "mediumvioletred", "orchid","indianred", "saddlebrown",
         "crimson", "darkmagenta", "mediumorchid", "indigo", "mediumslateblue",
-        "lightskyblue", "darkslateblue", "lightslategray", "dodgerblue",
-        "deepskyblue","cadetblue",  "paleturquoise",
-        "mediumaquamarine","teal", "medianturquoise", "limegreen",
-        "palegreen", "forestgreen", "darkgreen", "yellowgreen", "wheat",
-        "olivedrab","olive", "darkkhaki", "khaki", "gold",
-        "goldenrod", "darkgoldenrod", "orange", "tan", "peru",
-        "chocolate","saddlebrown", "sienna", "lightsalmon",
-        "coral","orangered", "darksalmon", "tomato", "salmon",
-        "lightcoral", "rosybrown", "indianred", "red", "firebrick",
-        "darkred", "gainsboro", "silver", "darkgray", "gray", "dimgray"
+        "olivedrab",  "khaki", "gold","chocolate", "orange", "tan",
+        "peru","coral","orangered", "darksalmon", "tomato", "salmon",
+        "mediumaquamarine","teal", "medianturquoise", "limegreen", "firebrick",
+        "palegreen",  "yellowgreen", "wheat","goldenrod", "rosybrown",
+
+
+         "lightsalmon","paleturquoise",
+        "lightcoral", "gainsboro",
+        "lightpink","silver", "gray","lightskyblue", "lightslategray"
     ];
     if (shuffle) return shuffleColors(colors);
     return colors;
