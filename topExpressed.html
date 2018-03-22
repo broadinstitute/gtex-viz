@@ -58,7 +58,7 @@
 
             </div>
         </div>
-
+        <div id="messageBox" style="color:#4eb3d3;"></div>
         <div id="expMapToolbar" style="display:none;"></div> <!-- the toolbar Div -->
         <div id="chart"></div> <!-- the heatmap Div -->
         <div id="boxplot"></div> <!-- the boxplot DIV -->
@@ -82,23 +82,14 @@
         });
         $("#datasetSelector").change(function(){
             const tissueId = $(this).val();
-            $('#spinner').show();
-            reset();
-            BatchGeneExpression.renderTopExpressed(tissueId, "chart", "expMapToolbar");
+            BatchGeneExpression.renderTopExpressed(tissueId, "chart", "expMapToolbar", "messageBox");
         });
 
         // mayo
         $("#dataset2").click(function(){
-            $('#spinner').show();
-            reset();
-            BatchGeneExpression.renderMayo("chart", "expMapToolbar");
+            BatchGeneExpression.renderMayo("chart", "expMapToolbar", "messageBox");
         });
 
-        function reset(){
-            $("#chart").empty();
-            $("#boxplot").empty();
-            $("#expMapToolbar").empty();
-        }
 
     </script>
 

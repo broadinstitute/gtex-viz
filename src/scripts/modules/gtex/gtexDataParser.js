@@ -7,7 +7,8 @@ export function getGtexUrls(){
         "geneId": host + "reference/geneId?format=json&geneId=",
         "geneExp": host + "expression/geneExpression?datasetId=gtex_v7&gencodeId=",
         "tissue":  host + "dataset/color",
-        "topInTissue": host + "expression/topExpressedGenes?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
+        "topInTissueFiltered": host + "expression/topExpressedGenes?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
+        "topInTissue": host + "expression/topExpressedGenes?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
         "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
 
         "exonExp": host + "expression/exonExpression?datasetId=gtex_v7&gencodeId=",

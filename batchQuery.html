@@ -45,7 +45,6 @@
                 </ul>
 
                 <hr>
-                <div id="messageBox" style="color: #CB181D;"></div>
                 <form id="geneExpressForm" style="background:#f2f7fd; padding: 15px;">
                      <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
                         <label for="genes" class="align-top">Enter Gencode IDs or Gene Names</label>
@@ -61,6 +60,7 @@
             </div>
 
             <div id="searchResult" class="col-xs-12 col-md-10">
+                <div id="messageBox" style="color: #CB181D;"></div>
                 <div id="expMapToolbar" style="display:none;"></div> <!-- the toolbar Div -->
                 <div id="chart"></div> <!-- the heatmap Div -->
                 <div id="boxplot"></div> <!-- the boxplot Div -->
@@ -92,24 +92,13 @@
                 $('#genes').val(examples);
             });
             $('#batchSubmit').click(function(){
-                reset();
                 let glist = $('#genes').val().replace(/ /g, "").toUpperCase().split(",").filter((d) => {return d!=""});
                 if (glist.length == 0){
                     alert("Must provide at least one gene");
                     throw "Gene input error";
                 }
-
-                $('#spinner').show();
-                BatchGeneExpression.searchById(glist, domId, "expMapToolbar", "messageBox");
-
+                BatchGeneExpression.searchById(glist, [], domId, "expMapToolbar", "messageBox");
             });
-        }
-
-        function reset(){
-            $("#chart").empty();
-            $("#boxplot").empty();
-            $("#expMapToolbar").empty();
-            $("#messageBox").empty();
         }
 
     </script>
