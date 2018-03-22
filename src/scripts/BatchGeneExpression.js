@@ -85,7 +85,7 @@ export function searchById(glist, domId, toolbarId, infoboxId, urls = getGtexUrl
             message = "Fatal Error: the gene list is empty.<br/>";
         }
         else {
-            if (gencodeIds.length <= glist.length){
+            if (gencodeIds.length < glist.length){
                 message = "Warning: Not all genes are found.<br/>";
             }
             if (gencodeIds.length > max){
