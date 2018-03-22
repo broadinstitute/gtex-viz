@@ -25,8 +25,16 @@ export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
             const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
             dmap.render(domId);
             // customization for GTEx
-            const tissueDict = tissues.reduce((a, d)=>{a[d.tissue_id] = d; return a;}, {});
-            const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{a[d.gencodeId]=d; return a;}, {});
+            const tissueDict = tissues.reduce((a, d)=>{
+                if(!d.hasOwnProperty("tissueId")) throw "tissue has no attr tissue_id";
+                a[d.tissueId] = d;
+                return a;
+            }, {});
+            const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
+                if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
+                a[d.gencodeId]=d; 
+                return a;
+            }, {});
             _customizeLabels(dmap, tissueDict, geneDict);
             _addTissueColors(dmap, tissueDict);
             _customizeMouseEvents(dmap, tissueDict, geneDict);
@@ -46,14 +54,14 @@ export function reset(ids){
  */
 export function createDatasetMenu(domId, urls = getGtexUrls()){
     d4.json(urls.tissue, function(err, results){
-        let tissues = results.color;
+        let tissues = parseTissues(results);
         tissues.forEach((d) => {
-            d.id = d.tissue_id;
-            d.text = d.tissue_name;
+            d.id = d.tissueId;
+            d.text = d.tissueName;
         });
         tissues.sort((a, b) => {
-            if(a.tissue_name < b.tissue_name) return -1;
-            if(a.tissue_name > b.tissue_name) return 1;
+            if(a.tissueName < b.tissueName) return -1;
+            if(a.tissueName > b.tissueName) return 1;
             return 0;
         });
 
@@ -137,8 +145,16 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
                 dmap.render(domId);
                 $('#spinner').hide();
                 // customization for GTEx
-                const tissueDict = tissues.reduce((a, d)=>{a[d.tissue_id] = d; return a;}, {});
-                const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{a[d.gencodeId]=d; return a;}, {});
+                const tissueDict = tissues.reduce((a, d)=>{
+                    if (!d.hasOwnProperty("tissueId")) throw "tissue has not attr tissue_id";
+                    a[d.tissueId] = d;
+                    return a;
+                }, {});
+                const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
+                    if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
+                    a[d.gencodeId]=d;
+                    return a;
+                }, {});
                 _customizeLabels(dmap, tissueDict, geneDict);
                 _addTissueColors(dmap, tissueDict);
                 _customizeMouseEvents(dmap, tissueDict, geneDict);
@@ -163,7 +179,7 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
 function _customizeLabels(dmap, tissueDict, geneDict){
     /***** Change row labels to tissue names *****/
     d4.select("#" + dmap.config.panels.main.id).selectAll(".exp-map-xlabel")
-        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
 
     /***** Change column labels to gene symbols *****/
     d4.select("#" + dmap.config.panels.main.id).selectAll(".exp-map-ylabel")
@@ -182,14 +198,14 @@ function _addTissueColors(dmap, tissueDict){
     let dots = d4.select("#"+id).selectAll(".exp-map-xcolor").data(heatmap.xList);
 
      // updates old elements
-    dots.attr("fill", (d) => tissueDict[d]===undefined?"#000000":`#${tissueDict[d].tissue_color_hex}`);
+    dots.attr("fill", (d) => tissueDict[d]===undefined?"#000000":`#${tissueDict[d].colorHex}`);
 
     // enters new elements
     dots.enter().append("circle")
         .attr('cx', (d) => heatmap.xScale(d) + heatmap.xScale.bandwidth()/2)
         .attr('cy', heatmap.yScale.range()[1] + 10)
         .attr("r", 3)
-        .attr("fill", (d) => tissueDict[d] === undefined? "#000000":`#${tissueDict[d].tissue_color_hex}`)
+        .attr("fill", (d) => tissueDict[d] === undefined? "#000000":`#${tissueDict[d].colorHex}`)
         .attr("opacity", 0.75)
         .attr("class", "exp-map-xcolor");
 
@@ -224,7 +240,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         d4.selectAll(".exp-map-ylabel").filter(`.${colClass}`)
             .classed('highlighted', true);
 
-        let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissue_name;
+        let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueName;
         let column = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
         tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median (${d.unit?d.unit:"TPM"}): ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
@@ -282,7 +298,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
  */
 function _renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
     // tissueOrder is a list of tissue objects {id:display name} in the same order as the x axis of the heat map.
-    let tissueOrder = dmap.objects.heatmap.xScale.domain().map((d, i) => {return {id:d, name:tissueDict[d].tissue_name}});
+    let tissueOrder = dmap.objects.heatmap.xScale.domain().map((d, i) => {return {id:d, name:tissueDict[d].tissueName}});
     // get gene expression data
     let data = dmap.data.external;
 
@@ -450,7 +466,7 @@ function _sortTissues (xlist, dmap, tissueDict){
 
     // changes the tissue display text to tissue names
     d4.selectAll(".exp-map-xlabel")
-        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissue_name);
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
     addTissueColors(dmap, tissueDict);
 
     // hides the boxplot

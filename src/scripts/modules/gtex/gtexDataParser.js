@@ -6,7 +6,7 @@ export function getGtexUrls(){
         // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
         "geneId": host + "reference/geneId?format=json&geneId=",
         "geneExp": host + "expression/geneExpression?datasetId=gtex_v7&gencodeId=",
-        "tissue":  host + "dataset/color",
+        "tissue":  host + "dataset/tissueInfo",
         "topInTissueFiltered": host + "expression/topExpressedGenes?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
         "topInTissue": host + "expression/topExpressedGenes?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
         "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
@@ -44,14 +44,25 @@ export function getGeneClusters(dataset){
 }
 
 export function parseTissues(data){
-    const attr = "color";
-    if(!data.hasOwnProperty(attr)) throw "parseTissues input error.";
-    return data[attr];
+    const attr = "tissueInfo";
+    if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseTissues input error.";
+    const tissues = data[attr];
+
+    // sanity check
+    ["tissueId", "tissueName", "colorHex"].forEach((d)=>{
+        if (!tissues[0].hasOwnProperty(d)) throw "Fatal Error: parseTissue attr not found: " + d;
+    });
+
+    return tissues;
 }
 
 export function parseExons(data){
     const attr = "collapsedGeneModel";
-    if(!data.hasOwnProperty(attr)) throw "parseExons input error.";
+    if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseExons input error.";
+    // sanity check
+    ["featureType"].forEach((d)=>{
+        if (!data[attr][0].hasOwnProperty(d)) throw "Fatal Error: parseExons attr not found: " + d;
+    });
     return data[attr].filter((d)=>d.featureType == "exon");
 }
 
