@@ -136,7 +136,7 @@ export default class Dendrogram {
         // axis
         // Add the x Axis
         dom.append("g")
-            .attr("class", "axis")
+            .attr("class", "dendrogram-axis")
             .attr("transform", "translate(0," + this.height + ")")
             .call(
                 d4.axisBottom(this.xScale)
@@ -214,7 +214,7 @@ export default class Dendrogram {
         // Add the x Axis
         dom.append("g")
             // .attr("transform", `translate(${this.width}, 0)`)
-            .attr("class", "axis")
+            .attr("class", "dendrogram-axis")
             .call(
                 d4.axisLeft(this.yScale)
                 .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
