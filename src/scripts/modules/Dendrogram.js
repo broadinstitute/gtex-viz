@@ -124,7 +124,7 @@ export default class Dendrogram {
             // .attr("fill", "#4b8699")
             .attr('fill', '#333')
             .attr("opacity", 0.5)
-            .attr("class", "node")
+            .attr("class", "dendrogram-node")
             .on("mouseover", function(d){
                 d3.select(this).attr("r", 3);
                 console.log(d.leaves());
@@ -201,7 +201,7 @@ export default class Dendrogram {
             // .attr("fill", "#4b8699")
             .attr('fill', '#333')
             .attr("opacity", 0.5)
-            .attr("class", "node")
+            .attr("class", "dendrogram-node")
             .on("mouseover", function(d){
                 d3.select(this).attr("r", 3);
                 console.log(d.leaves());

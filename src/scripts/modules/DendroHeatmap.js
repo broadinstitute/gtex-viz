@@ -27,8 +27,10 @@ export default class DendroHeatmap {
             heatmap: new Heatmap(this.data.heatmap, useLog, color, r)
         };
         this.visualComponents = {
-            tooltip: new Tooltip("tooltip", true), // TODO: remove hard-coded tooltip DOM ID
-            svg: undefined
+            tooltip: new Tooltip("tooltip", false), // TODO: remove hard-coded tooltip DOM ID
+            svg: undefined,
+            topTree: undefined,
+            leftTree: undefined
         };
     }
 
@@ -42,8 +44,8 @@ export default class DendroHeatmap {
         this._updateConfig(this.objects.columnTree, this.objects.rowTree, legendPos);
         let svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
 
-        this._renderTree(svg, this.objects.columnTree, this.config.panels.top, showTopTree);
-        this._renderTree(svg, this.objects.rowTree, this.config.panels.left, showLeftTree);
+        this.visualComponents.topTree = this._renderTree(svg, this.objects.columnTree, this.config.panels.top, showTopTree);
+        this.visualComponents.leftTree = this._renderTree(svg, this.objects.rowTree, this.config.panels.left, showLeftTree);
 
         const xlist = showTopTree?this.objects.columnTree.xScale.domain():this.objects.columnTree.xScale.domain().sort();
         const ylist = showLeftTree?this.objects.rowTree.yScale.domain():this.objects.rowTree.yScale.domain().sort();
@@ -69,15 +71,7 @@ export default class DendroHeatmap {
         heatmap.redraw(g, xList, yList, {w: config.w, h: config.h});
         heatmap.drawColorLegend(svg, this.config.panels.legend);
     }
-    //
-    // _renderHeatmapLegend(svg, heatmap){
-    //      // the heatmap color legend panel
-    //     const legendConfig = this.config.panels.legend;
-    //     const legendG = svg.append("g")
-    //         .attr("id", legendConfig.id)
-    //         .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
-    //     heatmap.drawLegend(legendG, legendConfig.cell.w);
-    // }
+
     /**
      * renders a newick tree
      * @param svg {Selection} a d3 selection object
@@ -104,12 +98,12 @@ export default class DendroHeatmap {
             d4.select(this)
                 .attr("r", 2)
                 .attr("fill", "#333");
-            const leaves = d.leaves().map((node)=>node.data.name);
             tooltip.hide();
         };
-        g.selectAll(".node")
+        g.selectAll(".dendrogram-node")
             .on("mouseover", mouseover)
             .on("mouseout", mouseout);
+        return g;
     }
 
     /**

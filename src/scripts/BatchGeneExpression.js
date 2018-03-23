@@ -281,6 +281,38 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         _renderBoxplot(action, d, geneDict, tissueDict, dmap);
     };
 
+    // mouse events of trees -- use closure
+
+    const treeNodeMouseover = function(labelClass){
+        return function(d){
+            d4.select(this)
+                .attr("r", 6)
+                .attr("fill", "red");
+            const ids = d.leaves().map((node)=>node.data.name);
+            // highlight labels
+            svg.selectAll(labelClass)
+                .filter((label)=>ids.includes(label))
+                .classed("highlighted", true);
+        }
+    };
+
+    const treeNodeMouseout = function(labelClass){
+        return function(d){
+            d4.select(this)
+            .attr("r", 2)
+            .attr("fill", "#333");
+            svg.selectAll(labelClass).classed("highlighted", false);
+        }
+    };
+
+    dmap.visualComponents.topTree.selectAll(".dendrogram-node")
+        .on("mouseover", treeNodeMouseover(".exp-map-xlabel"))
+        .on("mouseout", treeNodeMouseout(".exp-map-xlabel"));
+
+    dmap.visualComponents.leftTree.selectAll(".dendrogram-node")
+        .on("mouseover", treeNodeMouseover(".exp-map-ylabel"))
+        .on("mouseout", treeNodeMouseout(".exp-map-ylabel"));
+
     svg.selectAll(".exp-map-cell")
         .on("mouseover", cellMouseover)
         .on("mouseout", cellMouseout);
