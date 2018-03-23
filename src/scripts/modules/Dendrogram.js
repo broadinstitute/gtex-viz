@@ -124,7 +124,7 @@ export default class Dendrogram {
             // .attr("fill", "#4b8699")
             .attr('fill', '#333')
             .attr("opacity", 0.5)
-            .attr("class", "node")
+            .attr("class", "dendrogram-node")
             .on("mouseover", function(d){
                 d3.select(this).attr("r", 3);
                 console.log(d.leaves());
@@ -136,7 +136,7 @@ export default class Dendrogram {
         // axis
         // Add the x Axis
         dom.append("g")
-            .attr("class", "axis")
+            .attr("class", "dendrogram-axis")
             .attr("transform", "translate(0," + this.height + ")")
             .call(
                 d4.axisBottom(this.xScale)
@@ -201,7 +201,7 @@ export default class Dendrogram {
             // .attr("fill", "#4b8699")
             .attr('fill', '#333')
             .attr("opacity", 0.5)
-            .attr("class", "node")
+            .attr("class", "dendrogram-node")
             .on("mouseover", function(d){
                 d3.select(this).attr("r", 3);
                 console.log(d.leaves());
@@ -214,7 +214,7 @@ export default class Dendrogram {
         // Add the x Axis
         dom.append("g")
             // .attr("transform", `translate(${this.width}, 0)`)
-            .attr("class", "axis")
+            .attr("class", "dendrogram-axis")
             .call(
                 d4.axisLeft(this.yScale)
                 .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])

@@ -1,7 +1,7 @@
 import * as d4 from "d3";
 
 export default class Tooltip {
-    constructor(id, verbose=true, offsetX=30, offsetY=-40, duration=500){
+    constructor(id, verbose=false, offsetX=30, offsetY=-40, duration=500){
         this.id = id;
         this.verbose = verbose;
         this.offsetX = offsetX;

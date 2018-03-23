@@ -281,6 +281,38 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         _renderBoxplot(action, d, geneDict, tissueDict, dmap);
     };
 
+    // mouse events of trees -- use closure
+
+    const treeNodeMouseover = function(labelClass){
+        return function(d){
+            d4.select(this)
+                .attr("r", 6)
+                .attr("fill", "red");
+            const ids = d.leaves().map((node)=>node.data.name);
+            // highlight labels
+            svg.selectAll(labelClass)
+                .filter((label)=>ids.includes(label))
+                .classed("highlighted", true);
+        }
+    };
+
+    const treeNodeMouseout = function(labelClass){
+        return function(d){
+            d4.select(this)
+            .attr("r", 2)
+            .attr("fill", "#333");
+            svg.selectAll(labelClass).classed("highlighted", false);
+        }
+    };
+
+    dmap.visualComponents.topTree.selectAll(".dendrogram-node")
+        .on("mouseover", treeNodeMouseover(".exp-map-xlabel"))
+        .on("mouseout", treeNodeMouseout(".exp-map-xlabel"));
+
+    dmap.visualComponents.leftTree.selectAll(".dendrogram-node")
+        .on("mouseover", treeNodeMouseover(".exp-map-ylabel"))
+        .on("mouseout", treeNodeMouseout(".exp-map-ylabel"));
+
     svg.selectAll(".exp-map-cell")
         .on("mouseover", cellMouseover)
         .on("mouseout", cellMouseout);
@@ -310,18 +342,28 @@ function _renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
     const layout = {
         title: "",
         font: {
-            family: 'Libre Franklin',
+            family: 'Libre Franklin,Helvetica, sans-serif',
             size:11
         },
         yaxis: {
             title: 'TPM',
-            zeroline: false
+            zeroline: false,
+            tickfont: {
+                size: 9
+            }
+        },
+        xaxis: {
+            tickfont: {
+                size: 9
+            },
+            tickangle: 30
         },
         boxmode: 'group',
         margin: {
             t:0,
         },
-        showlegend: true
+        showlegend: true,
+
     };
 
     // action
@@ -374,7 +416,6 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
     if (useFilters !== undefined){
         const id0 = "filterOptions";
         let $button0 = $("<a/>").attr("id", id0)
-            .attr("href", `#${id0}`)
             .addClass("btn btn-default").appendTo($barDiv);
         $("<i/>").addClass("fa fa-filter").appendTo($button0);
 
@@ -394,7 +435,6 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
 
     const id1 = "sortTissues";
     let $button1 = $("<a/>").attr("id", id1)
-        .attr("href", `#${id1}`)
         .addClass("btn btn-default").appendTo($barDiv);
     $("<i/>").addClass("fa fa-sort-alpha-down").appendTo($button1); // a fontawesome icon
 
@@ -415,7 +455,6 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
 
     const id2 = "clusterTissues";
     let $button2 = $("<a/>").attr("id", id2)
-        .attr("href", `#${id2}`)
         .addClass("btn btn-default").appendTo($barDiv);
     $("<i/>").addClass("fa fa-code-branch").appendTo($button2);
 
@@ -434,7 +473,6 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
 
     const id3 = "expMapDownload";
     let $button3 = $("<a/>").attr("id", id3)
-        .attr("href", `#${id3}`)
         .addClass("btn btn-default").appendTo($barDiv);
     $("<i/>").addClass("fa fa-save").appendTo($button3);
 

@@ -90,6 +90,7 @@
             $('#searchExample').click(function(){
                 const examples = "FOO,ACTN3, SLK, ENSG00000121879.3, NDRG4, ENSG00000141510.11, ENSG00000039068.14, ENSG00000107485.11, ENSG00000095015.5, ENSG00000141027.16, ENSG00000065526.6, TP53";
                 $('#genes').val(examples);
+                return false; // this prevents a # sign being added to the URL...
             });
             $('#batchSubmit').click(function(){
                 let glist = $('#genes').val().replace(/ /g, "").toUpperCase().split(",").filter((d) => {return d!=""});
@@ -98,6 +99,7 @@
                     throw "Gene input error";
                 }
                 BatchGeneExpression.searchById(glist, [], domId, "expMapToolbar", "messageBox");
+                return false;
             });
         }
 

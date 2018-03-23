@@ -134,7 +134,6 @@ function customize(geneModel, map, jdata, edata){
     drawColorLegend("Exon median read counts per base", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y});// TODO: remove hard-coded positions
     mapSvg.selectAll(".exp-map-ylabel")
         .on("mouseover", function(d){
-            const tissue = d4.select(this).text();
              d4.select(this)
                 .classed('highlighted', true);
 
