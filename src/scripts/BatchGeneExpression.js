@@ -342,18 +342,28 @@ function _renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
     const layout = {
         title: "",
         font: {
-            family: 'Libre Franklin',
+            family: 'Libre Franklin,Helvetica, sans-serif',
             size:11
         },
         yaxis: {
             title: 'TPM',
-            zeroline: false
+            zeroline: false,
+            tickfont: {
+                size: 9
+            }
+        },
+        xaxis: {
+            tickfont: {
+                size: 9
+            },
+            tickangle: 30
         },
         boxmode: 'group',
         margin: {
             t:0,
         },
-        showlegend: true
+        showlegend: true,
+
     };
 
     // action
