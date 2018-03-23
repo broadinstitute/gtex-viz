@@ -406,7 +406,6 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
     if (useFilters !== undefined){
         const id0 = "filterOptions";
         let $button0 = $("<a/>").attr("id", id0)
-            .attr("href", `#${id0}`)
             .addClass("btn btn-default").appendTo($barDiv);
         $("<i/>").addClass("fa fa-filter").appendTo($button0);
 
@@ -426,7 +425,6 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
 
     const id1 = "sortTissues";
     let $button1 = $("<a/>").attr("id", id1)
-        .attr("href", `#${id1}`)
         .addClass("btn btn-default").appendTo($barDiv);
     $("<i/>").addClass("fa fa-sort-alpha-down").appendTo($button1); // a fontawesome icon
 
@@ -447,7 +445,6 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
 
     const id2 = "clusterTissues";
     let $button2 = $("<a/>").attr("id", id2)
-        .attr("href", `#${id2}`)
         .addClass("btn btn-default").appendTo($barDiv);
     $("<i/>").addClass("fa fa-code-branch").appendTo($button2);
 
@@ -466,7 +463,6 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
 
     const id3 = "expMapDownload";
     let $button3 = $("<a/>").attr("id", id3)
-        .attr("href", `#${id3}`)
         .addClass("btn btn-default").appendTo($barDiv);
     $("<i/>").addClass("fa fa-save").appendTo($button3);
 
