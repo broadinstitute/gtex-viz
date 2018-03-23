@@ -505,7 +505,7 @@ function _sortTissues (xlist, dmap, tissueDict){
     // changes the tissue display text to tissue names
     d4.selectAll(".exp-map-xlabel")
         .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
-    addTissueColors(dmap, tissueDict);
+    _addTissueColors(dmap, tissueDict);
 
     // hides the boxplot
     d4.select('#boxplot').style("opacity", 0.0);
