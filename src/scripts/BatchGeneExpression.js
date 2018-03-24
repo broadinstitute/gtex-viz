@@ -342,7 +342,7 @@ function _renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
     const layout = {
         title: "",
         font: {
-            family: 'Libre Franklin,Helvetica, sans-serif',
+            family: 'Open Sans, Helvetica, sans-serif',
             size:11
         },
         yaxis: {
@@ -413,7 +413,7 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
 
     let $barDiv = $("<div/>").addClass("btn-group btn-group-sm").appendTo(`#${barId}`);
 
-    if (useFilters !== undefined){
+    if (useFilters !== undefined){ // so far only applicable for topExpressed gene heatmap
         const id0 = "filterOptions";
         let $button0 = $("<a/>").attr("id", id0)
             .addClass("btn btn-default").appendTo($barDiv);

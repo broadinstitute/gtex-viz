@@ -2,11 +2,15 @@
 import * as d4 from "d3";
 import {getGtexUrls, parseTissues, parseExons, parseJunctions, parseIsoforms, parseIsoformExons, parseJunctionExpression, parseExonExpression, parseIsoformExpression} from "./modules/gtex/gtexDataParser";
 import {setColorScale, getColors, drawColorLegend} from "./modules/Colors";
+import {downloadSvg} from "./modules/utils";
+
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GeneModel from "./modules/GeneModel";
 
 /** TODO
+ * mouse events
+ * 4.0 add toolbar
  * 4.1 report individual isoforms
  * 4.2 mouseover exons should report the normalized read counts in a tissue
  *  * 6.5 exon expression map
@@ -42,7 +46,7 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
      d4.json(urls.geneId + geneId, function(json){  // get the gene object
         const gene = json.geneId[0];
         if (gene === undefined) throw "Fatal Error: gene not found";
-        _renderJunctions(gene, domId, urls);
+        _renderJunctions(gene, domId, toolbarId, urls);
     });
 }
 
@@ -50,10 +54,11 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
  *
  * @param gene {Object} with attr: gencodeId
  * @param heatmapDomId {String}
+ * @param toolbarId {String} the toolbar's dom ID
  * @param urls {Object} of the GTEx web service urls with attr: tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
  * @private
  */
-function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
+function _renderJunctions(gene, heatmapDomId, toolbarId, urls=getGtexUrls()){
     const gencodeId = gene.gencodeId;
     const modelDomId = "model";
     d4.queue()
@@ -82,7 +87,8 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
             let dmapConfig = new DendroHeatmapConfig("chart");
             dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 2000}); // TODO: figure out a better way to extend the SVG height
             dmapConfig.noTopTreePanel(1250);
-            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig, false);
+            const useLog = true;
+            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig, useLog);
             dmap.render(heatmapDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
 
             // gene model rendering
@@ -114,10 +120,40 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
             });
 
             // temporarily
-            customize(geneModel, dmap, jExpress, exonExpress);
+            _createToolbar(toolbarId, dmap.config.id);
+            _customize(geneModel, dmap, jExpress, exonExpress);
             $('#spinner').hide();
         });
 }
+
+/**
+ * Create the tool bar
+ * @param barId {String} the toolbar's dom ID
+ * @param domId {String} the SVG's parent dom ID
+ * @private
+ */
+function _createToolbar(barId, domId){
+    $(`#${barId}`).show();
+    let $barDiv = $("<div/>").addClass("btn-group btn-group-sm").appendTo(`#${barId}`);
+    const id1 = "isoformDownload";
+    let $button1 = $("<a/>").attr("id", id1)
+        .addClass("btn btn-default").appendTo($barDiv);
+    $("<i/>").addClass("fa fa-save").appendTo($button1);
+
+    d4.select(`#${id1}`)
+        .on("click", function(){
+            // TODO: review this download method
+            let svgObj = $($($(`${"#" +domId} svg`))[0]); // complicated jQuery!
+            downloadSvg(svgObj, "isoforms.svg", "downloadTempDiv"); // TODO: remove hard-coded hidden div, create this div on the fly
+        })
+        // .on("mouseover", function(){
+        //     dmap.visualComponents.tooltip.show("Download Isoform SVG");
+        // })
+        // .on("mouseout", function(){
+        //     dmap.visualComponents.tooltip.hide();
+        // });
+}
+
 
 /**
  * customizing the junciton expression visualization
@@ -127,7 +163,7 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
  * @param jdata {List} of junction expression data objects
  * @param edata {List} of exon expression data objects
  */
-function customize(geneModel, map, jdata, edata){
+function _customize(geneModel, map, jdata, edata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
     const ecolorScale = setColorScale(edata.map(d=>d.value), getColors("gnbu"));
