@@ -117,28 +117,38 @@ export function parseIsoforms(data){
 /**
  * parse final gene model exon expression
  * expression is normalized to reads per kb
- * @param json
- * @param exons
- * @param useLog
- * @returns {*}
+ * @param json {JSON} of exon expression web service
+ * @param exons {List} of exons with positions
+ * @param useLog {boolean} use log2 transformation
+ * @param adjust {Number} default 0.01
+ * @returns {List} of exon objects
  */
-export function parseExonExpression(json, exons){
+export function parseExonExpression(json, exons, useLog=true, adjust=1){
     const exonDict = exons.reduce((a, d)=>{a[d.exonId] = d; return a;}, {});
     const attr = "exonExpression";
     if(!json.hasOwnProperty(attr)) throw("parseExonExpression input error");
+
+    const exonObjects = json[attr];
+    // error-checking
+    ["data", "exonId", "tissueId"].forEach((d)=>{
+        if (!exonObjects[0].hasOwnProperty(d)) throw "Fatal Error: parseExonExpression attr not found: " + d;
+    });
     // parse GTEx median exon counts
-    const adjust = 1;
-    json[attr].forEach((d) => {
+    exonObjects.forEach((d) => {
         const exon = exonDict[d.exonId]; // for retrieving exon positions
-        if(!exon.hasOwnProperty("chromEnd")||!exon.hasOwnProperty("chromStart")) throw("parseExonExpression: data input error")
+        // error-checking
+        ["chromEnd", "chromStart"].forEach((d)=>{
+            if (!exon.hasOwnProperty(d)) throw "Fatal Error: parseExonExpression attr not found: " + d;
+        });
         d.l = exon.chromEnd - exon.chromStart + 1;
         d.value = Number(d.data)/d.l;
+        d.originalValue = Number(d.data)/d.l;
+        if (useLog) d.value = Math.log2(d.value + 1);
         d.x = d.exonId;
         d.y = d.tissueId;
-        d.originalValue = Number(d.data)/d.l;
         d.id = d.gencodeId
     });
-    return json[attr]
+    return exonObjects
 }
 
 /**

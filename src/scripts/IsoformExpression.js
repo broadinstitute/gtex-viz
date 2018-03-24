@@ -167,7 +167,7 @@ function _customize(geneModel, map, jdata, edata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
     const ecolorScale = setColorScale(edata.map(d=>d.value), getColors("gnbu"));
-    drawColorLegend("Exon median read counts per base", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y});// TODO: remove hard-coded positions
+    drawColorLegend("Exon median read counts per base", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y}, true, 2);
     mapSvg.selectAll(".exp-map-ylabel")
         .on("mouseover", function(d){
              d4.select(this)
