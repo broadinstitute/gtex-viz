@@ -141,19 +141,33 @@ export function parseExonExpression(json, exons){
     return json[attr]
 }
 
-export function parseJunctionExpression(json){
+/**
+ * Parse junction median read count data
+ * @param json {JSON} of the junciton expression web service
+ * @param useLog {Boolean} perform log transformation
+ * @param adjust {Number} for handling 0's when useLog is true
+ * @returns {List} of junction objects
+ */
+export function parseJunctionExpression(json, useLog=true, adjust=1){
     const attr = "junctionExpression";
     if(!json.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
-    // parse GTEx median junction counts
-    json[attr].forEach((d) => {
-        // TODO: add json attr error-checking
-        d.value = Number(d.data);
+
+    const junctions = json[attr];
+
+    // error-checking
+    ["tissueId", "junctionId", "data", "gencodeId"].forEach((d)=>{
+        if (!junctions[0].hasOwnProperty(d)) throw "Fatal Error: parseJunctionExpression attr not found: " + d;
+    });
+
+    // parse GTEx median junction read counts
+    junctions.forEach((d) => {
+        d.value = useLog?Math.log10(Number(d.data + adjust)):Number(d.data);
         d.x = d.junctionId;
         d.y = d.tissueId;
         d.originalValue = Number(d.data);
         d.id = d.gencodeId
     });
-    return json[attr];
+    return junctions;
 }
 
 export function parseIsoformExpression(json){

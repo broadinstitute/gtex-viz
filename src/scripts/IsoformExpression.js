@@ -7,6 +7,7 @@ import DendroHeatmap from "./modules/DendroHeatmap";
 import GeneModel from "./modules/GeneModel";
 
 /** TODO
+ * mouse events
  * 4.1 report individual isoforms
  * 4.2 mouseover exons should report the normalized read counts in a tissue
  *  * 6.5 exon expression map
@@ -82,7 +83,8 @@ function _renderJunctions(gene, heatmapDomId, urls=getGtexUrls()){
             let dmapConfig = new DendroHeatmapConfig("chart");
             dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 2000}); // TODO: figure out a better way to extend the SVG height
             dmapConfig.noTopTreePanel(1250);
-            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig, false);
+            const useLog = true;
+            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig, useLog);
             dmap.render(heatmapDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
 
             // gene model rendering
