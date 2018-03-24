@@ -413,7 +413,7 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
 
     let $barDiv = $("<div/>").addClass("btn-group btn-group-sm").appendTo(`#${barId}`);
 
-    if (useFilters !== undefined){
+    if (useFilters !== undefined){ // so far only applicable for topExpressed gene heatmap
         const id0 = "filterOptions";
         let $button0 = $("<a/>").attr("id", id0)
             .addClass("btn btn-default").appendTo($barDiv);
