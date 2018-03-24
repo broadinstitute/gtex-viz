@@ -342,7 +342,7 @@ function _renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
     const layout = {
         title: "",
         font: {
-            family: 'Libre Franklin,Helvetica, sans-serif',
+            family: 'Open Sans, Helvetica, sans-serif',
             size:11
         },
         yaxis: {
