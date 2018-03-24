@@ -41,12 +41,20 @@
 .exon-curated {
     cursor: pointer;
     stroke-width: 2px;
-    stroke: rgb(174, 174, 174);
+    stroke: rgb(85, 95, 102);
 }
 
 .exon-curated.highlighted {
     stroke: rgb(84, 219, 241);
     stroke-width: 5px;
+}
+
+/*temporary solution*/
+#modelLabel {
+    font-family: "Open Sans", "Helvetica", sans-serif;
+}
+#modelInfo {
+    font-family: "Open Sans", "Helvetica", sans-serif;
 }
 
 
