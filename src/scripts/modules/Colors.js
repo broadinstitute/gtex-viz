@@ -48,9 +48,10 @@ export function getColors(theme){
         rdpu: ['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177','#49006a'],
 
         // other sources
+        blues: ["#eeeeee", "#e8f8fc", "#caeef9", "#abe4f5", "#5fcbed", "#1aafdd", "#1697bf", "#117391", "#0a4354", "#041f27"],
         reds: ["#FFE4DE", "#FFC6BA", "#F7866E", "#d9745e", "#D25C43", "#b6442c", "#9b3a25","#712a1c", "#562015", "#2d110b"],
+        reds2: ['#f0f0f0', '#fff5f0','#fee0d2','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#a50f15','#67000d'],
         purples: ['#fcfbfd','#efedf5','#dadaeb','#bcbddc','#9e9ac8','#807dba','#6a51a3','#54278f','#3f007d'],
-        reds2: ['#f0f0f0', '#fff5f0','#fee0d2','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#a50f15','#67000d']
     };
     if(!palette.hasOwnProperty(theme)) throw "Color theme not found: " + theme;
     return palette[theme]
