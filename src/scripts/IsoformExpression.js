@@ -9,18 +9,18 @@ import DendroHeatmap from "./modules/DendroHeatmap";
 import GeneModel from "./modules/GeneModel";
 
 /** TODO
- * mouse events
+ * 1. sort isoforms when viewing a selected tissue
+ * 3. mouse events
  * 4.0 add toolbar
- * 4.1 report individual isoforms
+ * 4.1 code review: report individual isoforms and sort by most dominant isoforms.
  * 4.2 mouseover exons should report the normalized read counts in a tissue
  *  * 6.5 exon expression map
  * 13. Isoform Express Map
 
  * 4. add tissue colors
  * 4.2 reset gene model to no coloring
- * 4.3 do we set a threshold on tissues if the gene isn't expressed?
- * 4.5 automatic filtering of tissues based on median gene expression?
- * 6. gene information
+ * 4.3 add a tissue filter (to filter tissue based on a median gene expression TPM threshold)
+ * 6. add gene information
  * 7. improve heatmap custom layout configuration
  * 8. inconsistent highlight visual effects
  * 9. add exon text label
@@ -105,9 +105,11 @@ function _renderJunctions(gene, heatmapDomId, toolbarId, urls=getGtexUrls()){
             geneModel.render(modelG, modelConfig);
 
             // render isoform structures, ignoring intron lengths
+
             isoforms.forEach((isoform, i)=>{
                 const isoformModel = new GeneModel(isoform, exons, isoformExons[isoform.transcriptId], [], true);
-                const isoformG = dmap.visualComponents.svg.append("g").attr("id", isoform.transcriptId);
+                // create a new <g> for each isoform with the transcript ID, but replace the "." with "_" because a "." is not allowed in a dom ID
+                const isoformG = dmap.visualComponents.svg.append("g").attr("id", isoform.transcriptId.replace(".", "_"));
                 const h = 20;
                 const config = {
                     x: modelConfig.x,
@@ -121,7 +123,7 @@ function _renderJunctions(gene, heatmapDomId, toolbarId, urls=getGtexUrls()){
 
             // temporarily
             _createToolbar(toolbarId, dmap.config.id);
-            _customize(geneModel, dmap, jExpress, exonExpress);
+            _customize(geneModel, dmap, jExpress, exonExpress, isoformExpress);
             $('#spinner').hide();
         });
 }
@@ -158,16 +160,26 @@ function _createToolbar(barId, domId){
 /**
  * customizing the junciton expression visualization
  * dependencies: CSS classes from expressMap.css, junctionMap.css
- * @param geneModel {Object} of gene
+ * @param geneModel {Object} of the collapsed gene model
  * @param map {Object} of DendropHeatmap
  * @param jdata {List} of junction expression data objects
  * @param edata {List} of exon expression data objects
+ * @param idata {List} of isoform expression data objects
  */
-function _customize(geneModel, map, jdata, edata){
+function _customize(geneModel, map, jdata, edata, idata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
+
+    // define exon color scale
     const ecolorScale = setColorScale(edata.map(d=>d.value), getColors("blues"));
     drawColorLegend("Exon median read counts per base", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y}, true, 2);
+
+    // define isoform bar scale
+    const isoBarScale = d4.scaleLinear()
+        .domain([d4.min(idata.map(d=>d.value)), d4.max(idata.map(d=>d.value))])
+        .range([0, 100]);
+    const isoColorScale = setColorScale(idata.map(d=>Math.log10(d.value+1)), getColors("greys"));
+    // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")
         .on("mouseover", function(d){
              d4.select(this)
@@ -182,6 +194,23 @@ function _customize(geneModel, map, jdata, edata){
             const ex = edata.filter((d)=>d.tissueId==tissue);
             geneModel.changeTextlabel(mapSvg.select("#geneModel"), "Expression in " + tissue);
             geneModel.addData(mapSvg.select("#geneModel"), j, ex, map.objects.heatmap.colorScale, ecolorScale);
+
+            // TODO: code review!!! Add the following to geneModel.addData?
+            // isoforms update
+            // create a tissue-specific isoform expression lookup table indexed by transcriptId
+            const isoDict = idata.filter((d)=>d.tissueId==tissue).reduce((arr, d)=>{arr[d.transcriptId]=d.value; return arr;}, {});
+            Object.keys(isoDict).forEach((id)=>{
+                const isoform = mapSvg.select(`#${id.replace(".", "_")}`);
+                const x1 = isoform.select(".isoformBar").attr("x1");
+                // reset x2 to x1, then extend x2 by the isoform TPM of the selected tissue
+                const x2 = Number(x1) + isoBarScale(isoDict[id]) + 1; // base length = 1
+                isoform.select(".isoformBar")
+                    .attr("x2", x2)
+                    .style("stroke", isoColorScale(Math.log10(isoDict[id])));
+                isoform.selectAll(".exon-curated")
+                    .style("fill", isoColorScale(Math.log10(isoDict[id])));
+            });
+
         });
 
     mapSvg.selectAll(".exp-map-xlabel")
