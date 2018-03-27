@@ -48,9 +48,10 @@ export function getColors(theme){
         rdpu: ['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177','#49006a'],
 
         // other sources
+        blues: ["#eeeeee", "#e8f8fc", "#caeef9", "#abe4f5", "#5fcbed", "#1aafdd", "#1697bf", "#117391", "#0a4354", "#041f27"],
         reds: ["#FFE4DE", "#FFC6BA", "#F7866E", "#d9745e", "#D25C43", "#b6442c", "#9b3a25","#712a1c", "#562015", "#2d110b"],
+        reds2: ['#f0f0f0', '#fff5f0','#fee0d2','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#a50f15','#67000d'],
         purples: ['#fcfbfd','#efedf5','#dadaeb','#bcbddc','#9e9ac8','#807dba','#6a51a3','#54278f','#3f007d'],
-        reds2: ['#f0f0f0', '#fff5f0','#fee0d2','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#a50f15','#67000d']
     };
     if(!palette.hasOwnProperty(theme)) throw "Color theme not found: " + theme;
     return palette[theme]
@@ -78,7 +79,7 @@ export function setColorScale(data, colors, dmin = 0) {
  * @param useLog {Boolean}
  * @param cell
  */
-export function drawColorLegend(title, dom, scale, config, useLog, cell={h:5, w:50}){
+export function drawColorLegend(title, dom, scale, config, useLog, base=10, cell={h:5, w:50}){
 
     const data = [0].concat(scale.quantiles()); // add 0 to the list of values
     // legend title
@@ -104,7 +105,7 @@ export function drawColorLegend(title, dom, scale, config, useLog, cell={h:5, w:
 
     g.append("text")
         .attr("class", "color-legend")
-        .text((d) => useLog?(Math.pow(10, d)-1).toPrecision(2):d.toPrecision(2)) // TODO: assuming log is base 10
+        .text((d) => useLog?(Math.pow(base, d)-1).toPrecision(2):d.toPrecision(2)) // TODO: assuming log is base 10
         .attr("x", (d, i) => cell.w * i)
         .attr("y", 0);
 
