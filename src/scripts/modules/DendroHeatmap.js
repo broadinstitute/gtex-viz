@@ -1,9 +1,10 @@
+import {createSvg} from "./utils";
+import {select} from "d3-selection";
+
 import DendroHeatmapConfig from "./DendroHeatmapConfig";
 import Dendrogram from "./Dendrogram";
 import Heatmap from "./Heatmap";
-import {createSvg} from "./utils";
 import Tooltip from "./Tooltip";
-import * as d4 from "d3";
 
 export default class DendroHeatmap {
     /**
@@ -88,14 +89,14 @@ export default class DendroHeatmap {
 
         // customized mouse events
         const mouseover = function(d){
-            d4.select(this)
+            select(this)
                 .attr("r", 6)
                 .attr("fill", "red");
             const leaves = d.leaves().map((node)=>node.data.name);
             tooltip.show(`${leaves.join("<br>")}`);
         };
         const mouseout = function(d){
-            d4.select(this)
+            select(this)
                 .attr("r", 2)
                 .attr("fill", "#333");
             tooltip.hide();
