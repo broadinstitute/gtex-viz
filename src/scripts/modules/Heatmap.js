@@ -1,5 +1,7 @@
+import {select, selectAll} from "d3-selection";
+import {scaleBand} from "d3-scale";
+import {nest} from "d3-collection";
 
-import * as d4 from "d3";
 import {getColors, setColorScale, drawColorLegend} from "./Colors";
 export default class Heatmap {
     /* data is a json with the following attributes:
@@ -108,12 +110,12 @@ export default class Heatmap {
                 alert(`${d} is clicked. To be implemented`)
             })
             .on('mouseover', function(d){
-                d4.select(this)
+                select(this)
                     .classed('normal', false)
                     .classed('highlighted', true);
             })
             .on('mouseout', function(d){
-                d4.select(this)
+                select(this)
                     .classed('normal', true)
                     .classed('highlighted', false);
             });
@@ -121,12 +123,12 @@ export default class Heatmap {
         // renders the heatmap cells
 
         const cellMouseover = function(d) {
-            const selected = d4.select(this);
+            const selected = select(this);
             const rowClass = selected.attr("row");
             const colClass = selected.attr("col");
-            d4.selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
+            selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
                 .classed('highlighted', true);
-            d4.selectAll(".exp-map-ylabel").filter(`.${colClass}`)
+            selectAll(".exp-map-ylabel").filter(`.${colClass}`)
                 .classed('highlighted', true);
             selected.classed('highlighted', true);
             console.log(`Row: ${d.x}, Column: ${d.y}, Value: ${d.originalValue}`)
@@ -180,7 +182,7 @@ export default class Heatmap {
                 .map((d) => d.key);
         }
 
-        this.xScale = d4.scaleBand()
+        this.xScale = scaleBand()
             .domain(this.xList)
             .range([0, width])
             .padding(.05); // TODO: eliminate hard-coded value
@@ -191,12 +193,12 @@ export default class Heatmap {
             this.yList = newList
         }
         else {
-           this.yList = d4.nest()
+           this.yList = nest()
             .key((d) => d.y)
             .entries(this.data)
             .map((d) => d.key);
         }
-        this.yScale = d4.scaleBand()
+        this.yScale = scaleBand()
                 .domain(this.yList)
                 .range([0, height])
                 .padding(.05); // TODO: eliminate hard-coded value

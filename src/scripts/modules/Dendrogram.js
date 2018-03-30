@@ -33,7 +33,10 @@
 
 // TODO: eliminate hard-coded values
 
-import * as d4 from "d3";
+import {hierarchy} from "d3-hierarchy";
+import {ascending} from "d3-array";
+import {axisBottom, axisLeft} from "d3-axis";
+import {scaleLinear, scaleBand} from "d3-scale";
 
 import {parseNewick} from "../external/newick";
 const verbose = false;
@@ -44,10 +47,10 @@ export default class Dendrogram {
         this.orientation = orientation;
 
         this.postorder = [];
-        this.root = d4.hierarchy(parseNewick(newick), (d) => d.branchset)
+        this.root = hierarchy(parseNewick(newick), (d) => d.branchset)
             .sum((d)=>d.branchset?0:1)
             .sort((a,b)=>a.value-b.value||a.data.length-b.data.length);
-        this.leaves = this.root.leaves().sort((a, b) => (a.value - b.value) || d4.ascending(a.data.length, b.data.length));
+        this.leaves = this.root.leaves().sort((a, b) => (a.value - b.value) || ascending(a.data.length, b.data.length));
 
         this.width = undefined;
         this.height = undefined;
@@ -139,14 +142,14 @@ export default class Dendrogram {
             .attr("class", "dendrogram-axis")
             .attr("transform", "translate(0," + this.height + ")")
             .call(
-                d4.axisBottom(this.xScale)
+                axisBottom(this.xScale)
                 .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
             );
     }
 
     _sortNodesByLevel(){
         // returns a list of nodes ordered by ancestral level, then by branch length
-        return this.root.descendants().sort((a, b) => (a.height - b.height) || d4.ascending(a.data.length, b.data.length));
+        return this.root.descendants().sort((a, b) => (a.height - b.height) || ascending(a.data.length, b.data.length));
     }
 
     _drawVTree(dom){
@@ -216,7 +219,7 @@ export default class Dendrogram {
             // .attr("transform", `translate(${this.width}, 0)`)
             .attr("class", "dendrogram-axis")
             .call(
-                d4.axisLeft(this.yScale)
+                axisLeft(this.yScale)
                 .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
             );
 
@@ -249,13 +252,13 @@ export default class Dendrogram {
 
     _setXScale(){
         if ('h' == this.orientation){
-            this.xScale = d4.scaleLinear()
+            this.xScale = scaleLinear()
                 .domain([0, this._getMaxBranchLength()])
                 .range([0, this.width])
         } else {
             this._assignPostorder(this.root);
             if (verbose) console.log(this.postorder);
-            this.xScale = d4.scaleBand()
+            this.xScale = scaleBand()
                 .domain(this.postorder.map((d) => d.data.name))
                 .range([0, this.width])
                 .padding(.05);
@@ -266,12 +269,12 @@ export default class Dendrogram {
         if ('h' == this.orientation){
             this._assignPostorder(this.root);
             if (verbose) console.log(this.postorder);
-            this.yScale = d4.scaleBand()
+            this.yScale = scaleBand()
                 .domain(this.postorder.map((d) => d.data.name))
                 .range([0, this.height])
                 .padding(.05);
         } else {
-            this.yScale = d4.scaleLinear()
+            this.yScale = scaleLinear()
                 .domain([0, this._getMaxBranchLength()])
                 .range([0, this.height])
         }
