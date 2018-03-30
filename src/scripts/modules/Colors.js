@@ -1,4 +1,5 @@
-import * as d4 from "d3";
+import {max} from "d3-array";
+import {scaleQuantile} from "d3-scale";
 
 export function colorChart(shuffle=true){
     // ref: http://cloford.com/resources/colours/namedcol.htm
@@ -64,9 +65,8 @@ export function getColors(theme){
  * @param colors {List} of hexadecimal colors
  */
 export function setColorScale(data, colors, dmin = 0) {
-    // let dmin = Math.round(d4.min(data));
-    let dmax = Math.round(d4.max(data));
-    return d4.scaleQuantile()
+    let dmax = Math.round(max(data));
+    return scaleQuantile()
         .domain([dmin, dmax])
         .range(colors);
 }

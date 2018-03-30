@@ -7,10 +7,10 @@
  * @return {Selection} the d3 selection object of the SVG
  */
 
-import * as d4 from "d3";
+import {select} from "d3-selection";
 export function createSvg(id, width, height, margin){
     "use strict";
-    return d4.select("#"+id).append("svg")
+    return select("#"+id).append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
