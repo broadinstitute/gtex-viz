@@ -51,7 +51,8 @@ export function getColors(theme){
         blues: ["#eeeeee", "#e8f8fc", "#caeef9", "#abe4f5", "#5fcbed", "#1aafdd", "#1697bf", "#117391", "#0a4354", "#041f27"],
         reds: ["#FFE4DE", "#FFC6BA", "#F7866E", "#d9745e", "#D25C43", "#b6442c", "#9b3a25","#712a1c", "#562015", "#2d110b"],
         reds2: ['#f0f0f0', '#fff5f0','#fee0d2','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#a50f15','#67000d'],
-        purples: ['#fcfbfd','#efedf5','#dadaeb','#bcbddc','#9e9ac8','#807dba','#6a51a3','#54278f','#3f007d'],
+        purples: ["#eeeeee",'#fcfbfd','#efedf5','#dadaeb','#bcbddc','#9e9ac8','#807dba','#6a51a3','#54278f','#3f007d'],
+        greys: ["snow",'#f0f0f0','#d9d9d9','#bdbdbd','#969696','#737373','#525252','#252525','#000000']
     };
     if(!palette.hasOwnProperty(theme)) throw "Color theme not found: " + theme;
     return palette[theme]
@@ -71,7 +72,8 @@ export function setColorScale(data, colors, dmin = 0) {
 }
 
 /**
- *
+ * Draw a color legend bar.
+ * Dependencies: expressionMap.css
  * @param title {String}
  * @param dom {object} D3 dom object
  * @param scale {Object} D3 scale of the color
@@ -79,7 +81,7 @@ export function setColorScale(data, colors, dmin = 0) {
  * @param useLog {Boolean}
  * @param cell
  */
-export function drawColorLegend(title, dom, scale, config, useLog, base=10, cell={h:5, w:50}){
+export function drawColorLegend(title, dom, scale, config, useLog, base=10, cell={h:15, w:50}){
 
     const data = [0].concat(scale.quantiles()); // add 0 to the list of values
     // legend title
