@@ -14,35 +14,8 @@ import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GeneModel from "./modules/GeneModel";
 
-/** TODO
- * 1. sort isoforms when viewing a selected tissue
- * 3. mouse events
- * 4.0 add toolbar
- * 4.1 code review: report individual isoforms and sort by most dominant isoforms.
- * 4.2 mouseover exons should report the normalized read counts in a tissue
- *  * 6.5 exon expression map
- * 13. Isoform Express Map
-
- * 4. add tissue colors
- * 4.2 reset gene model to no coloring
- * 4.3 add a tissue filter (to filter tissue based on a median gene expression TPM threshold)
- * 6. add gene information
- * 7. improve heatmap custom layout configuration
- * 8. inconsistent highlight visual effects
- * 9. add exon text label
- * 10. add cell mouse events
- * 11. implement the tool bar (should it be a hamburger?
- * 11.5 tree scale bug
- * 11.9 rebuild spliceViz
- * 12.0 rewrite main.junction.js to a class
- * 12.1 code review
- * 14. EpiMap
- * 15. Create a new github repo and consolidate all of my d3.v4 viz tools there
- */
-
-
 /**
- *
+ * Render junctions
  * @param geneId {String} a gene name or gencode ID
  * @param domId {String} the DOM ID of the SVG
  * @param toolbarId {String} the DOM ID of the tool bar DIV
@@ -57,7 +30,7 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
 }
 
 /**
- *
+ * Render junction helper function
  * @param gene {Object} with attr: gencodeId
  * @param heatmapDomId {String}
  * @param toolbarId {String} the toolbar's dom ID

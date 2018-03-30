@@ -72,7 +72,8 @@ export function setColorScale(data, colors, dmin = 0) {
 }
 
 /**
- *
+ * Draw a color legend bar.
+ * Dependencies: expressionMap.css
  * @param title {String}
  * @param dom {object} D3 dom object
  * @param scale {Object} D3 scale of the color
@@ -80,7 +81,7 @@ export function setColorScale(data, colors, dmin = 0) {
  * @param useLog {Boolean}
  * @param cell
  */
-export function drawColorLegend(title, dom, scale, config, useLog, base=10, cell={h:5, w:50}){
+export function drawColorLegend(title, dom, scale, config, useLog, base=10, cell={h:15, w:50}){
 
     const data = [0].concat(scale.quantiles()); // add 0 to the list of values
     // legend title
