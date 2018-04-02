@@ -1,5 +1,7 @@
 import {max} from "d3-array";
-import {scaleQuantile} from "d3-scale";
+import {scaleSequential} from "d3-scale";
+import * as d3Chromatic from "d3-scale-chromatic";
+"use strict";
 
 export function colorChart(shuffle=true){
     // ref: http://cloford.com/resources/colours/namedcol.htm
@@ -40,6 +42,20 @@ function shuffleColors(array) {
     return array;
 }
 
+export function getColorInterpolator(name){
+    // reference: https://github.com/d3/d3-scale-chromatic/blob/master/README.md#sequential-multi-hue
+    const interpolators = {
+        BuGn: d3Chromatic.interpolateBuGn,
+        OrRd: d3Chromatic.interpolateOrRd,
+        PuBu: d3Chromatic.interpolatePuBu,
+        YlGnBu: d3Chromatic.interpolateYlGnBu
+    };
+    if (!interpolators.hasOwnProperty(name)) throw "Color Interpolator Error";
+    return interpolators[name];
+
+}
+
+
 export function getColors(theme){
     const palette = {
         // colorbrewer
@@ -60,15 +76,17 @@ export function getColors(theme){
 }
 
 /**
- * scaleQuantile maps the continuous domain to a discrete range of colors
+ * reference: https://github.com/d3/d3-scale
+ * reference: http://bl.ocks.org/curran/3094b37e63b918bab0a06787e161607b
+ * scaleSequential maps the continuous domain to a continuous color scale
  * @param data {List} of numerical data
- * @param colors {List} of hexadecimal colors
+ * @param colors {d3Chromatic function}
  */
-export function setColorScale(data, colors, dmin = 0) {
+export function setColorScale(data, colors=d3Chromatic.interpolateYlGnBu, dmin = 0) {
     let dmax = Math.round(max(data));
-    return scaleQuantile()
-        .domain([dmin, dmax])
-        .range(colors);
+    const scale = scaleSequential(colors);
+    scale.domain([dmin, dmax]);
+    return scale;
 }
 
 /**
@@ -83,7 +101,8 @@ export function setColorScale(data, colors, dmin = 0) {
  */
 export function drawColorLegend(title, dom, scale, config, useLog, base=10, cell={h:15, w:50}){
 
-    const data = [0].concat(scale.quantiles()); // add 0 to the list of values
+    // const data = [0].concat(scale.quantiles()); // add 0 to the list of values
+    const data = scale.ticks(5).slice(1); // why this doesn't provide consistent number of ticks??
     // legend title
     dom.append("text")
         .attr("class", "color-legend")
@@ -103,7 +122,7 @@ export function drawColorLegend(title, dom, scale, config, useLog, base=10, cell
         .attr("y", 5)
         .attr("width", cell.w)
         .attr("height", cell.h)
-        .style("fill", (d) => scale(d));
+        .style("fill", scale);
 
     g.append("text")
         .attr("class", "color-legend")

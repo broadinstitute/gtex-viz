@@ -64,7 +64,7 @@ export default class Heatmap {
     draw(dom, dimensions={w:1000, h:600}, angle=30){
         if (this.xList === undefined) this._setXList(dimensions.w);
         if (this.yList === undefined) this._setYList(dimensions.h);
-        if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value), this.colors);
+        if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value));
 
         // text labels
         // data join
