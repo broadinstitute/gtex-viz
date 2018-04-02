@@ -117,18 +117,18 @@ export function parseIsoforms(data){
 /**
  * parse final gene model exon expression
  * expression is normalized to reads per kb
- * @param json {JSON} of exon expression web service
+ * @param data {JSON} of exon expression web service
  * @param exons {List} of exons with positions
  * @param useLog {boolean} use log2 transformation
  * @param adjust {Number} default 0.01
  * @returns {List} of exon objects
  */
-export function parseExonExpression(json, exons, useLog=true, adjust=1){
+export function parseExonExpression(data, exons, useLog=true, adjust=1){
     const exonDict = exons.reduce((a, d)=>{a[d.exonId] = d; return a;}, {});
     const attr = "exonExpression";
-    if(!json.hasOwnProperty(attr)) throw("parseExonExpression input error");
+    if(!data.hasOwnProperty(attr)) throw("parseExonExpression input error");
 
-    const exonObjects = json[attr];
+    const exonObjects = data[attr];
     // error-checking
     ["data", "exonId", "tissueId"].forEach((d)=>{
         if (!exonObjects[0].hasOwnProperty(d)) throw "Fatal Error: parseExonExpression attr not found: " + d;
@@ -153,16 +153,16 @@ export function parseExonExpression(json, exons, useLog=true, adjust=1){
 
 /**
  * Parse junction median read count data
- * @param json {JSON} of the junciton expression web service
+ * @param data {JSON} of the junciton expression web service
  * @param useLog {Boolean} perform log transformation
  * @param adjust {Number} for handling 0's when useLog is true
  * @returns {List} of junction objects
  */
-export function parseJunctionExpression(json, useLog=true, adjust=1){
+export function parseJunctionExpression(data, useLog=true, adjust=1){
     const attr = "junctionExpression";
-    if(!json.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
+    if(!data.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
 
-    const junctions = json[attr];
+    const junctions = data[attr];
 
     // error-checking
     ["tissueId", "junctionId", "data", "gencodeId"].forEach((d)=>{
@@ -180,24 +180,24 @@ export function parseJunctionExpression(json, useLog=true, adjust=1){
     return junctions;
 }
 
-export function parseIsoformExpression(json){
+export function parseIsoformExpression(data){
     const attr = "isoformExpression";
-    if(!json.hasOwnProperty(attr)) throw("parseIsoformExpression input error");
+    if(!data.hasOwnProperty(attr)) throw("parseIsoformExpression input error");
     // parse GTEx isoform median TPM
-    json[attr].forEach((d) => {
+    data[attr].forEach((d) => {
         d.value = Number(d.data);
         d.originalValue = Number(d.data);
     });
 
-    return json[attr];
+    return data[attr];
 }
 
-export function parseMedianExpression(json, useLog=true){
+export function parseMedianExpression(data, useLog=true){
     const attr = "medianGeneExpression";
-    if(!json.hasOwnProperty(attr)) throw "parseMedianExpression input error.";
+    if(!data.hasOwnProperty(attr)) throw "parseMedianExpression input error.";
     const adjust = 1;
     // parse GTEx median gene expression
-    json.medianGeneExpression.forEach(function(d){
+    data.medianGeneExpression.forEach(function(d){
         // TODO: error-checking of the attributes
         d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
         d.x = d.tissueId;
@@ -205,7 +205,7 @@ export function parseMedianExpression(json, useLog=true){
         d.originalValue = Number(d.median);
         d.id = d.gencodeId
     });
-    return json[attr];
+    return data[attr];
 }
 
 export function parseMedianTPM(data, useLog=true){

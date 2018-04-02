@@ -1,8 +1,7 @@
 "use strict";
 
 import {select, selectAll} from "d3-selection";
-import {json} from "d3-request";
-import {queue} from "d3-queue";
+import {json} from "d3-fetch";
 import {scaleLinear} from "d3-scale";
 import {min, max} from "d3-array";
 
@@ -22,11 +21,15 @@ import GeneModel from "./modules/GeneModel";
  * @param urls {Object} of the GTEx web service urls with attr: geneId, tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
  */
 export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
-     json(urls.geneId + geneId, function(json){  // get the gene object
-        const gene = json.geneId[0];
-        if (gene === undefined) throw "Fatal Error: gene not found";
-        _renderJunctions(gene, domId, toolbarId, urls);
-    });
+     json(urls.geneId + geneId)
+         .then(function(data){  // get the gene object
+            const gene = data.geneId[0];
+            if (gene === undefined) throw "Fatal Error: gene not found";
+            _renderJunctions(gene, domId, toolbarId, urls);
+        })
+         .catch(function(err){
+             console.error(err);
+         })
 }
 
 /**
@@ -40,27 +43,30 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
 function _renderJunctions(gene, heatmapDomId, toolbarId, urls=getGtexUrls()){
     const gencodeId = gene.gencodeId;
     const modelDomId = "model";
-    queue()
-        .defer(json, urls.tissue) // tissue colors
-        .defer(json, urls.geneModelUnfiltered + gencodeId) // unfiltered collapsed gene model
-        .defer(json, urls.geneModel + gencodeId) // final collapsed gene model
-        .defer(json, urls.isoform + gencodeId) // isoform structures
-        .defer(json, urls.junctionExp + gencodeId) // junction expression data
-        .defer(json, urls.exonExp + gencodeId) // exon expression data of the final collapsed model only
-        .defer(json, urls.isoformExp + gencodeId)
-        .await(function(error, tissueJson, geneModelJson, curatedGeneModelJson, isoformJson, data, data2, data3){
-            if (error !== null) throw "Web service error.";
-            const tissues = parseTissues(tissueJson),
-                exons = parseExons(geneModelJson),
-                exonsCurated = parseExons(curatedGeneModelJson),
-                junctions = parseJunctions(data),
-                isoforms = parseIsoforms(isoformJson),
-                isoformExons = parseIsoformExons(isoformJson),
-                tissueTree = data.clusters.tissue,
-                junctionTree = data.clusters.junction, // junction tree is not really useful
-                jExpress = parseJunctionExpression(data),
-                exonExpress = parseExonExpression(data2,  exonsCurated),
-                isoformExpress = parseIsoformExpression(data3);
+
+    const promises = [
+        json(urls.tissue),
+        json(urls.geneModelUnfiltered + gencodeId),
+        json(urls.geneModel + gencodeId),
+        json(urls.isoform + gencodeId),
+        json(urls.junctionExp + gencodeId),
+        json(urls.exonExp + gencodeId),
+        json(urls.isoformExp + gencodeId)
+    ];
+
+    Promise.all(promises)
+        .then(function(args){
+            const tissues = parseTissues(args[0]),
+                exons = parseExons(args[1]),
+                exonsCurated = parseExons(args[2]),
+                isoforms = parseIsoforms(args[3]),
+                isoformExons = parseIsoformExons(args[3]),
+                junctions = parseJunctions(args[4]),
+                tissueTree = args[4].clusters.tissue,
+                junctionTree = args[4].clusters.junction, // junction tree is not really useful
+                jExpress = parseJunctionExpression(args[4]),
+                exonExpress = parseExonExpression(args[5],  exonsCurated),
+                isoformExpress = parseIsoformExpression(args[6]);
 
             // junction expression heat map
             let dmapConfig = new DendroHeatmapConfig("chart");
@@ -104,7 +110,8 @@ function _renderJunctions(gene, heatmapDomId, toolbarId, urls=getGtexUrls()){
             _createToolbar(toolbarId, dmap.config.id);
             _customize(geneModel, dmap, jExpress, exonExpress, isoformExpress);
             $('#spinner').hide();
-        });
+        })
+        .catch(function(err){console.error(err)});
 }
 
 /**

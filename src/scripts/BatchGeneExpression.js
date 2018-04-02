@@ -1,6 +1,5 @@
 "use strict";
-import {queue} from "d3-queue";
-import {json, tsv} from "d3-request";
+import {json, tsv} from "d3-fetch";
 import {select, selectAll, event} from "d3-selection";
 import {keys, values} from "d3-collection";
 
@@ -20,13 +19,10 @@ export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
     // - gets static data
     const tissueTree = getTissueClusters('top50Cerebellum_AD'),
           geneTree = getGeneClusters('top50Cerebellum_AD');
-
-    queue()
-        .defer(json, urls.tissue) // get tissue colors
-        .defer(tsv, urls.mayoGeneExp)
-        .await(function(error, data1, data2){
-            const tissues = parseTissues(data1);
-            const expression = parseMedianTPM(data2, true);
+    Promise.all([json(urls.tissue), tsv(urls.mayoGeneExp)])
+        .then(function(args){
+            const tissues = parseTissues(args[0]);
+            const expression = parseMedianTPM(args[1], true);
             const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
             dmap.render(domId);
             // customization for GTEx
@@ -37,7 +33,7 @@ export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
             }, {});
             const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
                 if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
-                a[d.gencodeId]=d; 
+                a[d.gencodeId]=d;
                 return a;
             }, {});
             _customizeLabels(dmap, tissueDict, geneDict);
@@ -45,7 +41,8 @@ export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
             _customizeMouseEvents(dmap, tissueDict, geneDict);
             _createToolbar(domId, toolbarId, undefined, dmap, tissueDict, [], urls);
             $('#spinner').hide(); // TODO: remove hard-coded dom ID
-        });
+        })
+        .catch(function(err){throw err});
 }
 
 export function reset(ids){
@@ -58,25 +55,27 @@ export function reset(ids){
  * @param urls {Object} of web service urls with attr: tissue
  */
 export function createDatasetMenu(domId, urls = getGtexUrls()){
-    json(urls.tissue, function(err, results){
-        let tissues = parseTissues(results);
-        tissues.forEach((d) => {
-            d.id = d.tissueId;
-            d.text = d.tissueName;
-        });
-        tissues.sort((a, b) => {
-            if(a.tissueName < b.tissueName) return -1;
-            if(a.tissueName > b.tissueName) return 1;
-            return 0;
-        });
+    json(urls.tissue)
+        .then(function(results){
+            let tissues = parseTissues(results);
+            tissues.forEach((d) => {
+                d.id = d.tissueId;
+                d.text = d.tissueName;
+            });
+            tissues.sort((a, b) => {
+                if(a.tissueName < b.tissueName) return -1;
+                if(a.tissueName > b.tissueName) return 1;
+                return 0;
+            });
 
-        // external library dependency: select2
-        $(`#${domId}`).select2({
-            placeholder: 'Select a data set',
-            data: tissues
-        });
+            // external library dependency: select2
+            $(`#${domId}`).select2({
+                placeholder: 'Select a data set',
+                data: tissues
+            });
 
-    });
+        })
+        .catch(function(err){console.error(err)});
 
 }
 
@@ -92,10 +91,14 @@ export function createDatasetMenu(domId, urls = getGtexUrls()){
 export function renderTopExpressed(tissueId, domId, toolbarId, infoId, urls=getGtexUrls(), useFilters=true){
     // getting data
     const url = useFilters?urls.topInTissueFiltered:urls.topInTissue;
-    json(url + tissueId, function(err, results){ // top 50 expressed genes in tissueId
-        const topGeneList = results.topExpressedGene.map(d=>d.gencodeId);
-        searchById(topGeneList, [tissueId], domId, toolbarId, infoId, urls, useFilters);
-    });
+    json(url+ tissueId)
+        .then(function(results){ // top 50 expressed genes in tissueId
+            const topGeneList = results.topExpressedGene.map(d=>d.gencodeId);
+            searchById(topGeneList, [tissueId], domId, toolbarId, infoId, urls, useFilters);
+        })
+        .catch(function(err){
+            console.error(err);
+        });
 }
 
 /**
@@ -114,65 +117,68 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
     $('#spinner').show();
     if (select(`#${domId}`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
     let message = "";
-    queue()
-    .defer(json, urls.tissue) // get tissue colors
-    .defer(json, urls.geneId + glist.join(",")) // get gene objects
-    .await(function(err2, tJson, gJson){
-        const tissues = parseTissues(tJson),
-            max = 50,
-            attr = "geneId";
-        if (!gJson.hasOwnProperty(attr)) throw "gene web service parsing error";
-        let geneObjects = gJson[attr];
-        if (geneObjects.length == 0) {
-            // validate if gene list is empty
-            message = "Fatal Error: the gene list is empty.<br/>";
-        } else {
-            // more input validation
-            if (geneObjects.length < glist.length) { // validate if all input genes are found
-                const allIds = geneObjects.map((d)=>d.gencodeId).concat(geneObjects.map((d)=>d.geneSymbolUpper)); // gather all gencodeIds and gene symbols in retrieved geneObjects
-                const missingGenes = glist.filter((d) => !allIds.includes(d));
-                message = `Warning: Not all genes are found: ${missingGenes.join(",")}<br/>`;
-            }
-            if (geneObjects.length > max) { // validate if the number of input genes exceeds the maximum
-                //language=HTML
-                message += `Warning: Too many genes. Input list truncated to the first ${max}.<br/>`;
-                geneObjects = geneObjects.slice(0, max); // slice the input gene list to the maximum allowed entries
-            }
 
-            // visualization rendering
-            // get all median express data of these genes in all tissues
-            const gencodeIds = geneObjects.map((d) => d.gencodeId);
-            json(urls.medExpById + gencodeIds.join(","), function (eData) {
-                const tissueTree = eData.clusters.tissue,
-                    geneTree = eData.clusters.gene,
-                    expression = parseMedianExpression(eData),
-                    dmap = new DendroHeatmap(tissueTree, geneTree, expression);
-                dmap.render(domId);
-                $('#spinner').hide();
-                // customization for GTEx
-                const tissueDict = tissues.reduce((a, d)=>{
-                    if (!d.hasOwnProperty("tissueId")) throw "tissue has not attr tissue_id";
-                    a[d.tissueId] = d;
-                    return a;
-                }, {});
-                const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
-                    if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
-                    a[d.gencodeId]=d;
-                    return a;
-                }, {});
-                _customizeLabels(dmap, tissueDict, geneDict);
-                _addTissueColors(dmap, tissueDict);
-                _customizeMouseEvents(dmap, tissueDict, geneDict);
-                _createToolbar(domId, toolbarId, infoId, dmap, tissueDict, tlist, urls, useFilters);
-                if(useFilters !== undefined){
-                    message += useFilters?"Mitochondrial genes are excluded.":"Mitochondrial genes are included";
+    Promise.all([json(urls.tissue), json(urls.geneId+glist.join(","))])
+        .then(function(args){
+             const tissues = parseTissues(args[0]),
+                max = 50;
+
+             const attr = "geneId";
+            if (!args[1].hasOwnProperty(attr)) throw "gene web service parsing error";
+            let geneObjects = args[1][attr];
+            if (geneObjects.length == 0) {
+                // validate if gene list is empty
+                message = "Fatal Error: the gene list is empty.<br/>";
+            } else {
+                // more input validation
+                if (geneObjects.length < glist.length) { // validate if all input genes are found
+                    const allIds = geneObjects.map((d)=>d.gencodeId).concat(geneObjects.map((d)=>d.geneSymbolUpper)); // gather all gencodeIds and gene symbols in retrieved geneObjects
+                    const missingGenes = glist.filter((d) => !allIds.includes(d));
+                    message = `Warning: Not all genes are found: ${missingGenes.join(",")}<br/>`;
                 }
-                $(`#${infoId}`).html(message);
+                if (geneObjects.length > max) { // validate if the number of input genes exceeds the maximum
+                    //language=HTML
+                    message += `Warning: Too many genes. Input list truncated to the first ${max}.<br/>`;
+                    geneObjects = geneObjects.slice(0, max); // slice the input gene list to the maximum allowed entries
+                }
 
-            });
-        }
+                // visualization rendering
+                // get all median express data of these genes in all tissues
+                const gencodeIds = geneObjects.map((d) => d.gencodeId);
+                json(urls.medExpById + gencodeIds.join(","))
+                    .then(function(eData) {
+                        const tissueTree = eData.clusters.tissue,
+                            geneTree = eData.clusters.gene,
+                            expression = parseMedianExpression(eData),
+                            dmap = new DendroHeatmap(tissueTree, geneTree, expression);
+                        dmap.render(domId);
+                        $('#spinner').hide();
+                        // customization for GTEx
+                        const tissueDict = tissues.reduce((a, d)=>{
+                            if (!d.hasOwnProperty("tissueId")) throw "tissue has not attr tissue_id";
+                            a[d.tissueId] = d;
+                            return a;
+                        }, {});
+                        const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
+                            if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
+                            a[d.gencodeId]=d;
+                            return a;
+                        }, {});
+                        _customizeLabels(dmap, tissueDict, geneDict);
+                        _addTissueColors(dmap, tissueDict);
+                        _customizeMouseEvents(dmap, tissueDict, geneDict);
+                        _createToolbar(domId, toolbarId, infoId, dmap, tissueDict, tlist, urls, useFilters);
+                        if(useFilters !== undefined){
+                            message += useFilters?"Mitochondrial genes are excluded.":"Mitochondrial genes are included";
+                        }
+                        $(`#${infoId}`).html(message);
 
-    });
+                    })
+                    .catch(function(err){console.error(err)});
+            }
+
+        })
+        .catch(function(err){throw err});
 }
 
 /**
@@ -385,12 +391,14 @@ function _renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
         }
         case "add": {
             const url = getGtexUrls().geneExp + gene;
-            json(url, function (error, d) {
-                let color = geneDict[gene].color || "black";
-                data[gene] = makeJsonForPlotly(gene, d, config.useLog, color, tissueOrder);
-                Plotly.newPlot(config.id, values(data), layout);
-                select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
-            });
+            json(url)
+                .then(function (d) {
+                    let color = geneDict[gene].color || "black";
+                    data[gene] = makeJsonForPlotly(gene, d, config.useLog, color, tissueOrder);
+                    Plotly.newPlot(config.id, values(data), layout);
+                    select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
+                })
+                .catch(function(err){console.error(err)});
             break;
         }
         default: {
