@@ -1,8 +1,13 @@
-import * as d4 from "d3"; // TODO: import specific API functions instead?
 "use strict";
+import {queue} from "d3-queue";
+import {json, tsv} from "d3-request";
+import {select, selectAll, event} from "d3-selection";
+import {keys, values} from "d3-collection";
+
 import {getGtexUrls, getTissueClusters, getGeneClusters, parseMedianTPM, parseTissues, parseMedianExpression, makeJsonForPlotly} from "./modules/gtex/gtexDataParser";
 import {colorChart} from "./modules/Colors";
 import {downloadSvg} from "./modules/utils";
+
 import DendroHeatmap from "./modules/DendroHeatmap";
 
 /**
@@ -16,9 +21,9 @@ export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
     const tissueTree = getTissueClusters('top50Cerebellum_AD'),
           geneTree = getGeneClusters('top50Cerebellum_AD');
 
-    d4.queue()
-        .defer(d4.json, urls.tissue) // get tissue colors
-        .defer(d4.tsv, urls.mayoGeneExp)
+    queue()
+        .defer(json, urls.tissue) // get tissue colors
+        .defer(tsv, urls.mayoGeneExp)
         .await(function(error, data1, data2){
             const tissues = parseTissues(data1);
             const expression = parseMedianTPM(data2, true);
@@ -53,7 +58,7 @@ export function reset(ids){
  * @param urls {Object} of web service urls with attr: tissue
  */
 export function createDatasetMenu(domId, urls = getGtexUrls()){
-    d4.json(urls.tissue, function(err, results){
+    json(urls.tissue, function(err, results){
         let tissues = parseTissues(results);
         tissues.forEach((d) => {
             d.id = d.tissueId;
@@ -87,7 +92,7 @@ export function createDatasetMenu(domId, urls = getGtexUrls()){
 export function renderTopExpressed(tissueId, domId, toolbarId, infoId, urls=getGtexUrls(), useFilters=true){
     // getting data
     const url = useFilters?urls.topInTissueFiltered:urls.topInTissue;
-    d4.json(url + tissueId, function(err, results){ // top 50 expressed genes in tissueId
+    json(url + tissueId, function(err, results){ // top 50 expressed genes in tissueId
         const topGeneList = results.topExpressedGene.map(d=>d.gencodeId);
         searchById(topGeneList, [tissueId], domId, toolbarId, infoId, urls, useFilters);
     });
@@ -107,11 +112,11 @@ export function renderTopExpressed(tissueId, domId, toolbarId, infoId, urls=getG
 export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGtexUrls(), useFilters=undefined){
     reset([domId, toolbarId, infoId, "boxplot"]);
     $('#spinner').show();
-    if (d4.select(`#${domId}`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
+    if (select(`#${domId}`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
     let message = "";
-    d4.queue()
-    .defer(d4.json, urls.tissue) // get tissue colors
-    .defer(d4.json, urls.geneId + glist.join(",")) // get gene objects
+    queue()
+    .defer(json, urls.tissue) // get tissue colors
+    .defer(json, urls.geneId + glist.join(",")) // get gene objects
     .await(function(err2, tJson, gJson){
         const tissues = parseTissues(tJson),
             max = 50,
@@ -137,7 +142,7 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
             // visualization rendering
             // get all median express data of these genes in all tissues
             const gencodeIds = geneObjects.map((d) => d.gencodeId);
-            d4.json(urls.medExpById + gencodeIds.join(","), function (eData) {
+            json(urls.medExpById + gencodeIds.join(","), function (eData) {
                 const tissueTree = eData.clusters.tissue,
                     geneTree = eData.clusters.gene,
                     expression = parseMedianExpression(eData),
@@ -178,11 +183,11 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
  */
 function _customizeLabels(dmap, tissueDict, geneDict){
     /***** Change row labels to tissue names *****/
-    d4.select("#" + dmap.config.panels.main.id).selectAll(".exp-map-xlabel")
+    select("#" + dmap.config.panels.main.id).selectAll(".exp-map-xlabel")
         .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
 
     /***** Change column labels to gene symbols *****/
-    d4.select("#" + dmap.config.panels.main.id).selectAll(".exp-map-ylabel")
+    select("#" + dmap.config.panels.main.id).selectAll(".exp-map-ylabel")
         .text((d) => geneDict[d]===undefined?d:geneDict[d].geneSymbol);
 }
 
@@ -195,7 +200,7 @@ function _addTissueColors(dmap, tissueDict){
 
     const id = dmap.config.panels.main.id;
     const heatmap = dmap.objects.heatmap;
-    let dots = d4.select("#"+id).selectAll(".exp-map-xcolor").data(heatmap.xList);
+    let dots = select("#"+id).selectAll(".exp-map-xcolor").data(heatmap.xList);
 
      // updates old elements
     dots.attr("fill", (d) => tissueDict[d]===undefined?"#000000":`#${tissueDict[d].colorHex}`);
@@ -228,7 +233,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         // dependencies -- css classes
         // expressMap.css
 
-        const selected = d4.select(this); // note: "this" refers to the dom element of d
+        const selected = select(this); // note: "this" refers to the dom element of d
         selected.classed('highlighted', true);
 
         // highlight the row and column labels
@@ -237,7 +242,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         svg.selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
             .classed('highlighted', true);
 
-        d4.selectAll(".exp-map-ylabel").filter(`.${colClass}`)
+        selectAll(".exp-map-ylabel").filter(`.${colClass}`)
             .classed('highlighted', true);
 
         let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueName;
@@ -253,11 +258,11 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
 
     // gene boxplot prep: assign a colorIndex to each gene
     const colors = colorChart();
-    d4.keys(geneDict).forEach((d, i)=>{geneDict[d].color = colors[i]});
+    keys(geneDict).forEach((d, i)=>{geneDict[d].color = colors[i]});
     const ylabelClick = function(d){
-        let s = d4.select(this);
+        let s = select(this);
         let action = "";
-        if (d4.event.altKey) { // if alt key is pressed -- i.e. adding an additional gene to boxplot
+        if (event.altKey) { // if alt key is pressed -- i.e. adding an additional gene to boxplot
             // highlights the selected label
             if(!s.classed("clicked")) s.classed("clicked", true);
             action = "add";
@@ -271,7 +276,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
             }
             else {
                 // else click it
-                d4.selectAll(".clicked").classed("clicked", false); // first clears all clicked labels if any
+                selectAll(".clicked").classed("clicked", false); // first clears all clicked labels if any
                 s.classed("clicked", true); // click this DOM element
                 dmap.data.external = {}; // clears the data storage
                 action = "add";
@@ -285,7 +290,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
 
     const treeNodeMouseover = function(labelClass){
         return function(d){
-            d4.select(this)
+            select(this)
                 .attr("r", 6)
                 .attr("fill", "red");
             const ids = d.leaves().map((node)=>node.data.name);
@@ -298,7 +303,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
 
     const treeNodeMouseout = function(labelClass){
         return function(d){
-            d4.select(this)
+            select(this)
             .attr("r", 2)
             .attr("fill", "#333");
             svg.selectAll(labelClass).classed("highlighted", false);
@@ -370,21 +375,21 @@ function _renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
     switch(action) {
         case "delete": {
             delete data[gene];
-            Plotly.newPlot(config.id, d4.values(data), layout);
-            if (d4.keys(data).length == 0) {
-                d4.select("#" + config.id).style("opacity", 0.0); // makes the boxplot section visible
+            Plotly.newPlot(config.id, values(data), layout);
+            if (keys(data).length == 0) {
+                select("#" + config.id).style("opacity", 0.0); // makes the boxplot section visible
             } else {
-                d4.select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
+                select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
             }
             break;
         }
         case "add": {
             const url = getGtexUrls().geneExp + gene;
-            d4.json(url, function (error, d) {
+            json(url, function (error, d) {
                 let color = geneDict[gene].color || "black";
                 data[gene] = makeJsonForPlotly(gene, d, config.useLog, color, tissueOrder);
-                Plotly.newPlot(config.id, d4.values(data), layout);
-                d4.select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
+                Plotly.newPlot(config.id, values(data), layout);
+                select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
             });
             break;
         }
@@ -419,7 +424,7 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
             .addClass("btn btn-default").appendTo($barDiv);
         $("<i/>").addClass("fa fa-filter").appendTo($button0);
 
-        d4.select(`#${id0}`)
+        select(`#${id0}`)
         .on("click", function(){
             // toggle the applied filter
             renderTopExpressed(queryTissues[0], domId, barId, infoId, urls, !useFilters);
@@ -438,10 +443,10 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
         .addClass("btn btn-default").appendTo($barDiv);
     $("<i/>").addClass("fa fa-sort-alpha-down").appendTo($button1); // a fontawesome icon
 
-    d4.select(`#${id1}`)
+    select(`#${id1}`)
         .on("click", function(){
             // hides the tissue dendrogram
-            d4.select("#" + dmap.config.panels.top.id).style("display", "None");
+            select("#" + dmap.config.panels.top.id).style("display", "None");
             // sort tissues
             let xlist = dmap.objects.heatmap.xList.sort();
             _sortTissues(xlist, dmap, tissueDict);
@@ -458,9 +463,9 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
         .addClass("btn btn-default").appendTo($barDiv);
     $("<i/>").addClass("fa fa-code-branch").appendTo($button2);
 
-    d4.select(`#${id2}`)
+    select(`#${id2}`)
         .on("click", function(){
-            d4.select("#" + dmap.config.panels.top.id).style("display", "Block");  // shows the tissue dendrogram
+            select("#" + dmap.config.panels.top.id).style("display", "Block");  // shows the tissue dendrogram
             let xlist = dmap.objects.columnTree.xScale.domain();
             _sortTissues(xlist, dmap, tissueDict);
         })
@@ -476,7 +481,7 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
         .addClass("btn btn-default").appendTo($barDiv);
     $("<i/>").addClass("fa fa-save").appendTo($button3);
 
-    d4.select(`#${id3}`)
+    select(`#${id3}`)
         .on("click", function(){
             let svgObj = $($($(`${"#" +dmap.config.id} svg`))[0]); // jQuery dependent
             downloadSvg(svgObj, "heatmap.svg", "downloadTempDiv");
@@ -498,20 +503,20 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
  */
 function _sortTissues (xlist, dmap, tissueDict){
     // updates the heatmap
-    const dom = d4.select("#"+dmap.config.panels.main.id);
+    const dom = select("#"+dmap.config.panels.main.id);
     const dimensions = dmap.config.panels.main;
     dmap.objects.heatmap.redraw(dom, xlist, dmap.objects.heatmap.yList, dimensions);
 
     // changes the tissue display text to tissue names
-    d4.selectAll(".exp-map-xlabel")
+    selectAll(".exp-map-xlabel")
         .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
     _addTissueColors(dmap, tissueDict);
 
     // hides the boxplot
-    d4.select('#boxplot').style("opacity", 0.0);
+    select('#boxplot').style("opacity", 0.0);
 
     // deselects genes
-    d4.selectAll(".exp-map-ylabel").classed("clicked", false);
+    selectAll(".exp-map-ylabel").classed("clicked", false);
     dmap.data.external = {};
 
 }

@@ -1,9 +1,12 @@
-import * as d4 from "d3"
 
 /*
 This class defines a gene model (or isoform), rendering the exons and junctions of a given gene. The model is rendered based on
 genomic positions, regardless of the strand and transcriptional direction.
  */
+
+import {curveCardinal, line} from "d3-shape";
+import {max, sum} from "d3-array";
+import {scaleLinear} from "d3-scale";
 
 export default class GeneModel {
     /**
@@ -146,10 +149,10 @@ export default class GeneModel {
             });
 
             /***** render junctions */
-            const curve = d4.line()
+            const curve = line()
                 .x((d) => d.x)
                 .y((d) => d.y)
-                .curve(d4.curveCardinal);
+                .curve(curveCardinal);
 
             this.junctions.filter((d) => !d.filtered)
                     .forEach((d, i) => {
@@ -271,17 +274,17 @@ export default class GeneModel {
 
         // use a linear scale to
         this.exons.forEach((d) => {d.length = Number(d.chromEnd) - Number(d.chromStart) + 1});
-        const maxExonLength = d4.max(this.exons, (d)=>d.length);
+        const maxExonLength = max(this.exons, (d)=>d.length);
 
         const domain = [0, maxExonLength*this.exons.length];
         const range = [0, w];
-        this.xScale = d4.scaleLinear()
+        this.xScale = scaleLinear()
             .domain(domain)
             .range(range);
 
         // fixed intron width
         const minLength = this.xScale.invert(this.minExonWidth); // the minimum exon length that maps to minimum exon width (pixels) using xScale
-        const totalExonLength = d4.sum(this.exons, (d)=>d.length>minLength?d.length:minLength); // if an exon is shorter than min length, use min length
+        const totalExonLength = sum(this.exons, (d)=>d.length>minLength?d.length:minLength); // if an exon is shorter than min length, use min length
         this.intronLength = (maxExonLength * this.exons.length - totalExonLength)/(this.exons.length-1); // caluclate the fixed intron length
     }
 
