@@ -58,11 +58,12 @@ export default class Heatmap {
     /**
      * draws the heatmap
      * @param dom {Selection}
-     * @param angle {Integer} for the y text labels
      * @param dimensions {Dictionary} {w:Integer, h:integer} of the heatmap
+     * @param angle {Integer} for the y text labels
+     * @param useNullColor {Boolean} whether to render null values with the pre-defined null color
      */
 
-    draw(dom, dimensions={w:1000, h:600}, angle=30){
+    draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=true){
         if (this.xList === undefined) this._setXList(dimensions.w);
         if (this.yList === undefined) this._setYList(dimensions.h);
         if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value), this.colorScheme);
@@ -150,6 +151,7 @@ export default class Heatmap {
             .attr("col", (d) => `y${this.yList.indexOf(d.y)}`);
 
         // enter new elements
+        const nullColor = "#DDDDDD";
         cells.enter().append("rect")
             .attr("row", (d) => `x${this.xList.indexOf(d.x)}`)
             .attr("col", (d) => `y${this.yList.indexOf(d.y)}`)
@@ -167,7 +169,7 @@ export default class Heatmap {
             .merge(cells)
             .transition()
             .duration(2000)
-            .style("fill", (d) => this.colorScale(d.value));
+            .style("fill", (d) => useNullColor&&d.originalValue==0?nullColor:this.colorScale(d.value)); // TODO: what if null value isn't 0?
 
         // exit and remove
         cells.exit().remove();
