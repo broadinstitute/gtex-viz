@@ -151,7 +151,14 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
                             geneTree = eData.clusters.gene,
                             expression = parseMedianExpression(eData),
                             dmap = new DendroHeatmap(tissueTree, geneTree, expression);
-                        dmap.render(domId);
+
+
+                        if (gencodeIds.length < 3) {
+                            dmap.render(domId, true, false)
+                        } else {
+                            dmap.render(domId);
+                        }
+
                         $('#spinner').hide();
                         // customization for GTEx
                         const tissueDict = tissues.reduce((a, d)=>{
