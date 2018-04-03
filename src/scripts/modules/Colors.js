@@ -48,9 +48,20 @@ export function getColorInterpolator(name){
         BuGn: d3Chromatic.interpolateBuGn,
         OrRd: d3Chromatic.interpolateOrRd,
         PuBu: d3Chromatic.interpolatePuBu,
-        YlGnBu: d3Chromatic.interpolateYlGnBu
+        YlGnBu: d3Chromatic.interpolateYlGnBu,
+        Blues: d3Chromatic.interpolateBlues,
+        Oranges: d3Chromatic.interpolateOranges,
+        Greens: d3Chromatic.interpolateGreens,
+        Purples: d3Chromatic.interpolatePurples,
+        Reds: d3Chromatic.interpolateReds,
+        Greys: d3Chromatic.interpolateGreys,
+        Grays: d3Chromatic.interpolateGreys
     };
-    if (!interpolators.hasOwnProperty(name)) throw "Color Interpolator Error";
+    if (!interpolators.hasOwnProperty(name)) {
+        const err = "Color Interpolator Error " + name;
+        console.error(err);
+        throw(err);
+    }
     return interpolators[name];
 
 }
@@ -80,11 +91,11 @@ export function getColors(theme){
  * reference: http://bl.ocks.org/curran/3094b37e63b918bab0a06787e161607b
  * scaleSequential maps the continuous domain to a continuous color scale
  * @param data {List} of numerical data
- * @param colors {d3Chromatic function}
+ * @param colors {String} a color name that is available in getColorInterpolator()
  */
-export function setColorScale(data, colors=d3Chromatic.interpolateYlGnBu, dmin = 0) {
+export function setColorScale(data, colors="YlGnBu", dmin = 0) {
     let dmax = Math.round(max(data));
-    const scale = scaleSequential(colors);
+    const scale = scaleSequential(getColorInterpolator(colors));
     scale.domain([dmin, dmax]);
     return scale;
 }
@@ -99,10 +110,10 @@ export function setColorScale(data, colors=d3Chromatic.interpolateYlGnBu, dmin =
  * @param useLog {Boolean}
  * @param cell
  */
-export function drawColorLegend(title, dom, scale, config, useLog, base=10, cell={h:15, w:50}){
+export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:15, w:50}){
 
     // const data = [0].concat(scale.quantiles()); // add 0 to the list of values
-    const data = scale.ticks(5).slice(1); // why this doesn't provide consistent number of ticks??
+    const data = scale.ticks(ticks).slice(1); // why this doesn't provide consistent number of ticks??
     // legend title
     dom.append("text")
         .attr("class", "color-legend")

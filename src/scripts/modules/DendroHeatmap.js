@@ -14,7 +14,7 @@ export default class DendroHeatmap {
      * @param heatmapData {List} of objects with attributes: x: String, y:String, value:Float, originalValue:Float, see the class Heatmap
      * @param config
      */
-    constructor(columnTree, rowTree, heatmapData, color="gnbu", r=2, config=new DendroHeatmapConfig(), useLog=true){
+    constructor(columnTree, rowTree, heatmapData, color="YlGnBu", r=2, config=new DendroHeatmapConfig(), useLog=true){
         this.config = config.get();
         this.data = {
             columnTree: columnTree,
@@ -40,7 +40,7 @@ export default class DendroHeatmap {
      * @param domId {String} the DOM id of the SVG
      * @return {Selection} the SVG object
      */
-    render(domId, showTopTree=true, showLeftTree=true, legendPos="bottom"){
+    render(domId, showTopTree=true, showLeftTree=true, legendPos="bottom", ticks=10){
         // TODO: code cleanup... better implementation for optional trees
         this._updateConfig(this.objects.columnTree, this.objects.rowTree, legendPos);
         let svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
@@ -51,7 +51,7 @@ export default class DendroHeatmap {
         const xlist = showTopTree?this.objects.columnTree.xScale.domain():this.objects.columnTree.xScale.domain().sort();
         const ylist = showLeftTree?this.objects.rowTree.yScale.domain():this.objects.rowTree.yScale.domain().sort();
 
-        this._renderHeatmap(svg, this.objects.heatmap, xlist, ylist);
+        this._renderHeatmap(svg, this.objects.heatmap, xlist, ylist, ticks);
         // this._renderHeatmapLegend(svg, this.objects.heatmap);
         this.visualComponents.svg = svg;
     }
@@ -62,15 +62,16 @@ export default class DendroHeatmap {
      * @param heatmap {Heatmap} a Heatmap object
      * @param xList {List} a list of x labels
      * @param yList {List} a list of y labels
+     * @param ticks {Integer} the number of bins in the color legend
      * @private
      */
-    _renderHeatmap(svg, heatmap, xList, yList){
+    _renderHeatmap(svg, heatmap, xList, yList, ticks=10){
         const config = this.config.panels.main;
         const g = svg.append("g")
             .attr("id", config.id)
             .attr("transform", `translate(${config.x}, ${config.y})`);
         heatmap.redraw(g, xList, yList, {w: config.w, h: config.h});
-        heatmap.drawColorLegend(svg, this.config.panels.legend);
+        heatmap.drawColorLegend(svg, this.config.panels.legend, ticks);
     }
 
     /**
