@@ -40,7 +40,7 @@ export default class Heatmap {
      * @param dimensions {Dictionary} {w:Integer, h:integer} with two attributes: w and h
      * @param angle {Integer} for the y text labels
      */
-    redraw(dom, xList, yList, dimensions={w:1000, h:600}, angle=30){
+    redraw(dom, xList, yList, dimensions={w:1000, h:1000}, angle=30){
         this._setXList(dimensions.w, xList);
         this._setYList(dimensions.h, yList);
         this.draw(dom, dimensions, angle);

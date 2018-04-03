@@ -48,8 +48,8 @@ export default class DendroHeatmap {
         this.visualComponents.topTree = this._renderTree(svg, this.objects.columnTree, this.config.panels.top, showTopTree);
         this.visualComponents.leftTree = this._renderTree(svg, this.objects.rowTree, this.config.panels.left, showLeftTree);
 
-        const xlist = showTopTree?this.objects.columnTree.xScale.domain():this.objects.columnTree.xScale.domain().sort();
-        const ylist = showLeftTree?this.objects.rowTree.yScale.domain():this.objects.rowTree.yScale.domain().sort();
+        let xlist = showTopTree?this.objects.columnTree.xScale.domain():undefined;
+        let ylist = showLeftTree?this.objects.rowTree.yScale.domain():undefined;
 
         this._renderHeatmap(svg, this.objects.heatmap, xlist, ylist, ticks);
         // this._renderHeatmapLegend(svg, this.objects.heatmap);
@@ -120,7 +120,7 @@ export default class DendroHeatmap {
         const rows = rowTree.leaves.length;
 
         // updates the left panel's height based on the data
-        this.config.panels.left.h = this.config.cell.h * rows;
+        this.config.panels.left.h = this.config.cell.h * rows<20?20:this.config.cell.h * rows;
         if(legendPos=="bottom") this.config.panels.legend.y += this.config.panels.left.h;
         this.config.h += this.config.panels.left.h;
         this.config.panels.main.h = this.config.panels.left.h;
