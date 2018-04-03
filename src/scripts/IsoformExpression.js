@@ -73,9 +73,8 @@ function _renderJunctions(gene, heatmapDomId, toolbarId, urls=getGtexUrls()){
             dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 2000}); // TODO: figure out a better way to extend the SVG height
             dmapConfig.noTopTreePanel(1250);
             const useLog = true;
-            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "reds2", 5, dmapConfig, useLog);
-            dmap.render(heatmapDomId, false, true, "top"); // false: no top tree, true: show left tree, top: legend on top
-
+            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "Reds", 5, dmapConfig, useLog);
+            dmap.render(heatmapDomId, false, true, top, 5);
             // gene model rendering
             const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
             const adjust = 100;
@@ -157,14 +156,14 @@ function _customize(geneModel, map, jdata, edata, idata){
     const mapSvg = map.visualComponents.svg;
 
     // define exon color scale
-    const ecolorScale = setColorScale(edata.map(d=>d.value), getColors("blues"));
-    drawColorLegend("Exon median read counts per base", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y}, true, 2);
+    const ecolorScale = setColorScale(edata.map(d=>d.value), "Blues");
+    drawColorLegend("Exon median read counts per base", mapSvg, ecolorScale, {x: map.config.panels.legend.x + 700, y:map.config.panels.legend.y}, true, 5, 2);
 
     // define isoform bar scale
     const isoBarScale = scaleLinear()
         .domain([min(idata.map(d=>d.value)), max(idata.map(d=>d.value))])
         .range([0, 100]);
-    const isoColorScale = setColorScale(idata.map(d=>Math.log10(d.value+1)), getColors("greys"));
+    const isoColorScale = setColorScale(idata.map(d=>Math.log10(d.value+1)), "Greys");
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")
         .on("mouseover", function(d){
