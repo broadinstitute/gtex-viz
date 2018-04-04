@@ -150,7 +150,14 @@ function _customize(tissues, geneModel, map, jdata, edata, idata){
             map.objects.heatmap.cellMouseover(selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName;
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0];
-            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName}<br/> Median read counts: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
+            tooltip.show(
+                `<table class="table table-sm table-bordered">
+                    <tr><td>Tissue</td><td>${tissue}</td></tr>
+                    <tr><td>Junction</td><td>${junc.displayName}</td></tr>
+                    <tr><td>Median Read Counts</td><td>${parseFloat(d.originalValue.toExponential()).toPrecision(4)}</td></tr>
+                </table>`
+            );
+            // tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName}<br/> Median read counts: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
