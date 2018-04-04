@@ -20,9 +20,13 @@ export default class DendroHeatmap {
      */
     constructor(columnTree, rowTree, heatmapData, color="YlGnBu", r=2, config=new DendroHeatmapConfig(), useLog=true){
         this.config = config.get();
+        //input evaluations
+        columnTree = columnTree===undefined||columnTree.startsWith("Not enough data")?undefined:columnTree;
+        rowTree = rowTree===undefined||rowTree.startsWith("Not enough data")?undefined:rowTree;
+        // assign attribute values based on input arguments
         this.data = {
-            columnTree: columnTree.startsWith("Not enough data")|| columnTree===undefined?undefined:columnTree,
-            rowTree: rowTree.startsWith("Not enough data")||rowTree===undefined?undefined:rowTree,
+            columnTree: columnTree,
+            rowTree: rowTree,
             heatmap: heatmapData,
             external: undefined
         };

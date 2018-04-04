@@ -245,10 +245,10 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
     const cellMouseover = function(d) {
         const selected = select(this);
         dmap.objects.heatmap.cellMouseover(selected); // call the default heatmap mouse over event first
-        let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueName;
-        let column = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
+        let tissue = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueName;
+        let gene = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
-        tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median (${d.unit?d.unit:"TPM"}): ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
+        tooltip.show(`Tissue: ${tissue} <br> Gene: ${genen} <br> Median (${d.unit?d.unit:"TPM"}): ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
     };
 
     const cellMouseout = function(d){

@@ -26,7 +26,6 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
             const gene = data.geneId[0];
             if (gene === undefined) throw "Fatal Error: gene not found";
             const gencodeId = gene.gencodeId;
-            const modelDomId = "model";
 
             const promises = [
                 json(urls.tissue),
@@ -52,12 +51,12 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
                     isoformExpress = parseIsoformExpression(args[6]);
 
                 // junction expression heat map
-                let dmapConfig = new DendroHeatmapConfig("chart"); // TODO: remove hard-coded chart name
+                let dmapConfig = new DendroHeatmapConfig(domId); // TODO: remove hard-coded chart name
                 dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 2000}); // TODO: figure out a better way to extend the SVG height
                 dmapConfig.noTopTreePanel(1250);
                 const useLog = true;
                 const dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, useLog);
-                dmap.render(heatmapDomId, false, true, top, 5);
+                dmap.render(domId, false, true, top, 5);
                 // gene model rendering
                 const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
                 const adjust = 100;
@@ -72,7 +71,6 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
                 geneModel.render(modelG, modelConfig);
 
                 // render isoform structures, ignoring intron lengths
-
                 isoforms.forEach((isoform, i)=>{
                     const isoformModel = new GeneModel(isoform, exons, isoformExons[isoform.transcriptId], [], true);
                     // create a new <g> for each isoform with the transcript ID, but replace the "." with "_" because a "." is not allowed in a dom ID
@@ -90,7 +88,7 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
 
                 // temporarily
                 _createToolbar(toolbarId, dmap.config.id);
-                _customize(geneModel, dmap, jExpress, exonExpress, isoformExpress);
+                _customize(tissues, geneModel, dmap, jExpress, exonExpress, isoformExpress);
                 $('#spinner').hide();
             })
                 .catch(function(err){console.error(err)});
@@ -132,22 +130,28 @@ function _createToolbar(barId, domId){
 /**
  * customizing the junciton expression visualization
  * dependencies: CSS classes from expressMap.css, junctionMap.css
+ * @param tissues {List} of GTEx tissue objects with attr: colorHex, tissueId, tissueName
  * @param geneModel {Object} of the collapsed gene model
  * @param map {Object} of DendropHeatmap
  * @param jdata {List} of junction expression data objects
  * @param edata {List} of exon expression data objects
  * @param idata {List} of isoform expression data objects
  */
-function _customize(geneModel, map, jdata, edata, idata){
+function _customize(tissues, geneModel, map, jdata, edata, idata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
     const tooltip = map.visualComponents.tooltip;
-
+    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
     // define the junction heatmap cells' mouse events
-    map.Svg.selectAll("exp-map-cell")
+    // note: If you need to reference the element inside the function (e.g. d3.select(this)) you will need to use a normal anonymous function.
+    mapSvg.selectAll(".exp-map-cell")
         .on("mouseover", function(d){
-
-        })
+            const selected = select(this);
+            map.objects.heatmap.cellMouseover(selected);
+            let tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName;
+            let junction = d.x;
+            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junction}<br/> Median read counts: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
+        });
 
     // define exon color scale
     const ecolorScale = setColorScale(edata.map(d=>d.value), "Blues");

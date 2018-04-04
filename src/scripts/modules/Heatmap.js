@@ -136,6 +136,7 @@ export default class Heatmap {
 
         // enter new elements
         const nullColor = "#DDDDDD";
+        const self = this;
         cells.enter().append("rect")
             .attr("row", (d) => `x${this.xList.indexOf(d.x)}`)
             .attr("col", (d) => `y${this.yList.indexOf(d.y)}`)
@@ -150,11 +151,11 @@ export default class Heatmap {
             .style("fill", (d) => "#eeeeee")
             .on("mouseover", function(d){
                 const selected = select(this); // Note: "this" here refers to the dom element not the object
-                this.cellMouseover(selected)
+                self.cellMouseover(selected)
             })
             .on("mouseout", function(d){
                 const selected = select(this); // Note: "this" here refers to the dom element not the object
-                this.cellMouseout()
+                self.cellMouseout()
             })
             .merge(cells)
             .transition()
@@ -184,7 +185,7 @@ export default class Heatmap {
             this.xList = newList
         }
         else {
-            this.xList = replace()
+            this.xList = nest()
                 .key((d) => d.x)
                 .entries(this.data)
                 .map((d) => d.key);
