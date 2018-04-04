@@ -151,6 +151,10 @@ function _customize(tissues, geneModel, map, jdata, edata, idata){
             let tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName;
             let junction = d.x;
             tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junction}<br/> Median read counts: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
+        })
+        .on("mouseout", function(d){
+            mapSvg.selectAll("*").classed('highlighted', false);
+            tooltip.hide();
         });
 
     // define exon color scale
