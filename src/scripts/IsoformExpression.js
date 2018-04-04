@@ -25,92 +25,79 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
          .then(function(data){  // get the gene object
             const gene = data.geneId[0];
             if (gene === undefined) throw "Fatal Error: gene not found";
-            _renderJunctions(gene, domId, toolbarId, urls);
-        })
+            const gencodeId = gene.gencodeId;
+            const modelDomId = "model";
+
+            const promises = [
+                json(urls.tissue),
+                json(urls.geneModelUnfiltered + gencodeId),
+                json(urls.geneModel + gencodeId),
+                json(urls.isoform + gencodeId),
+                json(urls.junctionExp + gencodeId),
+                json(urls.exonExp + gencodeId),
+                json(urls.isoformExp + gencodeId)
+            ];
+
+            Promise.all(promises)
+            .then(function(args){
+                const tissues = parseTissues(args[0]),
+                    exons = parseExons(args[1]),
+                    exonsCurated = parseExons(args[2]),
+                    isoforms = parseIsoforms(args[3]),
+                    isoformExons = parseIsoformExons(args[3]),
+                    junctions = parseJunctions(args[4]),
+                    tissueTree = args[4].clusters.tissue,
+                    jExpress = parseJunctionExpression(args[4]),
+                    exonExpress = parseExonExpression(args[5],  exonsCurated),
+                    isoformExpress = parseIsoformExpression(args[6]);
+
+                // junction expression heat map
+                let dmapConfig = new DendroHeatmapConfig("chart"); // TODO: remove hard-coded chart name
+                dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 2000}); // TODO: figure out a better way to extend the SVG height
+                dmapConfig.noTopTreePanel(1250);
+                const useLog = true;
+                const dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, useLog);
+                dmap.render(heatmapDomId, false, true, top, 5);
+                // gene model rendering
+                const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
+                const adjust = 100;
+                const modelConfig = {
+                    x: 100,
+                    y: dmap.config.panels.main.h + dmap.config.panels.main.y + adjust,
+                    w: dmap.config.panels.main.w,
+                    h: 100
+                };
+                const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel");
+                modelG.attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
+                geneModel.render(modelG, modelConfig);
+
+                // render isoform structures, ignoring intron lengths
+
+                isoforms.forEach((isoform, i)=>{
+                    const isoformModel = new GeneModel(isoform, exons, isoformExons[isoform.transcriptId], [], true);
+                    // create a new <g> for each isoform with the transcript ID, but replace the "." with "_" because a "." is not allowed in a dom ID
+                    const isoformG = dmap.visualComponents.svg.append("g").attr("id", isoform.transcriptId.replace(".", "_"));
+                    const h = 20;
+                    const config = {
+                        x: modelConfig.x,
+                        y: modelConfig.y + modelConfig.h + ((i) * h),
+                        w: modelConfig.w,
+                        h: h
+                    };
+                    isoformG.attr("transform", `translate(${config.x}, ${config.y})`);
+                    isoformModel.render(isoformG, config)
+                });
+
+                // temporarily
+                _createToolbar(toolbarId, dmap.config.id);
+                _customize(geneModel, dmap, jExpress, exonExpress, isoformExpress);
+                $('#spinner').hide();
+            })
+                .catch(function(err){console.error(err)});
+         })
          .catch(function(err){
              console.error(err);
          })
-}
-
-/**
- * Render junction helper function
- * @param gene {Object} with attr: gencodeId
- * @param heatmapDomId {String}
- * @param toolbarId {String} the toolbar's dom ID
- * @param urls {Object} of the GTEx web service urls with attr: tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
- * @private
- */
-function _renderJunctions(gene, heatmapDomId, toolbarId, urls=getGtexUrls()){
-    const gencodeId = gene.gencodeId;
-    const modelDomId = "model";
-
-    const promises = [
-        json(urls.tissue),
-        json(urls.geneModelUnfiltered + gencodeId),
-        json(urls.geneModel + gencodeId),
-        json(urls.isoform + gencodeId),
-        json(urls.junctionExp + gencodeId),
-        json(urls.exonExp + gencodeId),
-        json(urls.isoformExp + gencodeId)
-    ];
-
-    Promise.all(promises)
-        .then(function(args){
-            const tissues = parseTissues(args[0]),
-                exons = parseExons(args[1]),
-                exonsCurated = parseExons(args[2]),
-                isoforms = parseIsoforms(args[3]),
-                isoformExons = parseIsoformExons(args[3]),
-                junctions = parseJunctions(args[4]),
-                tissueTree = args[4].clusters.tissue,
-                junctionTree = args[4].clusters.junction, // junction tree is not really useful
-                jExpress = parseJunctionExpression(args[4]),
-                exonExpress = parseExonExpression(args[5],  exonsCurated),
-                isoformExpress = parseIsoformExpression(args[6]);
-
-            // junction expression heat map
-            let dmapConfig = new DendroHeatmapConfig("chart");
-            dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 2000}); // TODO: figure out a better way to extend the SVG height
-            dmapConfig.noTopTreePanel(1250);
-            const useLog = true;
-            const dmap = new DendroHeatmap(junctionTree, tissueTree, jExpress, "Reds", 5, dmapConfig, useLog);
-            dmap.render(heatmapDomId, false, true, top, 5);
-            // gene model rendering
-            const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
-            const adjust = 100;
-            const modelConfig = {
-                x: 100,
-                y: dmap.config.panels.main.h + dmap.config.panels.main.y + adjust,
-                w: dmap.config.panels.main.w,
-                h: 100
-            };
-            const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel");
-            modelG.attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
-            geneModel.render(modelG, modelConfig);
-
-            // render isoform structures, ignoring intron lengths
-
-            isoforms.forEach((isoform, i)=>{
-                const isoformModel = new GeneModel(isoform, exons, isoformExons[isoform.transcriptId], [], true);
-                // create a new <g> for each isoform with the transcript ID, but replace the "." with "_" because a "." is not allowed in a dom ID
-                const isoformG = dmap.visualComponents.svg.append("g").attr("id", isoform.transcriptId.replace(".", "_"));
-                const h = 20;
-                const config = {
-                    x: modelConfig.x,
-                    y: modelConfig.y + modelConfig.h + ((i) * h),
-                    w: modelConfig.w,
-                    h: h
-                };
-                isoformG.attr("transform", `translate(${config.x}, ${config.y})`);
-                isoformModel.render(isoformG, config)
-            });
-
-            // temporarily
-            _createToolbar(toolbarId, dmap.config.id);
-            _customize(geneModel, dmap, jExpress, exonExpress, isoformExpress);
-            $('#spinner').hide();
-        })
-        .catch(function(err){console.error(err)});
 }
 
 /**
@@ -154,6 +141,13 @@ function _createToolbar(barId, domId){
 function _customize(geneModel, map, jdata, edata, idata){
     // junction labels on the map
     const mapSvg = map.visualComponents.svg;
+    const tooltip = map.visualComponents.tooltip;
+
+    // define the junction heatmap cells' mouse events
+    map.Svg.selectAll("exp-map-cell")
+        .on("mouseover", function(d){
+
+        })
 
     // define exon color scale
     const ecolorScale = setColorScale(edata.map(d=>d.value), "Blues");
@@ -164,6 +158,7 @@ function _customize(geneModel, map, jdata, edata, idata){
         .domain([min(idata.map(d=>d.value)), max(idata.map(d=>d.value))])
         .range([0, 100]);
     const isoColorScale = setColorScale(idata.map(d=>Math.log10(d.value+1)), "Greys");
+
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")
         .on("mouseover", function(d){

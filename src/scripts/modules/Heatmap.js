@@ -29,7 +29,6 @@ export default class Heatmap {
         this.yScale = undefined;
         this.r = r;
         this.colorScheme = colorScheme;
-        // this.colors = getColors(colorScheme);
     }
 
     /**
@@ -125,21 +124,6 @@ export default class Heatmap {
 
         // renders the heatmap cells
 
-        const cellMouseover = function(d) {
-            const selected = select(this);
-            const rowClass = selected.attr("row");
-            const colClass = selected.attr("col");
-            selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
-                .classed('highlighted', true);
-            selectAll(".exp-map-ylabel").filter(`.${colClass}`)
-                .classed('highlighted', true);
-            selected.classed('highlighted', true);
-            console.log(`Row: ${d.x}, Column: ${d.y}, Value: ${d.originalValue}`)
-        };
-
-        const cellMouseout = function(d){
-            dom.selectAll("*").classed('highlighted', false);
-        };
         // data join
         const cells = dom.selectAll(".exp-map-cell")
             .data(this.data, (d) => d.value);
@@ -164,8 +148,14 @@ export default class Heatmap {
             .attr("width", this.xScale.bandwidth())
             .attr("height", this.yScale.bandwidth())
             .style("fill", (d) => "#eeeeee")
-            .on("mouseover", cellMouseover)
-            .on("mouseout", cellMouseout)
+            .on("mouseover", function(d){
+                const selected = select(this); // Note: "this" here refers to the dom element not the object
+                this.cellMouseover(selected)
+            })
+            .on("mouseout", function(d){
+                const selected = select(this); // Note: "this" here refers to the dom element not the object
+                this.cellMouseout()
+            })
             .merge(cells)
             .transition()
             .duration(2000)
@@ -173,6 +163,20 @@ export default class Heatmap {
 
         // exit and remove
         cells.exit().remove();
+    }
+
+    cellMouseout(d){
+        selectAll("*").classed('highlighted', false);
+    }
+
+    cellMouseover (selected) {
+        const rowClass = selected.attr("row");
+        const colClass = selected.attr("col");
+        selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
+            .classed('highlighted', true);
+        selectAll(".exp-map-ylabel").filter(`.${colClass}`)
+            .classed('highlighted', true);
+        selected.classed('highlighted', true);
     }
 
     _setXList(width, newList) {

@@ -243,21 +243,8 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
     const tooltip = dmap.visualComponents.tooltip;
 
     const cellMouseover = function(d) {
-        // dependencies -- css classes
-        // expressMap.css
-
-        const selected = select(this); // note: "this" refers to the dom element of d
-        selected.classed('highlighted', true);
-
-        // highlight the row and column labels
-        const rowClass = selected.attr("row");
-        const colClass = selected.attr("col");
-        svg.selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
-            .classed('highlighted', true);
-
-        selectAll(".exp-map-ylabel").filter(`.${colClass}`)
-            .classed('highlighted', true);
-
+        const selected = select(this);
+        dmap.objects.heatmap.cellMouseover(selected); // call the default heatmap mouse over event first
         let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueName;
         let column = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
