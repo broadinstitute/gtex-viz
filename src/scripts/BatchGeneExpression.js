@@ -248,7 +248,13 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         let tissue = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueName;
         let gene = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
-        tooltip.show(`Tissue: ${tissue} <br> Gene: ${genen} <br> Median (${d.unit?d.unit:"TPM"}): ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
+        tooltip.show(
+            `<table class="table table-sm table-bordered">
+                <tr><td>Tissue</td><td>${tissue}</td></tr>
+                <tr><td>Gene</td><td>${gene}</td></tr>
+                <tr><td>Median ${d.unit?d.unit:"TPM"}</td><td>${parseFloat(d.originalValue.toExponential()).toPrecision(4)}</td></tr>
+            </table>`
+        );
     };
 
     const cellMouseout = function(d){
