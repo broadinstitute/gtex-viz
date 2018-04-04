@@ -148,9 +148,9 @@ function _customize(tissues, geneModel, map, jdata, edata, idata){
         .on("mouseover", function(d){
             const selected = select(this);
             map.objects.heatmap.cellMouseover(selected);
-            let tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName;
-            let junction = d.x;
-            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junction}<br/> Median read counts: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
+            const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName;
+            const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0];
+            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName}<br/> Median read counts: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -202,7 +202,7 @@ function _customize(tissues, geneModel, map, jdata, edata, idata){
         });
 
     mapSvg.selectAll(".exp-map-xlabel")
-        .each(function(d){
+        .each(function(){
             // add junction ID as the dom id
             const xlabel = select(this);
             const jId = xlabel.text();
@@ -211,9 +211,9 @@ function _customize(tissues, geneModel, map, jdata, edata, idata){
 
             // and then change the text to startExon-endExon format
             const junc = geneModel.junctions.filter((d)=>d.junctionId == `${jId}` && !d.filtered)[0];
-            if (junc !== undefined) xlabel.text(`Exon ${junc.startExon.exonNumber} - ${junc.endExon.exonNumber}`);
+            if (junc !== undefined) xlabel.text(junc.displayName);
         })
-        .on("mouseover", function(d){
+        .on("mouseover", function(){
             const jId = select(this).attr("id");
             select(this).classed("highlighted", true);
 
@@ -225,7 +225,7 @@ function _customize(tissues, geneModel, map, jdata, edata, idata){
                 mapSvg.selectAll(`.exon${junc.endExon.exonNumber}`).classed("highlighted", true);
             }
         })
-        .on("mouseout", function(d){
+        .on("mouseout", function(){
             select(this).classed("highlighted", false);
             selectAll(".junc").classed("highlighted", false);
             selectAll(".junc-curve").classed("highlighted", false);
