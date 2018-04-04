@@ -323,13 +323,17 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         }
     };
 
-    dmap.visualComponents.topTree.selectAll(".dendrogram-node")
+    if (dmap.visualComponents.columnTree !== undefined){
+         dmap.visualComponents.columnTree.selectAll(".dendrogram-node")
         .on("mouseover", treeNodeMouseover(".exp-map-xlabel"))
         .on("mouseout", treeNodeMouseout(".exp-map-xlabel"));
+    }
 
-    dmap.visualComponents.leftTree.selectAll(".dendrogram-node")
+    if (dmap.visualComponents.rowTree !== undefined){
+        dmap.visualComponents.rowTree.selectAll(".dendrogram-node")
         .on("mouseover", treeNodeMouseover(".exp-map-ylabel"))
         .on("mouseout", treeNodeMouseout(".exp-map-ylabel"));
+    }
 
     svg.selectAll(".exp-map-cell")
         .on("mouseover", cellMouseover)

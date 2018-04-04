@@ -7,86 +7,78 @@ import Heatmap from "./Heatmap";
 import Tooltip from "./Tooltip";
 
 export default class DendroHeatmap {
+
     /**
      * Constructor
      * @param columnTree {String} a newick tree
      * @param rowTree {String} a newick tree
-     * @param heatmapData {List} of objects with attributes: x: String, y:String, value:Float, originalValue:Float, see the class Heatmap
-     * @param config
+     * @param heatmapData {List} of objects with attributes: x: String, y:String, value:Float, originalValue:Float
+     * @param color {String} a color name that's available in Colors.getColorInterpolator
+     * @param r {Integer} the degrees of rounded-corners of the heatmap cells
+     * @param config {DendroHeatmapConfig}
+     * @param useLog {Boolean}
      */
     constructor(columnTree, rowTree, heatmapData, color="YlGnBu", r=2, config=new DendroHeatmapConfig(), useLog=true){
         this.config = config.get();
         this.data = {
-            columnTree: columnTree,
-            rowTree: rowTree,
+            columnTree: columnTree.startsWith("Not enough data")?undefined:columnTree,
+            rowTree: rowTree.startsWith("Not enough data")?undefined:rowTree,
             heatmap: heatmapData,
             external: undefined
         };
         this.objects = {
-            columnTree: new Dendrogram(this.data.columnTree, "v"),
-            rowTree: new Dendrogram(this.data.rowTree, "h"),
+            columnTree: this.data.columnTree===undefined? undefined:new Dendrogram(this.data.columnTree, "v"),
+            rowTree: this.data.rowTree===undefined?undefined:new Dendrogram(this.data.rowTree, "h"),
             heatmap: new Heatmap(this.data.heatmap, useLog, color, r)
         };
         this.visualComponents = {
             tooltip: new Tooltip("tooltip", false), // TODO: remove hard-coded tooltip DOM ID
             svg: undefined,
-            topTree: undefined,
-            leftTree: undefined
+            columnTree: undefined,
+            rowTree: undefined
         };
     }
 
     /**
-     * visual rendering of the dendroHeatmap
+     * Render the dendrograms and corresponding heatmap
      * @param domId {String} the DOM id of the SVG
-     * @return {Selection} the SVG object
+     * @param showColumnTree {Boolean} render the column dendrogram
+     * @param showRowTree {Boolean} render the row dendrogram
+     * @param legendPos {Enum} where to place the color legend: bottom, top
+     * @param ticks {Integer} number of bins of the color legend
      */
-    render(domId, showTopTree=true, showLeftTree=true, legendPos="bottom", ticks=10){
-        // TODO: code cleanup... better implementation for optional trees
-        this._updateConfig(this.objects.columnTree, this.objects.rowTree, legendPos);
-        let svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
+    render(domId, showColumnTree=true, showRowTree=true, legendPos="bottom", ticks=10){
+        this._updateConfig(legendPos);
+        this.visualComponents.svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
 
-        this.visualComponents.topTree = this._renderTree(svg, this.objects.columnTree, this.config.panels.top, showTopTree);
-        this.visualComponents.leftTree = this._renderTree(svg, this.objects.rowTree, this.config.panels.left, showLeftTree);
+        let xlist = undefined,
+            ylist = undefined;
 
-        let xlist = showTopTree?this.objects.columnTree.xScale.domain():undefined;
-        let ylist = showLeftTree?this.objects.rowTree.yScale.domain():undefined;
+        if (showColumnTree && this.objects.columnTree!==undefined){
+            this.visualComponents.columnTree = this._renderTree(this.objects.columnTree, this.config.panels.top);
+            xlist = this.objects.columnTree.xScale.domain();
+        }
+        if (showRowTree && this.objects.rowTree !== undefined){
+            this.visualComponents.rowTree = this._renderTree(this.objects.rowTree, this.config.panels.left);
+            ylist = this.objects.rowTree.yScale.domain();
+        }
 
-        this._renderHeatmap(svg, this.objects.heatmap, xlist, ylist, ticks);
-        // this._renderHeatmapLegend(svg, this.objects.heatmap);
-        this.visualComponents.svg = svg;
-    }
-
-    /**
-     * renders the heatmap and color legend
-     * @param svg {Selection} a d3 selection object
-     * @param heatmap {Heatmap} a Heatmap object
-     * @param xList {List} a list of x labels
-     * @param yList {List} a list of y labels
-     * @param ticks {Integer} the number of bins in the color legend
-     * @private
-     */
-    _renderHeatmap(svg, heatmap, xList, yList, ticks=10){
-        const config = this.config.panels.main;
-        const g = svg.append("g")
-            .attr("id", config.id)
-            .attr("transform", `translate(${config.x}, ${config.y})`);
-        heatmap.redraw(g, xList, yList, {w: config.w, h: config.h});
-        heatmap.drawColorLegend(svg, this.config.panels.legend, ticks);
+        this._renderHeatmap(this.objects.heatmap, xlist, ylist, ticks);
     }
 
     /**
      * renders a newick tree
-     * @param svg {Selection} a d3 selection object
      * @param tree {Dendrogram} a Dendrogram object
      * @param config {Object} a panel config with attributes: x, y, width and height
      * @private
      */
-    _renderTree(svg, tree, config, show=true){
+    _renderTree(tree, config){
+        let dom = this.visualComponents.svg;
         const tooltip = this.visualComponents.tooltip;
-        const g = svg.append("g")
+        const g = dom.append("g")
             .attr("id", config.id)
             .attr("transform", `translate(${config.x}, ${config.y})`);
-        tree.draw(g, config.w, config.h, show);
+        tree.draw(g, config.w, config.h);
 
         // customized mouse events
         const mouseover = function(d){
@@ -109,15 +101,32 @@ export default class DendroHeatmap {
     }
 
     /**
+     * renders the heatmap and color legend
+     * @param heatmap {Heatmap} a Heatmap object
+     * @param xList {List} a list of x labels
+     * @param yList {List} a list of y labels
+     * @param ticks {Integer} the number of bins in the color legend
+     * @private
+     */
+    _renderHeatmap(heatmap, xList, yList, ticks=10){
+        let dom = this.visualComponents.svg;
+        const config = this.config.panels.main;
+        const g = dom.append("g")
+            .attr("id", config.id)
+            .attr("transform", `translate(${config.x}, ${config.y})`);
+        heatmap.redraw(g, xList, yList, {w: config.w, h: config.h});
+        heatmap.drawColorLegend(dom, this.config.panels.legend, ticks);
+    }
+
+
+
+    /**
      * adjusts the layout dimensions based on the actual data
-     * @param colTree {Dendrogram} the column tree object
-     * @param rowTree {Dendrogram} the row tree object
      * @param legendPos {String} bottom or top
      * @private
      */
-    _updateConfig(colTree, rowTree, legendPos){
-        const columns = colTree.leaves.length;
-        const rows = rowTree.leaves.length;
+    _updateConfig(legendPos){
+        const rows = this.objects.rowTree===undefined?1:this.objects.rowTree.leaves.length;
 
         // updates the left panel's height based on the data
         this.config.panels.left.h = this.config.cell.h * rows<20?20:this.config.cell.h * rows;
