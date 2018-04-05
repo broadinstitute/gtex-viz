@@ -87,7 +87,7 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
                 });
 
                 // temporarily
-                _createToolbar(toolbarId, dmap.config.id);
+                _createToolbar(toolbarId, dmap, dmap.config.id);
                 _customize(tissues, geneModel, dmap, jExpress, exonExpress, isoformExpress);
                 $('#spinner').hide();
             })
@@ -101,10 +101,11 @@ export function renderJunctions(geneId, domId, toolbarId, urls=getGtexUrls()){
 /**
  * Create the tool bar
  * @param barId {String} the toolbar's dom ID
+ * @param dmap {DendroHeatmap}
  * @param domId {String} the SVG's parent dom ID
  * @private
  */
-function _createToolbar(barId, domId){
+function _createToolbar(barId, dmap, domId){
     $(`#${barId}`).show();
     let $barDiv = $("<div/>").addClass("btn-group btn-group-sm").appendTo(`#${barId}`);
     const id1 = "isoformDownload";
@@ -118,12 +119,12 @@ function _createToolbar(barId, domId){
             let svgObj = $($($(`${"#" +domId} svg`))[0]); // complicated jQuery!
             downloadSvg(svgObj, "isoforms.svg", "downloadTempDiv"); // TODO: remove hard-coded hidden div, create this div on the fly
         })
-        // .on("mouseover", function(){
-        //     dmap.visualComponents.tooltip.show("Download Isoform SVG");
-        // })
-        // .on("mouseout", function(){
-        //     dmap.visualComponents.tooltip.hide();
-        // });
+        .on("mouseover", function(){
+            dmap.visualComponents.tooltip.show("Download Isoform SVG");
+        })
+        .on("mouseout", function(){
+            dmap.visualComponents.tooltip.hide();
+        });
 }
 
 
