@@ -111,7 +111,11 @@ export function parseIsoformExons(data){
 export function parseIsoforms(data){
     const attr = "transcript";
     if(!data.hasOwnProperty(attr)) throw("parseIsoforms input error");
-    return data[attr].filter((d)=>{return "transcript" == d.featureType});
+    return data[attr].filter((d)=>{return "transcript" == d.featureType}).sort((a, b)=>{
+        const l1 = Math.abs(a.chromEnd - a.chromStart) + 1;
+        const l2 = Math.abs(b.chromEnd - b.chromStart) + 1;
+        return -(l1-l2); // sort by isoform length in descending order
+    });
 }
 
 /**
