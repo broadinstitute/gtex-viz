@@ -3,7 +3,14 @@ import {json, tsv} from "d3-fetch";
 import {select, selectAll, event} from "d3-selection";
 import {keys, values} from "d3-collection";
 
-import {getGtexUrls, getTissueClusters, getGeneClusters, parseMedianTPM, parseTissues, parseMedianExpression, makeJsonForPlotly} from "./modules/gtex/gtexDataParser";
+import {getGtexUrls,
+        getTissueClusters,
+        getGeneClusters,
+        parseMedianTPM,
+        parseTissues,
+        parseMedianExpression,
+        makeJsonForPlotly
+} from "./modules/gtexDataParser";
 import {colorChart} from "./modules/Colors";
 import {downloadSvg} from "./modules/utils";
 

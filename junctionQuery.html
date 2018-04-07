@@ -68,7 +68,7 @@
             const geneId = $('#gene').val();
             reset();
             $('#spinner').show();
-            IsoformExpression.renderJunctions(geneId, "chart", "expMapToolbar");
+            IsoformExpression.render(geneId, "chart", "expMapToolbar");
         }
         function reset(){
             $("#chart").empty();
