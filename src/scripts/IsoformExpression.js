@@ -72,11 +72,12 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
                 const geneModel = _renderGeneModel(dmap.visualComponents.svg, gene, exons, exonsCurated, junctions, modelConfig);
 
                 // render isoform structures, ignoring intron lengths
+                const exonH = 20;
                  const isoTrackViewerConfig = {
                     x: modelConfig.x,
                     y: modelConfig.y + modelConfig.h,
                     w: modelConfig.w,
-                    h: 400
+                    h: exonH*isoforms.length
                 };
                 const isoformTrackViewer = _renderIsoformTracks(dmap.visualComponents.svg, isoforms, isoformExons, exons, isoTrackViewerConfig);
 
