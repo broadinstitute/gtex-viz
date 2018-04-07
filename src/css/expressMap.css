@@ -47,8 +47,24 @@ div.exp-map-tooltip {
 }
 
 .exp-map-tooltip table {
-    margin-bottom: 0px;
+    margin:0;
+    padding:0;
+    border: 1px solid white;
+    border-spacing: 2px;
 }
 
+.exp-map-tooltip td {
+    padding: 2px;
+    border: 1px solid white;
+}
+
+.exp-map-tooltip tr:nth-child(odd) {
+    background-color: #000;
+}
+
+.exp-map-tooltip tr:nth-child(even) {
+    background-color: #c8dcec;
+    color: #000;
+}
 
 
