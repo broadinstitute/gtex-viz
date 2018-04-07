@@ -6,6 +6,7 @@ This class is a viewer of transcriptional isoforms, each is render as a track
 import GeneModel from "./GeneModel";
 import {select, selectAll} from "d3-selection";
 import {scaleBand} from "d3-scale";
+import {axisTop, axisRight} from "d3-axis";
 
 export default class IsoformTrackViewer {
     constructor(isoforms, isoformExons, modelExons, config){
@@ -31,7 +32,7 @@ export default class IsoformTrackViewer {
         this.visualDom.select(".lollipopGraph").remove();
         const lollipopGraph = this.visualDom.append("g")
             .classed("lollipopGraph", true)
-            .attr("transform", `translate(-95, 13)`); // TODO: remove hard-coded values
+            .attr("transform", `translate(-100, 13)`); // TODO: remove hard-coded values
 
         const lollipops = lollipopGraph.selectAll(".lollipop")
             .data(data);
@@ -57,7 +58,32 @@ export default class IsoformTrackViewer {
             .style("fill", (d)=>colorScale(d.value))
             .transition()
             .duration(1000)
-            .attr("cx", (d)=>barScale(d.value))
+            .attr("cx", (d)=>barScale(d.value));
+
+        // add the axes
+        lollipopGraph.append("g")
+            .attr("class", "lollipop-axis")
+            .attr("transform", `translate(0,-10)`)
+            .call(
+                axisTop(barScale)
+                    .ticks(3)
+            );
+        lollipopGraph.append("text")
+            .attr("id", "lolliLabel")
+            .attr("x", 0)
+            .attr("y", -40)
+            .style("text-anchor", "end")
+            .style("font-size", 9)
+            .text("log10(TPM)");
+
+        lollipopGraph.append("g")
+            .attr("class", "lollipop-axis")
+            .attr("transform", `translate(0,-10)`)
+            .call(
+                axisRight(this.yScale)
+                  .tickValues([]) // show no ticks
+            );
+
 
 
     }
