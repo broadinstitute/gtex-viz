@@ -93,7 +93,7 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
 }
 
 function _renderIsoformTracks(dom, isoforms, isoformExons, modelExons, config={x:0, y:0, w:1000, h:400}){
-    const trackViewer = new IsoformTrackViewer(isoforms, isoformExons, modelExons, {w:config.w, h:config.h});
+    const trackViewer = new IsoformTrackViewer(isoforms, isoformExons, modelExons, config);
     const trackViewerG = dom.append("g");
     trackViewer.render(false, trackViewerG);
     trackViewerG.attr("transform", `translate(${config.x}, ${config.y})`);
@@ -187,15 +187,15 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
             tooltip.hide();
         });
 
-    // define exon color scale
+    // define gene model exon color scale
     const ecolorScale = setColorScale(edata.map(d=>d.value), "Blues");
     drawColorLegend("Exon median read counts per base", mapSvg, ecolorScale, {x: dmap.config.panels.legend.x + 700, y:dmap.config.panels.legend.y}, true, 5, 2);
 
-    // define isoform bar scale
-    // const isoBarScale = scaleLinear()
-    //     .domain([min(idata.map(d=>d.value)), max(idata.map(d=>d.value))])
-    //     .range([0, 100]);
+    // define isoform exon color scale
     const isoColorScale = setColorScale(idata.map(d=>d.value), "Greys");
+    const isoBarScale = scaleLinear()
+            .domain([min(idata.map(d=>d.value)), max(idata.map(d=>d.value))])
+            .range([0, 100]);
 
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")
@@ -213,20 +213,9 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
             geneModel.changeTextlabel(mapSvg.select("#geneModel"), "Expression in " + tissue);
             geneModel.addData(mapSvg.select("#geneModel"), j, ex, dmap.objects.heatmap.colorScale, ecolorScale);
 
-            // TODO: code review!!! Add the following to geneModel.addData?
             // isoforms update
-            // create a tissue-specific isoform expression lookup table indexed by transcriptId
-            const isoData = idata.filter((d)=>d.tissueId==tissue).sort((a,b)=>{return -(a.originalValue - b.originalValue)});
-
-            // sort the isoform tracks based on the tissue's expression data
-            isoTrackViewer.sortTracks(isoData.map((d)=>d.transcriptId));
-
-            // color each track's exons
-            isoData.forEach((d)=>{
-                const isoform = mapSvg.select(`#${d.transcriptId.replace(".", "_")}`);
-                isoform.selectAll(".exon-curated")
-                    .style("fill", isoColorScale(d.value))
-            });
+            const isoData = idata.filter((d)=>d.tissueId==tissue);
+            isoTrackViewer.showData(isoData, isoColorScale, isoBarScale);
         });
 
     mapSvg.selectAll(".exp-map-xlabel")

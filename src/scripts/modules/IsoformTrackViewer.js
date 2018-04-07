@@ -16,13 +16,59 @@ export default class IsoformTrackViewer {
         this.config = config;
     }
 
+    showData(data, colorScale, barScale){
+        data.sort((a,b)=>{return -(a.originalValue - b.originalValue)}); // first sort the expression data
+        const ids = data.map((d)=>d.transcriptId);
+        this.sortTracks(ids);
+
+        data.forEach((d)=>{
+            const isoform = this.visualDom.select(`#${d.transcriptId.replace(".", "_")}`);
+            isoform.selectAll(".exon-curated")
+                .style("fill", colorScale(d.value))
+        });
+
+        // render the lollipop graph
+        this.visualDom.select(".lollipopGraph").remove();
+
+        const lollipops = this.visualDom.append("g")
+            .classed("lollipopGraph", true)
+            .attr("transform", `translate(${this.config.w+10}, 15)`)
+            .selectAll(".lollipop")
+            .data(data);
+
+        const g = lollipops.enter()
+            .append("g")
+            .classed("lollipop", true);
+
+        g.append("line")
+            .attr("x1", 0)
+            .attr("y1", (d)=>this.yScale(d.transcriptId))
+            .attr("y2", (d)=>this.yScale(d.transcriptId))
+            .style("stroke", (d)=>colorScale(d.value))
+            .style("stroke-width", 2)
+            .transition()
+            .duration(1000)
+            .attr("x2", (d)=>barScale(d.value));
+
+        g.append("circle")
+            .attr("cx", 0)
+            .attr("cy", (d)=>this.yScale(d.transcriptId) )
+            .attr("r", 5)
+            .style("fill", (d)=>colorScale(d.value))
+            .transition()
+            .duration(1000)
+            .attr("cx", (d)=>barScale(d.value))
+
+
+    }
+
     sortTracks(ylist){
         console.log(ylist);
         this.setYscale(this.config.h, ylist);
         this.render(true);
     }
 
-    render(redraw=false, dom=undefined, duration=2000){
+    render(redraw=false, dom=undefined, duration=1000){
         if (dom === undefined && this.visualDom === undefined) throw "Fatal Error: must provide a dom element";
         if (dom === undefined) dom = this.visualDom;
         else this.visualDom = dom;
