@@ -203,10 +203,10 @@ export default class GeneModel {
             // model info text label
             dom.append("text")
                 .attr("id", "modelInfo") // TODO: no hard-coded value
-                .style("text-anchor", "start")
-                .attr("x", this.exons[this.exons.length -1].x + this.exons[this.exons.length-1].w + 15)
-                .attr("y", exonY + 15/2)
-                .style("font-size", 9)
+                .style("text-anchor", "end")
+                .attr("x", this.xScale(0))
+                .attr("y", exonY + 30)
+                .style("font-size", 12)
                 .text("Gene Model");
 
         }
@@ -247,8 +247,8 @@ export default class GeneModel {
         dom.append("text")
             .attr("id", "modelLabel") // TODO: no hard-coded value
             .style("text-anchor", "end")
-            .attr("x", this.xScale(0) - 20)
-            .attr("y", exonY + 15/2)
+            .attr("x", this.xScale(0) - 5)
+            .attr("y", exonY + 8)
             .style("font-size", 9)
             .text(this.gene.transcriptId===undefined?`${this.gene.geneSymbol}`:this.gene.transcriptId);
 

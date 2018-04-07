@@ -29,11 +29,11 @@ export default class IsoformTrackViewer {
 
         // render the lollipop graph
         this.visualDom.select(".lollipopGraph").remove();
-
-        const lollipops = this.visualDom.append("g")
+        const lollipopGraph = this.visualDom.append("g")
             .classed("lollipopGraph", true)
-            .attr("transform", `translate(${this.config.w+10}, 15)`)
-            .selectAll(".lollipop")
+            .attr("transform", `translate(-95, 13)`); // TODO: remove hard-coded values
+
+        const lollipops = lollipopGraph.selectAll(".lollipop")
             .data(data);
 
         const g = lollipops.enter()
