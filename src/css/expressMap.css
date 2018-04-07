@@ -46,5 +46,9 @@ div.exp-map-tooltip {
    border-radius:5px;
 }
 
+.exp-map-tooltip table {
+    margin-bottom: 0px;
+}
+
 
 

@@ -3,7 +3,14 @@ import {json, tsv} from "d3-fetch";
 import {select, selectAll, event} from "d3-selection";
 import {keys, values} from "d3-collection";
 
-import {getGtexUrls, getTissueClusters, getGeneClusters, parseMedianTPM, parseTissues, parseMedianExpression, makeJsonForPlotly} from "./modules/gtex/gtexDataParser";
+import {getGtexUrls,
+        getTissueClusters,
+        getGeneClusters,
+        parseMedianTPM,
+        parseTissues,
+        parseMedianExpression,
+        makeJsonForPlotly
+} from "./modules/gtexDataParser";
 import {colorChart} from "./modules/Colors";
 import {downloadSvg} from "./modules/utils";
 
@@ -243,25 +250,18 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
     const tooltip = dmap.visualComponents.tooltip;
 
     const cellMouseover = function(d) {
-        // dependencies -- css classes
-        // expressMap.css
+        const selected = select(this);
+        dmap.objects.heatmap.cellMouseover(selected); // call the default heatmap mouse over event first
+        let tissue = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueName;
+        let gene = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
-        const selected = select(this); // note: "this" refers to the dom element of d
-        selected.classed('highlighted', true);
-
-        // highlight the row and column labels
-        const rowClass = selected.attr("row");
-        const colClass = selected.attr("col");
-        svg.selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
-            .classed('highlighted', true);
-
-        selectAll(".exp-map-ylabel").filter(`.${colClass}`)
-            .classed('highlighted', true);
-
-        let row = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueName;
-        let column = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
-
-        tooltip.show(`Tissue: ${row} <br> Gene: ${column} <br> Median (${d.unit?d.unit:"TPM"}): ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`);
+        tooltip.show(
+            `<table class="table table-sm table-bordered">
+                <tr><td>Tissue</td><td>${tissue}</td></tr>
+                <tr><td>Gene</td><td>${gene}</td></tr>
+                <tr><td>Median ${d.unit?d.unit:"TPM"}</td><td>${parseFloat(d.originalValue.toExponential()).toPrecision(4)}</td></tr>
+            </table>`
+        );
     };
 
     const cellMouseout = function(d){
@@ -323,13 +323,17 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         }
     };
 
-    dmap.visualComponents.topTree.selectAll(".dendrogram-node")
+    if (dmap.visualComponents.columnTree !== undefined){
+         dmap.visualComponents.columnTree.selectAll(".dendrogram-node")
         .on("mouseover", treeNodeMouseover(".exp-map-xlabel"))
         .on("mouseout", treeNodeMouseout(".exp-map-xlabel"));
+    }
 
-    dmap.visualComponents.leftTree.selectAll(".dendrogram-node")
+    if (dmap.visualComponents.rowTree !== undefined){
+        dmap.visualComponents.rowTree.selectAll(".dendrogram-node")
         .on("mouseover", treeNodeMouseover(".exp-map-ylabel"))
         .on("mouseout", treeNodeMouseout(".exp-map-ylabel"));
+    }
 
     svg.selectAll(".exp-map-cell")
         .on("mouseover", cellMouseover)

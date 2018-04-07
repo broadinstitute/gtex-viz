@@ -111,7 +111,11 @@ export function parseIsoformExons(data){
 export function parseIsoforms(data){
     const attr = "transcript";
     if(!data.hasOwnProperty(attr)) throw("parseIsoforms input error");
-    return data[attr].filter((d)=>{return "transcript" == d.featureType});
+    return data[attr].filter((d)=>{return "transcript" == d.featureType}).sort((a, b)=>{
+        const l1 = Math.abs(a.chromEnd - a.chromStart) + 1;
+        const l2 = Math.abs(b.chromEnd - b.chromStart) + 1;
+        return -(l1-l2); // sort by isoform length in descending order
+    });
 }
 
 /**
@@ -180,12 +184,12 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
     return junctions;
 }
 
-export function parseIsoformExpression(data){
+export function parseIsoformExpression(data, useLog=true, adjust=1){
     const attr = "isoformExpression";
     if(!data.hasOwnProperty(attr)) throw("parseIsoformExpression input error");
     // parse GTEx isoform median TPM
     data[attr].forEach((d) => {
-        d.value = Number(d.data);
+        d.value = useLog?Math.log10(Number(d.data + adjust)):Number(d.data);
         d.originalValue = Number(d.data);
     });
 

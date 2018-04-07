@@ -35,6 +35,7 @@ export default class GeneModel {
             return 0;
         }); // sorted by junction ID
         this.isIsoform = isIsoform;
+
         // hard-coded for now
         this.intronLength = 0; // fixed fake intron length in base pairs
         this.minExonWidth = 5; // minimum exon width in pixels
@@ -71,16 +72,16 @@ export default class GeneModel {
     /**
      * render the SVG of the gene model
      * @param dom: an SVG dom object
-     * @param dimensions
+     * @param config
 
      */
-    render(dom, dimensions={w: 1200, h: 100}) {
-        this.setXscale(dimensions.w);
+    render(dom, config) {
+        this.setXscale(config.w);
 
         /* Note: exon.x, exon.w are in pixels for visual rendering */
         /* Note: exon.length is in base pairs */
         // calculating x and w for each exon
-        const exonY = dimensions.h/2; // TODO: remove hard-coded values
+        const exonY = config.h/2; // TODO: remove hard-coded values
         this.exons.forEach((d, i) => {
             if (i == 0) d.x = 0;
             if(i > 0) d.x = this.exons[i-1].x + this.exons[i-1].w + this.xScale(this.intronLength);
@@ -219,14 +220,6 @@ export default class GeneModel {
                 .attr("y1", exonY + (15/2))
                 .attr("y2", exonY + (15/2))
                 .classed("intron", true);
-            dom.append("line")
-                .attr("class", "isoformBar") // TODO: no hard-coded value
-                .style("stroke-width", "15")
-                .style("stroke", "#fff") // white, so it's invisible
-                .attr("x1", this.exons[this.exons.length -1].x + this.exons[this.exons.length-1].w + 15) // always refer to the collapsed model
-                .attr("x2", this.exons[this.exons.length -1].x + this.exons[this.exons.length-1].w + 15)
-                .attr("y1", exonY + 15/2)
-                .attr("y2", exonY + 15/2)
         }
 
         /***** rendering curated exons or isoform exons */
