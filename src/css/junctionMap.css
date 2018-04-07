@@ -21,14 +21,14 @@
 .intron {
     stroke: rgb(75, 134, 153);
     stroke-width: 1px;
-    stroke-dasharray: 3, 3;
+    stroke-dasharray: 10,5;
 }
 
 .exon {
     stroke: rgb(75, 134, 153);
     fill: none;
     stroke-width: 1px;
-    stroke-dasharray: 3, 3;
+    stroke-dasharray: 0.9;
 }
 
 .exon.highlighted {
@@ -40,7 +40,7 @@
 
 .exon-curated {
     cursor: pointer;
-    stroke-width: 1px;
+    stroke-width: 2px;
     stroke: rgb(85, 95, 102);
 }
 

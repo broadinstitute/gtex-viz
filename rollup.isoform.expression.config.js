@@ -1,6 +1,7 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 import replace from 'rollup-plugin-replace';
+import {minify} from 'uglify-es';
 
 /* to set the NODE_ENV
 in a terminal window (bash)
@@ -11,7 +12,7 @@ const name = 'IsoformExpression';
 export default {
     input: 'src/scripts/' + name + '.js',
     output: {
-        file: process.env.NODE_ENV=='production'?'build/js/isoform-expression.bundle.min.js':'build/js/isoform-expression.bundle.dev.js',
+        file: process.env.NODE_ENV=='prod'?'build/js/isoform-expression.bundle.min.js':'build/js/isoform-expression.bundle.dev.js',
         format: 'iife'
     },
     sourcemap: 'inline',
@@ -21,6 +22,6 @@ export default {
         replace({
           ENV: JSON.stringify(process.env.NODE_ENV || 'development'),
         }),
-        (process.env.NODE_ENV === 'production' && uglify()) // uglify for production: NODE_ENV=production rollup -c
+        (process.env.NODE_ENV === 'prod' && uglify({}, minify)) // uglify for production: NODE_ENV=production rollup -c
     ]
 }
