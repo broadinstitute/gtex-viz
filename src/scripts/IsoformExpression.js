@@ -82,7 +82,7 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
 
                 // temporarily
                 _createToolbar(toolbarId, dmap, dmap.config.id);
-                _customize(tissues, geneModel, dmap, jExpress, exonExpress, isoformExpress);
+                _customize(tissues, geneModel, dmap, isoformTrackViewer, jExpress, exonExpress, isoformExpress);
                 $('#spinner').hide();
             })
                 .catch(function(err){console.error(err)});
@@ -92,10 +92,10 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
          })
 }
 
-function _renderIsoformTracks(dom, isoforms, isoformExons, modelExons, config={x:0, y:0, w:1000, h:200}){
-    const trackViewer = new IsoformTrackViewer(isoforms, isoformExons, modelExons);
+function _renderIsoformTracks(dom, isoforms, isoformExons, modelExons, config={x:0, y:0, w:1000, h:400}){
+    const trackViewer = new IsoformTrackViewer(isoforms, isoformExons, modelExons, {w:config.w, h:config.h});
     const trackViewerG = dom.append("g");
-    trackViewer.render(trackViewerG, {w:config.w, h:config.h});
+    trackViewer.render(false, trackViewerG);
     trackViewerG.attr("transform", `translate(${config.x}, ${config.y})`);
     return trackViewer;
 }
@@ -160,7 +160,7 @@ function _createToolbar(barId, dmap, domId){
  * @param edata {List} of exon expression data objects
  * @param idata {List} of isoform expression data objects
  */
-function _customize(tissues, geneModel, dmap, jdata, edata, idata){
+function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idata){
     // junction labels on the map
     const mapSvg = dmap.visualComponents.svg;
     const tooltip = dmap.visualComponents.tooltip;
@@ -216,7 +216,13 @@ function _customize(tissues, geneModel, dmap, jdata, edata, idata){
             // TODO: code review!!! Add the following to geneModel.addData?
             // isoforms update
             // create a tissue-specific isoform expression lookup table indexed by transcriptId
-            const isoDict = idata.filter((d)=>d.tissueId==tissue).reduce((arr, d)=>{arr[d.transcriptId]=d.value; return arr;}, {});
+            const isoData = idata.filter((d)=>d.tissueId==tissue).sort((a,b)=>{return -(a.originalValue - b.originalValue)});
+
+            // sort the isoform tracks based on the tissue's expression data
+            isoTrackViewer.sortTracks(isoData.map((d)=>d.transcriptId));
+
+            // color the isoform tracks based on the tissue's expression data
+            const isoDict = isoData.reduce((arr, d)=>{arr[d.transcriptId]=d.value; return arr;}, {});
             Object.keys(isoDict).forEach((id)=>{
                 const isoform = mapSvg.select(`#${id.replace(".", "_")}`);
                 const x1 = isoform.select(".isoformBar").attr("x1");

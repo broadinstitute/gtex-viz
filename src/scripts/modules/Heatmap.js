@@ -158,8 +158,8 @@ export default class Heatmap {
                 self.cellMouseout()
             })
             .merge(cells)
-            .transition()
-            .duration(2000)
+            // .transition()
+            // .duration(2000)
             .style("fill", (d) => useNullColor&&d.originalValue==0?nullColor:this.colorScale(d.value)); // TODO: what if null value isn't 0?
 
         // exit and remove
