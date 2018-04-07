@@ -192,10 +192,10 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
     drawColorLegend("Exon median read counts per base", mapSvg, ecolorScale, {x: dmap.config.panels.legend.x + 700, y:dmap.config.panels.legend.y}, true, 5, 2);
 
     // define isoform bar scale
-    const isoBarScale = scaleLinear()
-        .domain([min(idata.map(d=>d.value)), max(idata.map(d=>d.value))])
-        .range([0, 100]);
-    const isoColorScale = setColorScale(idata.map(d=>Math.log10(d.value+1)), "Greys");
+    // const isoBarScale = scaleLinear()
+    //     .domain([min(idata.map(d=>d.value)), max(idata.map(d=>d.value))])
+    //     .range([0, 100]);
+    const isoColorScale = setColorScale(idata.map(d=>d.value), "Greys");
 
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")
@@ -221,20 +221,12 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
             // sort the isoform tracks based on the tissue's expression data
             isoTrackViewer.sortTracks(isoData.map((d)=>d.transcriptId));
 
-            // color the isoform tracks based on the tissue's expression data
-            const isoDict = isoData.reduce((arr, d)=>{arr[d.transcriptId]=d.value; return arr;}, {});
-            Object.keys(isoDict).forEach((id)=>{
-                const isoform = mapSvg.select(`#${id.replace(".", "_")}`);
-                const x1 = isoform.select(".isoformBar").attr("x1");
-                // reset x2 to x1, then extend x2 by the isoform TPM of the selected tissue
-                const x2 = Number(x1) + isoBarScale(isoDict[id]) + 1; // base length = 1
-                isoform.select(".isoformBar")
-                    .attr("x2", x2)
-                    .style("stroke", isoColorScale(Math.log10(isoDict[id])));
+            // color each track's exons
+            isoData.forEach((d)=>{
+                const isoform = mapSvg.select(`#${d.transcriptId.replace(".", "_")}`);
                 isoform.selectAll(".exon-curated")
-                    .style("fill", isoColorScale(Math.log10(isoDict[id])));
+                    .style("fill", isoColorScale(d.value))
             });
-
         });
 
     mapSvg.selectAll(".exp-map-xlabel")

@@ -184,12 +184,12 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
     return junctions;
 }
 
-export function parseIsoformExpression(data){
+export function parseIsoformExpression(data, useLog=true, adjust=1){
     const attr = "isoformExpression";
     if(!data.hasOwnProperty(attr)) throw("parseIsoformExpression input error");
     // parse GTEx isoform median TPM
     data[attr].forEach((d) => {
-        d.value = Number(d.data);
+        d.value = useLog?Math.log10(Number(d.data + adjust)):Number(d.data);
         d.originalValue = Number(d.data);
     });
 
