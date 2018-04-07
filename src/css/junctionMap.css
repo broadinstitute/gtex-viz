@@ -57,4 +57,13 @@
     font-family: "Open Sans", "Helvetica", sans-serif;
 }
 
+.lollipop-axis line, .lollipop-axis path{
+  fill: none;
+  stroke: #a9a9a9;
+  shape-rendering: crispEdges;
+}
+
+.lollipop-axis text {
+    fill: #a9a9a9;
+}
 

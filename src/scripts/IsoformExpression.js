@@ -196,7 +196,7 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
     const isoColorScale = setColorScale(idata.map(d=>d.value), "Greys");
     const isoBarScale = scaleLinear()
             .domain([min(idata.map(d=>d.value)), max(idata.map(d=>d.value))])
-            .range([0, 100]);
+            .range([0, -100]);
 
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")
