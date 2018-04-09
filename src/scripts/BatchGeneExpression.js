@@ -139,8 +139,14 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
             } else {
                 // more input validation
                 if (geneObjects.length < glist.length) { // validate if all input genes are found
-                    const allIds = geneObjects.map((d)=>d.gencodeId).concat(geneObjects.map((d)=>d.geneSymbolUpper)); // gather all gencodeIds and gene symbols in retrieved geneObjects
+                    const allIds = [];
+                    geneObjects.forEach((d)=>{
+                        allIds.push(d.gencodeId);
+                        allIds.push(d.geneSymbolUpper);
+                        allIds.push(d.ensemblId);
+                    }); // gather all IDs in retrieved geneObjects
                     const missingGenes = glist.filter((d) => !allIds.includes(d));
+
                     message = `Warning: Not all genes are found: ${missingGenes.join(",")}<br/>`;
                 }
                 if (geneObjects.length > max) { // validate if the number of input genes exceeds the maximum
