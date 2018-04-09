@@ -21,7 +21,7 @@
 .intron {
     stroke: rgb(75, 134, 153);
     stroke-width: 1px;
-    stroke-dasharray: 10,5;
+    /*stroke-dasharray: 10,5;*/
 }
 
 .exon {
