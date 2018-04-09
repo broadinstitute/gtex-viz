@@ -140,7 +140,8 @@ export default class Dendrogram {
             .attr("transform", "translate(0," + this.height + ")")
             .call(
                 axisBottom(this.xScale)
-                .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
+                    .ticks(3)
+                // .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
             );
     }
 
