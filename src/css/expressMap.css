@@ -5,7 +5,7 @@ text.color-legend {
 
 text.exp-map-xlabel {
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
-    font-size: 9px;
+    font-size: 10px;
 }
 text.exp-map-xlabel.highlighted {
     font-weight: 400;
