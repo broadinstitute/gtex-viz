@@ -101,7 +101,10 @@ export function renderTopExpressed(tissueId, domId, toolbarId, infoId, urls=getG
     json(url+ tissueId)
         .then(function(results){ // top 50 expressed genes in tissueId
             const topGeneList = results.topExpressedGene.map(d=>d.gencodeId);
-            searchById(topGeneList, [tissueId], domId, toolbarId, infoId, urls, useFilters);
+            const callback = function(){
+                _styleSelectedTissue(tissueId);
+            }
+            searchById(topGeneList, [tissueId], domId, toolbarId, infoId, urls, useFilters, callback);
         })
         .catch(function(err){
             console.error(err);
@@ -119,7 +122,7 @@ export function renderTopExpressed(tissueId, domId, toolbarId, infoId, urls=getG
  * @param useFilters {Boolean} indicating whether gene filter is applied, or use undefined for no filtering
  * @returns {*}
  */
-export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGtexUrls(), useFilters=undefined){
+export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGtexUrls(), useFilters=undefined, callback=undefined){
     reset([domId, toolbarId, infoId, "boxplot"]);
     $('#spinner').show();
     if (select(`#${domId}`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
@@ -193,12 +196,25 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
                         }
                         $(`#${infoId}`).html(message);
 
+                        if(callback !== undefined) callback();
+
                     })
                     .catch(function(err){console.error(err)});
             }
 
         })
         .catch(function(err){throw err});
+}
+
+
+/**
+ * For top expressed query, highlight the query tissue label
+ * @param tissueId {String} the tissue ID
+ * Dependencies: expressMap.css
+ */
+function _styleSelectedTissue(tissueId){
+    selectAll(".exp-map-xlabel").filter((d)=>d==tissueId)
+        .classed("query", true);
 }
 
 /**
@@ -529,20 +545,27 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
  * @param tissueDict {Dictionary} of tissue objects indexed by tissue ID with attr, tissue_name
  */
 function _sortTissues (xlist, dmap, tissueDict){
-    // updates the heatmap
+    // check if there's a query tissue, e.g. top-expressed heatmap
+    const qId = select(".exp-map-xlabel.query").datum();
+
+    // update the heatmap
     const dom = select("#"+dmap.config.panels.main.id);
     const dimensions = dmap.config.panels.main;
     dmap.objects.heatmap.redraw(dom, xlist, dmap.objects.heatmap.yList, dimensions);
 
-    // changes the tissue display text to tissue names
+    // change the tissue display text to tissue names
     selectAll(".exp-map-xlabel")
-        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName)
+        .classed("query", false);
     _addTissueColors(dmap, tissueDict);
 
-    // hides the boxplot
+    // style the query tissue if found
+    if (qId!==undefined) _styleSelectedTissue(qId);
+
+    // hide the boxplot
     select('#boxplot').style("opacity", 0.0);
 
-    // deselects genes
+    // deselect genes
     selectAll(".exp-map-ylabel").classed("clicked", false);
     dmap.data.external = {};
 

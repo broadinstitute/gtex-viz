@@ -12,6 +12,13 @@ text.exp-map-xlabel.highlighted {
     font-size: 12px;
     text-decoration: underline;
 }
+text.exp-map-xlabel.query {
+    font-weight: 600;
+    font-size:11px;
+    fill: #d2111b;
+}
+
+
 text.exp-map-ylabel {
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
     font-size: 10px;
