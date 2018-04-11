@@ -546,7 +546,9 @@ function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, ur
  */
 function _sortTissues (xlist, dmap, tissueDict){
     // check if there's a query tissue, e.g. top-expressed heatmap
-    const qId = select(".exp-map-xlabel.query").datum();
+    let qId = undefined;
+    const qTissue = select(".exp-map-xlabel.query");
+    if (!qTissue.empty()) qId = qTissue.datum();
 
     // update the heatmap
     const dom = select("#"+dmap.config.panels.main.id);
