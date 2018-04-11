@@ -242,22 +242,43 @@ function _addTissueColors(dmap, tissueDict){
 
     const id = dmap.config.panels.main.id;
     const heatmap = dmap.objects.heatmap;
-    let dots = select("#"+id).selectAll(".exp-map-xcolor").data(heatmap.xList);
+    // let dots = select("#"+id).selectAll(".exp-map-xcolor").data(heatmap.xList);
+    //
+    //  // updates old elements
+    // dots.attr("fill", (d) => tissueDict[d]===undefined?"#000000":`#${tissueDict[d].colorHex}`);
+    //
+    // // enters new elements
+    // dots.enter().append("circle")
+    //     .attr('cx', (d) => heatmap.xScale(d) + heatmap.xScale.bandwidth()/2)
+    //     .attr('cy', heatmap.yScale.range()[1] + 10)
+    //     .attr("r", 3)
+    //     .attr("fill", (d) => tissueDict[d] === undefined? "#000000":`#${tissueDict[d].colorHex}`)
+    //     .attr("opacity", 0.75)
+    //     .attr("class", "exp-map-xcolor");
+    //
+    // // removes retired elements
+    // dots.exit().remove();
 
-     // updates old elements
-    dots.attr("fill", (d) => tissueDict[d]===undefined?"#000000":`#${tissueDict[d].colorHex}`);
 
-    // enters new elements
-    dots.enter().append("circle")
-        .attr('cx', (d) => heatmap.xScale(d) + heatmap.xScale.bandwidth()/2)
-        .attr('cy', heatmap.yScale.range()[1] + 10)
-        .attr("r", 3)
-        .attr("fill", (d) => tissueDict[d] === undefined? "#000000":`#${tissueDict[d].colorHex}`)
-        .attr("opacity", 0.75)
-        .attr("class", "exp-map-xcolor");
+    let cells = select(`#${id}`).selectAll(".exp-map-xcolor").data(heatmap.xList);
 
-    // removes retired elements
-    dots.exit().remove();
+    // update
+    cells.attr("x", (d)=>heatmap.xScale(d))
+        .attr("y", (d)=>heatmap.yScale.range()[1] + 5)
+
+    // create new elements
+    cells.enter().append("rect")
+        .attr("x", (d)=>heatmap.xScale(d))
+        .attr("y", (d)=>heatmap.yScale.range()[1] + 5)
+        .attr("width", heatmap.xScale.bandwidth())
+        .attr("height", heatmap.yScale.bandwidth()*0.5)
+        .classed("exp-map-xcolor", true)
+        .merge(cells)
+        .style("fill", (d) => tissueDict[d] === undefined? "#000000": `#${tissueDict[d].colorHex}`);
+
+    // exit and remove
+    cells.exit().remove();
+
 }
 
 /**

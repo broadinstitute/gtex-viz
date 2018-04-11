@@ -73,9 +73,11 @@ export default class Heatmap {
             .data(this.xList);
 
         // update old elements
+        const Y = this.yScale.range()[1] + (this.yScale.bandwidth() * 2);
+        const adjust = 5;
         xLabels.attr("transform", (d) => {
-                let x = this.xScale(d)+(this.xScale.bandwidth()/2) + 1;
-                let y = this.yScale.range()[1] + 17;
+                let x = this.xScale(d) + adjust;
+                let y = Y;
                 return `translate(${x}, ${y}) rotate(${angle})`;
             });
             // .attr("class", (d, i) => `exp-map-xlabel x${i}`);
@@ -89,8 +91,8 @@ export default class Heatmap {
             .style("cursor", "pointer")
             .style("text-anchor", "start")
             .attr("transform", (d) => {
-                let x = this.xScale(d)+(this.xScale.bandwidth()/2) + 1;
-                let y = this.yScale.range()[1] + 17;
+                let x = this.xScale(d) + adjust;
+                let y = Y;
                 return `translate(${x}, ${y}) rotate(${angle})`;
             })
             .merge(xLabels)
