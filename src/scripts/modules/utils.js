@@ -30,7 +30,7 @@ export function downloadSvg(svgObj, downloadFileName, tempDownloadDivId){
     .attr("xmlns", "http://www.w3.org/2000/svg");
 
     // parse and add the CSS styling used by the SVG
-    var styles = _parseCssStyles(svgObj.get());
+    var styles = parseCssStyles(svgObj.get());
     $svgCopy.prepend(styles);
 
     $("#" + tempDownloadDivId).html('').hide();
@@ -43,12 +43,11 @@ export function downloadSvg(svgObj, downloadFileName, tempDownloadDivId){
     $("#" + tempDownloadDivId).html('').hide();
 }
 /**
- * A private function for parsing the CSS style sheet and including the style properties in the downloadable SVG.
+ * A function for parsing the CSS style sheet and including the style properties in the downloadable SVG.
  * @param dom
  * @returns {Element}
- * @private
  */
-function _parseCssStyles (dom) {
+export function parseCssStyles (dom) {
     var used = "";
     var sheets = document.styleSheets;
 
