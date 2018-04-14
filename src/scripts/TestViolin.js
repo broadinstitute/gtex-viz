@@ -1,3 +1,4 @@
+"use strict";
 import Violin from "./modules/Violin";
 import {range} from "d3-array";
 import {randomNormal, randomUniform} from "d3-random";
@@ -9,7 +10,11 @@ export function build(rootId){
         chart: "chart",
         tooltip: "tooltip",
         clone: "cloneTestViolin", // this one is needed for downloading svg;
-        svg: "testViolin"
+        svg: "testViolin",
+        buttons: {
+            save: "save",
+            reset: "reset"
+        }
     };
 
     // create all the sub <div> elements in the rootId
@@ -27,11 +32,15 @@ export function build(rootId){
         .attr("id", domIds.svg)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
-    violin.render(dom, dim.width, dim.height, undefined);
+    violin.render(dom, dim.width, dim.height, [0, 60]);
     const tooltip = violin.createTooltip(domIds.tooltip);
 
     const toolbar = violin.createToolbar(domIds.toolbar, tooltip);
     toolbar.createDownloadButton('save', domIds.svg, "testViolin", domIds.clone);
+    const resetClickEvent = function(){
+        violin.zoom(dom);
+    };
+    toolbar.createResetButton('reset', resetClickEvent)
 
 }
 
@@ -82,7 +91,7 @@ function _setMargins(top=50, right=50, bottom=50, left=50){
             values: [a list of numerical values with a normal distribution]
          }
     ]
- * @param N {Integer} the number of datasets
+ * @param N {Integer} the number of data sets
  * @private
  * returns a list of data objects
  * reference: https://github.com/d3/d3-random

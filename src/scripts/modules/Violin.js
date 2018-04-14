@@ -41,7 +41,12 @@ export default class Violin {
      * @param bins {Integer} the number of bins to use for the KDE
      * @param xPadding {Float} padding of the x scale
      */
-    render(dom, width=800, height=500, yDomain=undefined, zDomain=[-1, 1], bins=50, xPadding=0.05){
+    render(dom, width=400, height=250, yDomain=undefined, zDomain=[-1, 1], bins=50, xPadding=0.05){
+        this.ratio = height/width;
+        this.reset = () => {
+            dom.selectAll("*").remove();
+            this.render(dom, width, height, yDomain, zDomain, bins, xPadding);
+        };  // define the reset function on the fly
 
         // defines the X, Y, Z scales
         let scale = this._setScales(yDomain, zDomain, width, height, xPadding);
@@ -61,16 +66,25 @@ export default class Violin {
             this._drawViolin(entry, theViolin, scale);
         });
 
+         // // the clipBox to hide overflow
+        dom.append("rect")
+            .attr("id", "crop")
+            .attr("x", scale.x.range()[0])
+            .attr("y", scale.y.range()[0])
+            .attr("width", scale.x.range()[1])
+            .attr("height", scale.y.range()[0])
+            .style("fill", "white");
+
         // X and Y axes
-        let xAxis = axisBottom(scale.x);
-        let yAxis = axisLeft(scale.y).tickValues(scale.y.ticks(5));
+        this.xAxis = axisBottom(scale.x);
+        this.yAxis = axisLeft(scale.y).tickValues(scale.y.ticks(12*height/width));
 
         // render the x axis
-        var buffer = 5;
+        var buffer = 0;
         dom.append("g")
             .attr("class", "axis axis--x")
             .attr("transform", `translate(0, ${height + buffer})`)
-            .call(xAxis)
+            .call(this.xAxis)
             .selectAll("text")
             .style("text-anchor", "start")
             .attr("transform", "rotate(30, -10, 10)");
@@ -79,11 +93,13 @@ export default class Violin {
         dom.append("g")
             .attr("class", "axis axis--y")
             .attr("transform", `translate(-${buffer}, 0)`)
-            .call(yAxis);
+            .call(this.yAxis);
+
+
 
         // add the brush
         let theBrush = brush();
-        theBrush.on("end", (d) => {this._brush(dom, theBrush, yDomain, scale, xAxis, yAxis)});
+        theBrush.on("end", (d) => {this.zoom(dom, theBrush)});
 
         dom.append("g")
             .attr("class", "brush")
@@ -109,7 +125,7 @@ export default class Violin {
             yDomain = extent(allV);
         }
 
-        return {
+        this.scale = {
             x: scaleBand()
                 .rangeRound([0, width])
                 .domain(this.data.map((d) => d.label))
@@ -120,6 +136,7 @@ export default class Violin {
             z: scaleLinear() // the violin's width
                 .domain(zDomain)
         };
+        return this.scale;
     }
     _drawViolin(entry, dom, scale){
          // set the scale.z range based on scale.x
@@ -141,6 +158,7 @@ export default class Violin {
             .attr("class", "violin")
             .attr("d", violin);
 
+
         // the median line
         const med = median(entry.values);
         dom.append("line")
@@ -148,52 +166,60 @@ export default class Violin {
             .attr("x2", scale.z(0.25))
             .attr("y1", scale.y(med))
             .attr("y2", scale.y(med))
-            .attr("class", "median");
+            .attr("class", "violin-median");
     }
-    _brush(dom, theBrush, yDomain, scale, xAxis, yAxis) {
+
+    zoom(dom, theBrush) {
         let s = event.selection,
             idelTimeout,
             idelDelay = 350;
-
-        if (!s) {
-            if (!idelTimeout) return idelTimeout = setTimeout(function(){
+        if (theBrush === undefined){
+            this.reset();
+        }
+        else if (!s) {
+            if (!idelTimeout) return idelTimeout = setTimeout(function () {
                 idelTimeout = null;
             }, idelDelay);
-            scale.x.domain(this.data.map((d) => d.label));
-            scale.y.domain(yDomain);
+            this.reset();
 
-        } else {
-            // reset the scale domains based on the brushed window
-            scale.x.domain(scale.x.domain().filter((d, i)=>{
-                  const lowBound = Math.floor(s[0][0]/scale.x.bandwidth());
-                  const upperBound = Math.floor(s[1][0]/scale.x.bandwidth());
+        }
+        else {
+            // reset the current scales' domains based on the brushed window
+            this.scale.x.domain(this.scale.x.domain().filter((d, i)=>{
+                  const lowBound = Math.floor(s[0][0]*this.ratio/this.scale.x.bandwidth());
+                  const upperBound = Math.floor(s[1][0]/this.scale.x.bandwidth());
                   return i >= lowBound && i <=upperBound;
             })); // TODO: add comments
 
-            scale.y.domain([s[1][1], s[0][1]].map(scale.y.invert));
+            const min = Math.floor(this.scale.y.invert(s[1][1]));
+            const max = Math.ceil(this.scale.y.invert(s[0][1]*this.ratio));
+            console.log(min+ " " + max);
+            console.log(this.scale.y.range())
+            this.scale.y.domain([min, max]); // todo: debug
 
             dom.select(".brush").call(theBrush.move, null);
         }
 
         // zoom
         let t = dom.transition().duration(750);
-        dom.select(".axis--x").transition(t).call(xAxis);
-        dom.select(".axis--y").transition(t).call(yAxis);
+        dom.select(".axis--x").transition(t).call(this.xAxis);
+        dom.select(".axis--y").transition(t).call(this.yAxis);
 
         this.data.forEach((entry, i)=>{
+            // this for loop would produce harmless errors on the entries that are no longer on the x scale
             // set z for each violin
-            let x0 = scale.x(entry.label),
-            x1 = x0 + scale.x.bandwidth();
-            scale.z.range([x0, x1]);
+            let x0 = this.scale.x(entry.label),
+            x1 = x0 + this.scale.x.bandwidth();
+            this.scale.z.range([x0, x1]);
 
             // rerender the violin
             let g = dom.select(`#violin${i}`);
             g.select(".violin")
                 .transition(t)
                 .attr("d", area()
-            .x0((d) => scale.z(d[1]))
-            .x1((d) => scale.z(-d[1]))
-            .y((d) => scale.y(d[0])))
+            .x0((d) => this.scale.z(d[1]))
+            .x1((d) => this.scale.z(-d[1]))
+            .y((d) => this.scale.y(d[0])))
         });
 
     }

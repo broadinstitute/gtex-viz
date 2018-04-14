@@ -17,7 +17,7 @@ export default class Toolbar {
     }
 
     /**
-     * A special download button
+     * Create a download button
      * @param id {String} the button dom ID
      * @param svgId {String} the SVG dom ID to grab and download
      * @param outfileName {String} the download file name
@@ -35,7 +35,19 @@ export default class Toolbar {
             })
             .on('mouseout', ()=>{
                 this.tooltip.hide();
+            });
+    }
+
+    createResetButton(id, callback, icon='fa-search-minus'){
+        const $button = this.createButton(id, icon);
+        select(`#${id}`)
+            .on('click', callback)
+            .on('mouseover', ()=>{
+                this.tooltip.show("Reset the scales");
             })
+            .on('mouseout', ()=>{
+                this.tooltip.hide();
+            });
     }
 
     /**
