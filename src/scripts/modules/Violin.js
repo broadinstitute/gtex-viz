@@ -41,7 +41,7 @@ export default class Violin {
      * @param bins {Integer} the number of bins to use for the KDE
      * @param xPadding {Float} padding of the x scale
      */
-    render(dom, width=400, height=250, yDomain=undefined, zDomain=[-1, 1], bins=50, xPadding=0.05){
+    render(dom, width=400, height=250, yLabel="y label", yDomain=undefined, zDomain=[-1, 1], bins=50, xPadding=0.05){
         this.ratio = height/width;
         this.reset = () => {
             dom.selectAll("*").remove();
@@ -82,7 +82,7 @@ export default class Violin {
         // render the x axis
         var buffer = 0;
         dom.append("g")
-            .attr("class", "axis axis--x")
+            .attr("class", "violin-axis axis--x")
             .attr("transform", `translate(0, ${height + buffer})`)
             .call(this.xAxis)
             .selectAll("text")
@@ -91,9 +91,15 @@ export default class Violin {
 
         // add the y axis
         dom.append("g")
-            .attr("class", "axis axis--y")
+            .attr("class", "violin-axis axis--y")
             .attr("transform", `translate(-${buffer}, 0)`)
-            .call(this.yAxis);
+            .call(this.yAxis)
+            .append('text')
+             .attr('transform', 'rotate(-90)')
+             .attr('y', -30)
+             .attr('dy', '.1em')
+             .attr('text-anchor', 'end')
+             .text(yLabel);
 
 
 

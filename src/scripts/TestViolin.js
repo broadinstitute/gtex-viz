@@ -32,7 +32,7 @@ export function build(rootId){
         .attr("id", domIds.svg)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
-    violin.render(dom, dim.width, dim.height, [0, 60]);
+    violin.render(dom, dim.width, dim.height, "Random Number", [0, 60]);
     const tooltip = violin.createTooltip(domIds.tooltip);
 
     const toolbar = violin.createToolbar(domIds.toolbar, tooltip);
