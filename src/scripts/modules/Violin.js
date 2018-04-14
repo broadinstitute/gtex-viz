@@ -173,18 +173,19 @@ export default class Violin {
         // interquartile range
         const q1 = quantile(entry.values, 0.25);
         const q3 = quantile(entry.values, 0.75);
+        const z = 0.1;
         dom.append("rect")
-            .attr("x", scale.z(-0.05))
+            .attr("x", scale.z(-z))
             .attr("y", scale.y(q3))
-            .attr("width", Math.abs(scale.z(-0.05)-scale.z(0.05)))
+            .attr("width", Math.abs(scale.z(-z)-scale.z(z)))
             .attr("height", Math.abs(scale.y(q3) - scale.y(q1)))
             .attr("class", "violin-ir");
 
         // the median line
         const med = median(entry.values);
         dom.append("line")
-            .attr("x1", scale.z(-0.05))
-            .attr("x2", scale.z(0.05))
+            .attr("x1", scale.z(-z))
+            .attr("x2", scale.z(z))
             .attr("y1", scale.y(med))
             .attr("y2", scale.y(med))
             .attr("class", "violin-median");
@@ -246,19 +247,20 @@ export default class Violin {
              // interquartile range
             const q1 = quantile(entry.values, 0.25);
             const q3 = quantile(entry.values, 0.75);
+            const z = 0.1;
             g.select(".violin-ir")
                 .transition(t)
-                .attr("x", this.scale.z(-0.05))
+                .attr("x", this.scale.z(-z))
                 .attr("y", this.scale.y(q3))
-                .attr("width", Math.abs(this.scale.z(-0.05)-this.scale.z(0.05)))
+                .attr("width", Math.abs(this.scale.z(-z)-this.scale.z(z)))
                 .attr("height", Math.abs(this.scale.y(q3) - this.scale.y(q1)));
 
             // the median line
             const med = median(entry.values);
             g.select(".violin-median")
                 .transition(t)
-                .attr("x1", this.scale.z(-0.05))
-                .attr("x2", this.scale.z(0.05))
+                .attr("x1", this.scale.z(-z))
+                .attr("x2", this.scale.z(z))
                 .attr("y1", this.scale.y(med))
                 .attr("y2", this.scale.y(med))
             });

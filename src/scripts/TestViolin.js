@@ -22,7 +22,7 @@ export function build(rootId){
         $(`<div id="${domIds[k]}"/>`).appendTo(`#${rootId}`);
     });
 
-    const data = _genereateRandomData();
+    const data = _genereateRandomData(50);
     const margin = _setMargins();
     const dim = _setDimensions();
     let violin = new Violin(data);
@@ -52,7 +52,7 @@ export function build(rootId){
  * @returns {{width: number, height: number, outerWidth: number, outerHeight: number}}
  * @private
  */
-function _setDimensions(width=400, height=250, margin=_setMargins()){
+function _setDimensions(width=1200, height=250, margin=_setMargins()){
     return {
         width: width,
         height: height,
