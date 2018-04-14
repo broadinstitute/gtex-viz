@@ -32,7 +32,7 @@ export function build(rootId){
         .attr("id", domIds.svg)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
-    violin.render(dom, dim.width, dim.height, "Random Number", [0, 60]);
+    violin.render(dom, dim.width, dim.height, "Random Number");
     const tooltip = violin.createTooltip(domIds.tooltip);
 
     const toolbar = violin.createToolbar(domIds.toolbar, tooltip);
@@ -98,13 +98,12 @@ function _setMargins(top=50, right=50, bottom=50, left=50){
  */
 function _genereateRandomData(N=5){
     // values: a list of 100 random numbers with a normal (Gaussian) distribution
-    // the µ is randomly defined between 20-50, and standard deviation is 10
     const data =  range(0, N).map((d) => {
-        const mu = randomUniform(20, 50)();
-        const sigma = randomUniform(1, 3)();
+        const mu = 100 + Math.random()*20;
+        const sigma = 1;
         return {
             label: `dataset ` + d,
-            values: range(0, 100).map(randomNormal(mu, sigma))
+            values: range(0, 2000).map(randomNormal(mu, sigma))
         }
     });
     return data;

@@ -47,15 +47,11 @@ div.violin-tooltip {
 /*}*/
 
 path.gtex-violin-odd, path.violin{
-    stroke: #b3c2c9;
-    stroke-width: 1;
     fill: #1595a9;
     opacity: 0.7;
 }
 
 path.gtex-violin-even {
-    stroke: #203549;
-    stroke-width: 1;
     fill: #555f66;
     opacity: 0.7;
 }
@@ -66,8 +62,20 @@ path.gtex-density-curve {
     fill: none
 }
 
-line.gtex-violin-median {
-    stroke: white;
+line.violin-median {
     stroke-width: 2;
+    stroke: #1595a9;
 }
+
+rect.violin-ir {
+    fill: #203549;
+    stroke-width: 0;
+}
+
+.btn-default{
+   border-color: #4eb3d3;
+}
+
+
+
 

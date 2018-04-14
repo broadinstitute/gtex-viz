@@ -12,7 +12,7 @@ Input data structure: a list of data object with the following structure:
 ]
 */
 
-import {extent, ascending, median} from "d3-array";
+import {extent, ascending, median, quantile} from "d3-array";
 import {scaleBand, scaleLinear} from "d3-scale";
 import {area} from "d3-shape";
 import {axisBottom, axisLeft} from "d3-axis";
@@ -41,7 +41,7 @@ export default class Violin {
      * @param bins {Integer} the number of bins to use for the KDE
      * @param xPadding {Float} padding of the x scale
      */
-    render(dom, width=400, height=250, yLabel="y label", yDomain=undefined, zDomain=[-1, 1], bins=50, xPadding=0.05){
+    render(dom, width=400, height=250, yLabel="y label", yDomain=undefined, zDomain=[-0.5, 0.5], bins=50, xPadding=0.05){
         this.reset = () => {
             dom.selectAll("*").remove();
             this.render(dom, width, height, yLabel, yDomain, zDomain, bins, xPadding);
@@ -102,7 +102,7 @@ export default class Violin {
             .call(this.yAxis)
             .append('text')
              .attr('transform', 'rotate(-90)')
-             .attr('y', -30)
+             .attr('y', -40)
              .attr('dy', '.1em')
              .attr('text-anchor', 'end')
              .text(yLabel);
@@ -170,12 +170,21 @@ export default class Violin {
             .attr("class", "violin")
             .attr("d", violin);
 
+        // interquartile range
+        const q1 = quantile(entry.values, 0.25);
+        const q3 = quantile(entry.values, 0.75);
+        dom.append("rect")
+            .attr("x", scale.z(-0.05))
+            .attr("y", scale.y(q3))
+            .attr("width", Math.abs(scale.z(-0.05)-scale.z(0.05)))
+            .attr("height", Math.abs(scale.y(q3) - scale.y(q1)))
+            .attr("class", "violin-ir");
 
         // the median line
         const med = median(entry.values);
         dom.append("line")
-            .attr("x1", scale.z(-0.25))
-            .attr("x2", scale.z(0.25))
+            .attr("x1", scale.z(-0.05))
+            .attr("x2", scale.z(0.05))
             .attr("y1", scale.y(med))
             .attr("y2", scale.y(med))
             .attr("class", "violin-median");
@@ -204,7 +213,7 @@ export default class Violin {
             })); // TODO: add comments
 
             const min = Math.floor(this.scale.y.invert(s[1][1]));
-            const max = Math.ceil(this.scale.y.invert(s[0][1]));
+            const max = Math.floor(this.scale.y.invert(s[0][1]));
             console.log(min+ " " + max);
             console.log(this.scale.y.range());
             this.scale.y.domain([min, max]); // todo: debug
@@ -231,8 +240,28 @@ export default class Violin {
                 .attr("d", area()
             .x0((d) => this.scale.z(d[1]))
             .x1((d) => this.scale.z(-d[1]))
-            .y((d) => this.scale.y(d[0])))
-        });
+            .y((d) => this.scale.y(d[0])));
+
+            // rerender the box plot
+             // interquartile range
+            const q1 = quantile(entry.values, 0.25);
+            const q3 = quantile(entry.values, 0.75);
+            g.select(".violin-ir")
+                .transition(t)
+                .attr("x", this.scale.z(-0.05))
+                .attr("y", this.scale.y(q3))
+                .attr("width", Math.abs(this.scale.z(-0.05)-this.scale.z(0.05)))
+                .attr("height", Math.abs(this.scale.y(q3) - this.scale.y(q1)));
+
+            // the median line
+            const med = median(entry.values);
+            g.select(".violin-median")
+                .transition(t)
+                .attr("x1", this.scale.z(-0.05))
+                .attr("x2", this.scale.z(0.05))
+                .attr("y1", this.scale.y(med))
+                .attr("y2", this.scale.y(med))
+            });
 
     }
 
