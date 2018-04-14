@@ -103,7 +103,8 @@ function _genereateRandomData(N=5){
         const sigma = 1;
         return {
             label: `dataset ` + d,
-            values: range(0, 2000).map(randomNormal(mu, sigma))
+            values: range(0, 2000).map(randomNormal(mu, sigma)),
+            color: "burlywood"
         }
     });
     return data;

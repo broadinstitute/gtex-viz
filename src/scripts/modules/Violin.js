@@ -3,11 +3,13 @@ Input data structure: a list of data object with the following structure:
 [
     {
         label: "dataset 1",
-        values: [a list of numerical values]
+        values: [a list of numerical values],
+        color: "the color of the dataset, optional"
      },
      {
         label: "dataset 2",
-        values: [a list of numerical values]
+        values: [a list of numerical values],
+        color: "the color of the dataset, optional"
      }
 ]
 */
@@ -168,7 +170,8 @@ export default class Violin {
         dom.append("path")
             .datum(entry.vertices)
             .attr("class", "violin")
-            .attr("d", violin);
+            .attr("d", violin)
+            .style("fill", entry.color===undefined?"indigo":entry.color);
 
         // interquartile range
         const q1 = quantile(entry.values, 0.25);

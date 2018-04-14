@@ -38,7 +38,7 @@ export default class Toolbar {
             });
     }
 
-    createResetButton(id, callback, icon='fa-search-minus'){
+    createResetButton(id, callback, icon='fa-expand-arrows-alt'){
         const $button = this.createButton(id, icon);
         select(`#${id}`)
             .on('click', callback)
