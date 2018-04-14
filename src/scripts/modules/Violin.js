@@ -42,10 +42,9 @@ export default class Violin {
      * @param xPadding {Float} padding of the x scale
      */
     render(dom, width=400, height=250, yLabel="y label", yDomain=undefined, zDomain=[-1, 1], bins=50, xPadding=0.05){
-        this.ratio = height/width;
         this.reset = () => {
             dom.selectAll("*").remove();
-            this.render(dom, width, height, yDomain, zDomain, bins, xPadding);
+            this.render(dom, width, height, yLabel, yDomain, zDomain, bins, xPadding);
         };  // define the reset function on the fly
 
         // defines the X, Y, Z scales
@@ -68,9 +67,16 @@ export default class Violin {
 
          // // the clipBox to hide overflow
         dom.append("rect")
-            .attr("id", "crop")
+            .attr("class", "crop")
             .attr("x", scale.x.range()[0])
             .attr("y", scale.y.range()[0])
+            .attr("width", scale.x.range()[1])
+            .attr("height", scale.y.range()[0])
+            .style("fill", "white");
+        dom.append("rect")
+            .attr("class", "crop")
+            .attr("x", scale.x.range()[0])
+            .attr("y", -scale.y.range()[0])
             .attr("width", scale.x.range()[1])
             .attr("height", scale.y.range()[0])
             .style("fill", "white");
@@ -192,15 +198,15 @@ export default class Violin {
         else {
             // reset the current scales' domains based on the brushed window
             this.scale.x.domain(this.scale.x.domain().filter((d, i)=>{
-                  const lowBound = Math.floor(s[0][0]*this.ratio/this.scale.x.bandwidth());
+                  const lowBound = Math.floor(s[0][0]/this.scale.x.bandwidth());
                   const upperBound = Math.floor(s[1][0]/this.scale.x.bandwidth());
                   return i >= lowBound && i <=upperBound;
             })); // TODO: add comments
 
             const min = Math.floor(this.scale.y.invert(s[1][1]));
-            const max = Math.ceil(this.scale.y.invert(s[0][1]*this.ratio));
+            const max = Math.ceil(this.scale.y.invert(s[0][1]));
             console.log(min+ " " + max);
-            console.log(this.scale.y.range())
+            console.log(this.scale.y.range());
             this.scale.y.domain([min, max]); // todo: debug
 
             dom.select(".brush").call(theBrush.move, null);
