@@ -1,3 +1,4 @@
+"use strict";
 import Violin from "./modules/Violin";
 import {range} from "d3-array";
 import {randomNormal, randomUniform} from "d3-random";
@@ -9,7 +10,11 @@ export function build(rootId){
         chart: "chart",
         tooltip: "tooltip",
         clone: "cloneTestViolin", // this one is needed for downloading svg;
-        svg: "testViolin"
+        svg: "testViolin",
+        buttons: {
+            save: "save",
+            reset: "reset"
+        }
     };
 
     // create all the sub <div> elements in the rootId
@@ -17,7 +22,7 @@ export function build(rootId){
         $(`<div id="${domIds[k]}"/>`).appendTo(`#${rootId}`);
     });
 
-    const data = _genereateRandomData();
+    const data = _genereateRandomData(50);
     const margin = _setMargins();
     const dim = _setDimensions();
     let violin = new Violin(data);
@@ -27,11 +32,15 @@ export function build(rootId){
         .attr("id", domIds.svg)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
-    violin.render(dom, dim.width, dim.height, undefined);
+    violin.render(dom, dim.width, dim.height, "Random Number");
     const tooltip = violin.createTooltip(domIds.tooltip);
 
     const toolbar = violin.createToolbar(domIds.toolbar, tooltip);
     toolbar.createDownloadButton('save', domIds.svg, "testViolin", domIds.clone);
+    const resetClickEvent = function(){
+        violin.zoom(dom);
+    };
+    toolbar.createResetButton('reset', resetClickEvent)
 
 }
 
@@ -43,7 +52,7 @@ export function build(rootId){
  * @returns {{width: number, height: number, outerWidth: number, outerHeight: number}}
  * @private
  */
-function _setDimensions(width=400, height=250, margin=_setMargins()){
+function _setDimensions(width=1200, height=250, margin=_setMargins()){
     return {
         width: width,
         height: height,
@@ -82,20 +91,20 @@ function _setMargins(top=50, right=50, bottom=50, left=50){
             values: [a list of numerical values with a normal distribution]
          }
     ]
- * @param N {Integer} the number of datasets
+ * @param N {Integer} the number of data sets
  * @private
  * returns a list of data objects
  * reference: https://github.com/d3/d3-random
  */
 function _genereateRandomData(N=5){
     // values: a list of 100 random numbers with a normal (Gaussian) distribution
-    // the µ is randomly defined between 20-50, and standard deviation is 10
     const data =  range(0, N).map((d) => {
-        const mu = randomUniform(20, 50)();
-        const sigma = randomUniform(1, 3)();
+        const mu = 100 + Math.random()*20;
+        const sigma = 1;
         return {
             label: `dataset ` + d,
-            values: range(0, 100).map(randomNormal(mu, sigma))
+            values: range(0, 2000).map(randomNormal(mu, sigma)),
+            color: "burlywood"
         }
     });
     return data;
