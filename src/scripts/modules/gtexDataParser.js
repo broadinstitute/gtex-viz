@@ -233,7 +233,8 @@ function parseGeneExpression(gencodeId, data){
         exp: {}, // indexed by tissueId
         geneSymbol: ""
     };
-    data.geneExpression.forEach((d)=>{
+    if(!data.hasOwnProperty(attr)) throw ("parseGeneExpression input error.");
+    data[attr].forEach((d)=>{
         if (d.gencodeId == gencodeId) {
             // if the gencode ID matches the query gencodeId,
             // add the expression data to the lookup table
@@ -287,4 +288,21 @@ export function makeJsonForPlotly(gencodeId, data, useLog=false, color="grey", x
         marker: {color:color},
     };
 
+}
+
+/**
+ * parse the expression data of a gene for a grouped violin plot
+ * @param data {JSON} from GTEx gene expression web service
+ * @param colors {Dictionary} the violin color for genes
+ */
+export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined){
+    const attr = "geneExpression";
+    if(!data.hasOwnProperty(attr)) throw "parseGeneExpressionForViolin input error.";
+    data[attr].forEach((d)=>{
+        d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
+        d.group = d.tissueId;
+        d.label = d.gencodeId;
+        d.color = colors===undefined?"#DDDDDD":colors[d.gencodeId];
+    });
+    return data[attr];
 }

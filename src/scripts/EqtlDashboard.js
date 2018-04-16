@@ -1,7 +1,7 @@
 import {json} from "d3-fetch";
 import {select} from "d3-selection";
 import {range} from "d3-array";
-import GroupedViolin from "../../../expressMap/src/scripts/modules/GroupedViolin";
+import GroupedViolin from "./modules/GroupedViolin";
 
 /**
  * Build the eQTL Dashboard
@@ -383,7 +383,8 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
                 innerHeight = height - (margin.top + margin.bottom);
 
             let svg = _createSvg("#" + id, width, height, margin);
-            violin.render(svg, innerWidth, innerHeight, 0.1, 50, [-2, 2], [-1.5, 1.5], "Rank Normalized Expression");
+            violin.render(svg, innerWidth, innerHeight, 0.1, 50, undefined, [-2, 2], [-1.5, 1.5], "Rank Normalized Expression", true, false);
+            _customizeViolinPlot(violin, svg);
         })
         .catch(function(err){console.error(err)});
 }
@@ -436,6 +437,28 @@ function _createSvg(id, width, height, margin){
         .attr("height", height)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
+}
+
+function _customizeViolinPlot(plot, dom){
+    plot.groups.forEach((g)=>{
+        // customize the long tissue name
+        const gname = g.key;
+        const names = gname.split(" - ");
+        const customXlabel = dom.append("g");
+        const customLabels = customXlabel.selectAll(".violin-group-label")
+            .data(names);
+        customLabels.enter().append("text")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("class", "violin-group-label")
+            .attr("transform", (d, i) => {
+                let x = plot.scale.x(gname) + plot.scale.x.bandwidth()/2;
+                let y = plot.scale.y(plot.scale.y.domain()[0]) + 55 + (10*i); // todo: avoid hard-coded values
+                return `translate(${x}, ${y})`
+            })
+            .text((d) => d);
+    });
+
 }
 
 

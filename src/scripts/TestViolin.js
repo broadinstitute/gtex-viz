@@ -1,8 +1,55 @@
 "use strict";
-import Violin from "./modules/Violin";
+
 import {range} from "d3-array";
+import {json} from "d3-fetch";
 import {randomNormal, randomUniform} from "d3-random";
 import {select} from "d3-selection";
+
+import Violin from "./modules/Violin";
+import GroupedViolin from "./modules/GroupedViolin";
+import {getGtexUrls, parseGeneExpressionForViolin} from "./modules/gtexDataParser";
+
+
+export function buildGrouped(rootId){
+    const domIds = {
+        chart: "grouped-chart"
+    };
+     // create all the sub <div> elements in the rootId
+    Object.keys(domIds).forEach((k)=>{
+        $(`<div id="${domIds[k]}"/>`).appendTo(`#${rootId}`);
+    });
+    const margin = _setMargins(50, 50, 150, 50);
+    const dim = _setDimensions(1200, 200, margin);
+    const dom = select(`#${domIds.chart}`).append("svg")
+        .attr("width", dim.outerWidth)
+        .attr("height", dim.outerHeight)
+        .attr("id", domIds.svg)
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+   // get some data
+    const gencode = "ENSG00000065613.9,ENSG00000106624.4";
+    // const gencode = "ENSG00000106624.4";
+
+    const colors = {
+        "ENSG00000065613.9": "#97a4ac",
+        "ENSG00000106624.4": "#77c4d3"
+    };
+    json(getGtexUrls().geneExp + gencode)
+        .then(function(d){
+            const data = parseGeneExpressionForViolin(d, true, colors);
+            const violin = new GroupedViolin(data);
+            const tissues = data.reduce((arr,d)=>{arr[d.tissueId]=1; return arr},{});
+            const sort = (a, b)=>{
+                if (a>b) return 1;
+                if (a<b) return -1;
+                return 0;
+            };
+
+            // SVG rendering
+            violin.render(dom, dim.width, dim.height, 0, 50, Object.keys(tissues).sort(sort), [], [-3, 3], "log10(TPM)", false, true);
+        })
+        .catch(function(err){console.error(err)});
+}
 
 export function build(rootId){
     const domIds = {
@@ -19,6 +66,7 @@ export function build(rootId){
 
     // create all the sub <div> elements in the rootId
     Object.keys(domIds).forEach((k)=>{
+        if("buttons" == k) return;
         $(`<div id="${domIds[k]}"/>`).appendTo(`#${rootId}`);
     });
 
