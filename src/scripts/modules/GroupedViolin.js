@@ -33,7 +33,7 @@ export default class GroupedViolin {
      * @param data {List}: a list of objects with attributes: group: {String}, label: {String}, values: {List} of numerical values
      * @param groupInfo {Dictionary}: metadata of the group, indexed by group ID
      */
-    constructor(data, groupInfo){
+    constructor(data, groupInfo = {}){
         this.sanityCheck(data);
         this.data = data;
         this.groupInfo = groupInfo;
@@ -51,24 +51,24 @@ export default class GroupedViolin {
      * @param yLabel {String}
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, bins=50, yDomain=[-3,3], zDomain=[-1, 1], yLabel="Y axis"){
+    render(dom, width=500, height=357, xPadding=0.05, bins=50, yDomain=[-3,3], zDomain=[-1, 1], yLabel="Y axis", showSubX=true){
         // Silver ratio: 500/357 =~ 1.4
         // defines the X, subX, Y, Z scales
-        if (0 == yDomain.length){
+        if (yDomain===undefined || 0 == yDomain.length){
             let allV = [];
             this.data.forEach((d) => allV = allV.concat(d.values));
             yDomain = extent(allV);
         }
 
         // re-organized this.data indexed by groups
-        let groups = nest()
+        this.groups = nest()
             .key((d) => d.group)
             .entries(this.data);
 
-        let scale = {
+        this.scale = {
             x: scaleBand()
                 .rangeRound([0, width])
-                .domain(groups.map((d) => d.key))
+                .domain(this.groups.map((d) => d.key))
                 .padding(xPadding),
             subx: scaleBand()
                 .padding(xPadding),
@@ -79,7 +79,7 @@ export default class GroupedViolin {
                 .domain(zDomain)
         };
 
-        groups.forEach((g, gIndex) => {
+        this.groups.forEach((g, gIndex) => {
             let group = g.key;
             let entries = g.values;
             let info = this.groupInfo[group];
@@ -99,41 +99,22 @@ export default class GroupedViolin {
                         return d=='pvalue'&&parseFloat(info[d])<=parseFloat(info['pvalueThreshold'])?"orangered":"SlateGray"
                     })
                     .attr("transform", (d, i) => {
-                        let x = scale.x(group) + scale.x.bandwidth()/2;
-                        let y = scale.y(yDomain[0]) + 35; // todo: avoid hard-coded values
+                        let x = this.scale.x(group) + this.scale.x.bandwidth()/2;
+                        let y = this.scale.y(yDomain[0]) + 35; // todo: avoid hard-coded values
                         return `translate(${x}, ${y})`
                     })
                     .text((d) => `${d}: ${info[d]}`);
             }
 
-
-            // this part is very GTEx customized, perhaps should not be in the GroupViolin.js
-            // this is to custom-display the long tissue name
-            const names = group.split(" - ");
-            const customXlabel = dom.append("g");
-            const customLabels = customXlabel.selectAll(".violin-group-label")
-                .data(names);
-            customLabels.enter().append("text")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("class", "violin-group-label")
-                .attr("transform", (d, i) => {
-                    let x = scale.x(group) + scale.x.bandwidth()/2;
-                    let y = scale.y(yDomain[0]) + 55 + (10*i); // todo: avoid hard-coded values
-                    return `translate(${x}, ${y})`
-                })
-                .text((d) => d);
-
-
-            // defines the scale.subx based on scale.x
-            scale.subx
+            // defines the this.scale.subx based on this.scale.x
+            this.scale.subx
                 .domain(entries.map((d) => d.label))
-                .rangeRound([scale.x(group), scale.x(group) + scale.x.bandwidth()]);
+                .rangeRound([this.scale.x(group), this.scale.x(group) + this.scale.x.bandwidth()]);
 
             entries.forEach((entry) => {
 
-                // defines the range for scale.z based on scale.subx
-                scale.z.range([scale.subx(entry.label), scale.subx(entry.label) + scale.subx.bandwidth()]);
+                // defines the range for this.scale.z based on this.scale.subx
+                this.scale.z.range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
                 let size = entry.values.length;
                 if (0 == size) return; // no further rendering
                 entry.values = entry.values.sort(ascending);
@@ -142,47 +123,51 @@ export default class GroupedViolin {
                 // kernel density estimation
                 let vertices = kernelDensityEstimator(
                     kernel.gaussian,
-                    scale.y.ticks(bins),
+                    this.scale.y.ticks(bins),
                     kernelBandwidth.nrd(entry.values))
                     (entry.values);
                 // visual rendering
                 let violin = area()
-                    .x0((d) => scale.z(d[1]))
-                    .x1((d) => scale.z(-d[1]))
-                    .y((d) => scale.y(d[0]));
+                    .x0((d) => this.scale.z(d[1]))
+                    .x1((d) => this.scale.z(-d[1]))
+                    .y((d) => this.scale.y(d[0]));
 
                 dom.append("path")
                     .datum(vertices)
-                    .attr("class", function(){
-                        if (gIndex%2 == 0) return "gtex-violin-even";
-                        return "gtex-violin-odd";
-                    })
-                    .attr("d", violin);
+                    .attr("d", violin)
+                    .style("fill", ()=>{
+                        if (entry.color !== undefined) return entry.color;
+                        if(gIndex%2 == 0) return "#1595a9";
+                        return "#555f66";
+                    });
 
                 const med = median(entry.values);
                 dom.append("line") // the median line
-                    .attr("x1", scale.z(-0.25))
-                    .attr("x2", scale.z(0.25))
-                    .attr("y1", scale.y(med))
-                    .attr("y2", scale.y(med))
-                    .attr("class", "gtex-violin-median");
+                    .attr("x1", this.scale.z(-0.25))
+                    .attr("x2", this.scale.z(0.25))
+                    .attr("y1", this.scale.y(med))
+                    .attr("y2", this.scale.y(med))
+                    .attr("class", "violin-median");
             });
 
-            // adds the subx axis
+            // adds the subx axis if there are more than one entries
             var buffer = 5;
-             dom.append("g")
-            .attr("class", "violin-sub-axis")
-            .attr("transform", `translate(0, ${height + buffer})`)
-            .call(axisBottom(scale.subx))
+            if (entries.length > 1 || showSubX){
+                 dom.append("g")
+                .attr("class", "violin-sub-axis")
+                .attr("transform", `translate(0, ${height + buffer})`)
+                .call(axisBottom(this.scale.subx))
+            }
+
 
         });
 
         // renders the x axis
-        let buffer = 40;
+        let buffer = showSubX?40:0;
         dom.append("g")
             .attr("class", "violin-axis")
             .attr("transform", `translate(0, ${height + buffer})`)
-            .call(axisBottom(scale.x).tickFormat("")); // set tickFormat("") to show tick marks without text labels
+            .call(axisBottom(this.scale.x).tickFormat("")); // set tickFormat("") to show tick marks without text labels
 
         // adds the y Axis
         buffer = 5;
@@ -190,8 +175,8 @@ export default class GroupedViolin {
             .attr("class", "violin-axis")
             .attr("transform", `translate(-${buffer}, 0)`)
             .call(
-                axisLeft(scale.y)
-                    .tickValues(scale.y.ticks(5))
+                axisLeft(this.scale.y)
+                    .tickValues(this.scale.y.ticks(5))
             );
 
         // adds the text label for the y axis
