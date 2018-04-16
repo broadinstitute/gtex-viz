@@ -51,7 +51,7 @@ export default class GroupedViolin {
      * @param yLabel {String}
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, bins=50, yDomain=[-3,3], zDomain=[-1, 1], yLabel="Y axis", showSubX=true, showX=true){
+    render(dom, width=500, height=357, xPadding=0.05, bins=50, xDomain=undefined, yDomain=[-3,3], zDomain=[-1, 1], yLabel="Y axis", showSubX=true, showX=true){
         // Silver ratio: 500/357 =~ 1.4
         // defines the X, subX, Y, Z scales
         if (yDomain===undefined || 0 == yDomain.length){
@@ -68,7 +68,7 @@ export default class GroupedViolin {
         this.scale = {
             x: scaleBand()
                 .rangeRound([0, width])
-                .domain(this.groups.map((d) => d.key))
+                .domain(xDomain||this.groups.map((d) => d.key))
                 .padding(xPadding),
             subx: scaleBand()
                 .padding(xPadding),
@@ -163,7 +163,7 @@ export default class GroupedViolin {
 
             // adds the subx axis if there are more than one entries
             var buffer = 5;
-            if (entries.length > 1 || showSubX){
+            if (showSubX){
                  dom.append("g")
                 .attr("class", "violin-sub-axis")
                 .attr("transform", `translate(0, ${height + buffer})`)

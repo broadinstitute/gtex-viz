@@ -293,16 +293,16 @@ export function makeJsonForPlotly(gencodeId, data, useLog=false, color="grey", x
 /**
  * parse the expression data of a gene for a grouped violin plot
  * @param data {JSON} from GTEx gene expression web service
- * @param color {String} the violin color for this gene
+ * @param colors {Dictionary} the violin color for genes
  */
-export function parseGeneExpressionForViolin(data, color="indianred"){
+export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined){
     const attr = "geneExpression";
     if(!data.hasOwnProperty(attr)) throw "parseGeneExpressionForViolin input error.";
     data[attr].forEach((d)=>{
-        d.values = d.data;
+        d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
         d.group = d.tissueId;
         d.label = d.gencodeId;
-        d.color = color;
+        d.color = colors===undefined?"#DDDDDD":colors[d.gencodeId];
     });
     return data[attr];
 }
