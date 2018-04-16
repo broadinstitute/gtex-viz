@@ -1,7 +1,7 @@
 {
-  "name": "expressmap",
+  "name": "gtex-d3",
   "version": "0.0.1",
-  "description": "GTEx Gene Expression Dashboard",
+  "description": "GTEx D3 Repository",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,6 +14,7 @@
     "rollup-plugin-uglify": "^2.0.1"
   },
   "dependencies": {
-    "d3": "^5.0.0"
+    "d3": "^5.0.0",
+    "uglify-es": "^3.3.9"
   }
 }
