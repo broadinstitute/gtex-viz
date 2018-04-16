@@ -1,40 +1,21 @@
-# ExpressMap: A D3-based Gene Expression Heatmap
+# GTEx D3 Repository
 
 ## To run ExpressMap locally
 - You need to have internet access. 
-- In the repo's root directory, start the Python HTTP server:
+- In the repo's root directory, start the Python HTTP server and specify a port:
 
 ```python python/runServer.py```
 
 Then, you will be able to see the demo in a web browser at: 
 
-```localhost:8000```
+```localhost:<the port>```
 
-- You can also choose a different host name and port to run the demo:
+## rollup
+- For production mode: set NODE_ENV to prod:
+```export NODE_ENV="prod"```
 
-```python python/runServer.py <hostname:port>```
-
-## Test data 
-- GTEx data: The top 100 expressed genes in blood. 
-- Pre-computed gene and tissue dendrograms were generated using python/cluster.py.
-
-## UI features
-### Toolbar
-#### Tissue column sorting options 
-- By default, the tissue columns in the heatmap are arranged according to the tissue dendrogram (the leaf nodes). 
-- Alternatively, tissues can be sorted alphabetically. The tissue dendrogram is hidden in this view mode.
-
-### Heatmap mouse events
-#### Gene label
-- **Click** shows the gene's detailed expression boxplot.
-- **Alt-Click** adds the gene to the existing boxplot.
-#### Cell
-- **Mouseover** reports the underlying expression data in the tooltip.
-
-### Dendrogram mouse events
-#### Internal node
-- **Mouseover** reports the leaf nodes in the tooltip.
-
+- Batch Gene Heatmap:
+```rollup -c rollup.batch.gene.expression.config.js```
 
 
 
