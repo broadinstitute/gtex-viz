@@ -51,7 +51,7 @@ export default class GroupedViolin {
      * @param yLabel {String}
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, bins=50, yDomain=[-3,3], zDomain=[-1, 1], yLabel="Y axis", showSubX=true){
+    render(dom, width=500, height=357, xPadding=0.05, bins=50, yDomain=[-3,3], zDomain=[-1, 1], yLabel="Y axis", showSubX=true, showX=true){
         // Silver ratio: 500/357 =~ 1.4
         // defines the X, subX, Y, Z scales
         if (yDomain===undefined || 0 == yDomain.length){
@@ -164,10 +164,14 @@ export default class GroupedViolin {
 
         // renders the x axis
         let buffer = showSubX?40:0;
+        let xAxis = showX?axisBottom(this.scale.x):axisBottom(this.scale.x).tickFormat("");
         dom.append("g")
             .attr("class", "violin-axis")
             .attr("transform", `translate(0, ${height + buffer})`)
-            .call(axisBottom(this.scale.x).tickFormat("")); // set tickFormat("") to show tick marks without text labels
+            .call(xAxis) // set tickFormat("") to show tick marks without text labels
+            .selectAll("text")
+            .style("text-anchor", "start")
+            .attr("transform", "rotate(30, -10, 10)");
 
         // adds the y Axis
         buffer = 5;
