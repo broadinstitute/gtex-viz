@@ -34,7 +34,7 @@ export function buildGrouped(rootId){
             const violin = new GroupedViolin(data);
 
             // SVG rendering
-            violin.render(dom, dim.width, dim.height, 0, 25, [], [-0.5, 0.5], "TPM", false, true);
+            violin.render(dom, dim.width, dim.height, 0, 25, [], [-0.2, 0.2], "TPM", false, true);
         })
         .catch(function(err){console.error(err)});
 }

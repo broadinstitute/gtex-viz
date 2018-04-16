@@ -19,7 +19,7 @@ Input data structure: a list of data object with the following structure:
 ]
 */
 
-import {extent, median, ascending} from "d3-array";
+import {extent, median, ascending, quantile} from "d3-array";
 import {nest} from "d3-collection";
 import {scaleBand, scaleLinear} from "d3-scale";
 import {area} from "d3-shape";
@@ -141,10 +141,21 @@ export default class GroupedViolin {
                         return "#555f66";
                     });
 
+                 // interquartile range
+                const q1 = quantile(entry.values, 0.25);
+                const q3 = quantile(entry.values, 0.75);
+                const z = this.scale.z.domain()[1]/4;
+                dom.append("rect")
+                    .attr("x", this.scale.z(-z))
+                    .attr("y", this.scale.y(q3))
+                    .attr("width", Math.abs(this.scale.z(-z)-this.scale.z(z)))
+                    .attr("height", Math.abs(this.scale.y(q3) - this.scale.y(q1)))
+                    .attr("class", "violin-ir");
+
                 const med = median(entry.values);
                 dom.append("line") // the median line
-                    .attr("x1", this.scale.z(-0.25))
-                    .attr("x2", this.scale.z(0.25))
+                    .attr("x1", this.scale.z(-z))
+                    .attr("x2", this.scale.z(z))
                     .attr("y1", this.scale.y(med))
                     .attr("y2", this.scale.y(med))
                     .attr("class", "violin-median");
