@@ -1,21 +1,34 @@
-.violin-axis line, .axis path{
+.violin-x-axis line, .violin-y-axis line, .violin-x-axis path, .violin-y-axis path{
     fill: none;
     stroke: Silver;
     stroke-width: 1;
     shape-rendering: crispEdges;
 }
 
-.violin-axis text {
+.violin-x-axis text, .violin-y-axis text, .violin-x-axis-hide text {
     fill: #2a718b;
 }
 
+.violin-x-axis-hide line, .violin-x-axis-hide path{
+    fill: none;
+    stroke: Silver;
+    stroke-width: 0;
+    shape-rendering: crispEdges;
+}
+
 .violin-sub-axis line, .violin-sub-axis path{
+    stroke-width: 1;
+    stroke: Silver;
+    shape-rendering: crispEdges;
+}
+
+.violin-sub-axis-hide line, .violin-sub-axis-hide path{
     stroke-width: 0;
     stroke: Silver;
     shape-rendering: crispEdges;
 }
 
-.violin-sub-axis text {
+.violin-sub-axis text, .violin-sub-axis-hide text {
     fill: SlateGray;
     font-size: 9px;
 }

@@ -51,7 +51,7 @@ export default class GroupedViolin {
      * @param yLabel {String}
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, bins=50, xDomain=undefined, yDomain=[-3,3], zDomain=[-1, 1], yLabel="Y axis", showSubX=true, showX=true){
+    render(dom, width=500, height=357, xPadding=0.05, bins=50, xDomain=undefined, yDomain=[-3,3], zDomain=[-1, 1], yLabel="Y axis", showSubX=true, showX=true, subXAngle=0){
         // Silver ratio: 500/357 =~ 1.4
         // defines the X, subX, Y, Z scales
         if (yDomain===undefined || 0 == yDomain.length){
@@ -161,23 +161,30 @@ export default class GroupedViolin {
                     .attr("class", "violin-median");
             });
 
-            // adds the subx axis if there are more than one entries
+            // adds the sub-x axis if there are more than one entries
             var buffer = 5;
             if (showSubX){
-                 dom.append("g")
-                .attr("class", "violin-sub-axis")
-                .attr("transform", `translate(0, ${height + buffer})`)
-                .call(axisBottom(this.scale.subx))
+                const subxG = dom.append("g")
+                    .attr("class", "violin-sub-axis")
+                    .attr("transform", `translate(0, ${height + buffer})`)
+                    .call(axisBottom(this.scale.subx));
+
+                if(subXAngle>0){
+                subxG.selectAll("text")
+                    .style("text-anchor", "start")
+                    .attr("transform", `rotate(${subXAngle}, 2, 10)`);
+                }
+
             }
 
 
         });
 
         // renders the x axis
-        let buffer = showSubX?40:0;
+        let buffer = showSubX?45:0;
         let xAxis = showX?axisBottom(this.scale.x):axisBottom(this.scale.x).tickFormat("");
         dom.append("g")
-            .attr("class", "violin-axis")
+            .attr("class", "violin-x-axis")
             .attr("transform", `translate(0, ${height + buffer})`)
             .call(xAxis) // set tickFormat("") to show tick marks without text labels
             .selectAll("text")
@@ -187,7 +194,7 @@ export default class GroupedViolin {
         // adds the y Axis
         buffer = 5;
         dom.append("g")
-            .attr("class", "violin-axis")
+            .attr("class", "violin-y-axis")
             .attr("transform", `translate(-${buffer}, 0)`)
             .call(
                 axisLeft(this.scale.y)

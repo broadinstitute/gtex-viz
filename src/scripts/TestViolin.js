@@ -7,7 +7,7 @@ import {select} from "d3-selection";
 
 import Violin from "./modules/Violin";
 import GroupedViolin from "./modules/GroupedViolin";
-import {getGtexUrls, parseGeneExpressionForViolin} from "./modules/gtexDataParser";
+import {getGtexUrls, parseGeneExpressionForViolin, parseTissues} from "./modules/gtexDataParser";
 
 
 export function buildGrouped(rootId){
@@ -18,35 +18,40 @@ export function buildGrouped(rootId){
     Object.keys(domIds).forEach((k)=>{
         $(`<div id="${domIds[k]}"/>`).appendTo(`#${rootId}`);
     });
-    const margin = _setMargins(50, 50, 150, 50);
-    const dim = _setDimensions(1200, 200, margin);
-    const dom = select(`#${domIds.chart}`).append("svg")
-        .attr("width", dim.outerWidth)
-        .attr("height", dim.outerHeight)
-        .attr("id", domIds.svg)
-        .append("g")
-        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+    const urls = getGtexUrls();
    // get some data
+   //  const gencode = "ENSG00000065613.9,ENSG00000106624.4,ENSG00000120885.15";
     const gencode = "ENSG00000065613.9,ENSG00000106624.4";
+
     // const gencode = "ENSG00000106624.4";
 
-    const colors = {
-        "ENSG00000065613.9": "#97a4ac",
-        "ENSG00000106624.4": "#77c4d3"
-    };
-    json(getGtexUrls().geneExp + gencode)
-        .then(function(d){
-            const data = parseGeneExpressionForViolin(d, true, colors);
+    // const colors = {
+    //     "ENSG00000065613.9": "#97a4ac",
+    //     "ENSG00000106624.4": "#77c4d3"
+    // };
+    Promise.all([json(urls.tissue), json(urls.geneExp + gencode)])
+        .then(function(args){
+            const tissueTable = parseTissues(args[0]).reduce((arr,d)=>{arr[d.tissueId]=d; return arr},{});
+            const data = parseGeneExpressionForViolin(args[1], true, undefined);
             const violin = new GroupedViolin(data);
-            const tissues = data.reduce((arr,d)=>{arr[d.tissueId]=1; return arr},{});
             const sort = (a, b)=>{
                 if (a>b) return 1;
                 if (a<b) return -1;
                 return 0;
             };
+            const tissues = Object.keys(tissueTable).sort(sort);
 
             // SVG rendering
-            violin.render(dom, dim.width, dim.height, 0, 50, Object.keys(tissues).sort(sort), [], [-3, 3], "log10(TPM)", false, true);
+            const margin = _setMargins(50, 50, 150, 50);
+            const dim = _setDimensions(30*gencode.split(",").length*tissues.length, 150, margin);
+            const dom = select(`#${domIds.chart}`).append("svg")
+                .attr("width", dim.outerWidth)
+                .attr("height", dim.outerHeight)
+                .attr("id", domIds.svg)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+            violin.render(dom, dim.width, dim.height, 0.1, 50, tissues, [], [-3, 3], "log10(TPM)", true, false, 90);
+            _customizeViolinPlot(violin, dom, tissueTable);
         })
         .catch(function(err){console.error(err)});
 }
@@ -156,4 +161,66 @@ function _genereateRandomData(N=5){
         }
     });
     return data;
+}
+
+/**
+ * Customization of the violin plot
+ * @param plot {GroupedViolin}
+ * @param dom {D3 DOM}
+ */
+function _customizeViolinPlot(plot, dom, tissueDict){
+    plot.groups.forEach((g)=>{
+
+        ////// customize the long tissue name
+        const gname = g.key;
+
+        // totally hacking the tissue names here
+        const names = tissueDict[gname].tissueName
+            .replace(/\(/g, "|(")
+            .replace("transformed", "transformed|")
+            .split(/ - |\|/)
+            .reverse();
+
+        const customXlabel = dom.append("g");
+        const customLabels = customXlabel.selectAll(".violin-group-label")
+            .data(names);
+        customLabels.enter().append("text")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("class", "violin-group-label")
+            .attr("transform", (d, i) => {
+                let x = plot.scale.x(gname) + plot.scale.x.bandwidth()/2;
+                let y = -5-(10*i); // todo: avoid hard-coded values
+                return `translate(${x}, ${y})`
+            })
+            .text((d) => d);
+    });
+
+    ////// add the grid
+    dom.selectAll(".grid").data(plot.groups)
+        .enter()
+        .append("rect")
+        .attr("x", (g)=>plot.scale.x(g.key))
+        .attr("y", (g)=>plot.scale.y.range()[1])
+        .attr("width", (g)=>plot.scale.x.bandwidth())
+        .attr("height", (g)=>plot.scale.y.range()[0])
+        .style("stroke", "#97a4ac")
+        .style("stroke-width", 1)
+        .style("fill", "none")
+        .classed("grid", true);
+
+    ///// add tissue colors
+    dom.selectAll(".tcolor").data(plot.groups)
+        .enter()
+        .append("rect")
+        .attr("x", (g)=>plot.scale.x(g.key))
+        .attr("y", (g)=>plot.scale.y.range()[0])
+        .attr("width", (g)=>plot.scale.x.bandwidth())
+        .attr("height", 5)
+        .style("stroke-width", 0)
+        .style("fill", (g)=>`#${tissueDict[g.key].colorHex}`)
+
+    ///// hide X axis
+    dom.selectAll(".violin-x-axis").classed("violin-x-axis-hide", true).classed("violin-x-axis", false);
+
 }
