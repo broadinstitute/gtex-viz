@@ -22,11 +22,15 @@
     </head>
     <body class="container-fluid" style="margin-top:20px;">
         <h3>Violin plot testing</h3>
+        <div id="oneGene"></div>
+        <div id="twoGenes"></div>
         <div id="mainGrouped"></div>
         <div id="main"></div>
     </body>
     <script>
-        TestViolin.build("main");
+//        TestViolin.build("main");
+        TestViolin.buildGrouped("oneGene");
+        TestViolin.buildGrouped("twoGenes");
         TestViolin.buildGrouped("mainGrouped");
     </script>
 </html>

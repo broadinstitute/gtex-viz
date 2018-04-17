@@ -27,6 +27,7 @@ export const kernelBandwidth = {
  */
 export function kernelDensityEstimator(kernel, X, h){
     return function(V) {
+        // X is the bins
         return X.map((x) => [x, mean(V, (v) => kernel((x-v)/h))/h]);
     }
 }

@@ -20,20 +20,24 @@ export function buildGrouped(rootId){
     });
     const urls = getGtexUrls();
    // get some data
-   //  const gencode = "ENSG00000065613.9,ENSG00000106624.4,ENSG00000120885.15";
-    const gencode = "ENSG00000065613.9,ENSG00000106624.4";
+    let gencode = "";
+    let colors = undefined;
+    if (rootId == "oneGene"){
+        gencode = "ENSG00000106624.4";
+    } else if (rootId == "twoGenes") {
+        gencode = "ENSG00000065613.9,ENSG00000106624.4";
+        colors = {
+            "ENSG00000065613.9": "#97a4ac",
+            "ENSG00000106624.4": "#77c4d3"
+        };
+    } else {
+        gencode = "ENSG00000065613.9,ENSG00000106624.4,ENSG00000120885.15";
+    }
 
-    // const gencode = "ENSG00000106624.4";
-
-    // const colors = {
-    //     "ENSG00000065613.9": "#97a4ac",
-    //     "ENSG00000106624.4": "#77c4d3"
-    // };
     Promise.all([json(urls.tissue), json(urls.geneExp + gencode)])
         .then(function(args){
             const tissueTable = parseTissues(args[0]).reduce((arr,d)=>{arr[d.tissueId]=d; return arr},{});
-            const data = parseGeneExpressionForViolin(args[1], true, undefined);
-            const violin = new GroupedViolin(data);
+            const data = parseGeneExpressionForViolin(args[1], true, colors);
             const sort = (a, b)=>{
                 if (a>b) return 1;
                 if (a<b) return -1;
@@ -42,16 +46,30 @@ export function buildGrouped(rootId){
             const tissues = Object.keys(tissueTable).sort(sort);
 
             // SVG rendering
-            const margin = _setMargins(50, 50, 150, 50);
-            const dim = _setDimensions(30*gencode.split(",").length*tissues.length, 150, margin);
+            const margin = _setMargins(50, 50, 200, 50);
+            const wUnit = gencode.split(",").length <= 2? 20: 30;
+            const width = gencode.split(",").length==1?wUnit*tissues.length:wUnit*gencode.split(",").length*tissues.length;
+            const dim = _setDimensions(width, 150, margin);
             const dom = select(`#${domIds.chart}`).append("svg")
                 .attr("width", dim.outerWidth)
                 .attr("height", dim.outerHeight)
                 .attr("id", domIds.svg)
                 .append("g")
                 .attr("transform", `translate(${margin.left}, ${margin.top})`);
-            violin.render(dom, dim.width, dim.height, 0.1, 50, tissues, [], [-3, 3], "log10(TPM)", true, false, 90);
-            _customizeViolinPlot(violin, dom, tissueTable);
+
+            const violin = new GroupedViolin(data);
+            if (gencode.split(",").length == 1){
+                violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", false, true);
+            } else if (gencode.split(",").length == 2){
+                violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", false, true);
+
+            }
+            else{
+                violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", true, false, 90);
+                _customizeViolinPlot(violin, dom, tissueTable);
+            }
+
+
         })
         .catch(function(err){console.error(err)});
 }
@@ -190,7 +208,7 @@ function _customizeViolinPlot(plot, dom, tissueDict){
             .attr("class", "violin-group-label")
             .attr("transform", (d, i) => {
                 let x = plot.scale.x(gname) + plot.scale.x.bandwidth()/2;
-                let y = -5-(10*i); // todo: avoid hard-coded values
+                let y = -(10+10*i); // todo: avoid hard-coded values
                 return `translate(${x}, ${y})`
             })
             .text((d) => d);
@@ -214,11 +232,11 @@ function _customizeViolinPlot(plot, dom, tissueDict){
         .enter()
         .append("rect")
         .attr("x", (g)=>plot.scale.x(g.key))
-        .attr("y", (g)=>plot.scale.y.range()[0])
+        .attr("y", (g)=>plot.scale.y.range()[1]-5)
         .attr("width", (g)=>plot.scale.x.bandwidth())
         .attr("height", 5)
         .style("stroke-width", 0)
-        .style("fill", (g)=>`#${tissueDict[g.key].colorHex}`)
+        .style("fill", (g)=>`#${tissueDict[g.key].colorHex}`);
 
     ///// hide X axis
     dom.selectAll(".violin-x-axis").classed("violin-x-axis-hide", true).classed("violin-x-axis", false);

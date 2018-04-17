@@ -412,7 +412,7 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
                 innerHeight = height - (margin.top + margin.bottom);
 
             let svg = _createSvg("#" + id, width, height, margin);
-            violin.render(svg, innerWidth, innerHeight, 0.1, 50, undefined, [-2, 2], [-1.5, 1.5], "Rank Normalized Expression", true, false);
+            violin.render(svg, innerWidth, innerHeight, 0.1, undefined, [-1.5, 1.5], "Rank Normalized Expression", true, false);
             _customizeViolinPlot(violin, svg);
         })
         .catch(function(err){console.error(err)});

@@ -19,7 +19,7 @@ Input data structure: a list of data object with the following structure:
 ]
 */
 
-import {extent, median, ascending, quantile} from "d3-array";
+import {extent, median, ascending, quantile, max} from "d3-array";
 import {nest} from "d3-collection";
 import {scaleBand, scaleLinear} from "d3-scale";
 import {area} from "d3-shape";
@@ -45,13 +45,12 @@ export default class GroupedViolin {
      * @param width {Float}
      * @param height {Float}
      * @param xPadding {Float} padding of the x axis
-     * @param bins {Integer} KDE bins
+     * @param xDomain {List} the order of X groups
      * @param yDomain {List} the min and max values of the y domain
-     * @param zDomain {List} the min and max values of z domain
      * @param yLabel {String}
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, bins=50, xDomain=undefined, yDomain=[-3,3], zDomain=[-1, 1], yLabel="Y axis", showSubX=true, showX=true, subXAngle=0){
+    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showSubX=true, showX=true, subXAngle=0){
         // Silver ratio: 500/357 =~ 1.4
         // defines the X, subX, Y, Z scales
         if (yDomain===undefined || 0 == yDomain.length){
@@ -75,8 +74,7 @@ export default class GroupedViolin {
             y: scaleLinear()
                 .rangeRound([height, 0])
                 .domain(yDomain),
-            z: scaleLinear()
-                .domain(zDomain)
+            z: scaleLinear() // this is the violin width, the domain and range are determined later individually for each violin
         };
 
         this.groups.forEach((g, gIndex) => {
@@ -113,19 +111,24 @@ export default class GroupedViolin {
 
             entries.forEach((entry) => {
 
-                // defines the range for this.scale.z based on this.scale.subx
-                this.scale.z.range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
-                let size = entry.values.length;
-                if (0 == size) return; // no further rendering
+                if (0 == entry.values.length) return; // no further rendering if this group has no entries
                 entry.values = entry.values.sort(ascending);
 
-                // console.log("Bandwidth: " + kernelBandwidth.nrd(entry.values));
-                // kernel density estimation
-                let vertices = kernelDensityEstimator(
+                let kde = kernelDensityEstimator(
                     kernel.gaussian,
-                    this.scale.y.ticks(bins),
-                    kernelBandwidth.nrd(entry.values))
-                    (entry.values);
+                    this.scale.y.ticks(30), // use 30 vertices along the Y axis (to create the violin path)
+                    kernelBandwidth.nrd(entry.values) // estimate the bandwidth based on the data
+                );
+                const vertices = kde(entry.values);
+
+                // defines the z scale
+                console.log(vertices.map((d)=>d[1]));
+                let zMax = max(vertices, (d)=>Math.abs(d[1])); // find the abs(value) in entry.values
+                console.log(`zMax: ${zMax}`);
+                this.scale.z
+                    .domain([-zMax, zMax])
+                    .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
+
                 // visual rendering
                 let violin = area()
                     .x0((d) => this.scale.z(d[1]))
