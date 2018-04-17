@@ -19,7 +19,7 @@ Input data structure: a list of data object with the following structure:
 ]
 */
 
-import {extent, median, ascending, quantile, max} from "d3-array";
+import {extent, median, ascending, quantile, max, min} from "d3-array";
 import {nest} from "d3-collection";
 import {scaleBand, scaleLinear} from "d3-scale";
 import {area} from "d3-shape";
@@ -34,7 +34,7 @@ export default class GroupedViolin {
      * @param groupInfo {Dictionary}: metadata of the group, indexed by group ID
      */
     constructor(data, groupInfo = {}){
-        this.sanityCheck(data);
+        this._sanityCheck(data);
         this.data = data;
         this.groupInfo = groupInfo;
     }
@@ -50,7 +50,7 @@ export default class GroupedViolin {
      * @param yLabel {String}
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showSubX=true, showX=true, subXAngle=0){
+    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showX=true, showSubX=true, subXAngle=0, showWhisker=false){
         // Silver ratio: 500/357 =~ 1.4
         // defines the X, subX, Y, Z scales
         if (yDomain===undefined || 0 == yDomain.length){
@@ -84,7 +84,6 @@ export default class GroupedViolin {
 
             if (info !== undefined){
                  // renders group info such as p-value, group name
-                // TODO: perhaps group info should not be included in the class, should be written as customization code
                 const groupInfoDom = dom.append("g");
                 const groupLabels = groupInfoDom.selectAll(".violin-group-label")
                     .data(['pvalue']);
@@ -114,54 +113,7 @@ export default class GroupedViolin {
                 if (0 == entry.values.length) return; // no further rendering if this group has no entries
                 entry.values = entry.values.sort(ascending);
 
-                let kde = kernelDensityEstimator(
-                    kernel.gaussian,
-                    this.scale.y.ticks(30), // use 30 vertices along the Y axis (to create the violin path)
-                    kernelBandwidth.nrd(entry.values) // estimate the bandwidth based on the data
-                );
-                const vertices = kde(entry.values);
-
-                // defines the z scale
-                console.log(vertices.map((d)=>d[1]));
-                let zMax = max(vertices, (d)=>Math.abs(d[1])); // find the abs(value) in entry.values
-                console.log(`zMax: ${zMax}`);
-                this.scale.z
-                    .domain([-zMax, zMax])
-                    .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
-
-                // visual rendering
-                let violin = area()
-                    .x0((d) => this.scale.z(d[1]))
-                    .x1((d) => this.scale.z(-d[1]))
-                    .y((d) => this.scale.y(d[0]));
-
-                dom.append("path")
-                    .datum(vertices)
-                    .attr("d", violin)
-                    .style("fill", ()=>{
-                        if (entry.color !== undefined) return entry.color;
-                        if(gIndex%2 == 0) return "#1595a9";
-                        return "#555f66";
-                    });
-
-                 // interquartile range
-                const q1 = quantile(entry.values, 0.25);
-                const q3 = quantile(entry.values, 0.75);
-                const z = this.scale.z.domain()[1]/4;
-                dom.append("rect")
-                    .attr("x", this.scale.z(-z))
-                    .attr("y", this.scale.y(q3))
-                    .attr("width", Math.abs(this.scale.z(-z)-this.scale.z(z)))
-                    .attr("height", Math.abs(this.scale.y(q3) - this.scale.y(q1)))
-                    .attr("class", "violin-ir");
-
-                const med = median(entry.values);
-                dom.append("line") // the median line
-                    .attr("x1", this.scale.z(-z))
-                    .attr("x2", this.scale.z(z))
-                    .attr("y1", this.scale.y(med))
-                    .attr("y2", this.scale.y(med))
-                    .attr("class", "violin-median");
+                this._drawViolin(dom, entry, showWhisker);
             });
 
             // adds the sub-x axis if there are more than one entries
@@ -214,7 +166,77 @@ export default class GroupedViolin {
 
     }
 
-    sanityCheck(data){
+    _drawViolin(dom, entry, showWhisker){
+
+        // generate the vertices for the violin path use a kde
+        let kde = kernelDensityEstimator(
+            kernel.gaussian,
+            this.scale.y.ticks(100), // use up to 100 vertices along the Y axis (to create the violin path)
+            kernelBandwidth.nrd(entry.values) // estimate the bandwidth based on the data
+        );
+        const eDomain = extent(entry.values); // get the max and min in entry.values
+        const vertices = kde(entry.values).filter((d)=>d[0]>eDomain[0]&&d[0]<eDomain[1]); // filter the vertices that aren't in the entry.values
+
+        // define the z scale -- the violin width
+        let zMax = max(vertices, (d)=>Math.abs(d[1])); // find the abs(value) in entry.values
+        this.scale.z
+            .domain([-zMax, zMax])
+            .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
+
+        // visual rendering
+        const violinG = dom.append("g");
+        let violin = area()
+            .x0((d) => this.scale.z(d[1]))
+            .x1((d) => this.scale.z(-d[1]))
+            .y((d) => this.scale.y(d[0]));
+
+        violinG.append("path")
+            .datum(vertices)
+            .attr("d", violin)
+            .style("fill", ()=>{
+                if (entry.color !== undefined) return entry.color;
+                // alternate the odd and even colors
+                if(gIndex%2 == 0) return "#90c1c1";
+                return "#94a8b8";
+            });
+
+        // boxplot
+        const q1 = quantile(entry.values, 0.25);
+        const q3 = quantile(entry.values, 0.75);
+        const z = this.scale.z.domain()[1]/3;
+
+        if(showWhisker){
+            // the upper and lower limits of entry.values
+            const iqr = Math.abs(q3-q1);
+            const upper = max(entry.values.filter((d)=>d<q3+(iqr*1.5)));
+            const lower = min(entry.values.filter((d)=>d>q1-(iqr*1.5)));
+            dom.append("line")
+                .attr("x1", this.scale.z(0))
+                .attr("x2", this.scale.z(0))
+                .attr("y1", this.scale.y(upper))
+                .attr("y2", this.scale.y(lower))
+                .style("stroke", "#fff");
+        }
+
+        // interquartile range
+        violinG.append("rect")
+            .attr("x", this.scale.z(-z))
+            .attr("y", this.scale.y(q3))
+            .attr("width", Math.abs(this.scale.z(-z)-this.scale.z(z)))
+            .attr("height", Math.abs(this.scale.y(q3) - this.scale.y(q1)))
+            .attr("class", "violin-ir");
+
+        // median
+        const med = median(entry.values);
+        violinG.append("line") // the median line
+            .attr("x1", this.scale.z(-z))
+            .attr("x2", this.scale.z(z))
+            .attr("y1", this.scale.y(med))
+            .attr("y2", this.scale.y(med))
+            .attr("class", "violin-median");
+    }
+
+    _sanityCheck(data){
         const attr = ["group", "label", "values"];
 
         data.forEach((d) => {

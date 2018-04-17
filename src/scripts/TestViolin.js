@@ -25,10 +25,11 @@ export function buildGrouped(rootId){
     if (rootId == "oneGene"){
         gencode = "ENSG00000106624.4";
     } else if (rootId == "twoGenes") {
-        gencode = "ENSG00000065613.9,ENSG00000106624.4";
+        gencode = "ENSG00000065613.9,ENSG00000106624.4,ENSG00000120885.15";
         colors = {
-            "ENSG00000065613.9": "#97a4ac",
-            "ENSG00000106624.4": "#77c4d3"
+            "ENSG00000065613.9": "#802f45",
+            "ENSG00000106624.4": "#94a8b8",
+            "ENSG00000120885.15": "#17a2b8"
         };
     } else {
         gencode = "ENSG00000065613.9,ENSG00000106624.4,ENSG00000120885.15";
@@ -47,7 +48,7 @@ export function buildGrouped(rootId){
 
             // SVG rendering
             const margin = _setMargins(50, 50, 200, 50);
-            const wUnit = gencode.split(",").length <= 2? 20: 30;
+            const wUnit = gencode.split(",").length == 1? 20: (rootId=="twoGenes"?15:30);
             const width = gencode.split(",").length==1?wUnit*tissues.length:wUnit*gencode.split(",").length*tissues.length;
             const dim = _setDimensions(width, 150, margin);
             const dom = select(`#${domIds.chart}`).append("svg")
@@ -59,13 +60,13 @@ export function buildGrouped(rootId){
 
             const violin = new GroupedViolin(data);
             if (gencode.split(",").length == 1){
-                violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", false, true);
-            } else if (gencode.split(",").length == 2){
-                violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", false, true);
+                violin.render(dom, dim.width, dim.height, 0, tissues, [], "log10(TPM)", true, false);
+            } else if (rootId=="twoGenes"){
+                violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", true, false);
 
             }
             else{
-                violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", true, false, 90);
+                violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", false, true, 90);
                 _customizeViolinPlot(violin, dom, tissueTable);
             }
 

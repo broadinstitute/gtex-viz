@@ -55,37 +55,13 @@ div.violin-tooltip {
    border-radius:5px;
 }
 
-/*.chart {*/
-    /*float: left;*/
-/*}*/
-
-path.gtex-violin-odd {
-    fill: #1595a9;
-    opacity: 0.7;
-}
-
-path.gtex-violin-even {
-    fill: #555f66;
-    opacity: 0.7;
-}
-
-path.violin {
-    fill: #1595a9;
-}
-
-path.gtex-density-curve {
-    stroke: Salmon;
-    stroke-width: 1;
-    fill: none
-}
-
 line.violin-median {
     stroke-width: 2;
     stroke: #fff;
 }
 
 rect.violin-ir {
-    fill: #203549;
+    fill: #555f66;
     stroke-width: 0;
 }
 

@@ -302,7 +302,7 @@ export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
         d.group = d.tissueId;
         d.label = d.geneSymbol;
-        d.color = colors===undefined?"#77c4d3":colors[d.gencodeId];
+        d.color = colors===undefined?"#90c1c1":colors[d.gencodeId];
     });
     return data[attr];
 }
