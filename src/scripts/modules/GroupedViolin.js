@@ -24,8 +24,10 @@ import {nest} from "d3-collection";
 import {scaleBand, scaleLinear} from "d3-scale";
 import {area} from "d3-shape";
 import {axisBottom, axisLeft} from "d3-axis";
+import {select} from "d3-selection";
 
 import {kernelDensityEstimator, kernel, kernelBandwidth} from "./kde";
+import Tooltip from "./Tooltip";
 
 export default class GroupedViolin {
     /**
@@ -50,7 +52,7 @@ export default class GroupedViolin {
      * @param yLabel {String}
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showX=true, showSubX=true, subXAngle=0, showWhisker=false){
+    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showX=true, showSubX=true, subXAngle=0, showWhisker=false, showDivider=false){
         // Silver ratio: 500/357 =~ 1.4
         // defines the X, subX, Y, Z scales
         if (yDomain===undefined || 0 == yDomain.length){
@@ -68,16 +70,15 @@ export default class GroupedViolin {
             x: scaleBand()
                 .rangeRound([0, width])
                 .domain(xDomain||this.groups.map((d) => d.key))
-                .padding(xPadding),
-            subx: scaleBand()
-                .padding(xPadding),
+                .paddingInner(xPadding),
+            subx: scaleBand(),
             y: scaleLinear()
                 .rangeRound([height, 0])
                 .domain(yDomain),
             z: scaleLinear() // this is the violin width, the domain and range are determined later individually for each violin
         };
 
-        this.groups.forEach((g, gIndex) => {
+        this.groups.forEach((g) => {
             let group = g.key;
             let entries = g.values;
             let info = this.groupInfo[group];
@@ -112,8 +113,8 @@ export default class GroupedViolin {
 
                 if (0 == entry.values.length) return; // no further rendering if this group has no entries
                 entry.values = entry.values.sort(ascending);
-
-                this._drawViolin(dom, entry, showWhisker);
+                const gIndex = this.scale.x.domain().indexOf(entry.group);
+                this._drawViolin(dom, entry, showWhisker, gIndex);
             });
 
             // adds the sub-x axis if there are more than one entries
@@ -164,9 +165,37 @@ export default class GroupedViolin {
             .attr("text-anchor", "start")
             .text(yLabel);
 
+        // plot mouse events
+        dom.on("mouseout", ()=>{
+            if(this.tooltip !== undefined) this.tooltip.hide();
+        });
+
+        // add group dividers
+        if(showDivider){
+            this._addGroupDivider(dom);
+        }
+
     }
 
-    _drawViolin(dom, entry, showWhisker){
+    /**
+     * Create the tooltip object
+     * @param domId {String} the tooltip's dom ID
+     * @returns {Tooltip}
+     */
+    createTooltip(domId){
+        this.tooltip = new Tooltip(domId);
+        select(`#${domId}`).classed('violin-tooltip', true);
+        return this.tooltip;
+    }
+
+    /**
+     * render the violin and box plots
+     * @param dom {D3 DOM}
+     * @param entry {Object} with attrs: values, label
+     * @param showWhisker {Boolean}
+     * @private
+     */
+    _drawViolin(dom, entry, showWhisker, gIndex){
 
         // generate the vertices for the violin path use a kde
         let kde = kernelDensityEstimator(
@@ -185,14 +214,16 @@ export default class GroupedViolin {
 
         // visual rendering
         const violinG = dom.append("g");
+
         let violin = area()
             .x0((d) => this.scale.z(d[1]))
             .x1((d) => this.scale.z(-d[1]))
             .y((d) => this.scale.y(d[0]));
 
-        violinG.append("path")
+        const vPath = violinG.append("path")
             .datum(vertices)
             .attr("d", violin)
+            .classed("gtex-violin", true)
             .style("fill", ()=>{
                 if (entry.color !== undefined) return entry.color;
                 // alternate the odd and even colors
@@ -234,6 +265,22 @@ export default class GroupedViolin {
             .attr("y1", this.scale.y(med))
             .attr("y2", this.scale.y(med))
             .attr("class", "violin-median");
+
+        // mouse events
+        violinG.on("mouseover", ()=>{
+            vPath.classed("highlighted", true);
+            console.log(entry);
+            if(this.tooltip === undefined) console.warn("GroupViolin Warning: tooltip not defined");
+            else {
+                this.tooltip.show(
+                    entry.group + "<br/>" +
+                    entry.label + "<br/>" +
+                    "Median: " + med.toPrecision(4) + "<br/>");
+            }
+        });
+        violinG.on("mouseout", ()=>{
+            vPath.classed("highlighted", false);
+        });
     }
 
     _sanityCheck(data){
@@ -246,4 +293,33 @@ export default class GroupedViolin {
             // if (0 == d.values.length) throw "Violin: Input data error";
         });
     }
+
+    _addGroupDivider(dom){
+        const groups = this.scale.x.domain();
+        const padding = Math.abs(this.scale.x(this.scale.x.domain()[1]) - this.scale.x(this.scale.x.domain()[0]) - this.scale.x.bandwidth());
+
+        const getX = (g, i)=> {
+            if (i !== groups.length - 1) {
+                return this.scale.x(g) + +this.scale.x.bandwidth() + (padding/2)
+            }
+            else {
+                return 0;
+            }
+        };
+
+        dom.selectAll(".vline").data(groups)
+            .enter()
+            .append("line")
+            .classed("vline", true)
+            .attr("x1", getX)
+            .attr("x2", getX)
+            .attr("y1", this.scale.y.range()[0])
+            .attr("y2", this.scale.y.range()[1])
+            .style("stroke-width", (g, i)=>i!=groups.length-1?1:0)
+            .style("stroke", "silver")
+            .style("opacity", 0.25)
+
+    }
+
+
 }

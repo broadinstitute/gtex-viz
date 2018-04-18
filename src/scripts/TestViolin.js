@@ -1,3 +1,10 @@
+/**
+ * TODO:
+ * - add show color legend option
+ * - toolbar implementation
+ * - brush implementation
+ */
+
 "use strict";
 
 import {range} from "d3-array";
@@ -11,8 +18,14 @@ import {getGtexUrls, parseGeneExpressionForViolin, parseTissues} from "./modules
 
 
 export function buildGrouped(rootId){
+    const colors = {
+        "ENSG00000065613.9": "#802f45",
+        "ENSG00000106624.4": "#94a8b8",
+        "ENSG00000120885.15": "#90c1c1"
+    };
     const domIds = {
-        chart: "grouped-chart"
+        chart: "grouped-chart",
+        tooltip: "tooltip2"
     };
      // create all the sub <div> elements in the rootId
     Object.keys(domIds).forEach((k)=>{
@@ -21,16 +34,11 @@ export function buildGrouped(rootId){
     const urls = getGtexUrls();
    // get some data
     let gencode = "";
-    let colors = undefined;
     if (rootId == "oneGene"){
         gencode = "ENSG00000106624.4";
     } else if (rootId == "twoGenes") {
-        gencode = "ENSG00000065613.9,ENSG00000106624.4,ENSG00000120885.15";
-        colors = {
-            "ENSG00000065613.9": "#802f45",
-            "ENSG00000106624.4": "#94a8b8",
-            "ENSG00000120885.15": "#17a2b8"
-        };
+        gencode = "ENSG00000065613.9,ENSG00000106624.4";
+
     } else {
         gencode = "ENSG00000065613.9,ENSG00000106624.4,ENSG00000120885.15";
     }
@@ -47,8 +55,8 @@ export function buildGrouped(rootId){
             const tissues = Object.keys(tissueTable).sort(sort);
 
             // SVG rendering
-            const margin = _setMargins(50, 50, 200, 50);
-            const wUnit = gencode.split(",").length == 1? 20: (rootId=="twoGenes"?15:30);
+            const margin = _setMargins(50, 50, 100, 50);
+            const wUnit = rootId=="trellis"?30:20;
             const width = gencode.split(",").length==1?wUnit*tissues.length:wUnit*gencode.split(",").length*tissues.length;
             const dim = _setDimensions(width, 150, margin);
             const dom = select(`#${domIds.chart}`).append("svg")
@@ -59,17 +67,33 @@ export function buildGrouped(rootId){
                 .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
             const violin = new GroupedViolin(data);
-            if (gencode.split(",").length == 1){
-                violin.render(dom, dim.width, dim.height, 0, tissues, [], "log10(TPM)", true, false);
-            } else if (rootId=="twoGenes"){
-                violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", true, false);
+            const tooltip = violin.createTooltip(domIds.tooltip);
 
-            }
-            else{
-                violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", false, true, 90);
-                _customizeViolinPlot(violin, dom, tissueTable);
-            }
+            switch(rootId){
+                case "oneGene": {
+                    violin.render(dom, dim.width, dim.height, 0, tissues, [], "log10(TPM)", true, false);
+                    break;
+                }
+                case "twoGenes": {
+                    violin.render(dom, dim.width, dim.height, 0.40, tissues, [], "log10(TPM)", true, false);
+                    _addTissueColorBand(violin, dom, tissueTable, "bottom");
+                    break;
+                }
 
+                case "threeGenes": {
+                    violin.render(dom, dim.width, dim.height, 0.30, tissues, [], "log10(TPM)", true, false, 0, false, true);
+                    _addTissueColorBand(violin, dom, tissueTable, "bottom");
+                    break;
+                }
+                case "trellis": {
+                    violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", false, true, 90);
+                    _customizeViolinPlot(violin, dom, tissueTable);
+                    break;
+                }
+                default: {
+                    throw "rootID is not recognized";
+                }
+            }
 
         })
         .catch(function(err){console.error(err)});
@@ -91,6 +115,7 @@ export function build(rootId){
     // create all the sub <div> elements in the rootId
     Object.keys(domIds).forEach((k)=>{
         if("buttons" == k) return;
+        if ("svg" == k) return;
         $(`<div id="${domIds[k]}"/>`).appendTo(`#${rootId}`);
     });
 
@@ -229,17 +254,27 @@ function _customizeViolinPlot(plot, dom, tissueDict){
         .classed("grid", true);
 
     ///// add tissue colors
-    dom.selectAll(".tcolor").data(plot.groups)
-        .enter()
-        .append("rect")
-        .attr("x", (g)=>plot.scale.x(g.key))
-        .attr("y", (g)=>plot.scale.y.range()[1]-5)
-        .attr("width", (g)=>plot.scale.x.bandwidth())
-        .attr("height", 5)
-        .style("stroke-width", 0)
-        .style("fill", (g)=>`#${tissueDict[g.key].colorHex}`);
+    _addTissueColorBand(plot, dom, tissueDict);
 
     ///// hide X axis
     dom.selectAll(".violin-x-axis").classed("violin-x-axis-hide", true).classed("violin-x-axis", false);
 
 }
+
+function _addTissueColorBand(plot, dom, tissueDict, loc="top"){
+     ///// add tissue colors
+    const tissueG = dom.append("g");
+
+    tissueG.selectAll(".tcolor").data(plot.scale.x.domain())
+        .enter()
+        .append("rect")
+        .classed("tcolor", true)
+        .attr("x", (g)=>plot.scale.x(g) )
+        .attr("y", (g)=>loc=="top"?plot.scale.y.range()[1]-5:plot.scale.y.range()[0]-5)
+        .attr("width", (g)=>plot.scale.x.bandwidth())
+        .attr("height", 5)
+        .style("stroke-width", 0)
+        .style("fill", (g)=>`#${tissueDict[g].colorHex}`)
+        .style("opacity", 0.7);
+}
+

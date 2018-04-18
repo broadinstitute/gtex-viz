@@ -1,7 +1,7 @@
 import {select, event} from "d3-selection";
 
 export default class Tooltip {
-    constructor(id, verbose=false, offsetX=30, offsetY=-40, duration=500){
+    constructor(id, verbose=false, offsetX=30, offsetY=-40, duration=100){
         this.id = id;
         this.verbose = verbose;
         this.offsetX = offsetX;
