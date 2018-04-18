@@ -130,7 +130,7 @@ export default class Violin {
 
         // add the brush
         let theBrush = brush();
-        theBrush.on("end", (d) => {this.zoom(dom, theBrush)});
+        theBrush.on("end", () => {this.zoom(dom, theBrush)});
 
         dom.append("g")
             .attr("class", "brush")

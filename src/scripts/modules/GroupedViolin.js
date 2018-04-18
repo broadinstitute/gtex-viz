@@ -24,7 +24,8 @@ import {nest} from "d3-collection";
 import {scaleBand, scaleLinear} from "d3-scale";
 import {area} from "d3-shape";
 import {axisBottom, axisLeft} from "d3-axis";
-import {select} from "d3-selection";
+import {select, selectAll, event} from "d3-selection";
+import {brush} from "d3-brush";
 
 import {kernelDensityEstimator, kernel, kernelBandwidth} from "./kde";
 import Tooltip from "./Tooltip";
@@ -54,7 +55,14 @@ export default class GroupedViolin {
      */
 
     render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showX=true, showSubX=true, subXAngle=0, showWhisker=false, showDivider=false){
-        // Silver ratio: 500/357 =~ 1.4
+
+        // define the reset for this plot
+        this.reset = () => {
+            dom.selectAll("*").remove();
+            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider);
+        };
+
+
         // defines the X, subX, Y, Z scales
         if (yDomain===undefined || 0 == yDomain.length){
             let allV = [];
@@ -79,10 +87,12 @@ export default class GroupedViolin {
             z: scaleLinear() // this is the violin width, the domain and range are determined later individually for each violin
         };
 
+        // for each group
         this.groups.forEach((g) => {
             let group = g.key;
             let entries = g.values;
-            let info = this.groupInfo[group];
+            let info = this.groupInfo[group]; // optional
+            g.index = this.scale.x.domain().indexOf(group);
 
             if (info !== undefined){
                  // renders group info such as p-value, group name
@@ -114,8 +124,7 @@ export default class GroupedViolin {
 
                 if (0 == entry.values.length) return; // no further rendering if this group has no entries
                 entry.values = entry.values.sort(ascending);
-                const gIndex = this.scale.x.domain().indexOf(entry.group);
-                this._drawViolin(dom, entry, showWhisker, gIndex);
+                this._drawViolin(dom, entry, showWhisker, g.index);
             });
 
             // adds the sub-x axis if there are more than one entries
@@ -139,24 +148,23 @@ export default class GroupedViolin {
 
         // renders the x axis
         let buffer = showSubX?45:0;
-        let xAxis = showX?axisBottom(this.scale.x):axisBottom(this.scale.x).tickFormat("");
+        this.xAxis = showX?axisBottom(this.scale.x):axisBottom(this.scale.x).tickFormat("");
         dom.append("g")
-            .attr("class", "violin-x-axis")
+            .attr("class", "violin-x-axis axis--x")
             .attr("transform", `translate(0, ${height + buffer})`)
-            .call(xAxis) // set tickFormat("") to show tick marks without text labels
+            .call(this.xAxis) // set tickFormat("") to show tick marks without text labels
             .selectAll("text")
             .style("text-anchor", "start")
             .attr("transform", "rotate(30, -10, 10)");
 
         // adds the y Axis
         buffer = 5;
+        this.yAxis = axisLeft(this.scale.y)
+                    .tickValues(this.scale.y.ticks(5));
         dom.append("g")
-            .attr("class", "violin-y-axis")
+            .attr("class", "violin-y-axis axis--y")
             .attr("transform", `translate(-${buffer}, 0)`)
-            .call(
-                axisLeft(this.scale.y)
-                    .tickValues(this.scale.y.ticks(5))
-            );
+            .call(this.yAxis);
 
         // adds the text label for the y axis
         dom.append("text")
@@ -203,6 +211,108 @@ export default class GroupedViolin {
     }
 
     /**
+     * Add a brush to the plot
+     * @param dom {D3} Dom element
+     */
+    addBrush(dom){
+        const theBrush = brush();
+        theBrush.on("end", ()=>{this.zoom(dom, theBrush)});
+        dom.append("g")
+            .attr("class", "brush")
+            .call(theBrush);
+    }
+
+    zoom(dom, theBrush){
+        let s = event.selection,
+            idelTimeout,
+            idelDelay = 350;
+        if (theBrush === undefined){
+            this.reset();
+        }
+        else if (!s) {
+            if (!idelTimeout) return idelTimeout = setTimeout(function () {
+                idelTimeout = null;
+            }, idelDelay);
+            this.reset();
+
+        }
+        else {
+            // reset the current scales' domains based on the brushed window
+            this.scale.x.domain(this.scale.x.domain().filter((d, i)=>{
+                  const lowBound = Math.floor(s[0][0]/this.scale.x.bandwidth());
+                  const upperBound = Math.floor(s[1][0]/this.scale.x.bandwidth());
+                  return i >= lowBound && i <=upperBound;
+            })); // TODO: add comments
+
+            const min = Math.floor(this.scale.y.invert(s[1][1]));
+            const max = Math.floor(this.scale.y.invert(s[0][1]));
+            console.log(min+ " " + max);
+            console.log(this.scale.y.range());
+            this.scale.y.domain([min, max]); // todo: debug
+
+            dom.select(".brush").call(theBrush.move, null);
+        }
+
+
+         // zoom
+        let t = dom.transition().duration(750);
+        dom.select(".axis--x").transition(t).call(this.xAxis);
+        dom.select(".axis--y").transition(t).call(this.yAxis);
+
+        this.groups.forEach((gg, i)=> {
+            let group = gg.key;
+            let entries = gg.values;
+
+            // re-define the subx's range
+            this.scale.subx
+                .rangeRound([this.scale.x(group), this.scale.x(group) + this.scale.x.bandwidth()]);
+
+            entries.forEach((entry) => {
+                if (0 == entry.values.length) return; // no further rendering if this group has no entries
+                const gIndex = this.scale.x.domain().indexOf(group);
+
+
+                // re-define the scale.z's range
+                this.scale.z
+                    .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
+
+                // re-render the violin
+                const g = dom.select(`#violin${gg.index}-${entry.label}`);
+                g.select(".violin")
+                    .transition(t)
+                    .attr("d", area()
+                        .x0((d) => this.scale.z(d[1]))
+                        .x1((d) => this.scale.z(-d[1]))
+                        .y((d) => this.scale.y(d[0]))
+                    );
+
+
+                // re-render the box plot
+                // interquartile range
+                const q1 = quantile(entry.values, 0.25);
+                const q3 = quantile(entry.values, 0.75);
+                const z = 0.1;
+                g.select(".violin-ir")
+                    .transition(t)
+                    .attr("x", this.scale.z(-z))
+                    .attr("y", this.scale.y(q3))
+                    .attr("width", Math.abs(this.scale.z(-z) - this.scale.z(z)))
+                    .attr("height", Math.abs(this.scale.y(q3) - this.scale.y(q1)));
+
+                // the median line
+                const med = median(entry.values);
+                g.select(".violin-median")
+                    .transition(t)
+                    .attr("x1", this.scale.z(-z))
+                    .attr("x2", this.scale.z(z))
+                    .attr("y1", this.scale.y(med))
+                    .attr("y2", this.scale.y(med))
+            });
+        });
+
+    }
+
+    /**
      * render the violin and box plots
      * @param dom {D3 DOM}
      * @param entry {Object} with attrs: values, label
@@ -227,7 +337,8 @@ export default class GroupedViolin {
             .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
 
         // visual rendering
-        const violinG = dom.append("g");
+        const violinG = dom.append("g")
+            .attr('id', `violin${gIndex}-${entry.label}`);
 
         let violin = area()
             .x0((d) => this.scale.z(d[1]))
@@ -237,7 +348,7 @@ export default class GroupedViolin {
         const vPath = violinG.append("path")
             .datum(vertices)
             .attr("d", violin)
-            .classed("gtex-violin", true)
+            .classed("violin", true)
             .style("fill", ()=>{
                 if (entry.color !== undefined) return entry.color;
                 // alternate the odd and even colors
@@ -256,6 +367,7 @@ export default class GroupedViolin {
             const upper = max(entry.values.filter((d)=>d<q3+(iqr*1.5)));
             const lower = min(entry.values.filter((d)=>d>q1-(iqr*1.5)));
             dom.append("line")
+                .classed("whisker", true)
                 .attr("x1", this.scale.z(0))
                 .attr("x2", this.scale.z(0))
                 .attr("y1", this.scale.y(upper))

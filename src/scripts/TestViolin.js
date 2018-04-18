@@ -3,6 +3,8 @@
  * - add show color legend option
  * - toolbar implementation
  * - brush implementation
+ * - eQTL dashboard toolbar
+ * - add violin to expression heat map
  */
 
 "use strict";
@@ -76,14 +78,16 @@ export function buildGrouped(rootId){
 
             const violin = new GroupedViolin(data);
 
-            ///// creating the tooltip and toolbar
+            ///// creating the tooltip and toolbar, and the brush
             const tooltip = violin.createTooltip(domIds.tooltip);
             const toolbar = violin.createToolbar(domIds.toolbar, tooltip);
             toolbar.createDownloadButton(domIds.buttons.save, domIds.svg, `${rootId}-save.svg`, domIds.clone);
+            violin.addBrush(dom);
 
             switch(rootId){
                 case "oneGene": {
                     violin.render(dom, dim.width, dim.height, 0, tissues, [], "log10(TPM)", true, false);
+
                     break;
                 }
                 case "twoGenes": {

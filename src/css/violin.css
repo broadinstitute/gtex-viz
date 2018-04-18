@@ -55,7 +55,7 @@ div.violin-tooltip {
    border-radius:5px;
 }
 
-path.gtex-violin.highlighted {
+path.violin.highlighted {
     stroke-width: 2;
     stroke: #555f66;
 }
