@@ -28,6 +28,7 @@ import {select} from "d3-selection";
 
 import {kernelDensityEstimator, kernel, kernelBandwidth} from "./kde";
 import Tooltip from "./Tooltip";
+import Toolbar from "./Toolbar";
 
 export default class GroupedViolin {
     /**
@@ -186,6 +187,19 @@ export default class GroupedViolin {
         this.tooltip = new Tooltip(domId);
         select(`#${domId}`).classed('violin-tooltip', true);
         return this.tooltip;
+    }
+
+    /**
+     * Create the toolbar panel
+     * @param domId {String} the toolbar's dom ID
+     * @param tooltip {Tooltip}
+     * @returns {Toolbar}
+     */
+
+    createToolbar(domId, tooltip=undefined){
+        if (tooltip === undefined) tooltip = this.createTooltip(domId);
+        this.toolbar = new Toolbar(domId, tooltip);
+        return this.toolbar;
     }
 
     /**

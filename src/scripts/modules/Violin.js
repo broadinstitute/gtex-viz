@@ -139,6 +139,7 @@ export default class Violin {
     }
 
     createToolbar(domId, tooltip=undefined){
+        if (tooltip === undefined) tooltip = this.createTooltip(domId);
         this.toolbar = new Toolbar(domId, tooltip);
         return this.toolbar
     }

@@ -24,11 +24,19 @@ export function buildGrouped(rootId){
         "ENSG00000120885.15": "#90c1c1"
     };
     const domIds = {
-        chart: "grouped-chart",
-        tooltip: "tooltip2"
+        tooltip: `${rootId}-tooltip2`,
+        toolbar: `${rootId}-toolbar2`,
+        chart: `${rootId}-chart`,
+        svg: `${rootId}-svg` ,
+        clone: `${rootId}-svg-clone`,
+        buttons: {
+            save: `${rootId}-save`,
+            reset: `${rootId}-reset`
+        }
     };
      // create all the sub <div> elements in the rootId
     Object.keys(domIds).forEach((k)=>{
+        if (k=='buttons' || k=='svg') return;
         $(`<div id="${domIds[k]}"/>`).appendTo(`#${rootId}`);
     });
     const urls = getGtexUrls();
@@ -67,7 +75,11 @@ export function buildGrouped(rootId){
                 .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
             const violin = new GroupedViolin(data);
+
+            ///// creating the tooltip and toolbar
             const tooltip = violin.createTooltip(domIds.tooltip);
+            const toolbar = violin.createToolbar(domIds.toolbar, tooltip);
+            toolbar.createDownloadButton(domIds.buttons.save, domIds.svg, `${rootId}-save.svg`, domIds.clone);
 
             switch(rootId){
                 case "oneGene": {
