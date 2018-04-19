@@ -301,8 +301,8 @@ export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined
     data[attr].forEach((d)=>{
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
         d.group = d.tissueId;
-        d.label = d.gencodeId;
-        d.color = colors===undefined?"#DDDDDD":colors[d.gencodeId];
+        d.label = d.geneSymbol;
+        d.color = colors===undefined?"#90c1c1":colors[d.gencodeId];
     });
     return data[attr];
 }

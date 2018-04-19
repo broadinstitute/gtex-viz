@@ -58,6 +58,35 @@ export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxI
 
 }
 
+/**
+ * Customization of the violin plot
+ * @param plot {GroupedViolin}
+ * @param dom {D3 DOM}
+ */
+function _customizeViolinPlot(plot, dom){
+    plot.groups.forEach((g)=>{
+        // customize the long tissue name
+        const gname = g.key;
+        const names = gname.split(" - ");
+        const customXlabel = dom.append("g");
+        const customLabels = customXlabel.selectAll(".violin-group-label")
+            .data(names);
+        customLabels.enter().append("text")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("class", "violin-group-label")
+            .attr("transform", (d, i) => {
+                let x = plot.scale.x(gname) + plot.scale.x.bandwidth()/2;
+                let y = plot.scale.y(plot.scale.y.domain()[0]) + 55 + (10*i); // todo: avoid hard-coded values
+                return `translate(${x}, ${y})`
+            })
+            .text((d) => d);
+    });
+
+    dom.selectAll(".violin-sub-axis").classed("violin-sub-axis-hide", true).classed("violin-sub-axis", false);
+
+}
+
 function _getGTExUrls(){
     const host = 'https://gtexportal.org/rest/v1/';
     return {
@@ -383,7 +412,7 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
                 innerHeight = height - (margin.top + margin.bottom);
 
             let svg = _createSvg("#" + id, width, height, margin);
-            violin.render(svg, innerWidth, innerHeight, 0.1, 50, undefined, [-2, 2], [-1.5, 1.5], "Rank Normalized Expression", true, false);
+            violin.render(svg, innerWidth, innerHeight, 0.1, undefined, [-1.5, 1.5], "Rank Normalized Expression", false, true);
             _customizeViolinPlot(violin, svg);
         })
         .catch(function(err){console.error(err)});
@@ -439,26 +468,5 @@ function _createSvg(id, width, height, margin){
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
 }
 
-function _customizeViolinPlot(plot, dom){
-    plot.groups.forEach((g)=>{
-        // customize the long tissue name
-        const gname = g.key;
-        const names = gname.split(" - ");
-        const customXlabel = dom.append("g");
-        const customLabels = customXlabel.selectAll(".violin-group-label")
-            .data(names);
-        customLabels.enter().append("text")
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("class", "violin-group-label")
-            .attr("transform", (d, i) => {
-                let x = plot.scale.x(gname) + plot.scale.x.bandwidth()/2;
-                let y = plot.scale.y(plot.scale.y.domain()[0]) + 55 + (10*i); // todo: avoid hard-coded values
-                return `translate(${x}, ${y})`
-            })
-            .text((d) => d);
-    });
-
-}
 
 

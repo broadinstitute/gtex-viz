@@ -14,7 +14,7 @@ Input data structure: a list of data object with the following structure:
 ]
 */
 
-import {extent, ascending, median, quantile} from "d3-array";
+import {max, extent, ascending, median, quantile} from "d3-array";
 import {scaleBand, scaleLinear} from "d3-scale";
 import {area} from "d3-shape";
 import {axisBottom, axisLeft} from "d3-axis";
@@ -24,14 +24,32 @@ import {kernelDensityEstimator, kernel, kernelBandwidth} from "./kde";
 import Toolbar from "./Toolbar";
 import Tooltip from "./Tooltip";
 
+/**
+ * Violin plot
+ *
+ */
+
 export default class Violin {
+    /**
+     * Constructor for Violin
+     * @param data {Json} should have the following structure
+     * [
+     *  {
+     *      label: "dataset1",
+     *      values [values]
+     *   },
+     *  {
+     *      label: "dataset2",
+     *      values: [values]
+     *   }
+     * ]
+     */
     constructor(data){
         this._sanityCheck(data);
         this.data = data;
         this.tooltip = undefined;
         this.toolbar = undefined;
     }
-
 
     /**
      * renders the violin plot
@@ -43,15 +61,15 @@ export default class Violin {
      * @param bins {Integer} the number of bins to use for the KDE
      * @param xPadding {Float} padding of the x scale
      */
-    render(dom, width=400, height=250, yLabel="y label", yDomain=undefined, zDomain=[-0.5, 0.5], bins=50, xPadding=0.05){
+    render(dom, width=400, height=250, yLabel="y label", yDomain=undefined, xPadding=0.05){
         this.reset = () => {
             dom.selectAll("*").remove();
-            this.render(dom, width, height, yLabel, yDomain, zDomain, bins, xPadding);
+            this.render(dom, width, height, yLabel, yDomain, xPadding);
         };  // define the reset function on the fly
 
         // defines the X, Y, Z scales
-        let scale = this._setScales(yDomain, zDomain, width, height, xPadding);
-        let binValues = scale.y.ticks(bins); // these values are set only once using the original y scale
+        let scale = this._setScales(yDomain, width, height, xPadding);
+        let binValues = scale.y.ticks(30); // these values are set only once using the original y scale
         // for each data entry
         this.data.forEach((entry, i) => {
 
@@ -60,8 +78,7 @@ export default class Violin {
             entry.vertices = kernelDensityEstimator(
                 kernel.gaussian,
                 binValues,
-                kernelBandwidth.nrd(entry.values))
-            (entry.values);
+                kernelBandwidth.nrd(entry.values))(entry.values);
             let theViolin = dom.append("g").attr("id", `violin${i}`)
                 .classed("gtex-violin", true);
             this._drawViolin(entry, theViolin, scale);
@@ -113,7 +130,7 @@ export default class Violin {
 
         // add the brush
         let theBrush = brush();
-        theBrush.on("end", (d) => {this.zoom(dom, theBrush)});
+        theBrush.on("end", () => {this.zoom(dom, theBrush)});
 
         dom.append("g")
             .attr("class", "brush")
@@ -122,6 +139,7 @@ export default class Violin {
     }
 
     createToolbar(domId, tooltip=undefined){
+        if (tooltip === undefined) tooltip = this.createTooltip(domId);
         this.toolbar = new Toolbar(domId, tooltip);
         return this.toolbar
     }
@@ -132,7 +150,7 @@ export default class Violin {
         return this.tooltip;
     }
 
-    _setScales(yDomain, zDomain, width, height, xPadding){
+    _setScales(yDomain, width, height, xPadding){
         if (undefined === yDomain){
             let allV = [];
             this.data.forEach((d) => allV = allV.concat(d.values));
@@ -148,7 +166,6 @@ export default class Violin {
                 .rangeRound([height, 0])
                 .domain(yDomain),
             z: scaleLinear() // the violin's width
-                .domain(zDomain)
         };
         return this.scale;
     }
@@ -156,7 +173,10 @@ export default class Violin {
          // set the scale.z range based on scale.x
         let x0 = scale.x(entry.label),
             x1 = x0 + scale.x.bandwidth();
-        scale.z.range([x0, x1]);
+        const zMax = max(entry.vertices, (d)=>Math.abs(d[1]));
+        scale.z
+            .domain([-zMax, zMax])
+            .range([x0, x1]);
 
         entry.values = entry.values.sort(ascending);
 
