@@ -1,6 +1,5 @@
 /**
  * TODO:
- * - tooltip too far?
  * - violin gene colors
  * - eQTL dashboard toolbar
  * - code review

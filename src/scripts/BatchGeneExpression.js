@@ -409,45 +409,55 @@ function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap) {
 function _renderViolinHelper(data, dmap, tissueDict){
     // plot configurations
     const id = {
-        root: "violinPlot", // the root <div> ID
-        svg: "violinSvg",
+        root: "violinRoot", // the root <div> ID
         tooltip: "violinTooltip",
         toolbar: "violinToolbar",
         clone: "violinClone",
+        chart: "violinPlot",
+        svg: "violinSvg",
         buttons: {
             save: "violinSave"
         }
     };
 
-    // clear previously rendered plot
-    select(`#${id.root}`).selectAll("*").remove();
+    // error-checking required DOM elements
+    const rootId = `#${id.root}`;
+    const tooltipId = `#${id.tooltip}`;
+    if ($(rootId).length == 0) throw "Violin Plot Error: rootId does not exist.";
+    if ($(tooltipId).length == 0) $('<div/>').attr("id", id.tooltip).appendTo($('body')); // create it if not already present on the html document
 
-    if (data.length == 0){
-        select(`#${id.root}`).style("opacity", 0.0);
+    // clear previously rendered plot
+    select(rootId).selectAll("*").remove();
+
+    // rebuild the dom components within the root div
+    ["toolbar", "chart", "clone"].forEach((key)=>{
+        $('<div/>').attr("id", id[key]).appendTo($(rootId));
+    });
+
+
+    if (data.length == 0){ // no expression data, no need to proceed
+        select(rootId).style("opacity", 0.0);
         return;
     }
     // tissueOrder is a list of tissue objects {id:display name} in the same order as the x axis of the heat map.
     let tissueOrder = dmap.objects.heatmap.xScale.domain().map((d, i) => {return {id:d, name:tissueDict[d].tissueName}});
-
     const genes = data.reduce((arr, d)=>{arr[d.label]=1; return arr}, {});
     const gCounts = Object.keys(genes).length;
 
-    $(`<div id="${id.tooltip}"/>`).appendTo(`#${id.root}`);
-    $(`<div id="${id.toolbar}"/>`).appendTo(`#${id.root}`);
-    $(`<div id="${id.clone}"/>`).appendTo(`#${id.root}`);
 
     if (gCounts == 0){
         select(`#${id.root}`).style("opacity", 0.0); // makes the boxplot section visible
         return
     }
 
-    const margin = _setViolinPlotMargins(50, 50, 100, 50);
-    const width = 20 * Object.keys(genes).length * tissueOrder.length;
+    const margin = _setViolinPlotMargins(50, 50, 100, dmap.config.panels.main.x);
+    let width = 20 * Object.keys(genes).length * tissueOrder.length;
+    width = width < dmap.config.panels.main.w? dmap.config.panels.main.w: width;
     const dim = _setViolinPlotDimensions(width, 150, margin);
 
 
     // render the violin
-    const dom = select(`#${id.root}`)
+    const dom = select(`#${id.chart}`)
                 .style("opacity", 1.0)
                 .append("svg")
                 .attr("width", dim.outerWidth)
