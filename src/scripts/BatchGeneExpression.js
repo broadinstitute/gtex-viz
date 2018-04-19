@@ -446,10 +446,11 @@ function _renderViolinHelper(data, dmap, tissueDict){
 
 
     if (gCounts == 0){
-        select(`#${id.root}`).style("opacity", 0.0); // makes the boxplot section visible
+        select(rootId).style("opacity", 0.0);
         return
     }
 
+    select(rootId).style("opacity", 1.0); // makes the boxplot section visible
     const margin = _setViolinPlotMargins(50, 50, 100, dmap.config.panels.main.x);
     let width = 20 * Object.keys(genes).length * tissueOrder.length;
     width = width < dmap.config.panels.main.w? dmap.config.panels.main.w: width;
@@ -458,7 +459,7 @@ function _renderViolinHelper(data, dmap, tissueDict){
 
     // render the violin
     const dom = select(`#${id.chart}`)
-                .style("opacity", 1.0)
+                // .style("opacity", 1.0)
                 .append("svg")
                 .attr("width", dim.outerWidth)
                 .attr("height", dim.outerHeight)
