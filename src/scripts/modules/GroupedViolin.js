@@ -190,9 +190,9 @@ export default class GroupedViolin {
                 .attr("transform", `translate(0, 0)`);
 
             legendG.append("rect")
-                .attr("x", 2*this.scale.x.bandwidth() + this.scale.x.range()[0]-5)
+                .attr("x", 50 + this.scale.x.range()[0]-5)
                 .attr("y", -35)
-                .attr("width", 2*this.scale.x.bandwidth()*(this.groups[0].values.length)  + this.scale.x.range()[0] + 10)
+                .attr("width", 70*(this.groups[0].values.length + 1))
                 .attr("height", 24)
                 .style("fill", "none")
                 .style("stroke", "silver");
@@ -203,7 +203,7 @@ export default class GroupedViolin {
             const g = legends.enter().append("g").classed("violin-legend", true);
             const w = 10;
             g.append("rect")
-                .attr("x", (d, i) => 2*this.scale.x.bandwidth()*(i + 1)  + this.scale.x.range()[0])
+                .attr("x", (d, i) => 70*(i + 1)  + this.scale.x.range()[0])
                 .attr("y", -28)
                 .attr("width", w)
                 .attr("height", w)
@@ -212,7 +212,7 @@ export default class GroupedViolin {
             g.append("text")
                 .attr("class", "violin-legend-text")
                 .text((d) => d.label)
-                .attr("x", (d, i) => 2 + w + (2*this.scale.x.bandwidth()* (i + 1) ) + this.scale.x.range()[0])
+                .attr("x", (d, i) => 15 + 70*(i + 1) + this.scale.x.range()[0])
                 .attr("y", -20);
         }
 

@@ -86,12 +86,12 @@ export function buildGrouped(rootId){
             switch(rootId){
                 case "oneGene": {
                     violin.addBrush(dom);
-                    violin.render(dom, dim.width, dim.height, 0, tissues, [], "log10(TPM)", true, false, 0, false, false, true);
-
+                    violin.render(dom, dim.width, dim.height, 0.3, tissues, [], "log10(TPM)", true, false, 0, false, false, true);
+                    _addTissueColorBand(violin, dom, tissueTable, "bottom");
                     break;
                 }
                 case "twoGenes": {
-                    violin.render(dom, dim.width, dim.height, 0.40, tissues, [], "log10(TPM)", true, false, 0, false, true, true);
+                    violin.render(dom, dim.width, dim.height, 0.30, tissues, [], "log10(TPM)", true, false, 0, false, true, true);
                     _addTissueColorBand(violin, dom, tissueTable, "bottom");
                     break;
                 }
