@@ -9,12 +9,14 @@ import {getGtexUrls,
         parseMedianTPM,
         parseTissues,
         parseMedianExpression,
-        makeJsonForPlotly
+        makeJsonForPlotly,
+        parseGeneExpressionForViolin
 } from "./modules/gtexDataParser";
 import {colorChart} from "./modules/Colors";
 import {downloadSvg} from "./modules/utils";
 
 import DendroHeatmap from "./modules/DendroHeatmap";
+import GroupedViolin from "./modules/GroupedViolin";
 
 /**
  * Mayo demo
@@ -281,13 +283,6 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         let tissue = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueName;
         let gene = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
-        // tooltip.show(
-        //     `<table>
-        //         <tr><td>Tissue</td><td>${tissue}</td></tr>
-        //         <tr><td>Gene</td><td>${gene}</td></tr>
-        //         <tr><td>Median ${d.unit?d.unit:"TPM"}</td><td>${parseFloat(d.originalValue.toExponential()).toPrecision(4)}</td></tr>
-        //     </table>`
-        // );
         tooltip.show(`Tissue: ${tissue}<br/> Gene: ${gene}<br/> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
 
     };
@@ -319,12 +314,13 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
                 // else click it
                 selectAll(".clicked").classed("clicked", false); // first clears all clicked labels if any
                 s.classed("clicked", true); // click this DOM element
-                dmap.data.external = {}; // clears the data storage
+                dmap.data.external = []; // clears the data storage
                 action = "add";
             }
         }
         // console.log(geneDict[d].color); // debugging
-        _renderBoxplot(action, d, geneDict, tissueDict, dmap);
+        // _renderBoxplot(action, d, geneDict, tissueDict, dmap);
+        _renderViolinPlot(action, d, geneDict, tissueDict, dmap);
     };
 
     // mouse events of trees -- use closure
@@ -368,6 +364,141 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         .on("mouseout", cellMouseout);
 
     svg.selectAll(".exp-map-ylabel").on("click", ylabelClick);
+}
+
+/**
+ * renders the gene expression violin plot
+ * @param action {ENUM} add, new, or delete
+ * @param gene {String} gencode ID
+ * @param geneDict {Dictionary} gencode ID => gene object with attribute: index
+ * @param tissueDict {Dictionary} tissue objects indexed by tissue ID
+ * @param dmap {DendroHeatmap}
+ */
+function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap) {
+
+
+    // action
+    switch(action) {
+        case "delete": {
+            dmap.data.external = dmap.data.external.filter((d)=>d.gencodeId!=gene);
+            _renderViolinHelper(dmap.data.external, dmap, tissueDict);
+            break;
+        }
+        case "add": {
+            const url = getGtexUrls().geneExp + gene;
+            const colors = {};
+            colors[gene] = geneDict[gene].color;
+            json(url)
+                .then(function (d) {
+                    dmap.data.external = dmap.data.external.concat(parseGeneExpressionForViolin(d, true, colors));
+                    _renderViolinHelper(dmap.data.external, dmap, tissueDict);
+                })
+                .catch(function(err){console.error(err)});
+            break;
+        }
+        default: {
+            console.warn("action not understood.");
+            break;
+        }
+    }
+
+
+
+}
+
+function _renderViolinHelper(data, dmap, tissueDict){
+    // plot configurations
+    const id = {
+        root: "violinPlot", // the root <div> ID
+        svg: "violinSvg",
+        tooltip: "violinTooltip",
+        toolbar: "violinToolbar",
+        clone: "violinClone",
+        buttons: {
+            save: "violinSave"
+        }
+    };
+
+    // clear previously rendered plot
+    select(`#${id.root}`).selectAll("*").remove();
+
+    if (data.length == 0){
+        select(`#${id.root}`).style("opacity", 0.0);
+        return;
+    }
+    // tissueOrder is a list of tissue objects {id:display name} in the same order as the x axis of the heat map.
+    let tissueOrder = dmap.objects.heatmap.xScale.domain().map((d, i) => {return {id:d, name:tissueDict[d].tissueName}});
+
+    const genes = data.reduce((arr, d)=>{arr[d.label]=1; return arr}, {});
+    const gCounts = Object.keys(genes).length;
+
+    $(`<div id="${id.tooltip}"/>`).appendTo(`#${id.root}`);
+    $(`<div id="${id.toolbar}"/>`).appendTo(`#${id.root}`);
+    $(`<div id="${id.clone}"/>`).appendTo(`#${id.root}`);
+
+    if (gCounts == 0){
+        select(`#${id.root}`).style("opacity", 0.0); // makes the boxplot section visible
+        return
+    }
+
+    const margin = _setViolinPlotMargins(50, 50, 100, 50);
+    const width = 20 * Object.keys(genes).length * tissueOrder.length;
+    const dim = _setViolinPlotDimensions(width, 150, margin);
+
+
+    // render the violin
+    const dom = select(`#${id.root}`)
+                .style("opacity", 1.0)
+                .append("svg")
+                .attr("width", dim.outerWidth)
+                .attr("height", dim.outerHeight)
+                .attr("id", id.svg)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    const violin = new GroupedViolin(data);
+    const tooltip = violin.createTooltip(id.tooltip);
+    const toolbar = violin.createToolbar(id.toolbar, tooltip);
+    toolbar.createDownloadButton(id.buttons.save, id.svg, `${id.root}-save.svg`, id.clone);
+
+    const showDivider = gCounts == 1? false: true;
+    violin.render(dom, dim.width, dim.height, 0.30, tissueOrder.map((d)=>d.id), [], "log10(TPM)", true, false, 0, false, showDivider, true);
+
+}
+
+/**
+ * Set the margins of the violin plot
+ * @param top {Integer}
+ * @param right {Integer}
+ * @param bottom {integer}
+ * @param left {Integer}
+ * @returns {{top: number, right: number, bottom: number, left: number}}
+ * @private
+ */
+function _setViolinPlotMargins(top=50, right=50, bottom=50, left=50){
+    return {
+        top: top,
+        right: right,
+        bottom: bottom,
+        left: left
+    };
+}
+
+/**
+ * Set the dimensions of the violin plot
+ * @param width {Integer}
+ * @param height {Integer}
+ * @param margin {Object} with attr: top, right, bottom, left
+ * @returns {{width: number, height: number, outerWidth: number, outerHeight: number}}
+ * @private
+ */
+function _setViolinPlotDimensions(width=1200, height=250, margin=_setMargins()){
+    return {
+        width: width,
+        height: height,
+        outerWidth: width + (margin.left + margin.right),
+        outerHeight: height + (margin.top + margin.bottom)
+    }
 }
 
 /**
