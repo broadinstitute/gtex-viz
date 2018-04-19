@@ -1,9 +1,10 @@
 /**
  * TODO:
-    - add violin to expression heat map
- *  - toolbar implementation, add reset button
+ * - tooltip too far?
+ * - violin gene colors
+ * - eQTL dashboard toolbar
+ * - code review
  *  - brush implementation + customizable zoom (optional?)
- *  - eQTL dashboard toolbar
  *
  */
 
