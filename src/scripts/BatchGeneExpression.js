@@ -105,7 +105,7 @@ export function renderTopExpressed(tissueId, domId, toolbarId, infoId, urls=getG
             const topGeneList = results.topExpressedGene.map(d=>d.gencodeId);
             const callback = function(){
                 _styleSelectedTissue(tissueId);
-            }
+            };
             searchById(topGeneList, [tissueId], domId, toolbarId, infoId, urls, useFilters, callback);
         })
         .catch(function(err){
@@ -236,7 +236,7 @@ function _customizeLabels(dmap, tissueDict, geneDict){
 }
 
 /**
- * Adds GTEx tissue colors to the tissue labels (column names)
+ * Adds GTEx tissue colors to the tissue labels (column names of the heatmap)
  * @param dmap {DendroHeatmap}
  * @param tissueDict {Dictionary} of GTEx tissue objects indexed by tissue_id
  */
@@ -401,9 +401,6 @@ function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap) {
             break;
         }
     }
-
-
-
 }
 
 function _renderViolinHelper(data, dmap, tissueDict){
@@ -446,11 +443,12 @@ function _renderViolinHelper(data, dmap, tissueDict){
 
 
     if (gCounts == 0){
-        select(`#${id.root}`).style("opacity", 0.0); // makes the boxplot section visible
+        select(rootId).style("opacity", 0.0);
         return
     }
 
-    const margin = _setViolinPlotMargins(50, 50, 100, dmap.config.panels.main.x);
+    select(rootId).style("opacity", 1.0); // makes the boxplot section visible
+    const margin = _setViolinPlotMargins(50, 50, 150, dmap.config.panels.main.x);
     let width = 20 * Object.keys(genes).length * tissueOrder.length;
     width = width < dmap.config.panels.main.w? dmap.config.panels.main.w: width;
     const dim = _setViolinPlotDimensions(width, 150, margin);
@@ -458,7 +456,7 @@ function _renderViolinHelper(data, dmap, tissueDict){
 
     // render the violin
     const dom = select(`#${id.chart}`)
-                .style("opacity", 1.0)
+                // .style("opacity", 1.0)
                 .append("svg")
                 .attr("width", dim.outerWidth)
                 .attr("height", dim.outerHeight)
@@ -473,6 +471,9 @@ function _renderViolinHelper(data, dmap, tissueDict){
 
     const showDivider = gCounts == 1? false: true;
     violin.render(dom, dim.width, dim.height, 0.30, tissueOrder.map((d)=>d.id), [], "log10(TPM)", true, false, 0, false, showDivider, true);
+    _addViolinTissueColorBand(violin, dom, tissueDict, "bottom");
+    _changeViolinXLabel(dom, tissueDict);
+
 
 }
 
@@ -509,6 +510,30 @@ function _setViolinPlotDimensions(width=1200, height=250, margin=_setMargins()){
         outerWidth: width + (margin.left + margin.right),
         outerHeight: height + (margin.top + margin.bottom)
     }
+}
+
+function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
+     ///// add tissue colors
+    const tissueG = dom.append("g");
+
+    tissueG.selectAll(".tcolor").data(plot.scale.x.domain())
+        .enter()
+        .append("rect")
+        .classed("tcolor", true)
+        .attr("x", (g)=>plot.scale.x(g) )
+        .attr("y", (g)=>loc=="top"?plot.scale.y.range()[1]-5:plot.scale.y.range()[0]-5)
+        .attr("width", (g)=>plot.scale.x.bandwidth())
+        .attr("height", 5)
+        .style("stroke-width", 0)
+        .style("fill", (g)=>`#${tissueDict[g].colorHex}`)
+        .style("opacity", 0.7);
+}
+
+function _changeViolinXLabel(dom, tissueDict){
+    /***** Change row labels to tissue names *****/
+    dom.select(".violin-x-axis").selectAll("text")
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
+
 }
 
 /**
@@ -598,6 +623,7 @@ function _renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
  * @param queryTissues {List} of tissue IDs
  * @param urls {Object} of GTEx web service urls
  * @param useFilter {Boolean} indicating whether gene filter is on or off, and when the value is undefined, it means no filter
+ * TODO: refactor this function with the new Toolbar.js
  */
 function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, urls=getGtexUrls(), useFilters=undefined){
     // fontawesome reference: http://fontawesome.io/examples/
@@ -710,7 +736,7 @@ function _sortTissues (xlist, dmap, tissueDict){
     if (qId!==undefined) _styleSelectedTissue(qId);
 
     // hide the boxplot
-    select('#boxplot').style("opacity", 0.0);
+    select('#violinRoot').style("opacity", 0.0);
 
     // deselect genes
     selectAll(".exp-map-ylabel").classed("clicked", false);

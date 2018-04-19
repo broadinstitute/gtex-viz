@@ -4,19 +4,87 @@ import * as d3Chromatic from "d3-scale-chromatic";
 "use strict";
 
 export function colorChart(shuffle=true){
-    // ref: http://cloford.com/resources/colours/namedcol.htm
+    // ref illustrator color themes
     const colors = [
-        "crimson", "palevioletred", "deeppink", "mediumvioletred", "orchid",
-        "fuchsia", "darkmagenta", "darkviolet", "indigo", "blueviolet",
-        "blue", "mediumslateblue", "darkslateblue", "mediumblue", "midnightblue",
-        "royalblue", "dodgerblue", "deppskyblue", "darkturquoise", "steelblue",
-        "darkcyan", "darkslategray", "seagreen", "limegreen", "darkgreen",
-        "mediumspringgreen", "darkseagreen","green", "olivedrab", "darkkhaki",
-        "darkolivegreen", "yellowgreen", "olive", "goldenrod", "darkgoldenrod",
-        "orange", "tan", "peru", "sandybrown", "chocolate", "saddlebrown",
-        "sienna", "coral", "orangered", "tomato", "rosybrown",
-        "firebrick", "indianred", "red", "brown","gray", "black"
+        "rgb(100,118,120)",
+        "rgb(101,141,145)",
+        "rgb(103,126,82)",
+        "rgb(103,184,222)",
+        // "rgb(104,92,121)",
+        "rgb(108,110,88)",
+
+        "rgb(108,147,128)",
+        "rgb(119,144,182)",
+        "rgb(126,130,122)",
+        "rgb(133,173,186)",
+        "rgb(137,114,91)",
+        "rgb(145,170,157)",
+
+        "rgb(145,201,232)",
+        "rgb(147,105,66)",
+        "rgb(159,114,116)",
+        "rgb(159,188,191)",
+        "rgb(159,229,194)",
+        "rgb(163,163,171)",
+
+        "rgb(164,207,190)",
+        "rgb(172,108,130)",
+        "rgb(173,84,114)",
+        "rgb(174,195,222)",
+        "rgb(176,204,153)",
+
+        "rgb(179,180,150)",
+        "rgb(180,220,237)",
+        "rgb(183,202,121)",
+        "rgb(192,202,85)",
+        "rgb(193,191,193",
+        "rgb(195,97,136)",
+
+        "rgb(199,121,102)",
+        "rgb(207,202,76)",
+        "rgb(209,219,189)",
+        "rgb(213,251,255)",
+        "rgb(215,94,56)",
+
+        "rgb(218,114,126)",
+        "rgb(223,90,73)",
+        "rgb(224,247,217)",
+        "rgb(227,205,164)",
+        "rgb(228,168,185)",
+
+        "rgb(230,176,152)",
+        "rgb(232,212,175)",
+        "rgb(239,201,76)",
+        "rgb(240,124,108)",
+        "rgb(246,232,177)",
+
+        "rgb(249,228,173)",
+        "rgb(252,245,191)",
+        "rgb(255,188,103)",
+        "rgb(45,94,110)",
+        "rgb(51,153,204)",
+
+        "rgb(60,124,145)",
+        "rgb(62,87,145)",
+        "rgb(65,115,120)",
+        // "rgb(86,98,107)",
+        "rgb(89,216,229)",
+        "rgb(94,178,153)",
+        "rgb(95,124,134)"
     ];
+    // ref: http://cloford.com/resources/colours/namedcol.htm
+    // const colors = [
+        //"crimson", "palevioletred", "deeppink", "mediumvioletred", "orchid",
+        // "fuchsia", "darkmagenta", "darkviolet", "indigo", "blueviolet",
+        // "blue", "mediumslateblue", "darkslateblue", "mediumblue", "midnightblue",
+        // "royalblue", "dodgerblue", "deppskyblue", "darkturquoise", "steelblue",
+        // "darkcyan", "darkslategray", "seagreen", "limegreen", "darkgreen",
+        // "mediumspringgreen", "darkseagreen","green", "olivedrab", "darkkhaki",
+        // "darkolivegreen", "yellowgreen", "olive", "goldenrod", "darkgoldenrod",
+        // "orange", "tan", "peru", "sandybrown", "chocolate", "saddlebrown",
+        // "sienna", "coral", "orangered", "tomato", "rosybrown",
+        // "firebrick", "indianred", "red", "brown","gray", "black"
+    // ];
     if (shuffle) return shuffleColors(colors);
     return colors;
 }
