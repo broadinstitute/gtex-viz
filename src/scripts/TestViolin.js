@@ -1,10 +1,10 @@
 /**
  * TODO:
- * - add show color legend option
- * - toolbar implementation
- * - brush implementation
- * - eQTL dashboard toolbar
- * - add violin to expression heat map
+    - add violin to expression heat map
+ *  - toolbar implementation, add reset button
+ *  - brush implementation + customizable zoom (optional?)
+ *  - eQTL dashboard toolbar
+ *
  */
 
 "use strict";
@@ -82,22 +82,22 @@ export function buildGrouped(rootId){
             const tooltip = violin.createTooltip(domIds.tooltip);
             const toolbar = violin.createToolbar(domIds.toolbar, tooltip);
             toolbar.createDownloadButton(domIds.buttons.save, domIds.svg, `${rootId}-save.svg`, domIds.clone);
-            violin.addBrush(dom);
 
             switch(rootId){
                 case "oneGene": {
-                    violin.render(dom, dim.width, dim.height, 0, tissues, [], "log10(TPM)", true, false);
+                    violin.addBrush(dom);
+                    violin.render(dom, dim.width, dim.height, 0, tissues, [], "log10(TPM)", true, false, 0, false, false, true);
 
                     break;
                 }
                 case "twoGenes": {
-                    violin.render(dom, dim.width, dim.height, 0.40, tissues, [], "log10(TPM)", true, false);
+                    violin.render(dom, dim.width, dim.height, 0.40, tissues, [], "log10(TPM)", true, false, 0, false, true, true);
                     _addTissueColorBand(violin, dom, tissueTable, "bottom");
                     break;
                 }
 
                 case "threeGenes": {
-                    violin.render(dom, dim.width, dim.height, 0.30, tissues, [], "log10(TPM)", true, false, 0, false, true);
+                    violin.render(dom, dim.width, dim.height, 0.30, tissues, [], "log10(TPM)", true, false, 0, false, true, true);
                     _addTissueColorBand(violin, dom, tissueTable, "bottom");
                     break;
                 }

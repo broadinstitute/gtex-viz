@@ -54,12 +54,12 @@ export default class GroupedViolin {
      * @param yLabel {String}
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showX=true, showSubX=true, subXAngle=0, showWhisker=false, showDivider=false){
+    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showX=true, showSubX=true, subXAngle=0, showWhisker=false, showDivider=false, showLegend=false){
 
         // define the reset for this plot
         this.reset = () => {
             dom.selectAll("*").remove();
-            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider);
+            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
         };
 
 
@@ -182,6 +182,38 @@ export default class GroupedViolin {
         // add group dividers
         if(showDivider){
             this._addGroupDivider(dom);
+        }
+
+        // add color legend
+        if (showLegend) {
+            const legendG = dom.append("g")
+                .attr("transform", `translate(0, 0)`);
+
+            legendG.append("rect")
+                .attr("x", 2*this.scale.x.bandwidth() + this.scale.x.range()[0]-5)
+                .attr("y", -35)
+                .attr("width", 2*this.scale.x.bandwidth()*(this.groups[0].values.length)  + this.scale.x.range()[0] + 10)
+                .attr("height", 24)
+                .style("fill", "none")
+                .style("stroke", "silver");
+
+            const legends = legendG.selectAll(".violin-legend").data(this.groups[0].values);
+
+
+            const g = legends.enter().append("g").classed("violin-legend", true);
+            const w = 10;
+            g.append("rect")
+                .attr("x", (d, i) => 2*this.scale.x.bandwidth()*(i + 1)  + this.scale.x.range()[0])
+                .attr("y", -28)
+                .attr("width", w)
+                .attr("height", w)
+                .style("fill", (d) => d.color);
+
+            g.append("text")
+                .attr("class", "violin-legend-text")
+                .text((d) => d.label)
+                .attr("x", (d, i) => 2 + w + (2*this.scale.x.bandwidth()* (i + 1) ) + this.scale.x.range()[0])
+                .attr("y", -20);
         }
 
     }
@@ -351,7 +383,7 @@ export default class GroupedViolin {
             .classed("violin", true)
             .style("fill", ()=>{
                 if (entry.color !== undefined) return entry.color;
-                // alternate the odd and even colors
+                // alternate the odd and even colors, maybe we don't want this feature
                 if(gIndex%2 == 0) return "#90c1c1";
                 return "#94a8b8";
             });
