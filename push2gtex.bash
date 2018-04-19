@@ -1,5 +1,5 @@
 HOME=/Users/khhuang/Sites
-SOURCE=$HOME/expressMap
+SOURCE=$HOME/gtex-d3
 DEST=$HOME/gtex-cloud/contexts/external/gtex/media/expressHeatmap
 
 export NODE_ENV="prod"
