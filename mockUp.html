@@ -1,0 +1,173 @@
+
+<html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+        <script defer src="build/external/fontawesome-free-5.0.7/svg-with-js/js/fontawesome-all.js"></script>
+        <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet">
+        <script
+          src="https://code.jquery.com/jquery-3.2.1.min.js"
+          integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+          crossorigin="anonymous">
+        </script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+        <script src="build/js/eqtl-dashboard.bundle.dev.js"></script>
+
+        <style>
+            h5 {
+                font-size: 16px;
+            }
+            body {
+                font-family: 'Lato', sans-serif;
+            }
+
+            h3, h4, h5 {
+                color: rgb(47, 55, 56);
+            }
+
+            .btn-info {
+                color: #fff;
+                background-color: rgb(100, 118, 120);
+                border-color: rgb(100, 118, 120);
+            }
+
+            #menu {
+                background: #f1f5f5;
+                padding: 5px;
+            }
+
+            a{
+                color: rgb(89, 216, 229);
+            }
+
+            label.ed-tissue-main-level {
+                margin:0 0 5px 0;
+                padding:0;
+                font-size: 12px;
+            }
+            label.ed-tissue-sub-level {
+                margin: 0 0 5px 16px;
+                padding: 0 0 0 0;
+                font-size: 9px;
+            }
+            .last-site {
+                margin-bottom: 10px;
+            }
+
+            legend {
+                width: 100%;
+                padding: 0;
+                margin-bottom: 20px;
+                font-size: 15px;
+                color: #333333;
+                border: 0;
+                border-bottom: 1px solid rgb(159, 188, 191);
+            }
+
+            .btn-extra-sm {
+                font-size: 12px;
+                line-height: 1;
+                border-radius: .2em;
+                padding: 2px 4px;
+            }
+
+            label {
+                display: inline-block;
+            }
+        </style>
+
+    </head>
+    <body class="container-fluid" style="margin-top:20px;">
+        <h4>Multi-Gene Query</h4>
+        <!-- input form -->
+        <p>
+            <button class="btn btn-info btn-extra-sm"
+                type="button"
+                data-toggle="collapse"
+                data-target="#collapseForm"
+                aria-expanded="false"
+                aria-controls="collapseForm">
+                <i class="fa fa-bars"></i>
+            </button>
+        </p>
+        <div class="row collapse show" id="collapseForm">
+            <div class="col-sm-12">
+                <form id="form">
+                     <div class="form-group row"> <!-- form-group for optimum spacing between the label and its associated form input element -->
+
+                         <div class="col-sm-12 col-md-2">
+                             <h5 for="inputGenes" class="align-top">Enter Genes</h5>
+                             <ul style="font-size:12px; list-style-type:square; padding-left: 15px;">
+                                <li>Limited to 50 entries.</li>
+                                <li><a href="#" id="example">Example search</a></li>
+                             </ul>
+                             <textarea id="inputGenes" rows="20" class="form-control" placeholder="For example: ENSG00000248746.1 ,ACTN3 ,SLK ,NDRG4" style="font-size:9px;"></textarea>
+                             <br/>
+                             <div id="submit" class="btn btn-info btn-sm" style="margin-bottom:1em;">Search</div>
+
+                         </div>
+                         <div class="col-xs-12 col-md-10">
+                             <h5>Select Datasets</h5>
+                             <div id="datasets" style="padding-left: 15px; padding-right: 15px;">
+                                 <div id="menu" class="form-group row">
+                                     <div id="pfizer" class="col-xs-12 col-md-2">
+                                         <legend>Pfizer</legend>
+                                         <div class="row" style="line-height: 1px;">
+                                             <div class="col-xs-12" style="padding-left: 15px;">
+                                                <label class="ed-tissue-main-level">
+                                                    <input type="checkbox" class="tissueGroup">
+                                                    <span class="checkmark"></span>
+                                                    <span>Brain</span>
+                                                </label>
+                                                <br>
+                                                <label class="ed-tissue-sub-level">
+                                                    <input type="checkbox">
+                                                    <span class="checkmark"></span>
+                                                    <span>Brain - Cerebellum</span>
+                                                </label>
+                                                <br>
+                                                <label class="ed-tissue-sub-level">
+                                                    <input type="checkbox">
+                                                    <span class="checkmark"></span>
+                                                    <span>Brain - Temporal Cortex</span>
+                                                </label>
+                                                <br>
+                                                <label class="ed-tissue-sub-level">
+                                                    <input type="checkbox">
+                                                    <span class="checkmark"></span>
+                                                    <span>Brain - Cerebellum AD</span>
+                                                </label>
+                                                <br>
+                                                <label class="ed-tissue-sub-level last-site">
+                                                    <input type="checkbox">
+                                                    <span class="checkmark"></span>
+                                                    <span>Brain - Temporal Cortex AD</span>
+                                                </label>
+                                                <br>
+                                         </div>
+                                    </div>
+                                     </div>
+                                     <div id="gtex" class="col-xs-12 col-md-10">
+                                          <legend>GTEx</legend>
+                                         <div id="tissueBoxes" class="row"></div>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+
+                </form>
+
+            </div>
+        </div>
+
+    </body>
+    <script>
+        $(document).ready(function(){
+            // build the tissue menu
+            EqtlDashboard.build("eqtlDashboardResults", "tissueBoxes", "geneVariantPairs", "eqtlDashboardSubmit", "collapseForm", "messageBox");
+        });
+
+    </script>
+</html>
