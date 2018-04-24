@@ -417,7 +417,7 @@ function _renderViolinHelper(data, dmap, tissueDict){
         }
     };
 
-    // error-checking required DOM elements
+    // error-checking the required DOM elements
     const rootId = `#${id.root}`;
     const tooltipId = `#${id.tooltip}`;
     if ($(rootId).length == 0) throw "Violin Plot Error: rootId does not exist.";

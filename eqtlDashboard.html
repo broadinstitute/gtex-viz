@@ -66,14 +66,14 @@
         <div class="row">
             <div class="col-sm-12" id="messageBox" style="color:firebrick; font-size: 10px;"></div>
             <div id="eqtlDashboardDiv" class="col-sm-12">
-                <div id="eqtlDashboardResults" class="row flex-row" style="padding-left: 15px;overflow:auto;"></div>
+                <div id="eqtlDashboardRoot" class="row flex-row" style="padding-left: 15px;overflow:auto;"></div>
             </div>
         </div>
     </body>
     <script>
         $(document).ready(function(){
             // build the tissue menu
-            EqtlDashboard.build("eqtlDashboardResults", "tissueBoxes", "geneVariantPairs", "eqtlDashboardSubmit", "collapseForm", "messageBox");
+            EqtlDashboard.build("eqtlDashboardRoot", "tissueBoxes", "geneVariantPairs", "eqtlDashboardSubmit", "collapseForm", "messageBox");
 
             // define buttons
 

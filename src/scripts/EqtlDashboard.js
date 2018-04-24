@@ -58,6 +58,60 @@ export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxI
 
 }
 
+function _visualize(mainId, input, info){
+
+    const id = {
+        main: mainId,
+        tooltip: "eqtlTooltip",
+        toolbar: `${mainId}Toolbar`,
+        clone: `${mainId}Clone`,
+        chart: `${mainId}Chart`,
+        svg: `${mainId}Svg`,
+        buttons: {
+            save: `${mainId}Save`
+        }
+    };
+
+    // error-checking DOM elements
+    if ($(`#${id.main}`).length == 0) throw "Violin Plot Error: the chart DOM doesn't exist";
+    if ($(`#${id.tooltip}`).length == 0) $('<div/>').attr("id", id.tooltip).appendTo($('body'));
+
+    // clear previously rendered plot if any
+    select(`#${id.main}`).selectAll("*").remove();
+
+    // build the dom elements
+    ["toolbar", "chart", "clone"].forEach((d)=>{
+        $('<div/>').attr("id", id[d]).appendTo($(`#${id.main}`));
+    });
+
+    // violin plot rendering
+
+    let margin = {
+        left: 50,
+        top: 50,
+        right: 50,
+        bottom: 100
+    };
+
+    let innerWidth = input.length * 50,
+        width = innerWidth + (margin.left + margin.right);
+    let height = 200,
+        innerHeight = height - (margin.top + margin.bottom);
+
+    let dom = select(`#${id.chart}`)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("id", id.svg)
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    let violin = new GroupedViolin(input, info);
+    const tooltip = violin.createTooltip(id.tooltip);
+
+    violin.render(dom, innerWidth, innerHeight, 0.3, undefined, [], "Rank Normalized Expression", false, true, 0, false, true, false);
+    _customizeViolinPlot(violin, dom);
+}
 /**
  * Customization of the violin plot
  * @param plot {GroupedViolin}
@@ -396,24 +450,7 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
             }
 
             });
-
-            let violin = new GroupedViolin(input, info);
-
-            let margin = {
-                left: 50,
-                top: 50,
-                right: 50,
-                bottom: 100
-            };
-
-            let innerWidth = input.length * 50,
-                width = innerWidth + (margin.left + margin.right);
-            let height = 200,
-                innerHeight = height - (margin.top + margin.bottom);
-
-            let svg = _createSvg("#" + id, width, height, margin);
-            violin.render(svg, innerWidth, innerHeight, 0.1, undefined, [-1.5, 1.5], "Rank Normalized Expression", false, true);
-            _customizeViolinPlot(violin, svg);
+            _visualize(id, input, info);
         })
         .catch(function(err){console.error(err)});
 }
@@ -459,14 +496,6 @@ function _apiCall(url, tissue){
 
 }
 
-function _createSvg(id, width, height, margin){
-    // renders svg
-    return select(id).append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .append("g")
-        .attr("transform", `translate(${margin.left}, ${margin.top})`);
-}
 
 
 

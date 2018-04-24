@@ -278,8 +278,8 @@ export default class GroupedViolin {
 
             const min = Math.floor(this.scale.y.invert(s[1][1]));
             const max = Math.floor(this.scale.y.invert(s[0][1]));
-            console.log(min+ " " + max);
-            console.log(this.scale.y.range());
+            // console.log(min+ " " + max);
+            // console.log(this.scale.y.range());
             this.scale.y.domain([min, max]); // todo: debug
 
             dom.select(".brush").call(theBrush.move, null);
@@ -427,7 +427,7 @@ export default class GroupedViolin {
         // mouse events
         violinG.on("mouseover", ()=>{
             vPath.classed("highlighted", true);
-            console.log(entry);
+            // console.log(entry);
             if(this.tooltip === undefined) console.warn("GroupViolin Warning: tooltip not defined");
             else {
                 this.tooltip.show(
