@@ -58,7 +58,16 @@ export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxI
 
 }
 
-function _visualize(mainId, input, info){
+/**
+ *
+ * @param gene {Object} with attr geneSymbol and gencodeId
+ * @param variant {Object} with attr variantId and snpId
+ * @param mainId {String} the main DIV id
+ * @param input {Object} the violin data
+ * @param info {Object} the metadata of the groups
+ * @private
+ */
+function _visualize(gene, variant, mainId, input, info){
 
     const id = {
         main: mainId,
@@ -84,7 +93,7 @@ function _visualize(mainId, input, info){
         $('<div/>').attr("id", id[d]).appendTo($(`#${id.main}`));
     });
 
-    // violin plot rendering
+    // violin plot
 
     let margin = {
         left: 50,
@@ -106,9 +115,19 @@ function _visualize(mainId, input, info){
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+    // add violin title
+
+    dom.append("text")
+        .classed("ed-section-title", true)
+        .text(`${gene.geneSymbol} (${gene.gencodeId}) and ${variant.snpId||""} (${variant.variantId})`)
+        .attr("x", 0)
+        .attr("y", -margin.top + 16);
+
+    // render the violin
     let violin = new GroupedViolin(input, info);
     const tooltip = violin.createTooltip(id.tooltip);
-
+    const toolbar = violin.createToolbar(id.toolbar, tooltip);
+    toolbar.createDownloadButton(id.buttons.save, id.svg, `${id.main}-save.svg`, id.clone);
     violin.render(dom, innerWidth, innerHeight, 0.3, undefined, [], "Rank Normalized Expression", false, true, 0, false, true, false);
     _customizeViolinPlot(violin, dom);
 }
@@ -381,7 +400,6 @@ function _parseVariant(vjson){
 function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
     // display gene-variant pair names
     const id = `boxplot${i}`;
-    $(`#${dashboardId}`).append(`<h5>${gene.geneSymbol} <small>(${gene.gencodeId})</small> and ${variant.snpId||""} <small>(${variant.variantId})</small></h5>`); // TODO: display this as <text> in the SVG?
     $(`#${dashboardId}`).append(`<div id="${id}" class="col-sm-12"></div>`);
 
     // d3-queue https://github.com/d3/d3-queue
@@ -450,7 +468,7 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
             }
 
             });
-            _visualize(id, input, info);
+            _visualize(gene, variant, id, input, info);
         })
         .catch(function(err){console.error(err)});
 }
