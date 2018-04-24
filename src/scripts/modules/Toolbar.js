@@ -58,7 +58,7 @@ export default class Toolbar {
      */
     createButton(id, icon='fa-save'){
         const $button = $('<a/>').attr('id', id)
-            .addClass('btn btn-customized').appendTo(this.bar);
+            .addClass('btn btn-default').appendTo(this.bar);
         $('<i/>').addClass(`fa ${icon}`).appendTo($button);
         this.buttons[id] = $button;
         return $button;
