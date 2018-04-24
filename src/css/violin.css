@@ -74,10 +74,6 @@ rect.violin-ir {
     stroke-width: 0;
 }
 
-.btn-customized{
-   border-color: #4eb3d3;
-}
-
 text.violin-legend-text {
     fill: SlateGray;
     font-size: 9px;
