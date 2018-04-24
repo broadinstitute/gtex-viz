@@ -1,4 +1,5 @@
 .ed-tissue-main-level {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
     margin:0;
     padding:0;
     font-size: 12px;
@@ -10,4 +11,8 @@
 }
 .last-site {
     margin-bottom: 10px;
+}
+.ed-section-title {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    font-size: 15px;
 }

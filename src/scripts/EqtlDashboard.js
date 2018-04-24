@@ -59,6 +59,79 @@ export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxI
 }
 
 /**
+ *
+ * @param gene {Object} with attr geneSymbol and gencodeId
+ * @param variant {Object} with attr variantId and snpId
+ * @param mainId {String} the main DIV id
+ * @param input {Object} the violin data
+ * @param info {Object} the metadata of the groups
+ * @private
+ */
+function _visualize(gene, variant, mainId, input, info){
+
+    const id = {
+        main: mainId,
+        tooltip: "eqtlTooltip",
+        toolbar: `${mainId}Toolbar`,
+        clone: `${mainId}Clone`,
+        chart: `${mainId}Chart`,
+        svg: `${mainId}Svg`,
+        buttons: {
+            save: `${mainId}Save`
+        }
+    };
+
+    // error-checking DOM elements
+    if ($(`#${id.main}`).length == 0) throw "Violin Plot Error: the chart DOM doesn't exist";
+    if ($(`#${id.tooltip}`).length == 0) $('<div/>').attr("id", id.tooltip).appendTo($('body'));
+
+    // clear previously rendered plot if any
+    select(`#${id.main}`).selectAll("*").remove();
+
+    // build the dom elements
+    ["toolbar", "chart", "clone"].forEach((d)=>{
+        $('<div/>').attr("id", id[d]).appendTo($(`#${id.main}`));
+    });
+
+    // violin plot
+
+    let margin = {
+        left: 50,
+        top: 50,
+        right: 50,
+        bottom: 100
+    };
+
+    let innerWidth = input.length * 50,
+        width = innerWidth + (margin.left + margin.right);
+    let height = 200,
+        innerHeight = height - (margin.top + margin.bottom);
+
+    let dom = select(`#${id.chart}`)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("id", id.svg)
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    // add violin title
+
+    dom.append("text")
+        .classed("ed-section-title", true)
+        .text(`${gene.geneSymbol} (${gene.gencodeId}) and ${variant.snpId||""} (${variant.variantId})`)
+        .attr("x", 0)
+        .attr("y", -margin.top + 16);
+
+    // render the violin
+    let violin = new GroupedViolin(input, info);
+    const tooltip = violin.createTooltip(id.tooltip);
+    const toolbar = violin.createToolbar(id.toolbar, tooltip);
+    toolbar.createDownloadButton(id.buttons.save, id.svg, `${id.main}-save.svg`, id.clone);
+    violin.render(dom, innerWidth, innerHeight, 0.3, undefined, [], "Rank Normalized Expression", false, true, 0, false, true, false);
+    _customizeViolinPlot(violin, dom);
+}
+/**
  * Customization of the violin plot
  * @param plot {GroupedViolin}
  * @param dom {D3 DOM}
@@ -327,7 +400,6 @@ function _parseVariant(vjson){
 function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
     // display gene-variant pair names
     const id = `boxplot${i}`;
-    $(`#${dashboardId}`).append(`<h5>${gene.geneSymbol} <small>(${gene.gencodeId})</small> and ${variant.snpId||""} <small>(${variant.variantId})</small></h5>`); // TODO: display this as <text> in the SVG?
     $(`#${dashboardId}`).append(`<div id="${id}" class="col-sm-12"></div>`);
 
     // d3-queue https://github.com/d3/d3-queue
@@ -396,24 +468,7 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
             }
 
             });
-
-            let violin = new GroupedViolin(input, info);
-
-            let margin = {
-                left: 50,
-                top: 50,
-                right: 50,
-                bottom: 100
-            };
-
-            let innerWidth = input.length * 50,
-                width = innerWidth + (margin.left + margin.right);
-            let height = 200,
-                innerHeight = height - (margin.top + margin.bottom);
-
-            let svg = _createSvg("#" + id, width, height, margin);
-            violin.render(svg, innerWidth, innerHeight, 0.1, undefined, [-1.5, 1.5], "Rank Normalized Expression", false, true);
-            _customizeViolinPlot(violin, svg);
+            _visualize(gene, variant, id, input, info);
         })
         .catch(function(err){console.error(err)});
 }
@@ -459,14 +514,6 @@ function _apiCall(url, tissue){
 
 }
 
-function _createSvg(id, width, height, margin){
-    // renders svg
-    return select(id).append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .append("g")
-        .attr("transform", `translate(${margin.left}, ${margin.top})`);
-}
 
 
 

@@ -417,7 +417,7 @@ function _renderViolinHelper(data, dmap, tissueDict){
         }
     };
 
-    // error-checking required DOM elements
+    // error-checking the required DOM elements
     const rootId = `#${id.root}`;
     const tooltipId = `#${id.tooltip}`;
     if ($(rootId).length == 0) throw "Violin Plot Error: rootId does not exist.";
@@ -473,8 +473,6 @@ function _renderViolinHelper(data, dmap, tissueDict){
     violin.render(dom, dim.width, dim.height, 0.30, tissueOrder.map((d)=>d.id), [], "log10(TPM)", true, false, 0, false, showDivider, true);
     _addViolinTissueColorBand(violin, dom, tissueDict, "bottom");
     _changeViolinXLabel(dom, tissueDict);
-
-
 }
 
 /**

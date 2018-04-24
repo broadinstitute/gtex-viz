@@ -5,6 +5,8 @@
         <link rel="stylesheet" type="text/css" href="src/css/violin.css">
         <link rel="stylesheet" type="text/css" href="src/css/eqtlDashboard.css">
         <link rel="stylesheet" href="build/external/fontawesome-free-5.0.7/web-fonts-with-css/css/fontawesome-all.css">
+        <script src="build/external/FileSaver/FileSaver.min.js"></script>
+
         <script
           src="https://code.jquery.com/jquery-3.2.1.min.js"
           integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
@@ -66,14 +68,14 @@
         <div class="row">
             <div class="col-sm-12" id="messageBox" style="color:firebrick; font-size: 10px;"></div>
             <div id="eqtlDashboardDiv" class="col-sm-12">
-                <div id="eqtlDashboardResults" class="row flex-row" style="padding-left: 15px;overflow:auto;"></div>
+                <div id="eqtlDashboardRoot" class="row flex-row" style="padding-left: 15px;overflow:auto;"></div>
             </div>
         </div>
     </body>
     <script>
         $(document).ready(function(){
             // build the tissue menu
-            EqtlDashboard.build("eqtlDashboardResults", "tissueBoxes", "geneVariantPairs", "eqtlDashboardSubmit", "collapseForm", "messageBox");
+            EqtlDashboard.build("eqtlDashboardRoot", "tissueBoxes", "geneVariantPairs", "eqtlDashboardSubmit", "collapseForm", "messageBox");
 
             // define buttons
 
