@@ -9,7 +9,6 @@
 
 import {select} from "d3-selection";
 export function createSvg(id, width, height, margin){
-    "use strict";
     return select("#"+id).append("svg")
         .attr("width", width)
         .attr("height", height)

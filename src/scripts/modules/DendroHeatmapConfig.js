@@ -3,70 +3,56 @@
  * review all the position calculations
  */
 export default class DendroHeatmapConfig {
-    constructor(id="chart"){
+    /**
+     *
+     * @param id {String} the name of the dom ID
+     * @param leftPanelW {Integer}, set to 0 if there's no left panel
+     * @param topPanelH {Integer}, set to 0 if there's no top panel
+     * @param margin {Object} with attr: top, right, bottom, left, smaller values than the default are not recommended for the heatmap
+     * @param cell {Object} with attr: w and h
+     */
+    constructor(id="chart", leftPanelW=100, topPanelH=60, margin={top:50, right:250, bottom:170, left:10}, cell={w: undefined, h:12}) {
         this.id = id;
-        this.margin = {left: 10, top: 10, right: 250, bottom: 170};
-
-        this.cell = { // are these used?
-            w: undefined,
-            h: 12
-        };
-
-        this.topTreePanel = { // the column dendrogram panel
-            x: 100,
-            y: 0,
-            h: 60,
-            w: window.innerWidth - (100 + 150 + 300), // hard-coded values?
-            id: "topTree"
-        };
-
-        let adjust = 15; // spacing adjustment
+        this.margin = margin;
+        const adjust = 10;
 
         this.leftTreePanel = { // the row dendrogram panel
-            x: this.margin.left,
-            y: this.margin.top + this.topTreePanel.h,
-            h: undefined, // data-dependent
-            w: 100 - (adjust),
+            x: margin.left,
+            y: margin.top + topPanelH,
+            h: undefined, // undefined initially, because it's data-dependent
+            w: leftPanelW - adjust,
             id: "leftTree"
         };
 
+
+        this.cell = cell;
+
+        this.topTreePanel = { // the column dendrogram panel
+            x: margin.left + leftPanelW,
+            y: margin.top,
+            h: topPanelH - adjust,
+            w: window.innerWidth - (margin.left + leftPanelW + margin.right), // hard-coded values?
+            id: "topTree"
+        };
+
         this.heatmapPanel = {
-            x: 100,
-            y: this.margin.top + this.topTreePanel.h,
+            x: margin.left + leftPanelW,
+            y: margin.top + topPanelH,
             h: this.leftTreePanel.h,
             w: this.topTreePanel.w,
             id: "heatmap"
         };
 
         this.legendPanel = { // the color legend panel
-            x: 100,
-            y: this.margin.top + this.topTreePanel.h + 150,
-            h: 50,
+            x: margin.left + leftPanelW,
+            y: 0,
+            h: margin.top/2,
             w: this.topTreePanel.w,
             cell: {w: 60},
             id: "legend"
         };
 
-    }
 
-    setId(id="chart"){
-        this.id = id;
-    }
-
-    setMargin(margin={left: 10, top: 10, right: 250, bottom: 170}){
-        this.margin = margin;
-    }
-
-    setMainPanelWidth(w){
-        this.heatmapPanel.w = w;
-    }
-
-    noTopTreePanel(mainPanelWidth = window.innerWidth - (100 + 250)){
-        this.topTreePanel = {x:0, y:0, h:20, w:0};
-        this.leftTreePanel.y = this.margin.top*2;
-        this.heatmapPanel.y = this.margin.top*2;
-        this.heatmapPanel.w = mainPanelWidth;
-        this.legendPanel.y = 0; // in the margin top
     }
 
     get(){
