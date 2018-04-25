@@ -184,6 +184,9 @@ function _buildTissueMenu(groups, domId){
     const labelSubClass = "ed-tissue-sub-level";
     const lastSiteClass = "last-site";
 
+    // erase everything in domId in case it isn't empty
+    select(`#${domId}`).selectAll("*").remove();
+
     // sort the tissue groups alphabetically
     let groupNames = Object.keys(groups).sort();
 
