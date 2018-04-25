@@ -6,14 +6,16 @@ export default class DendroHeatmapConfig {
     /**
      *
      * @param id {String} the name of the dom ID
+     * @param mainPanelW {Number}
      * @param leftPanelW {Integer}, set to 0 if there's no left panel
      * @param topPanelH {Integer}, set to 0 if there's no top panel
      * @param margin {Object} with attr: top, right, bottom, left, smaller values than the default are not recommended for the heatmap
      * @param cell {Object} with attr: w and h
      */
-    constructor(id="chart", leftPanelW=100, topPanelH=60, margin={top:50, right:250, bottom:170, left:10}, cell={w: undefined, h:12}) {
+    constructor(id="chart", rootW=window.innerWidth, leftPanelW=100, topPanelH=60, margin={top:50, right:250, bottom:170, left:10}, cell={w: undefined, h:12}) {
         this.id = id;
         this.margin = margin;
+        this.rootW = rootW;
         const adjust = 10;
 
         this.leftTreePanel = { // the row dendrogram panel
@@ -31,7 +33,7 @@ export default class DendroHeatmapConfig {
             x: margin.left + leftPanelW,
             y: margin.top,
             h: topPanelH - adjust,
-            w: window.innerWidth - (margin.left + leftPanelW + margin.right), // hard-coded values?
+            w: rootW - (margin.left + leftPanelW + margin.right), // hard-coded values?
             id: "topTree"
         };
 
@@ -60,7 +62,7 @@ export default class DendroHeatmapConfig {
             id: this.id,
             margin: this.margin,
             cell: this.cell,
-            w: window.innerWidth,
+            w: this.rootW,
             h: this.margin.top + this.topTreePanel.h + this.legendPanel.h + this.margin.bottom, // initial height
             panels: {
                 top: this.topTreePanel,
