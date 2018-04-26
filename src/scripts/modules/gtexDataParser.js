@@ -151,7 +151,7 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
         if (useLog) d.value = Math.log2(d.value + 1);
         d.x = d.exonId;
         d.y = d.tissueId;
-        d.id = d.gencodeId
+        d.id = d.gencodeId;
     });
     return exonObjects
 }
@@ -192,6 +192,9 @@ export function parseIsoformExpression(data, useLog=true, adjust=1){
     data[attr].forEach((d) => {
         d.value = useLog?Math.log10(Number(d.data + adjust)):Number(d.data);
         d.originalValue = Number(d.data);
+        d.x = d.transcriptId;
+        d.y = d.tissueId;
+        d.id = d.gencodeId;
     });
 
     return data[attr];

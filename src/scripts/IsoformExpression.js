@@ -56,17 +56,19 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
                     isoforms = parseIsoforms(args[3]),
                     isoformExons = parseIsoformExons(args[3]),
                     junctions = parseJunctions(args[4]),
-                    tissueTree = args[4].clusters.tissue,
                     jExpress = parseJunctionExpression(args[4]),
                     exonExpress = parseExonExpression(args[5],  exonsCurated),
                     isoformExpress = parseIsoformExpression(args[6]);
 
-                // render the junction expression dendro-heatmap
+                const tissueTree = args[4].clusters.tissue; // based on junction expression
 
+                // render the junction expression dendro-heatmap
                 const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50});
                 const dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, true);
                 dmap.render(domId, false, true, top, 5);
+                $('#spinner').hide();
 
+                // return;
 
                 // define the gene model and isoform tracks layout dimensions
                 const modelConfig = {
