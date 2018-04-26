@@ -11,8 +11,8 @@ export function getGtexUrls(){
         "topInTissue": host + "expression/topExpressedGenes?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
         "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
 
-        "exonExp": host + "expression/exonExpression?datasetId=gtex_v7&gencodeId=",
-        "junctionExp": host + "expression/junctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
+        "exonExp": host + "expression/medianExonExpression?datasetId=gtex_v7&gencodeId=",
+        "junctionExp": host + "expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
         "isoformExp": host + "expression/isoformExpression?datasetId=gtex_v7&boxplotDetail=median&gencodeId=",
 
         "geneModel": host + "reference/collapsedGeneModel?unfiltered=false&release=v7&gencode_id=",
@@ -58,7 +58,7 @@ export function parseTissues(data){
 
 export function parseExons(data){
     const attr = "collapsedGeneModel";
-    if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseExons input error.";
+    if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseExons input error." + data;
     // sanity check
     ["featureType"].forEach((d)=>{
         if (!data[attr][0].hasOwnProperty(d)) throw "Fatal Error: parseExons attr not found: " + d;
@@ -72,7 +72,8 @@ export function parseJunctions(data){
     // assuming that each tissue has the same junctions, to grab all the known
     // junctions of a gene, we only need to look at one tissue
     // here we use Liver
-    const attr = "junctionExpression";
+    const attr = "medianJunctionExpression";
+    if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseJunctions input error. " + data;
     return data[attr].filter((d)=>{return d.tissueId=="Liver"})
                     .map((d) => {
                         let pos = d.junctionId.split("_");
@@ -92,7 +93,7 @@ export function parseJunctions(data){
  */
 export function parseIsoformExons(data){
     const attr = "transcript";
-    if(!data.hasOwnProperty(attr)) throw("parseIsoforms input error");
+    if(!data.hasOwnProperty(attr)) throw "parseIsoforms input error " + data;
     return data[attr].filter((d)=>{return "exon" == d.featureType})
         .reduce((a, d)=>{
         if (a[d.transcriptId] === undefined) a[d.transcriptId] = [];
@@ -129,7 +130,7 @@ export function parseIsoforms(data){
  */
 export function parseExonExpression(data, exons, useLog=true, adjust=1){
     const exonDict = exons.reduce((a, d)=>{a[d.exonId] = d; return a;}, {});
-    const attr = "exonExpression";
+    const attr = "medianExonExpression";
     if(!data.hasOwnProperty(attr)) throw("parseExonExpression input error");
 
     const exonObjects = data[attr];
@@ -163,7 +164,7 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
  * @returns {List} of junction objects
  */
 export function parseJunctionExpression(data, useLog=true, adjust=1){
-    const attr = "junctionExpression";
+    const attr = "medianJunctionExpression";
     if(!data.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
 
     const junctions = data[attr];

@@ -15,6 +15,7 @@ import {getGtexUrls,
 import {colorChart} from "./modules/Colors";
 import {downloadSvg} from "./modules/utils";
 
+import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GroupedViolin from "./modules/GroupedViolin";
 
@@ -32,7 +33,8 @@ export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
         .then(function(args){
             const tissues = parseTissues(args[0]);
             const expression = parseMedianTPM(args[1], true);
-            const dmap = new DendroHeatmap(tissueTree, geneTree, expression);
+            const config = new DendroHeatmapConfig("chart", window.innerWidth);
+            const dmap = new DendroHeatmap(tissueTree, geneTree, expression, "YlGnBu", 2, config);
             dmap.render(domId);
             // customization for GTEx
             const tissueDict = tissues.reduce((a, d)=>{
@@ -167,9 +169,11 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
                     .then(function(eData) {
                         const tissueTree = eData.clusters.tissue,
                             geneTree = eData.clusters.gene,
-                            expression = parseMedianExpression(eData),
-                            dmap = new DendroHeatmap(tissueTree, geneTree, expression);
-
+                            expression = parseMedianExpression(eData);
+                        let WIDTH = $(`#${domId}`).parent().width();
+                        WIDTH = WIDTH == 0?window.innerWidth:WIDTH;
+                        const config = new DendroHeatmapConfig("chart", WIDTH);
+                        const dmap = new DendroHeatmap(tissueTree, geneTree, expression, "YlGnBu", 2, config);
 
                         if (gencodeIds.length < 3) {
                             dmap.render(domId, true, false)

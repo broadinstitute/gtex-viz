@@ -51,7 +51,7 @@ export default class DendroHeatmap {
      * @param legendPos {Enum} where to place the color legend: bottom, top
      * @param ticks {Integer} number of bins of the color legend
      */
-    render(domId, showColumnTree=true, showRowTree=true, legendPos="bottom", ticks=10){
+    render(domId, showColumnTree=true, showRowTree=true, legendPos="top", ticks=10){
         this._updateConfig(legendPos);
         this.visualComponents.svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
 
@@ -134,9 +134,10 @@ export default class DendroHeatmap {
 
         // updates the left panel's height based on the data
         this.config.panels.left.h = this.config.cell.h * rows<20?20:this.config.cell.h * rows;
-        if(legendPos=="bottom") this.config.panels.legend.y += this.config.panels.left.h;
         this.config.h += this.config.panels.left.h;
         this.config.panels.main.h = this.config.panels.left.h;
+        if(legendPos=="bottom") this.config.panels.legend.y += this.config.panels.main.h + this.config.panels.main.x + 50;
+
 
     }
 }

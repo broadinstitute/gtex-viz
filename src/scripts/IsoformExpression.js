@@ -61,27 +61,46 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
                     exonExpress = parseExonExpression(args[5],  exonsCurated),
                     isoformExpress = parseIsoformExpression(args[6]);
 
-                const dmap = _renderJunctionHeatmap(domId, tissueTree, jExpress);
+                // render the junction expression dendro-heatmap
 
+                const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50});
+                const dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, true);
+                dmap.render(domId, false, true, top, 5);
+
+
+                // define the gene model and isoform tracks layout dimensions
                 const modelConfig = {
-                    x: 100,
+                    x: dmap.config.panels.main.x,
                     y: dmap.config.panels.main.h + dmap.config.panels.main.y + 100,
                     w: dmap.config.panels.main.w,
                     h: 100
                 };
-                const geneModel = _renderGeneModel(dmap.visualComponents.svg, gene, exons, exonsCurated, junctions, modelConfig);
 
-                // render isoform structures, ignoring intron lengths
                 const exonH = 20;
-                 const isoTrackViewerConfig = {
+                const isoTrackViewerConfig = {
                     x: modelConfig.x,
                     y: modelConfig.y + modelConfig.h,
                     w: modelConfig.w,
                     h: exonH*isoforms.length
                 };
-                const isoformTrackViewer = _renderIsoformTracks(dmap.visualComponents.svg, isoforms, isoformExons, exons, isoTrackViewerConfig);
 
-                // temporarily
+                // extend the SVG height to accommondate the gene model and isoform tracks
+                let h = +select(`#${domId}`).select('svg').attr("height"); // get the current height
+                select(`#${domId}`).select('svg').attr("height", h + modelConfig.h + isoTrackViewerConfig.h);
+
+                // render the gene model
+                const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
+                const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel")
+                    .attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
+                geneModel.render(modelG, modelConfig);
+
+                // render isoform tracks, ignoring intron lengths
+                const isoformTrackViewer = new IsoformTrackViewer(isoforms, isoformExons, exons, isoTrackViewerConfig);
+                const trackViewerG = dmap.visualComponents.svg.append("g")
+                    .attr("transform", `translate(${isoTrackViewerConfig.x}, ${isoTrackViewerConfig.y})`);
+                isoformTrackViewer.render(false, trackViewerG);
+
+                // temporary code: customization
                 _createToolbar(toolbarId, dmap, dmap.config.id);
                 _customize(tissues, geneModel, dmap, isoformTrackViewer, jExpress, exonExpress, isoformExpress);
                 $('#spinner').hide();
@@ -93,33 +112,6 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
          })
 }
 
-function _renderIsoformTracks(dom, isoforms, isoformExons, modelExons, config={x:0, y:0, w:1000, h:400}){
-    const trackViewer = new IsoformTrackViewer(isoforms, isoformExons, modelExons, config);
-    const trackViewerG = dom.append("g");
-    trackViewer.render(false, trackViewerG);
-    trackViewerG.attr("transform", `translate(${config.x}, ${config.y})`);
-    return trackViewer;
-}
-
-function _renderJunctionHeatmap(domId, tissueTree, jExpress){
-    // junction expression heat map
-    let dmapConfig = new DendroHeatmapConfig(domId); // TODO: remove hard-coded chart name
-    dmapConfig.setMargin({left: 150, top: 20, right: 200, bottom: 2000}); // TODO: figure out a better way to extend the SVG height
-    dmapConfig.noTopTreePanel(1250);
-    const useLog = true;
-    const dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, useLog);
-    dmap.render(domId, false, true, top, 5);
-    return dmap;
-}
-
-function _renderGeneModel(dom, gene, exons, exonsCurated, junctions, config={x:100, y:100, w:100, h:100}){
-    // gene model rendering
-    const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
-    const modelG = dom.append("g").attr("id", "geneModel");
-    modelG.attr("transform", `translate(${config.x}, ${config.y})`);
-    geneModel.render(modelG, config);
-    return geneModel;
-}
 
 /**
  * Create the tool bar
@@ -174,13 +166,6 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
             dmap.objects.heatmap.cellMouseover(selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName;
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0];
-            // tooltip.show(
-            //     `<table>
-            //         <tr><td>Tissue</td><td>${tissue}</td></tr>
-            //         <tr><td>Junction</td><td>${junc.displayName}</td></tr>
-            //         <tr><td>Median Read Counts</td><td>${parseFloat(d.originalValue.toExponential()).toPrecision(4)}</td></tr>
-            //     </table>`
-            // );
             tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName}<br/> Median read counts: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
         })
         .on("mouseout", function(d){
@@ -198,9 +183,26 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
             .domain([min(idata.map(d=>d.value)), max(idata.map(d=>d.value))])
             .range([0, -100]);
 
+    // replace tissue ID with tissue name
+    mapSvg.selectAll(".exp-map-ylabel")
+        .text((d)=>tissueDict[d]!==undefined?tissueDict[d].tissueName:d)
+        .attr("x", dmap.objects.heatmap.xScale.range()[1] + 15); // make room for tissue color boxes
+
+    // add tissue bands
+    mapSvg.select("#heatmap").selectAll(".tissue-band")
+        .data(dmap.objects.heatmap.yScale.domain())
+        .enter()
+        .append("rect")
+        .attr("x", dmap.objects.heatmap.xScale.range()[1] + 5)
+        .attr("y", (d)=>dmap.objects.heatmap.yScale(d))
+        .attr("width", 5)
+        .attr("height", dmap.objects.heatmap.yScale.bandwidth())
+        .classed("tissue-band", true)
+        .style("fill", (d)=>tissueDict[d].colorHex);
+
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")
-        .on("mouseover", function(d){
+        .on("mouseover", function(){
              select(this)
                 .classed('highlighted', true);
 
@@ -208,17 +210,18 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
         .on("click", function(d){
             mapSvg.selectAll(".exp-map-ylabel").classed("clicked", false);
             select(this).classed("clicked", true);
-            const tissue = select(this).text();
-            const j = jdata.filter((d)=>d.tissueId==tissue); // junction data
-            const ex = edata.filter((d)=>d.tissueId==tissue); // exon data
-            geneModel.changeTextlabel(mapSvg.select("#geneModel"), "Expression in " + tissue);
+            const tissue = d;
+            const j = jdata.filter((j)=>j.tissueId==tissue); // junction data
+            const ex = edata.filter((e)=>e.tissueId==tissue); // exon data
+            geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissue);
             geneModel.addData(mapSvg.select("#geneModel"), j, ex, dmap.objects.heatmap.colorScale, ecolorScale);
 
             // isoforms update
-            const isoData = idata.filter((d)=>d.tissueId==tissue);
+            const isoData = idata.filter((iso)=>iso.tissueId==tissue);
             isoTrackViewer.showData(isoData, isoColorScale, isoBarScale);
         });
 
+    // junction labels
     mapSvg.selectAll(".exp-map-xlabel")
         .each(function(){
             // add junction ID as the dom id
