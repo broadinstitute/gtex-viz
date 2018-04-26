@@ -63,7 +63,7 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
 
                 // render the junction expression dendro-heatmap
 
-                const dmapConfig = new DendroHeatmapConfig(domId, 150, 0, {top: 30, right: 350, bottom: 200, left: 50});
+                const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50});
                 const dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, true);
                 dmap.render(domId, false, true, top, 5);
 
@@ -183,9 +183,26 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
             .domain([min(idata.map(d=>d.value)), max(idata.map(d=>d.value))])
             .range([0, -100]);
 
+    // replace tissue ID with tissue name
+    mapSvg.selectAll(".exp-map-ylabel")
+        .text((d)=>tissueDict[d]!==undefined?tissueDict[d].tissueName:d)
+        .attr("x", dmap.objects.heatmap.xScale.range()[1] + 15); // make room for tissue color boxes
+
+    // add tissue bands
+    mapSvg.select("#heatmap").selectAll(".tissue-band")
+        .data(dmap.objects.heatmap.yScale.domain())
+        .enter()
+        .append("rect")
+        .attr("x", dmap.objects.heatmap.xScale.range()[1] + 5)
+        .attr("y", (d)=>dmap.objects.heatmap.yScale(d))
+        .attr("width", 5)
+        .attr("height", dmap.objects.heatmap.yScale.bandwidth())
+        .classed("tissue-band", true)
+        .style("fill", (d)=>tissueDict[d].colorHex);
+
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")
-        .on("mouseover", function(d){
+        .on("mouseover", function(){
              select(this)
                 .classed('highlighted', true);
 
@@ -193,17 +210,18 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
         .on("click", function(d){
             mapSvg.selectAll(".exp-map-ylabel").classed("clicked", false);
             select(this).classed("clicked", true);
-            const tissue = select(this).text();
-            const j = jdata.filter((d)=>d.tissueId==tissue); // junction data
-            const ex = edata.filter((d)=>d.tissueId==tissue); // exon data
+            const tissue = d;
+            const j = jdata.filter((j)=>j.tissueId==tissue); // junction data
+            const ex = edata.filter((e)=>e.tissueId==tissue); // exon data
             geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissue);
             geneModel.addData(mapSvg.select("#geneModel"), j, ex, dmap.objects.heatmap.colorScale, ecolorScale);
 
             // isoforms update
-            const isoData = idata.filter((d)=>d.tissueId==tissue);
+            const isoData = idata.filter((iso)=>iso.tissueId==tissue);
             isoTrackViewer.showData(isoData, isoColorScale, isoBarScale);
         });
 
+    // junction labels
     mapSvg.selectAll(".exp-map-xlabel")
         .each(function(){
             // add junction ID as the dom id

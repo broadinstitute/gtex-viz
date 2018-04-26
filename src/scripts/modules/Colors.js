@@ -178,7 +178,7 @@ export function setColorScale(data, colors="YlGnBu", dmin = 0) {
  * @param useLog {Boolean}
  * @param cell
  */
-export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:15, w:50}){
+export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:50}){
 
     // const data = [0].concat(scale.quantiles()); // add 0 to the list of values
     const data = scale.ticks(ticks).slice(1); // why this doesn't provide consistent number of ticks??
