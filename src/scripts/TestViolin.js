@@ -135,7 +135,7 @@ export function build(rootId){
         $(`<div id="${domIds[k]}"/>`).appendTo(`#${rootId}`);
     });
 
-    const data = _genereateRandomData(50);
+    const data = _generateRandomData(50);
     const margin = _setMargins();
     const dim = _setDimensions();
     let violin = new Violin(data);
@@ -193,7 +193,7 @@ function _setMargins(top=50, right=50, bottom=50, left=50){
 }
 
 /**
- * Genereate random data sets for the violin
+ * Generate random data sets for the violin
  * data = [
         {
             label: "dataset 1",
@@ -209,7 +209,7 @@ function _setMargins(top=50, right=50, bottom=50, left=50){
  * returns a list of data objects
  * reference: https://github.com/d3/d3-random
  */
-function _genereateRandomData(N=5){
+function _generateRandomData(N=5){
     // values: a list of 100 random numbers with a normal (Gaussian) distribution
     const data =  range(0, N).map((d) => {
         const mu = 100 + Math.random()*20;
