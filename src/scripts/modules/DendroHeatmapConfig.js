@@ -10,13 +10,13 @@ export default class DendroHeatmapConfig {
      * @param leftPanelW {Integer}, set to 0 if there's no left panel
      * @param topPanelH {Integer}, set to 0 if there's no top panel
      * @param margin {Object} with attr: top, right, bottom, left, smaller values than the default are not recommended for the heatmap
-     * @param cell {Object} with attr: w and h
+     * @param cellH {Integer}
+     * @param adjust {Integer}, adjusted spacing between the heatmap and the dendrogram
      */
-    constructor(id="chart", rootW=window.innerWidth, leftPanelW=100, topPanelH=60, margin={top:50, right:250, bottom:170, left:10}, cell={w: undefined, h:12}) {
+    constructor(id="chart", rootW=window.innerWidth, leftPanelW=100, topPanelH=100, margin={top:50, right:250, bottom:170, left:10}, cellH=12, adjust=10) {
         this.id = id;
         this.margin = margin;
         this.rootW = rootW;
-        const adjust = 10;
 
         this.leftTreePanel = { // the row dendrogram panel
             x: margin.left,
@@ -27,7 +27,10 @@ export default class DendroHeatmapConfig {
         };
 
 
-        this.cell = cell;
+        this.cell = {
+            w: undefined,
+            h: cellH
+        };
 
         this.topTreePanel = { // the column dendrogram panel
             x: margin.left + leftPanelW,

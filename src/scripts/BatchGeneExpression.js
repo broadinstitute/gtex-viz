@@ -250,10 +250,13 @@ function _addTissueColors(dmap, tissueDict){
     const heatmap = dmap.objects.heatmap;
 
     let cells = select(`#${id}`).selectAll(".exp-map-xcolor").data(heatmap.xList);
+    let leaves = select(`#${id}`).selectAll(".leaf-color").data(heatmap.xList);
 
     // update
     cells.attr("x", (d)=>heatmap.xScale(d))
         .attr("y", (d)=>heatmap.yScale.range()[1] + 5);
+    leaves.attr("x", (d)=>heatmap.xScale(d))
+        .attr("y", (d)=>heatmap.yScale.range()[0] - 10);
 
     // create new elements
     cells.enter().append("rect")
@@ -265,8 +268,17 @@ function _addTissueColors(dmap, tissueDict){
         .merge(cells)
         .style("fill", (d) => tissueDict[d] === undefined? "#000000": `#${tissueDict[d].colorHex}`);
 
+    leaves.enter().append("rect")
+        .attr("x", (d)=>heatmap.xScale(d))
+        .attr("y", (d)=>heatmap.yScale.range()[0] - 10)
+        .attr("width", heatmap.xScale.bandwidth())
+        .attr("height", heatmap.yScale.bandwidth()*0.5)
+        .classed("leaf-color", true)
+        .merge(leaves)
+        .style("fill", (d) => tissueDict[d] === undefined? "#000000": `#${tissueDict[d].colorHex}`);
     // exit and remove
     cells.exit().remove();
+    leaves.exit().remove();
 
 }
 

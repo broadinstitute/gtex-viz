@@ -63,7 +63,7 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
                 const tissueTree = args[4].clusters.tissue; // based on junction expression
 
                 // render the junction expression dendro-heatmap
-                const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50});
+                const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 20}, 12, 10);
                 const dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, true);
                 dmap.render(domId, false, true, top, 5);
                 $('#spinner').hide();
@@ -200,6 +200,17 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
         .attr("width", 5)
         .attr("height", dmap.objects.heatmap.yScale.bandwidth())
         .classed("tissue-band", true)
+        .style("fill", (d)=>tissueDict[d].colorHex);
+
+     mapSvg.select("#heatmap").selectAll(".tree-tissue-band")
+        .data(dmap.objects.heatmap.yScale.domain())
+        .enter()
+        .append("rect")
+        .attr("x", dmap.objects.heatmap.xScale.range()[0] - 10)
+        .attr("y", (d)=>dmap.objects.heatmap.yScale(d))
+        .attr("width", 5)
+        .attr("height", dmap.objects.heatmap.yScale.bandwidth())
+        .classed("tree-tissue-band", true)
         .style("fill", (d)=>tissueDict[d].colorHex);
 
     // define tissue label mouse events

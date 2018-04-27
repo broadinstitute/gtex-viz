@@ -218,7 +218,8 @@ export default class Dendrogram {
             .attr("class", "dendrogram-axis")
             .call(
                 axisLeft(this.yScale)
-                .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
+                    .ticks(3)
+                // .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
             );
 
     }
