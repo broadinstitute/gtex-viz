@@ -23,7 +23,7 @@ import {extent, median, ascending, quantile, max, min} from "d3-array";
 import {nest} from "d3-collection";
 import {scaleBand, scaleLinear} from "d3-scale";
 import {area} from "d3-shape";
-import {axisBottom, axisLeft} from "d3-axis";
+import {axisTop, axisBottom, axisLeft} from "d3-axis";
 import {select, selectAll, event} from "d3-selection";
 import {brush} from "d3-brush";
 
@@ -34,7 +34,7 @@ import Toolbar from "./Toolbar";
 export default class GroupedViolin {
     /**
      * constructor for GroupedViolin
-     * @param data {List}: a list of objects with attributes: group: {String}, label: {String}, values: {List} of numerical values
+     * @param data {List}: a list of objects with attributes: group: {String}, label: {String}, values: {List} of numerical values, size: integer, optional
      * @param groupInfo {Dictionary}: metadata of the group, indexed by group ID
      */
     constructor(data, groupInfo = {}){
@@ -44,17 +44,24 @@ export default class GroupedViolin {
     }
 
     /**
-     * render the grouped violin plot
+     *
      * @param dom {DOM} the SVG dom object to append the violin plot to
      * @param width {Float}
      * @param height {Float}
      * @param xPadding {Float} padding of the x axis
      * @param xDomain {List} the order of X groups
-     * @param yDomain {List} the min and max values of the y domain
+     * @param yDomain  {List} the min and max values of the y domain
      * @param yLabel {String}
+     * @param showX
+     * @param showSubX
+     * @param subXAngle
+     * @param showWhisker
+     * @param showDivider
+     * @param showLegend
+     * @param showSize
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showX=true, showSubX=true, subXAngle=0, showWhisker=false, showDivider=false, showLegend=false){
+    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showX=true, showSubX=true, subXAngle=0, showWhisker=false, showDivider=false, showLegend=false, showSize=false){
 
         // define the reset for this plot
         this.reset = () => {
@@ -99,7 +106,7 @@ export default class GroupedViolin {
                 const groupInfoDom = dom.append("g");
                 const groupLabels = groupInfoDom.selectAll(".violin-group-label")
                     .data(['pvalue']);
-                groupLabels.enter().append("text")
+                groupLabels.enter().append("text") // Code review: consider moving this part to the eQTL dashboard
                     .attr("x", 0)
                     .attr("y", 0)
                     .attr("class", "violin-group-label")
@@ -109,7 +116,7 @@ export default class GroupedViolin {
                     })
                     .attr("transform", (d, i) => {
                         let x = this.scale.x(group) + this.scale.x.bandwidth()/2;
-                        let y = this.scale.y(yDomain[0]) + 35; // todo: avoid hard-coded values
+                        let y = this.scale.y(yDomain[0]) + 50; // todo: avoid hard-coded values
                         return `translate(${x}, ${y})`
                     })
                     .text((d) => `${d}: ${info[d]}`);
@@ -128,26 +135,36 @@ export default class GroupedViolin {
             });
 
             // adds the sub-x axis if there are more than one entries
-            var buffer = 5;
-            if (showSubX){
+            var buffer = 15;
+            if (showSize){
+                 const sizeScale = scaleBand()
+                    .domain(entries.map((d) => {return d.size==undefined?'(0)':`(${d.size||0})`}))
+                    .rangeRound([this.scale.x(group), this.scale.x(group) + this.scale.x.bandwidth()]);
+                 const sizexG = dom.append("g")
+                     .attr("class", "violin-size-axis")
+                     .attr("transform", `translate(0, ${height + buffer})`)
+                     .call(axisBottom(sizeScale));
+            }
+
+            if (showSubX) {
+                var buffer = 5;
                 const subxG = dom.append("g")
                     .attr("class", "violin-sub-axis")
                     .attr("transform", `translate(0, ${height + buffer})`)
                     .call(axisBottom(this.scale.subx));
 
-                if(subXAngle>0){
-                subxG.selectAll("text")
-                    .style("text-anchor", "start")
-                    .attr("transform", `rotate(${subXAngle}, 2, 10)`);
+                if (subXAngle > 0) {
+                    subxG.selectAll("text")
+                        .style("text-anchor", "start")
+                        .attr("transform", `rotate(${subXAngle}, 2, 10)`);
                 }
-
             }
 
 
         });
 
         // renders the x axis
-        let buffer = showSubX?45:0;
+        let buffer = showSubX?55:0; // Code review: hard-coded values
         this.xAxis = showX?axisBottom(this.scale.x):axisBottom(this.scale.x).tickFormat("");
         dom.append("g")
             .attr("class", "violin-x-axis axis--x")
@@ -474,8 +491,8 @@ export default class GroupedViolin {
             .attr("y1", this.scale.y.range()[0])
             .attr("y2", this.scale.y.range()[1])
             .style("stroke-width", (g, i)=>i!=groups.length-1?1:0)
-            .style("stroke", "silver")
-            .style("opacity", 0.25)
+            .style("stroke", "rgb(86,98,107)")
+            .style("opacity", 0.5)
 
     }
 
