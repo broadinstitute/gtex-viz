@@ -198,8 +198,6 @@ export default class Dendrogram {
             .attr("cx", (d) => d.x + this.xScale.bandwidth()/2)
             .attr("cy", (d) => d.y)
             .attr("r", 2)
-            // .attr("fill", "#8DCDC1")
-            // .attr("fill", "#4b8699")
             .attr('fill', '#333')
             .attr("opacity", 0.5)
             .attr("class", "dendrogram-node")
@@ -218,7 +216,8 @@ export default class Dendrogram {
             .attr("class", "dendrogram-axis")
             .call(
                 axisLeft(this.yScale)
-                .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
+                    .ticks(3)
+                // .tickValues([Math.floor(this._getMaxBranchLength()/2), Math.floor(this._getMaxBranchLength())])
             );
 
     }

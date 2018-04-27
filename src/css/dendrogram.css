@@ -7,3 +7,12 @@
 .dendrogram-axis text {
     fill: #a9a9a9;
 }
+
+.leaf-color {
+    stroke-width: 0;
+}
+
+.leaf-color.highlighted {
+    stroke-width: 1px;
+    stroke: #555f66;
+}

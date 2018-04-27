@@ -56,17 +56,19 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
                     isoforms = parseIsoforms(args[3]),
                     isoformExons = parseIsoformExons(args[3]),
                     junctions = parseJunctions(args[4]),
-                    tissueTree = args[4].clusters.tissue,
                     jExpress = parseJunctionExpression(args[4]),
                     exonExpress = parseExonExpression(args[5],  exonsCurated),
                     isoformExpress = parseIsoformExpression(args[6]);
 
-                // render the junction expression dendro-heatmap
+                const tissueTree = args[4].clusters.tissue; // based on junction expression
 
-                const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50});
+                // render the junction expression dendro-heatmap
+                const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 20}, 12, 10);
                 const dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, true);
                 dmap.render(domId, false, true, top, 5);
+                $('#spinner').hide();
 
+                // return;
 
                 // define the gene model and isoform tracks layout dimensions
                 const modelConfig = {
@@ -189,7 +191,7 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
         .attr("x", dmap.objects.heatmap.xScale.range()[1] + 15); // make room for tissue color boxes
 
     // add tissue bands
-    mapSvg.select("#heatmap").selectAll(".tissue-band")
+    mapSvg.select("#heatmap").selectAll(".exp-map-ycolor")
         .data(dmap.objects.heatmap.yScale.domain())
         .enter()
         .append("rect")
@@ -197,7 +199,18 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
         .attr("y", (d)=>dmap.objects.heatmap.yScale(d))
         .attr("width", 5)
         .attr("height", dmap.objects.heatmap.yScale.bandwidth())
-        .classed("tissue-band", true)
+        .classed("exp-map-ycolor", true)
+        .style("fill", (d)=>tissueDict[d].colorHex);
+
+    mapSvg.select("#heatmap").selectAll(".leaf-color")
+        .data(dmap.objects.heatmap.yScale.domain())
+        .enter()
+        .append("rect")
+        .attr("x", dmap.objects.heatmap.xScale.range()[0] - 10)
+        .attr("y", (d)=>dmap.objects.heatmap.yScale(d))
+        .attr("width", 5)
+        .attr("height", dmap.objects.heatmap.yScale.bandwidth())
+        .classed("leaf-color", true)
         .style("fill", (d)=>tissueDict[d].colorHex);
 
     // define tissue label mouse events
