@@ -127,7 +127,7 @@ export function renderTopExpressed(tissueId, domId, toolbarId, infoId, urls=getG
  * @returns {*}
  */
 export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGtexUrls(), useFilters=undefined, callback=undefined){
-    reset([domId, toolbarId, infoId, "boxplot"]);
+    reset([domId, toolbarId, infoId, "violinRoot"]);
     $('#spinner').show();
     if (select(`#${domId}`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
     let message = "";
@@ -292,7 +292,7 @@ function _addTissueColors(dmap, tissueDict){
 function _customizeMouseEvents(dmap, tissueDict, geneDict) {
     const svg = dmap.visualComponents.svg;
     const tooltip = dmap.visualComponents.tooltip;
-
+    dmap.data.external = [];
     const cellMouseover = function(d) {
         const selected = select(this);
         dmap.objects.heatmap.cellMouseover(selected); // call the default heatmap mouse over event first
@@ -314,27 +314,19 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
     const ylabelClick = function(d){
         let s = select(this);
         let action = "";
-        if (event.altKey) { // if alt key is pressed -- i.e. adding an additional gene to boxplot
-            // highlights the selected label
-            if(!s.classed("clicked")) s.classed("clicked", true);
-            action = "add";
+
+        // toggles click/unclick events
+        // if the DOM has the class "clicked", then unclick it
+        if (s.classed("clicked")) {
+            s.classed("clicked", false);
+            action = "delete";
         }
         else {
-            // toggles click/unclick events
-            // if the DOM has the class "clicked", then unclick it
-            if (s.classed("clicked")) {
-                s.classed("clicked", false);
-                action = "delete";
-            }
-            else {
-                // else click it
-                selectAll(".clicked").classed("clicked", false); // first clears all clicked labels if any
-                s.classed("clicked", true); // click this DOM element
-                dmap.data.external = []; // clears the data storage
-                action = "add";
-            }
+            // else click it
+            // selectAll(".clicked").classed("clicked", false); // first clears all clicked labels if any
+            s.classed("clicked", true); // click this DOM element
+            action = "add";
         }
-        // _renderBoxplot(action, d, geneDict, tissueDict, dmap);
         _renderViolinPlot(action, d, geneDict, tissueDict, dmap);
     };
 
@@ -369,6 +361,7 @@ function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap) {
             colors[gene] = geneDict[gene].color;
             json(url)
                 .then(function (d) {
+                    if (dmap.data.external === undefined) dmap.data.external = [];
                     dmap.data.external = dmap.data.external.concat(parseGeneExpressionForViolin(d, true, colors));
                     _renderViolinHelper(dmap.data.external, dmap, tissueDict);
                 })
@@ -514,83 +507,6 @@ function _changeViolinXLabel(dom, tissueDict){
 }
 
 /**
- * renders the gene expression boxplot
- * @param action {ENUM} add, new, or delete
- * @param gene {String} gencode ID
- * @param geneDict {Dictionary} gencode ID => gene object with attribute: index
- * @param tissueDict {Dictionary} tissue objects indexed by tissue ID
- * @param dmap {DendroHeatmap}
- */
-function _renderBoxplot(action, gene, geneDict, tissueDict, dmap) {
-    // tissueOrder is a list of tissue objects {id:display name} in the same order as the x axis of the heat map.
-    let tissueOrder = dmap.objects.heatmap.xScale.domain().map((d, i) => {return {id:d, name:tissueDict[d].tissueName}});
-    // get gene expression data
-    let data = dmap.data.external;
-
-    // plotly boxplot configurations
-    const config = {
-        useLog: false,
-        id: "boxplot",
-    };
-    const layout = {
-        title: "",
-        font: {
-            family: 'Open Sans, Helvetica, sans-serif',
-            size:11
-        },
-        yaxis: {
-            title: 'TPM',
-            zeroline: false,
-            tickfont: {
-                size: 9
-            }
-        },
-        xaxis: {
-            tickfont: {
-                size: 9
-            },
-            tickangle: 30
-        },
-        boxmode: 'group',
-        margin: {
-            t:0,
-        },
-        showlegend: true,
-
-    };
-
-    // action
-    switch(action) {
-        case "delete": {
-            delete data[gene];
-            Plotly.newPlot(config.id, values(data), layout);
-            if (keys(data).length == 0) {
-                select("#" + config.id).style("opacity", 0.0); // makes the boxplot section visible
-            } else {
-                select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
-            }
-            break;
-        }
-        case "add": {
-            const url = getGtexUrls().geneExp + gene;
-            json(url)
-                .then(function (d) {
-                    let color = geneDict[gene].color || "black";
-                    data[gene] = makeJsonForPlotly(gene, d, config.useLog, color, tissueOrder);
-                    Plotly.newPlot(config.id, values(data), layout);
-                    select("#" + config.id).style("opacity", 1.0); // makes the boxplot section visible
-                })
-                .catch(function(err){console.error(err)});
-            break;
-        }
-        default: {
-            console.warn("action not understood.");
-            break;
-        }
-    }
-}
-
-/**
  * create the toolbar
  * @param domId {String} the dendropheatmap's DIV ID
  * @param barId {String} the toolbar DOM ID
@@ -712,12 +628,12 @@ function _sortTissues (xlist, dmap, tissueDict){
     // style the query tissue if found
     if (qId!==undefined) _styleSelectedTissue(qId);
 
-    // hide the boxplot
+    // hide the violin plot
     select('#violinRoot').style("opacity", 0.0);
 
     // deselect genes
     selectAll(".exp-map-ylabel").classed("clicked", false);
-    dmap.data.external = {};
+    dmap.data.external = undefined;
 
 }
 
