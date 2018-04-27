@@ -59,11 +59,11 @@ export default class DendroHeatmap {
             ylist = undefined;
 
         if (showColumnTree && this.objects.columnTree!==undefined){
-            this.visualComponents.columnTree = this._renderTree(this.objects.columnTree, this.config.panels.top);
+            this.visualComponents.columnTree = this._renderTree("column", this.objects.columnTree, this.config.panels.top);
             xlist = this.objects.columnTree.xScale.domain();
         }
         if (showRowTree && this.objects.rowTree !== undefined){
-            this.visualComponents.rowTree = this._renderTree(this.objects.rowTree, this.config.panels.left);
+            this.visualComponents.rowTree = this._renderTree("row", this.objects.rowTree, this.config.panels.left);
             ylist = this.objects.rowTree.yScale.domain();
         }
 
@@ -72,32 +72,38 @@ export default class DendroHeatmap {
 
     /**
      * renders a newick tree
+     * @param direction {enum} column or row
      * @param tree {Dendrogram} a Dendrogram object
      * @param config {Object} a panel config with attributes: x, y, width and height
      * @private
      */
-    _renderTree(tree, config){
-        let dom = this.visualComponents.svg;
+    _renderTree(direction, tree, config){
+        let svg = this.visualComponents.svg;
+        const labelClass = direction=="row"?".exp-map-ylabel":".exp-map-xlabel";
+
         const tooltip = this.visualComponents.tooltip;
-        const g = dom.append("g")
+        const g = svg.append("g")
             .attr("id", config.id)
             .attr("transform", `translate(${config.x}, ${config.y})`);
         tree.draw(g, config.w, config.h);
 
-        // customized mouse events
+        const mouseout = function(){
+            select(this)
+                .attr("r", 2)
+                .attr("fill", "#333");
+            svg.selectAll(labelClass).classed("highlighted", false);
+        };
+
         const mouseover = function(d){
             select(this)
                 .attr("r", 6)
                 .attr("fill", "red");
-            const leaves = d.leaves().map((node)=>node.data.name);
-            tooltip.show(`${leaves.join("<br>")}`);
+            let ids = d.leaves().map((node)=>node.data.name);
+            svg.selectAll(labelClass)
+                .filter((label)=>ids.includes(label))
+                .classed("highlighted", true);
         };
-        const mouseout = function(d){
-            select(this)
-                .attr("r", 2)
-                .attr("fill", "#333");
-            tooltip.hide();
-        };
+
         g.selectAll(".dendrogram-node")
             .on("mouseover", mouseover)
             .on("mouseout", mouseout);
