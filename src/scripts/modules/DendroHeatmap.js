@@ -92,6 +92,7 @@ export default class DendroHeatmap {
                 .attr("r", 2)
                 .attr("fill", "#333");
             svg.selectAll(labelClass).classed("highlighted", false);
+            svg.selectAll(".leaf-color").classed("highlighted", false);
         };
 
         const mouseover = function(d){
@@ -100,6 +101,9 @@ export default class DendroHeatmap {
                 .attr("fill", "red");
             let ids = d.leaves().map((node)=>node.data.name);
             svg.selectAll(labelClass)
+                .filter((label)=>ids.includes(label))
+                .classed("highlighted", true);
+            svg.selectAll(".leaf-color")
                 .filter((label)=>ids.includes(label))
                 .classed("highlighted", true);
         };

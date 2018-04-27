@@ -191,7 +191,7 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
         .attr("x", dmap.objects.heatmap.xScale.range()[1] + 15); // make room for tissue color boxes
 
     // add tissue bands
-    mapSvg.select("#heatmap").selectAll(".tissue-band")
+    mapSvg.select("#heatmap").selectAll(".exp-map-ycolor")
         .data(dmap.objects.heatmap.yScale.domain())
         .enter()
         .append("rect")
@@ -199,10 +199,10 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
         .attr("y", (d)=>dmap.objects.heatmap.yScale(d))
         .attr("width", 5)
         .attr("height", dmap.objects.heatmap.yScale.bandwidth())
-        .classed("tissue-band", true)
+        .classed("exp-map-ycolor", true)
         .style("fill", (d)=>tissueDict[d].colorHex);
 
-     mapSvg.select("#heatmap").selectAll(".tree-tissue-band")
+    mapSvg.select("#heatmap").selectAll(".leaf-color")
         .data(dmap.objects.heatmap.yScale.domain())
         .enter()
         .append("rect")
@@ -210,7 +210,7 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, jdata, edata, idat
         .attr("y", (d)=>dmap.objects.heatmap.yScale(d))
         .attr("width", 5)
         .attr("height", dmap.objects.heatmap.yScale.bandwidth())
-        .classed("tree-tissue-band", true)
+        .classed("leaf-color", true)
         .style("fill", (d)=>tissueDict[d].colorHex);
 
     // define tissue label mouse events
