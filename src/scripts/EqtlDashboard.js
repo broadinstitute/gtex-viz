@@ -94,7 +94,7 @@ function _visualize(gene, variant, mainId, input, info){
     });
 
     // violin plot
-
+    // TODO: code review on the layout, remove hard-coded values and customized code in GroupedViolin.js
     let margin = {
         left: 50,
         top: 50,
@@ -102,10 +102,10 @@ function _visualize(gene, variant, mainId, input, info){
         bottom: 100
     };
 
-    let innerWidth = input.length * 50,
+    let innerWidth = input.length * 40, // set at at least 50 because of the long tissue names
         width = innerWidth + (margin.left + margin.right);
-    let height = 200,
-        innerHeight = height - (margin.top + margin.bottom);
+    let innerHeight = 80,
+        height = innerHeight + (margin.top + margin.bottom);
 
     let dom = select(`#${id.chart}`)
         .append("svg")
@@ -128,7 +128,7 @@ function _visualize(gene, variant, mainId, input, info){
     const tooltip = violin.createTooltip(id.tooltip);
     const toolbar = violin.createToolbar(id.toolbar, tooltip);
     toolbar.createDownloadButton(id.buttons.save, id.svg, `${id.main}-save.svg`, id.clone);
-    violin.render(dom, innerWidth, innerHeight, 0.3, undefined, [], "Rank Normalized Expression", false, true, 0, false, true, false);
+    violin.render(dom, innerWidth, innerHeight, 0.3, undefined, [], "Rank Normalized Expression", false, true, 0, false, true, false, true);
     _customizeViolinPlot(violin, dom);
 }
 /**
@@ -140,7 +140,7 @@ function _customizeViolinPlot(plot, dom){
     plot.groups.forEach((g)=>{
         // customize the long tissue name
         const gname = g.key;
-        const names = gname.split(" - ");
+        const names = gname.replace(/\(/, " - (").split(/\s*-\s*/);
         const customXlabel = dom.append("g");
         const customLabels = customXlabel.selectAll(".violin-group-label")
             .data(names);
@@ -150,13 +150,13 @@ function _customizeViolinPlot(plot, dom){
             .attr("class", "violin-group-label")
             .attr("transform", (d, i) => {
                 let x = plot.scale.x(gname) + plot.scale.x.bandwidth()/2;
-                let y = plot.scale.y(plot.scale.y.domain()[0]) + 55 + (10*i); // todo: avoid hard-coded values
+                let y = plot.scale.y(plot.scale.y.domain()[0]) + 75 + (10*i); // todo: avoid hard-coded values
                 return `translate(${x}, ${y})`
             })
             .text((d) => d);
     });
 
-    dom.selectAll(".violin-sub-axis").classed("violin-sub-axis-hide", true).classed("violin-sub-axis", false);
+    dom.selectAll(".violin-size-axis").classed("hide", true);
 
 }
 
@@ -199,7 +199,6 @@ function _buildTissueMenu(groups, domId){
     groupNames.forEach(function(gname){
         let sites = groups[gname]; // a list of site objects with attr: name and id
         const gId = gname.replace(/ /g, "_"); // replace the spaces with dashes to create a group <DOM> id
-
         // figure out which dom section to append this tissue site
         let $currentDom = $sections[3];
         if("Brain" == gname) $currentDom = $sections[0];
@@ -405,6 +404,10 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
     const id = `boxplot${i}`;
     $(`#${dashboardId}`).append(`<div id="${id}" class="col-sm-12"></div>`);
 
+    // parse the genotypes from the variant ID
+    const ref = variant.variantId.split(/_/)[2];
+    const alt = variant.variantId.split(/_/)[3];
+
     // d3-queue https://github.com/d3/d3-queue
     let promises = [];
 
@@ -427,17 +430,20 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
                 input = input.concat([
                     {
                         group: group,
-                        label: "Ref",
+                        // label: "Ref",
+                        label: `${ref}${ref}`,
                         values: [0]
                     },
                     {
                         group: group,
-                        label: "Het",
+                        label: `${ref}${alt}`,
+                        // label: "Het",
                         values: [0]
                     },
                     {
                         group: group,
-                        label: "Alt",
+                        label: `${alt}${alt}`,
+                        // label: "Alt",
                         values: [0]
                     }
                 ])
@@ -449,17 +455,20 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
                 input = input.concat([
                     {
                         group: group,
-                        label: `Ref (${d.homoRefExp.length})`,
+                        label: `${ref}${ref}`,
+                        size: d.homoRefExp.length,
                         values: d.homoRefExp
                     },
                     {
                         group: group,
-                        label: `Het (${d.heteroExp.length})`,
+                        label: `${ref}${alt}`,
+                        size: d.heteroExp.length,
                         values: d.heteroExp
                     },
                     {
                         group: group,
-                        label: `Alt (${d.homoAltExp.length})`,
+                        label: `${alt}${alt}`,
+                        size: d.homoAltExp.length,
                         values: d.homoAltExp
                     }
                 ]);

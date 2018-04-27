@@ -2,13 +2,19 @@
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
     fill: none;
     stroke: Silver;
-    stroke-width: 1;
+    stroke-width: 1px;
     shape-rendering: crispEdges;
 }
 
 .violin-x-axis text, .violin-y-axis text, .violin-x-axis-hide text {
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
     fill: #2a718b;
+}
+
+.violin-size-axis text {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    fill: #239db8;
+    font-size: 8px;
 }
 
 .violin-x-axis-hide line, .violin-x-axis-hide path{
@@ -18,8 +24,15 @@
     shape-rendering: crispEdges;
 }
 
+.violin-size-axis.hide line, .violin-size-axis.hide path{
+    fill: none;
+    stroke: Silver;
+    stroke-width: 0;
+    shape-rendering: crispEdges;
+}
+
 .violin-sub-axis line, .violin-sub-axis path{
-    stroke-width: 1;
+    stroke-width: 1px;
     stroke: Silver;
     shape-rendering: crispEdges;
 }
@@ -60,12 +73,12 @@ div.violin-tooltip {
 }
 
 path.violin.highlighted {
-    stroke-width: 2;
+    stroke-width: 2px;
     stroke: #555f66;
 }
 
 line.violin-median {
-    stroke-width: 2;
+    stroke-width: 2px;
     stroke: #fff;
 }
 
