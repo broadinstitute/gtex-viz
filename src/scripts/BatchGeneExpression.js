@@ -292,7 +292,7 @@ function _addTissueColors(dmap, tissueDict){
 function _customizeMouseEvents(dmap, tissueDict, geneDict) {
     const svg = dmap.visualComponents.svg;
     const tooltip = dmap.visualComponents.tooltip;
-
+    dmap.data.external = [];
     const cellMouseover = function(d) {
         const selected = select(this);
         dmap.objects.heatmap.cellMouseover(selected); // call the default heatmap mouse over event first
@@ -314,27 +314,19 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
     const ylabelClick = function(d){
         let s = select(this);
         let action = "";
-        if (event.altKey) { // if alt key is pressed -- i.e. adding an additional gene to boxplot
-            // highlights the selected label
-            if(!s.classed("clicked")) s.classed("clicked", true);
-            action = "add";
+
+        // toggles click/unclick events
+        // if the DOM has the class "clicked", then unclick it
+        if (s.classed("clicked")) {
+            s.classed("clicked", false);
+            action = "delete";
         }
         else {
-            // toggles click/unclick events
-            // if the DOM has the class "clicked", then unclick it
-            if (s.classed("clicked")) {
-                s.classed("clicked", false);
-                action = "delete";
-            }
-            else {
-                // else click it
-                selectAll(".clicked").classed("clicked", false); // first clears all clicked labels if any
-                s.classed("clicked", true); // click this DOM element
-                dmap.data.external = []; // clears the data storage
-                action = "add";
-            }
+            // else click it
+            // selectAll(".clicked").classed("clicked", false); // first clears all clicked labels if any
+            s.classed("clicked", true); // click this DOM element
+            action = "add";
         }
-        // _renderBoxplot(action, d, geneDict, tissueDict, dmap);
         _renderViolinPlot(action, d, geneDict, tissueDict, dmap);
     };
 
@@ -369,6 +361,7 @@ function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap) {
             colors[gene] = geneDict[gene].color;
             json(url)
                 .then(function (d) {
+                    if (dmap.data.external === undefined) dmap.data.external = [];
                     dmap.data.external = dmap.data.external.concat(parseGeneExpressionForViolin(d, true, colors));
                     _renderViolinHelper(dmap.data.external, dmap, tissueDict);
                 })
@@ -717,7 +710,7 @@ function _sortTissues (xlist, dmap, tissueDict){
 
     // deselect genes
     selectAll(".exp-map-ylabel").classed("clicked", false);
-    dmap.data.external = {};
+    dmap.data.external = undefined;
 
 }
 
