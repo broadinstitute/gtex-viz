@@ -102,7 +102,7 @@ export function buildGrouped(rootId){
                     break;
                 }
                 case "trellis": {
-                    violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", false, true, 90);
+                    violin.render(dom, dim.width, dim.height, 0.05, tissues, [], "log10(TPM)", false, true, 90, false, false, false, false);
                     _customizeViolinPlot(violin, dom, tissueTable);
                     break;
                 }
