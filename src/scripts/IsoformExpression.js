@@ -126,9 +126,10 @@ export function render(type, geneId, domId, toolbarId, urls=getGtexUrls()){
                     .attr("transform", `translate(${isoTrackViewerConfig.x}, ${isoTrackViewerConfig.y})`);
                 isoformTrackViewer.render(false, trackViewerG);
 
-                // temporary code: customization
+                // customization
+                _addColorLegendsForModel(junctionColorScale, exonColorScale, isoformColorScale);
                 _createToolbar(toolbarId, dmap, dmap.config.id);
-                _customize(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
+                _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
 
                 switch(type){
                     case "junction": {
@@ -176,23 +177,22 @@ function _createToolbar(barId, dmap, domId){
 
 
 /**
- * customizing the junciton expression visualization
+ * customizing the heatmap
  * dependencies: CSS classes from expressMap.css, junctionMap.css
  * @param tissues {List} of GTEx tissue objects with attr: colorHex, tissueId, tissueName
- * @param geneModel {Object} of the collapsed gene model
- * @param dmap {Object} of DendropHeatmap
+ * @param geneModel {GeneModel} of the collapsed gene model
+ * @param dmap {Object} of DendroHeatmap
  * @param jdata {List} of junction expression data objects
  * @param edata {List} of exon expression data objects
  * @param idata {List} of isoform expression data objects
+ * @private
  */
-function _customize(tissues, geneModel, dmap, isoTrackViewer, junctionScale, exonScale, isoformScale, junctionData, exonData, isoformData){
+function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionScale, exonScale, isoformScale, junctionData, exonData, isoformData){
     const mapSvg = dmap.visualComponents.svg;
     const tooltip = dmap.visualComponents.tooltip;
     const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
 
     drawColorLegend("Exon median read counts per base", mapSvg, exonScale, {x: dmap.config.panels.legend.x + 700, y:dmap.config.panels.legend.y}, true, 5, 2);
-
-
 
     // replace tissue ID with tissue name
     mapSvg.selectAll(".exp-map-ylabel")
@@ -246,10 +246,15 @@ function _customize(tissues, geneModel, dmap, isoTrackViewer, junctionScale, exo
             const isoData = isoformData.filter((iso)=>iso.tissueId==tissue);
             isoTrackViewer.showData(isoData, isoformScale, isoBarScale);
         });
-
-
 }
 
+/**
+ * customizing the junction heat map
+ * @param tissues {List} of the GTEx tissue objects with attr: tissueName
+ * @param geneModel {GeneModel}
+ * @param dmap {DendroHeatmap}
+ * @private
+ */
 function _customizeJunctionMap(tissues, geneModel, dmap){
     const mapSvg = dmap.visualComponents.svg;
     const tooltip = dmap.visualComponents.tooltip;
