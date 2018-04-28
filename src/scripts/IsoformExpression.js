@@ -61,23 +61,25 @@ export function render(type, geneId, domId, toolbarId, urls=getGtexUrls()){
                     exonExpress = parseExonExpression(args[5],  exonsCurated),
                     isoformExpress = parseIsoformExpression(args[6]);
 
-                let tissueTree = "";
-                const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
                 let dmap = undefined;
                 switch(type){
                     case "isoform": {
-                        tissueTree = args[6].clusters.gene; // named wrong, API needs to be fixed later
-                        dmap = new DendroHeatmap(undefined, tissueTree, isoformExpress, "Greys", 5, dmapConfig, true);
+                        const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 100, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
+
+                        let tissueTree = args[6].clusters.tissue;
+                        let isoformTree = args[6].clusters.isoform;
+                        dmap = new DendroHeatmap(isoformTree, tissueTree, isoformExpress, "Greys", 5, dmapConfig, true);
+                        dmap.render(domId, true, true, top, 5);
+
                         break;
                     }
                     case "junction": {
-                        tissueTree = args[4].clusters.tissue;
+                        const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
+
+                        let tissueTree = args[4].clusters.tissue;
                         dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, true);
-                        break;
-                    }
-                    case "exon": {
-                        tissueTree = args[5].clusters.tissue;
-                        dmap = new DendroHeatmap(undefined, tissueTree, exonExpress, "Blues", 5, dmapConfig, true);
+                        dmap.render(domId, false, true, top, 5);
+
                         break;
                     }
                     default: {
@@ -87,10 +89,9 @@ export function render(type, geneId, domId, toolbarId, urls=getGtexUrls()){
 
                 // render the junction expression dendro-heatmap
 
-                dmap.render(domId, false, true, top, 5);
                 $('#spinner').hide();
 
-                if (type == "isoform") return;
+                // if (type == "isoform") return;
 
                 // define the gene model and isoform tracks layout dimensions
                 const modelConfig = {

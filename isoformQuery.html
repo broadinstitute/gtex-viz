@@ -37,15 +37,12 @@
                     <!-- Nav tabs -->
 
                     <ul class="nav nav-tabs" role="tablist">
-                      <li class="nav-item">
-                        <a id="isoform" class="nav-link" role="tab" data-toggle="tab">isoforms</a>
-                      </li>
-                      <li class="nav-item">
-                        <a id="junction" class="nav-link active" role="tab" data-toggle="tab">junctions</a>
-                      </li>
-                      <li class="nav-item">
-                        <a id="exon" class="nav-link" role="tab" data-toggle="tab">exons</a>
-                      </li>
+                        <li class="nav-item">
+                            <a id="junction" class="nav-link active" role="tab" data-toggle="tab">junctions</a>
+                        </li>
+                        <li class="nav-item">
+                            <a id="isoform" class="nav-link" role="tab" data-toggle="tab">isoforms</a>
+                        </li>
                     </ul>
 
                     <!-- Tab panes -->
@@ -82,7 +79,6 @@
             });
             $('#isoform').click(function(){init("isoform")});
             $('#junction').click(function(){init("junction")});
-            $('#exon').click(function(){init("exon")});
 
         });
         function init(type){
