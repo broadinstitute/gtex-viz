@@ -6,7 +6,7 @@
         <link rel="stylesheet" href="build/external/fontawesome-free-5.0.7/web-fonts-with-css/css/fontawesome-all.css">
         <link rel="stylesheet" type="text/css" href="src/css/dendrogram.css">
         <link rel="stylesheet" type="text/css" href="src/css/expressMap.css">
-        <link rel="stylesheet" type="text/css" href="src/css/junctionMap.css">
+        <link rel="stylesheet" type="text/css" href="src/css/isoform.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Franklin:300,400" >
         <link rel="stylesheet" type="text/css" href="build/external/select2-4.0.4/css/select2.min.css">
 
@@ -18,28 +18,47 @@
 
         <div class="row">
             <div class="col-xs-12 col-sm-2">
-                <h4>Isoform, Exon and Junction Expression</h4>
+                <h4>Isoform Expression</h4>
                 <form id="junctionExpressForm" style="padding: 5px;">
                      <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
                         <input id="gene" type="text" class="form-control" placeholder="Enter a gencode ID or gene name" style="font-size:12px; text-transform:uppercase;"></input>
-                         e.g. ACTN1, ACTN3, NDRG4, SLK, ENGASE,
+                         <small>e.g. ACTN1, ACTN3, NDRG4, ENGASE</small>
                      </div>
                 </form>
-                <div class="col-xs-1">
-                    <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
-                </div>
             </div>
             <div id="geneInfoBox" class="col-xs-12 col-sm-10">
                 Gene Info: To be implemented.
             </div>
         </div>
-        <div class="row">
-            <div id="searchResult" class="col-xs-12">
+        <div id="searchResult" class="col-xs-12">
                 <div id="messageBox" style="color: #CB181D;"></div>
-                <div id="expMapToolbar" style="display:none;"></div> <!-- the toolbar Div -->
-                <div id="chart"></div> <!-- the heatmap Div -->
-            </div>
+                <!-- charts -->
+                <div id="isoformNav" style="display:none">
+                    <!-- Nav tabs -->
+
+                    <ul class="nav nav-tabs" role="tablist">
+                      <li class="nav-item">
+                        <a id="isoform" class="nav-link" role="tab" data-toggle="tab">isoforms</a>
+                      </li>
+                      <li class="nav-item">
+                        <a id="junction" class="nav-link active" role="tab" data-toggle="tab">junctions</a>
+                      </li>
+                      <li class="nav-item">
+                        <a id="exon" class="nav-link" role="tab" data-toggle="tab">exons</a>
+                      </li>
+                    </ul>
+
+                    <!-- Tab panes -->
+                    <div class="tab-content">
+                        <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i></div>
+                        <div id="expMapToolbar" style="display:none;"></div> <!-- the toolbar Div -->
+                        <div id="chart">
+                        </div> <!-- the heatmap Div -->
+                    </div>
+                </div>
+
         </div>
+
     </body>
     <script
       src="https://code.jquery.com/jquery-3.2.1.min.js"
@@ -58,16 +77,20 @@
                 if(e.keyCode == 13){
                     // bind the enter key
                     e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
-                    init();
+                    init("junction");
                 }
             });
-            $('#junctionSubmit').click(init);
+            $('#isoform').click(function(){init("isoform")});
+            $('#junction').click(function(){init("junction")});
+            $('#exon').click(function(){init("exon")});
+
         });
-        function init(){
+        function init(type){
             const geneId = $('#gene').val();
             reset();
             $('#spinner').show();
-            IsoformExpression.render(geneId, "chart", "expMapToolbar");
+            $('#isoformNav').show();
+            IsoformExpression.render(type, geneId, "chart", "expMapToolbar");
         }
         function reset(){
             $("#chart").empty();

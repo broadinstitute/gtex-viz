@@ -1,7 +1,7 @@
 "use strict";
 
 export function getGtexUrls(){
-    const host = "https://gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
+    const host = "https://dev.gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
     return {
         // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
         "geneId": host + "reference/geneId?format=json&geneId=",
@@ -11,7 +11,7 @@ export function getGtexUrls(){
         "topInTissue": host + "expression/topExpressedGenes?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
         "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
 
-        "exonExp": host + "expression/medianExonExpression?datasetId=gtex_v7&gencodeId=",
+        "exonExp": host + "expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
         "junctionExp": host + "expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
         "isoformExp": host + "expression/isoformExpression?datasetId=gtex_v7&boxplotDetail=median&gencodeId=",
 

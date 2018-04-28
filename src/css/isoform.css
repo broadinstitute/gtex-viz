@@ -1,3 +1,10 @@
+/*#iso-menu.a {*/
+    /*color: #239db8*/
+/*}*/
+/*#isomenu.item {*/
+    /*!*color: #239db8 !important;*!*/
+    /*cursor: pointer;*/
+/*}*/
 .junc {
     cursor: pointer;
 }

@@ -26,12 +26,13 @@ import IsoformTrackViewer from "./modules/IsoformTrackViewer";
 
 /**
  * Render expression heatmap, gene model, and isoform tracks
+ * @param type {enum} isoform, exon, junction
  * @param geneId {String} a gene name or gencode ID
  * @param domId {String} the DOM ID of the SVG
  * @param toolbarId {String} the DOM ID of the tool bar DIV
  * @param urls {Object} of the GTEx web service urls with attr: geneId, tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
  */
-export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
+export function render(type, geneId, domId, toolbarId, urls=getGtexUrls()){
      json(urls.geneId + geneId)
          .then(function(data){  // get the gene object
             const gene = data.geneId[0];
@@ -60,15 +61,36 @@ export function render(geneId, domId, toolbarId, urls=getGtexUrls()){
                     exonExpress = parseExonExpression(args[5],  exonsCurated),
                     isoformExpress = parseIsoformExpression(args[6]);
 
-                const tissueTree = args[4].clusters.tissue; // based on junction expression
+                let tissueTree = "";
+                const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
+                let dmap = undefined;
+                switch(type){
+                    case "isoform": {
+                        tissueTree = args[6].clusters.gene; // named wrong, API needs to be fixed later
+                        dmap = new DendroHeatmap(undefined, tissueTree, isoformExpress, "Greys", 5, dmapConfig, true);
+                        break;
+                    }
+                    case "junction": {
+                        tissueTree = args[4].clusters.tissue;
+                        dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, true);
+                        break;
+                    }
+                    case "exon": {
+                        tissueTree = args[5].clusters.tissue;
+                        dmap = new DendroHeatmap(undefined, tissueTree, exonExpress, "Blues", 5, dmapConfig, true);
+                        break;
+                    }
+                    default: {
+                        throw "Input type is not recognized";
+                    }
+                }
 
                 // render the junction expression dendro-heatmap
-                const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 20}, 12, 10);
-                const dmap = new DendroHeatmap(undefined, tissueTree, jExpress, "Reds", 5, dmapConfig, true);
+
                 dmap.render(domId, false, true, top, 5);
                 $('#spinner').hide();
 
-                // return;
+                if (type == "isoform") return;
 
                 // define the gene model and isoform tracks layout dimensions
                 const modelConfig = {
