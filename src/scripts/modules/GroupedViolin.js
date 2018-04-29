@@ -119,7 +119,7 @@ export default class GroupedViolin {
                         let y = this.scale.y(yDomain[0]) + 50; // todo: avoid hard-coded values
                         return `translate(${x}, ${y})`
                     })
-                    .text((d) => `${d}: ${info[d]}`);
+                    .text((d) => `${d}: ${parseFloat(parseFloat(info[d]).toPrecision(3)).toExponential()}`);
             }
 
             // defines the this.scale.subx based on this.scale.x
