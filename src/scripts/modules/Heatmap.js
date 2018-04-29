@@ -18,9 +18,10 @@ export default class Heatmap {
      * @param useLog {Boolean} performs log transformation
      * @param colorScheme {String}: recognized terms in Colors:getColorInterpolator
      */
-    constructor(data, useLog=true, colorScheme="YlGnBu", r=2){
+    constructor(data, colorScheme="YlGnBu", useLog=true, base=10, r=2){
         this.data = data;
         this.useLog = useLog;
+        this.base = base;
         this.nullColor = "#e6e6e6";
         this.colorScale = undefined;
         this.xList = undefined;
@@ -52,7 +53,7 @@ export default class Heatmap {
      */
 
     drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=10){
-        drawColorLegend(this.data[0].unit||"Value", dom, this.colorScale, legendConfig, this.useLog, ticks);
+        drawColorLegend(this.data[0].unit||"Value", dom, this.colorScale, legendConfig, this.useLog, ticks, this.base);
     }
     /**
      * draws the heatmap
@@ -192,7 +193,7 @@ export default class Heatmap {
                 .entries(this.data)
                 .map((d) => d.key);
         }
-
+        console.info(this.xList);
         this.xScale = scaleBand()
             .domain(this.xList)
             .range([0, width])

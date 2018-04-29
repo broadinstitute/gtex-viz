@@ -142,8 +142,8 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
     exonObjects.forEach((d) => {
         const exon = exonDict[d.exonId]; // for retrieving exon positions
         // error-checking
-        ["chromEnd", "chromStart"].forEach((d)=>{
-            if (!exon.hasOwnProperty(d)) throw "Fatal Error: parseExonExpression attr not found: " + d;
+        ["chromEnd", "chromStart"].forEach((p)=>{
+            if (!exon.hasOwnProperty(p)) throw "Fatal Error: parseExonExpression attr not found: " + p;
         });
         d.l = exon.chromEnd - exon.chromStart + 1;
         d.value = Number(d.data)/d.l;
@@ -152,8 +152,13 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
         d.x = d.exonId;
         d.y = d.tissueId;
         d.id = d.gencodeId;
+        d.chromStart = exon.chromStart;
     });
-    return exonObjects
+    return exonObjects.sort((a,b)=>{
+        if (a.chromStart<b.chromStart) return -1;
+        if (a.chromStart>b.chromStart) return 1;
+        return 0;
+    }); // sort by genomic location in ascending order
 }
 
 /**
@@ -182,7 +187,13 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
         d.originalValue = Number(d.data);
         d.id = d.gencodeId
     });
-    return junctions;
+
+    // sort by genomic location in ascending order
+    return junctions.sort((a,b)=>{
+        if (a.junctionId>b.junctionId) return 1;
+        else if (a.junctionId<b.junctionId) return -1;
+        return 0;
+    });
 }
 
 export function parseIsoformExpression(data, useLog=true, adjust=1){

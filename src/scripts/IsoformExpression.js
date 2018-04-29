@@ -74,7 +74,7 @@ export function render(type, geneId, domId, toolbarId, urls=getGtexUrls()){
 
                         let tissueTree = args[6].clusters.tissue;
                         let isoformTree = args[6].clusters.isoform;
-                        dmap = new DendroHeatmap(isoformTree, tissueTree, isoformExpress, "Greys", 5, dmapConfig, true);
+                        dmap = new DendroHeatmap(isoformTree, tissueTree, isoformExpress, "Greys", 5, dmapConfig, true, 10);
                         dmap.render(domId, true, true, top, 5);
 
                         break;
@@ -82,7 +82,7 @@ export function render(type, geneId, domId, toolbarId, urls=getGtexUrls()){
                     case "junction": {
                         const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
                         let tissueTree = args[4].clusters.tissue;
-                        dmap = new DendroHeatmap(undefined, tissueTree, junctionExpress, "Reds", 5, dmapConfig, true);
+                        dmap = new DendroHeatmap(undefined, tissueTree, junctionExpress, "Reds", 5, dmapConfig, true, 10);
                         dmap.render(domId, false, true, top, 5);
 
                         break;
@@ -90,7 +90,7 @@ export function render(type, geneId, domId, toolbarId, urls=getGtexUrls()){
                     case "exon": {
                         const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
                         let tissueTree = args[5].clusters.tissue;
-                        dmap = new DendroHeatmap(undefined, tissueTree, exonExpress, "Blues", 5, dmapConfig, true);
+                        dmap = new DendroHeatmap(undefined, tissueTree, exonExpress, "Blues", 5, dmapConfig, true, 2);
                         dmap.render(domId, false, true, top, 5);
 
                         break;
