@@ -405,9 +405,11 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
     $(`#${dashboardId}`).append(`<div id="${id}" class="col-sm-12"></div>`);
 
     // parse the genotypes from the variant ID
-    const ref = variant.variantId.split(/_/)[2];
-    const alt = variant.variantId.split(/_/)[3];
-
+    let ref = variant.variantId.split(/_/)[2];
+    let alt = variant.variantId.split(/_/)[3];
+    const het = ref + alt;
+    ref = ref + ref;
+    alt = alt + alt;
     // d3-queue https://github.com/d3/d3-queue
     let promises = [];
 
@@ -430,20 +432,17 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
                 input = input.concat([
                     {
                         group: group,
-                        // label: "Ref",
-                        label: `${ref}${ref}`,
+                        label: ref.length>2?"ref":ref,
                         values: [0]
                     },
                     {
                         group: group,
-                        label: `${ref}${alt}`,
-                        // label: "Het",
+                        label: het.length>2?"het":het,
                         values: [0]
                     },
                     {
                         group: group,
-                        label: `${alt}${alt}`,
-                        // label: "Alt",
+                        label: alt.length>2?"alt":alt,
                         values: [0]
                     }
                 ])
@@ -455,19 +454,19 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
                 input = input.concat([
                     {
                         group: group,
-                        label: `${ref}${ref}`,
+                        label: ref.length>2?"ref":ref,
                         size: d.homoRefExp.length,
                         values: d.homoRefExp
                     },
                     {
                         group: group,
-                        label: `${ref}${alt}`,
+                        label: het.length>2?"het":het,
                         size: d.heteroExp.length,
                         values: d.heteroExp
                     },
                     {
                         group: group,
-                        label: `${alt}${alt}`,
+                        label: alt.length>2?"alt":alt,
                         size: d.homoAltExp.length,
                         values: d.homoAltExp
                     }
