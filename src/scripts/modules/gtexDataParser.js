@@ -1,7 +1,7 @@
 "use strict";
 
 export function getGtexUrls(){
-    const host = "https://gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
+    const host = "https://dev.gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
     return {
         // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
         "geneId": host + "reference/geneId?format=json&geneId=",
@@ -11,7 +11,7 @@ export function getGtexUrls(){
         "topInTissue": host + "expression/topExpressedGenes?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
         "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
 
-        "exonExp": host + "expression/medianExonExpression?datasetId=gtex_v7&gencodeId=",
+        "exonExp": host + "expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
         "junctionExp": host + "expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
         "isoformExp": host + "expression/isoformExpression?datasetId=gtex_v7&boxplotDetail=median&gencodeId=",
 
@@ -142,8 +142,8 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
     exonObjects.forEach((d) => {
         const exon = exonDict[d.exonId]; // for retrieving exon positions
         // error-checking
-        ["chromEnd", "chromStart"].forEach((d)=>{
-            if (!exon.hasOwnProperty(d)) throw "Fatal Error: parseExonExpression attr not found: " + d;
+        ["chromEnd", "chromStart"].forEach((p)=>{
+            if (!exon.hasOwnProperty(p)) throw "Fatal Error: parseExonExpression attr not found: " + p;
         });
         d.l = exon.chromEnd - exon.chromStart + 1;
         d.value = Number(d.data)/d.l;
@@ -152,8 +152,13 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
         d.x = d.exonId;
         d.y = d.tissueId;
         d.id = d.gencodeId;
+        d.chromStart = exon.chromStart;
     });
-    return exonObjects
+    return exonObjects.sort((a,b)=>{
+        if (a.chromStart<b.chromStart) return -1;
+        if (a.chromStart>b.chromStart) return 1;
+        return 0;
+    }); // sort by genomic location in ascending order
 }
 
 /**
@@ -182,7 +187,13 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
         d.originalValue = Number(d.data);
         d.id = d.gencodeId
     });
-    return junctions;
+
+    // sort by genomic location in ascending order
+    return junctions.sort((a,b)=>{
+        if (a.junctionId>b.junctionId) return 1;
+        else if (a.junctionId<b.junctionId) return -1;
+        return 0;
+    });
 }
 
 export function parseIsoformExpression(data, useLog=true, adjust=1){

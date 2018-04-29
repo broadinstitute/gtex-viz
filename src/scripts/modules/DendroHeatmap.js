@@ -18,7 +18,7 @@ export default class DendroHeatmap {
      * @param config {DendroHeatmapConfig}
      * @param useLog {Boolean}
      */
-    constructor(columnTree, rowTree, heatmapData, color="YlGnBu", r=2, config=new DendroHeatmapConfig(), useLog=true){
+    constructor(columnTree, rowTree, heatmapData, color="YlGnBu", r=2, config=new DendroHeatmapConfig(), useLog=true, base=10){
         this.config = config.get();
         //input evaluations
         columnTree = columnTree===undefined||columnTree.startsWith("Not enough data")?undefined:columnTree;
@@ -33,7 +33,7 @@ export default class DendroHeatmap {
         this.objects = {
             columnTree: this.data.columnTree===undefined? undefined:new Dendrogram(this.data.columnTree, "v"),
             rowTree: this.data.rowTree===undefined?undefined:new Dendrogram(this.data.rowTree, "h"),
-            heatmap: new Heatmap(this.data.heatmap, useLog, color, r)
+            heatmap: new Heatmap(this.data.heatmap, color, useLog, base, r)
         };
         this.visualComponents = {
             tooltip: new Tooltip("tooltip", false), // TODO: remove hard-coded tooltip DOM ID

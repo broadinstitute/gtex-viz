@@ -34,7 +34,7 @@ export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
             const tissues = parseTissues(args[0]);
             const expression = parseMedianTPM(args[1], true);
             const config = new DendroHeatmapConfig("chart", window.innerWidth);
-            const dmap = new DendroHeatmap(tissueTree, geneTree, expression, "YlGnBu", 2, config);
+            const dmap = new DendroHeatmap(tissueTree, geneTree, expression, "YlGnBu", 2, config, true, 10);
             dmap.render(domId);
             // customization for GTEx
             const tissueDict = tissues.reduce((a, d)=>{
