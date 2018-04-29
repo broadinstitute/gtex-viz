@@ -176,38 +176,67 @@ export function setColorScale(data, colors="YlGnBu", dmin = 0) {
  * @param scale {Object} D3 scale of the color
  * @param config {Object} with attr: x, y
  * @param useLog {Boolean}
+ * @param orientation {enum} h or v, i.e. horizontal or vertical
  * @param cell
  */
-export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:50}){
+export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:50}, orientation="h"){
 
-    // const data = [0].concat(scale.quantiles()); // add 0 to the list of values
-    const data = scale.ticks(ticks).slice(1); // why this doesn't provide consistent number of ticks??
-    // legend title
-    dom.append("text")
-        .attr("class", "color-legend")
-        .text(title)
-        .attr("x", -10)
-        .attr("text-anchor", "end")
-        .attr("y", cell.h)
-        .attr("transform", `translate(${config.x}, ${config.y})`);
+    const data = scale.ticks(ticks).slice(1); // why doesn't this provide consistent number of ticks??
+
 
     // legend groups
     const legends = dom.append("g").attr("transform", `translate(${config.x}, ${config.y})`)
                     .selectAll(".legend").data(data);
 
     const g = legends.enter().append("g").classed("legend", true);
-    g.append("rect")
-        .attr("x", (d, i) => cell.w*i)
-        .attr("y", 5)
-        .attr("width", cell.w)
-        .attr("height", cell.h)
-        .style("fill", scale);
 
-    g.append("text")
-        .attr("class", "color-legend")
-        .text((d) => useLog?(Math.pow(base, d)-1).toPrecision(2):d.toPrecision(2)) // TODO: assuming log is base 10
-        .attr("x", (d, i) => cell.w * i)
-        .attr("y", 0);
+    if (orientation == 'h'){
+         // legend title
+        dom.append("text")
+            .attr("class", "color-legend")
+            .text(title)
+            .attr("x", -10)
+            .attr("text-anchor", "end")
+            .attr("y", cell.h)
+            .attr("transform", `translate(${config.x}, ${config.y})`);
+
+        // the color legend
+        g.append("rect")
+            .attr("x", (d, i) => cell.w*i)
+            .attr("y", 5)
+            .attr("width", cell.w)
+            .attr("height", cell.h)
+            .style("fill", scale);
+
+        g.append("text")
+            .attr("class", "color-legend")
+            .text((d) => useLog?(Math.pow(base, d)-1).toPrecision(2):d.toPrecision(2))
+            .attr("x", (d, i) => cell.w * i)
+            .attr("y", 0);
+    } else {
+         // legend title
+        dom.append("text")
+            .attr("class", "color-legend")
+            .text(title)
+            .attr("x", 5)
+            .attr("text-anchor", "start")
+            .attr("y", 0)
+            .attr("transform", `translate(${config.x}, ${config.y + cell.h * data.length})rotate(90)`);
+
+        g.append("rect")
+            .attr("x", 0)
+            .attr("y", (d, i) => cell.h*i)
+            .attr("width", cell.w)
+            .attr("height", cell.h)
+            .style("fill", scale);
+
+        g.append("text")
+            .attr("class", "color-legend")
+            .text((d) => useLog?(Math.pow(base, d)-1).toPrecision(2):d.toPrecision(2))
+            .attr("x", 15)
+            .attr("y", (d, i) => cell.h * i + (cell.h/2));
+    }
+
 
 
 }

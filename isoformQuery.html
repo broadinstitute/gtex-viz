@@ -28,6 +28,8 @@
             </div>
             <div id="geneInfoBox" class="col-xs-12 col-sm-10">
                 Gene Info: To be implemented.
+                <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i></div>
+
             </div>
         </div>
         <div id="searchResult" class="col-xs-12">
@@ -41,13 +43,15 @@
                             <a id="junction" class="nav-link active" role="tab" data-toggle="tab">junctions</a>
                         </li>
                         <li class="nav-item">
+                            <a id="exon" class="nav-link" role="tab" data-toggle="tab">exons</a>
+                        </li>
+                        <li class="nav-item">
                             <a id="isoform" class="nav-link" role="tab" data-toggle="tab">isoforms</a>
                         </li>
                     </ul>
 
                     <!-- Tab panes -->
                     <div class="tab-content">
-                        <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i></div>
                         <div id="expMapToolbar" style="display:none;"></div> <!-- the toolbar Div -->
                         <div id="chart">
                         </div> <!-- the heatmap Div -->
@@ -78,6 +82,7 @@
                 }
             });
             $('#isoform').click(function(){init("isoform")});
+            $('#exon').click(function(){init("exon")});
             $('#junction').click(function(){init("junction")});
 
         });

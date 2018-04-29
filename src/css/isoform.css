@@ -5,6 +5,10 @@
     /*!*color: #239db8 !important;*!*/
     /*cursor: pointer;*/
 /*}*/
+
+.nav-link{
+    cursor: pointer;
+}
 .junc {
     cursor: pointer;
 }

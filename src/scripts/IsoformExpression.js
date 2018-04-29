@@ -81,9 +81,16 @@ export function render(type, geneId, domId, toolbarId, urls=getGtexUrls()){
                     }
                     case "junction": {
                         const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
-
                         let tissueTree = args[4].clusters.tissue;
                         dmap = new DendroHeatmap(undefined, tissueTree, junctionExpress, "Reds", 5, dmapConfig, true);
+                        dmap.render(domId, false, true, top, 5);
+
+                        break;
+                    }
+                    case "exon": {
+                        const dmapConfig = new DendroHeatmapConfig(domId, window.innerWidth, 150, 0, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
+                        let tissueTree = args[5].clusters.tissue;
+                        dmap = new DendroHeatmap(undefined, tissueTree, exonExpress, "Blues", 5, dmapConfig, true);
                         dmap.render(domId, false, true, top, 5);
 
                         break;
@@ -127,7 +134,7 @@ export function render(type, geneId, domId, toolbarId, urls=getGtexUrls()){
                 isoformTrackViewer.render(false, trackViewerG);
 
                 // customization
-                _addColorLegendsForModel(junctionColorScale, exonColorScale, isoformColorScale);
+                _addColorLegendsForGeneModel(dmap, junctionColorScale, exonColorScale, isoformColorScale);
                 _createToolbar(toolbarId, dmap, dmap.config.id);
                 _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
 
@@ -189,10 +196,7 @@ function _createToolbar(barId, dmap, domId){
  */
 function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionScale, exonScale, isoformScale, junctionData, exonData, isoformData){
     const mapSvg = dmap.visualComponents.svg;
-    const tooltip = dmap.visualComponents.tooltip;
     const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
-
-    drawColorLegend("Exon median read counts per base", mapSvg, exonScale, {x: dmap.config.panels.legend.x + 700, y:dmap.config.panels.legend.y}, true, 5, 2);
 
     // replace tissue ID with tissue name
     mapSvg.selectAll(".exp-map-ylabel")
@@ -336,5 +340,20 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
         .on('mouseout', function(d){
             select(this).classed("highlighted", false);
         });
+
+}
+
+function _addColorLegendsForGeneModel(dmap, junctionScale, exonScale, isoformScale){
+    const mapSvg = dmap.visualComponents.svg;
+    let X = dmap.objects.heatmap.xScale.range()[1] + 50;
+    const Y = 30;
+    const inc = 50;
+    drawColorLegend("Exon read counts per base", mapSvg.select("#geneModel"), exonScale, {x: X, y:Y}, true, 5, 2, {h:20, w:10}, 'v');
+
+    X = X + inc;
+    drawColorLegend("Junction read counts", mapSvg.select("#geneModel"), junctionScale, {x: X, y:Y}, true, 5, 10, {h:20, w:10}, 'v');
+
+    // X = X + inc;
+    // drawColorLegend("Isoform TPM", mapSvg.select("#geneModel"), isoformScale, {x: X, y:Y}, true, 5, 10, {h:20, w:10}, 'v');
 
 }
