@@ -16,7 +16,7 @@ export default class DendroHeatmapConfig {
     constructor(id="chart", rootW=window.innerWidth, leftPanelW=100, topPanelH=100, margin={top:50, right:250, bottom:170, left:10}, cellH=12, adjust=10) {
         this.id = id;
         this.margin = margin;
-        this.rootW = rootW;
+        this.rootW = rootW<1000?1000:rootW;
 
         this.leftTreePanel = { // the row dendrogram panel
             x: margin.left,
@@ -36,7 +36,7 @@ export default class DendroHeatmapConfig {
             x: margin.left + leftPanelW,
             y: margin.top,
             h: topPanelH - adjust,
-            w: rootW - (margin.left + leftPanelW + margin.right), // hard-coded values?
+            w: this.rootW - (margin.left + leftPanelW + margin.right), // hard-coded values?
             id: "topTree"
         };
 
