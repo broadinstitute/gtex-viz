@@ -156,7 +156,7 @@ function _customizeViolinPlot(plot, dom){
             .text((d) => d);
     });
 
-    dom.selectAll(".violin-size-axis").classed("hide", true);
+    dom.selectAll(".violin-size-axis").classed("violin-size-axis-hide", true).classed("violin-size-axis", false);
 
 }
 
