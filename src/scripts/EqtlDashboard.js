@@ -401,7 +401,7 @@ function _parseVariant(vjson){
  */
 function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
     // display gene-variant pair names
-    const id = `boxplot${i}`;
+    const id = `violinplot${i}`;
     $(`#${dashboardId}`).append(`<div id="${id}" class="col-sm-12"></div>`);
 
     // parse the genotypes from the variant ID
