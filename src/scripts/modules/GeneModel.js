@@ -179,7 +179,7 @@ export default class GeneModel {
                 .attr("cy", (d) => d.cy)
                 .merge(juncDots)
                 .attr("r", 4)
-                .style("fill", "rgb(239, 59, 44)");
+                .style("fill", "rgb(86, 98, 107)");
 
             /***** rendering full gene model exons */
             const exonRects = dom.selectAll(".exon")
