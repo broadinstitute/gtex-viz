@@ -17,6 +17,12 @@
     font-size: 8px;
 }
 
+.violin-size-axis-hide text {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    fill: #239db8;
+    font-size: 8px;
+}
+
 .violin-x-axis-hide line, .violin-x-axis-hide path{
     fill: none;
     stroke: Silver;
@@ -24,7 +30,7 @@
     shape-rendering: crispEdges;
 }
 
-.violin-size-axis.hide line, .violin-size-axis.hide path{
+.violin-size-axis-hide line, .violin-size-axis-hide path{
     fill: none;
     stroke: Silver;
     stroke-width: 0;

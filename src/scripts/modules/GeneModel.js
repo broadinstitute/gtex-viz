@@ -2,6 +2,8 @@
 /*
 This class defines a gene model (or isoform), rendering the exons and junctions of a given gene. The model is rendered based on
 genomic positions, regardless of the strand and transcriptional direction.
+
+TODO: extract out the simple isoform structure rendering?
  */
 
 import {curveCardinal, line} from "d3-shape";
@@ -11,16 +13,15 @@ import {scaleLinear} from "d3-scale";
 export default class GeneModel {
     /**
      * constructor
-     * @param gene {Object}
+     * @param gene {Object} with attributes: strand, transcriptId, geneSymbol
      * @param exons {List} of exon objects with attributes: chrom, chromStart, chromEnd, length, exonNumber, exonId
-     * @param exonsCurated {List} of exon objects in the final gene model. This is pretty specific to GTEx.
-     *        If this list isn't available for your data, then just pass in the same exon list again.
+     * @param exonsCurated {List} of exon objects in the final gene model. This is pretty specific to GTEx. If this list isn't available for your data, then just pass in the same exon list again.
      * @param junctions {List} of junction objects with attributes: chrom, chromStart, chromEnd, junctionId
      * @param isIsoform {Boolean}
      */
 
-    /** NOTE: the exonNumber in exons & exonsCurated are not mappable
-     *  To map exons of curated gene model to the original model, use genomic positions.
+    /** NOTE: the exonNumber in exons & exonsCurated don't refer to the same exons (at least this is the case in GTEx)
+     *  To ensure correct exon mapping of the curated gene model to the original model, here we use genomic position.
      */
     constructor (gene, exons, exonsCurated, junctions, isIsoform=false){
         this.gene = gene;

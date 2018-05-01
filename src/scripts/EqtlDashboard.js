@@ -156,7 +156,7 @@ function _customizeViolinPlot(plot, dom){
             .text((d) => d);
     });
 
-    dom.selectAll(".violin-size-axis").classed("hide", true);
+    dom.selectAll(".violin-size-axis").classed("violin-size-axis-hide", true).classed("violin-size-axis", false);
 
 }
 
@@ -401,7 +401,7 @@ function _parseVariant(vjson){
  */
 function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
     // display gene-variant pair names
-    const id = `boxplot${i}`;
+    const id = `violinplot${i}`;
     $(`#${dashboardId}`).append(`<div id="${id}" class="col-sm-12"></div>`);
 
     // parse the genotypes from the variant ID
