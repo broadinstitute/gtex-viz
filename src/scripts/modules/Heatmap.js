@@ -4,6 +4,9 @@ import {nest} from "d3-collection";
 import {transition} from "d3-transition";
 
 import {getColors, setColorScale, drawColorLegend} from "./Colors";
+import Toolbar from "./Toolbar";
+import Tooltip from "./Tooltip";
+
 export default class Heatmap {
     /* data is a json with the following attributes:
         x: the x label
@@ -30,9 +33,45 @@ export default class Heatmap {
         this.yScale = undefined;
         this.r = r;
         this.colorScheme = colorScheme;
+
+        this.toolbar = undefined;
+        this.tooltip = undefined;
     }
 
     /**
+     * Create the toolbar panel
+     * @param domId {String} the toolbar's dom ID
+     * @param tooltip {Tooltip}
+     * @returns {Toolbar}
+     */
+
+    createToolbar(domId, tooltip){
+        this.toolbar = new Toolbar(domId, tooltip);
+        return this.toolbar;
+    }
+
+     /**
+     * Create the tooltip object
+     * @param domId {String} the tooltip's dom ID
+     * @returns {Tooltip}
+     */
+    createTooltip(domId){
+        this.tooltip = new Tooltip(domId);
+        select(`#${domId}`).classed('heatmap-tooltip', true);
+        return this.tooltip;
+    }
+
+    /**
+     * draw color legend for the heat map
+     * @param dom {Selection} a d3 selection object
+     * @param legendConfig {Object} with attr: x, y
+     */
+
+    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=10){
+        drawColorLegend(this.data[0].unit||"Value", dom, this.colorScale, legendConfig, this.useLog, ticks, this.base);
+    }
+
+     /**
      * redraws the heatmap: when the xlist and ylist are changed, redraw the heatmap
      * @param dom {Selection} a d3 selection object
      * @param xList {List} a list of x labels
@@ -46,15 +85,6 @@ export default class Heatmap {
         this.draw(dom, dimensions, angle);
     }
 
-    /**
-     * draw color legend for the heat map
-     * @param dom {Selection} a d3 selection object
-     * @param legendConfig {Object} with attr: x, y
-     */
-
-    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=10){
-        drawColorLegend(this.data[0].unit||"Value", dom, this.colorScale, legendConfig, this.useLog, ticks, this.base);
-    }
     /**
      * draws the heatmap
      * @param dom {Selection}
@@ -193,7 +223,6 @@ export default class Heatmap {
                 .entries(this.data)
                 .map((d) => d.key);
         }
-        console.info(this.xList);
         this.xScale = scaleBand()
             .domain(this.xList)
             .range([0, width])

@@ -32,8 +32,8 @@
     </head>
 
     <body class="container-fluid" style="margin-top:20px;">
-        <div id="downloadTempDiv" style="display:none;"></div> <!-- a hidden div for svg download, a temp solution-->
-        <div id="tooltip" class="exp-map-tooltip"></div> <!--a hidden div for the mouseover tooltip-->
+        <!--<div id="downloadTempDiv" style="display:none;"></div> &lt;!&ndash; a hidden div for svg download, a temp solution&ndash;&gt;-->
+        <!--<div id="tooltip" class="exp-map-tooltip"></div> &lt;!&ndash;a hidden div for the mouseover tooltip&ndash;&gt;-->
 
         <div>
             <h4>Batch Gene Expression Query</h4>
@@ -63,8 +63,8 @@
 
             <div id="searchResult" class="col-xs-12 col-md-10">
                 <div class="row">
-                    <div id="expMapToolbar" style="display:none;" class="col-xs-12"></div> <!-- the toolbar Div -->
-                    <div id="chart" class="col-xs-12"></div> <!-- the heatmap Div -->
+                    <!--<div id="expMapToolbar" style="display:none;" class="col-xs-12"></div> &lt;!&ndash; the toolbar Div &ndash;&gt;-->
+                    <div id="heatmapRoot" class="col-xs-12"></div> <!-- the heatmap Div -->
                     <div id="violinRoot" class="col-xs-12"></div>
                 </div>
 
@@ -89,7 +89,8 @@
     <script>
         $(document).ready(batchGeneQuery);
         function batchGeneQuery(){
-            const domId = "chart";
+            const heatmapRootId = "heatmapRoot";
+            const violinRootId = "violinRoot";
             $('#searchExample').click(function(){
                 const examples = "FOO,ACTN3, SLK, ENSG00000121879.3, NDRG4, ENSG00000141510.11, ENSG00000039068.14, ENSG00000107485.11, ENSG00000095015.5, ENSG00000141027.16, ENSG00000065526.6, TP53";
                 $('#genes').val(examples);
@@ -101,7 +102,8 @@
                     alert("Must provide at least one gene");
                     throw "Gene input error";
                 }
-                BatchGeneExpression.searchById(glist, [], domId, "expMapToolbar", "messageBox");
+                // BatchGeneExpression.searchById(glist, [], domId, "expMapToolbar", "messageBox");
+                BatchGeneExpression.searchById(glist, [], heatmapRootId, violinRootId);
                 return false;
             });
         }

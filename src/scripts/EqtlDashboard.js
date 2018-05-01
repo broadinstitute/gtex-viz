@@ -9,7 +9,7 @@ import GroupedViolin from "./modules/GroupedViolin";
  * 1. Fetch and organize tissue sites into groups.
  * 2. Build the two-level tissue site menu.
  * 3. Bind the search function to the submit button.
- * ToDo: perhaps the dom elements in the form could be accessed without specified dom IDs?
+ * ToDo: perhaps the dom elements in the form could be accessed without specifying the dom IDs?
  * @param dashboardId {String}: eQTL result <div> ID
  * @param menuId {String} tissue menu <div> ID
  * @param pairId {String} gene-variant <textarea> ID

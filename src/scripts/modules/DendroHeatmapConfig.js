@@ -4,8 +4,6 @@
  */
 export default class DendroHeatmapConfig {
     /**
-     *
-     * @param id {String} the name of the dom ID
      * @param mainPanelW {Number}
      * @param leftPanelW {Integer}, set to 0 if there's no left panel
      * @param topPanelH {Integer}, set to 0 if there's no top panel
@@ -13,8 +11,7 @@ export default class DendroHeatmapConfig {
      * @param cellH {Integer}
      * @param adjust {Integer}, adjusted spacing between the heatmap and the dendrogram
      */
-    constructor(id="chart", rootW=window.innerWidth, leftPanelW=100, topPanelH=100, margin={top:50, right:250, bottom:170, left:10}, cellH=12, adjust=10) {
-        this.id = id;
+    constructor(rootW=window.innerWidth, leftPanelW=100, topPanelH=100, margin={top:50, right:250, bottom:170, left:10}, cellH=12, adjust=10) {
         this.margin = margin;
         this.rootW = rootW<1000?1000:rootW;
 
@@ -62,7 +59,6 @@ export default class DendroHeatmapConfig {
 
     get(){
         return {
-            id: this.id,
             margin: this.margin,
             cell: this.cell,
             w: this.rootW,
