@@ -199,7 +199,8 @@ export default class GeneModel {
                 .attr("width", (d) => d.w)
                 .attr("height", 15) // TODO: remove hard-coded values
                 .attr("x", (d) => d.x)
-                .merge(exonRects);
+                .merge(exonRects)
+                .style("cursor", "default");
 
             // model info text label
             dom.append("text")
@@ -239,9 +240,8 @@ export default class GeneModel {
             .attr("height", 15) // TODO: remove hard-coded values
             .attr("x", (d) => d.x)
             .merge(exonRects2)
-            .style("fill", "#eee");
-
-
+            .style("fill", "#eee")
+            .style("cursor", "default");
 
         /***** rendering text labels */
 

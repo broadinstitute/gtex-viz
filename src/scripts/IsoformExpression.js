@@ -159,15 +159,20 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
 
                 switch(type){
+                    case "isoform": {
+                        _customizeIsoformMap(tissues, geneModel, dmap);
+                        break;
+                    }
                     case "junction": {
                         _customizeJunctionMap(tissues, geneModel, dmap);
                         break;
                     }
                     case "exon": {
                         _customizeExonMap(tissues, geneModel, dmap);
+                        break;
                     }
                     default: {
-
+                        throw "unrecognized type";
                     }
                 }
             }).catch(function(err){console.error(err)});
@@ -258,6 +263,56 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
         });
 }
 
+/**
+ * customizing the isoform heat map
+ * @param tissues {List} of the GTEx tissue objects with attr: tissueName
+ * @param geneModel {GeneModel}
+ * @param dmap {DendroHeatmap}
+
+ * @private
+ */
+function _customizeIsoformMap(tissues, geneModel, dmap){
+    const mapSvg = dmap.visualComponents.svg;
+    const tooltip = dmap.tooltip;
+    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
+
+    // define the isoform heatmap cells' mouse events
+    // note: to reference the element inside the function (e.g. d3.select(this)) here we must use a normal anonymous function.
+    mapSvg.selectAll(".exp-map-cell")
+        .on("mouseover", function(d){
+            const selected = select(this); // 'this' refers to the d3 DOM object
+            dmap.objects.heatmap.cellMouseover(selected);
+            const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName; // get tissue name or ID
+            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.id}<br/> ${d.unit}: ${parseFloat(d.originalValue.toExponential()).toPrecision(3)}`)
+        })
+        .on("mouseout", function(d){
+            mapSvg.selectAll("*").classed('highlighted', false);
+            tooltip.hide();
+        });
+
+    // isoform labels
+    mapSvg.selectAll(".exp-map-xlabel")
+        .on("mouseover", function(d){
+            select(this).classed("highlighted", true);
+
+            // highlight the isoform track
+            const id = d.replace(".", "_"); // dot is not an allowable character, so it has been replaced with an underscore
+            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the class name?
+        })
+        .on("mouseout", function(){
+            select(this).classed("highlighted", false);
+            mapSvg.selectAll(".exon-curated").classed("highlighted", false);
+        });
+}
+
+/**
+ * customizing the exon heat map
+ * @param tissues {List} of the GTEx tissue objects with attr: tissueName
+ * @param geneModel {GeneModel}
+ * @param dmap {DendroHeatmap}
+
+ * @private
+ */
 function _customizeExonMap(tissues, geneModel, dmap){
     const mapSvg = dmap.visualComponents.svg;
     const tooltip = dmap.tooltip;
