@@ -614,7 +614,7 @@ function _changeViolinXLabel(dom, tissueDict){
 /**
  * Add the toolbar
  * @param dmap {DendroHeatmap}
- * @param ids {Dictionary} of dome IDs with a list of buttons
+ * @param ids {Dictionary} of dom IDs with buttons
  * @param tissueDict {Dictionary} of tissue objects indexed by tissue ID
  * @param queryTissues {List} of user-defined query tissues
  * @param urls {Dictionary} of GTEx web service URLs

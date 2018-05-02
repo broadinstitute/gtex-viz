@@ -13,9 +13,6 @@
     </head>
 
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
-        <div id="downloadTempDiv" style="display:none;"></div> <!-- a hidden div for svg download, a temp solution-->
-        <div id="tooltip" class="exp-map-tooltip"></div> <!--a hidden div for the mouseover tooltip-->
-
         <div class="row">
             <div class="col-xs-12 col-sm-2">
                 <h4>Splicing</h4>
@@ -40,21 +37,20 @@
 
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item">
+                            <a id="isoform" class="nav-link" role="tab" data-toggle="tab">isoforms</a>
+                        </li>
+                        <li class="nav-item">
                             <a id="junction" class="nav-link active" role="tab" data-toggle="tab">junctions</a>
                         </li>
                         <li class="nav-item">
                             <a id="exon" class="nav-link" role="tab" data-toggle="tab">exons</a>
                         </li>
-                        <li class="nav-item">
-                            <a id="isoform" class="nav-link" role="tab" data-toggle="tab">isoforms</a>
-                        </li>
                     </ul>
 
                     <!-- Tab panes -->
                     <div class="tab-content">
-                        <div id="expMapToolbar" style="display:none;"></div> <!-- the toolbar Div -->
-                        <div id="chart">
-                        </div> <!-- the heatmap Div -->
+                        <!--<div id="expMapToolbar" style="display:none;"></div> &lt;!&ndash; the toolbar Div &ndash;&gt;-->
+                        <div id="vizRoot"></div> <!-- the heatmap/gene model Div -->
                     </div>
                 </div>
 
@@ -78,7 +74,7 @@
                 if(e.keyCode == 13){
                     // bind the enter key
                     e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
-                    init("junction");
+                    init("isoform");
                 }
             });
             $('#isoform').click(function(){init("isoform")});
@@ -91,11 +87,13 @@
             reset();
             $('#spinner').show();
             $('#isoformNav').show();
-            IsoformExpression.render(type, geneId, "chart", "expMapToolbar");
+            IsoformExpression.render(type, geneId, "vizRoot");
         }
         function reset(){
-            $("#chart").empty();
-            $("#expMapToolbar").empty();
+            $("#vizRoot").empty();
+            // always reset the active tab to the isoform
+            $(".nav-link").removeClass("active");
+            $("#isoform").addClass("active");
         }
     </script>
 
