@@ -6,10 +6,10 @@ import {keys, values} from "d3-collection";
 import {getGtexUrls,
         getTissueClusters,
         getGeneClusters,
+        parseGenes,
         parseMedianTPM,
         parseTissues,
         parseMedianExpression,
-        makeJsonForPlotly,
         parseGeneExpressionForViolin
 } from "./modules/gtexDataParser";
 import {colorChart} from "./modules/Colors";
@@ -25,40 +25,40 @@ import GroupedViolin from "./modules/GroupedViolin";
  * @param toolbarId
  * @param urls
  */
-export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
-    // - gets static data
-    const tissueTree = getTissueClusters('top50Cerebellum_AD'),
-          geneTree = getGeneClusters('top50Cerebellum_AD');
-    Promise.all([json(urls.tissue), tsv(urls.mayoGeneExp)])
-        .then(function(args){
-            const tissues = parseTissues(args[0]);
-            const expression = parseMedianTPM(args[1], true);
-            const config = new DendroHeatmapConfig("chart", window.innerWidth);
-            const dmap = new DendroHeatmap(tissueTree, geneTree, expression, "YlGnBu", 2, config, true, 10);
-            dmap.render(domId);
-            // customization for GTEx
-            const tissueDict = tissues.reduce((a, d)=>{
-                if(!d.hasOwnProperty("tissueId")) throw "tissue has no attr tissue_id";
-                a[d.tissueId] = d;
-                return a;
-            }, {});
-            const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
-                if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
-                a[d.gencodeId]=d;
-                return a;
-            }, {});
-            _customizeLabels(dmap, tissueDict, geneDict);
-            _addTissueColors(dmap, tissueDict);
-            _customizeMouseEvents(dmap, tissueDict, geneDict);
-            _createToolbar(domId, toolbarId, undefined, dmap, tissueDict, [], urls);
-            $('#spinner').hide(); // TODO: remove hard-coded dom ID
-        })
-        .catch(function(err){throw err});
-}
+// export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
+//     // - gets static data
+//     const tissueTree = getTissueClusters('top50Cerebellum_AD'),
+//           geneTree = getGeneClusters('top50Cerebellum_AD');
+//     Promise.all([json(urls.tissue), tsv(urls.mayoGeneExp)])
+//         .then(function(args){
+//             const tissues = parseTissues(args[0]);
+//             const expression = parseMedianTPM(args[1], true);
+//             const config = new DendroHeatmapConfig("chart", window.innerWidth);
+//             const dmap = new DendroHeatmap(tissueTree, geneTree, expression, "YlGnBu", 2, config, true, 10);
+//             dmap.render(domId);
+//             // customization for GTEx
+//             const tissueDict = tissues.reduce((a, d)=>{
+//                 if(!d.hasOwnProperty("tissueId")) throw "tissue has no attr tissue_id";
+//                 a[d.tissueId] = d;
+//                 return a;
+//             }, {});
+//             const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
+//                 if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
+//                 a[d.gencodeId]=d;
+//                 return a;
+//             }, {});
+//             _customizeLabels(dmap, tissueDict, geneDict);
+//             _addTissueColors(dmap, tissueDict);
+//             _customizeMouseEvents(dmap, tissueDict, geneDict);
+//             _createToolbar(domId, toolbarId, undefined, dmap, tissueDict, [], urls);
+//             $('#spinner').hide(); // TODO: remove hard-coded dom ID
+//         })
+//         .catch(function(err){throw err});
+// }
 
-export function reset(ids){
-    ids.forEach((d)=>{$(`#${d}`).empty()});
-}
+// export function reset(ids){
+//     ids.forEach((d)=>{$(`#${d}`).empty()});
+// }
 
 /**
  * Create the tissue (dataset) dropdown menu using select2
@@ -99,20 +99,140 @@ export function createDatasetMenu(domId, urls = getGtexUrls()){
  * @param urls {Dictionary} of GTEx web services urls
  * @param useFilters {Boolean} if the filter is applied, and if undefined, it means no filter
  */
-export function renderTopExpressed(tissueId, domId, toolbarId, infoId, urls=getGtexUrls(), useFilters=true){
-    // getting data
+export function renderTopExpressed(tissueId, heatmapRootId, violinRootId, urls=getGtexUrls(), useFilters=true){
+    // getting the top expressed genes in tissueId
     const url = useFilters?urls.topInTissueFiltered:urls.topInTissue;
+    const $filterInfoDiv = $(`#filterInfo`).length==0?$('<div/>').attr('id', 'filterInfo').appendTo('body'):$(`#filterInfo`);
+    if(useFilters) $filterInfoDiv.html("Mitochondrial genes are excluded.<br/>");
+    else $filterInfoDiv.html("Mitochondrial genes are included.<br/>");
+
     json(url+ tissueId)
         .then(function(results){ // top 50 expressed genes in tissueId
             const topGeneList = results.topExpressedGene.map(d=>d.gencodeId);
             const callback = function(){
                 _styleSelectedTissue(tissueId);
             };
-            searchById(topGeneList, [tissueId], domId, toolbarId, infoId, urls, useFilters, callback);
+            searchById(topGeneList, [tissueId], heatmapRootId, violinRootId, urls, useFilters, callback);
         })
         .catch(function(err){
             console.error(err);
         });
+}
+
+export function searchById(glist, tlist, heatmapRootId, violinRootId, urls=getGtexUrls(), useFilters=undefined, callback=undefined){
+    $('#spinner').show();
+    $(`#${heatmapRootId}`).empty(); // clear the root DOM content
+    const MAX = 50;
+    const $message = $('<div/>').appendTo(`#${heatmapRootId}`);
+    let message = "";
+    if (glist.length > MAX) {
+        message = `Warning: Too many genes. Input list truncated to the first ${MAX}. <br/>`;
+        glist = glist.slice(0, MAX);
+    }
+    Promise.all([json(urls.tissue), json(urls.geneId+glist.join(","))])
+       .then(function(args){
+           const tissues = parseTissues(args[0]);
+
+           // genes
+           const genes = parseGenes(args[1]);
+           // error-checking
+           message += _validateGenes(heatmapRootId, genes, glist);
+           $message.html(message);
+
+           // get median expression data and clusters of the input genes in all tissues
+           json(urls.medExpById + genes.map((g)=>g.gencodeId).join(","))
+               .then(function(eData){
+                   $('#spinner').hide();
+                    _renderDendroHeatmap(genes, tissues, tlist, eData, heatmapRootId, violinRootId, urls, useFilters);
+               })
+               .catch(function(err){console.error(err)});
+       })
+       .catch(function(err){console.error(err)});
+}
+
+function _validateGenes(domId, genes, input){
+    let message = "";
+
+    if (genes.length == 0) message = "Fatal Error: the gene list is empty.<br/>";
+    else {
+        if (genes.length < input.length){
+            let allIds = [];
+            genes.forEach((g)=>{
+                // compile a list of all known IDs
+                allIds.push(g.gencodeId);
+                allIds.push(g.geneSymbolUpper);
+                allIds.push(g.ensemblId);
+            });
+            let missingGenes = input.filter((g)=>!allIds.includes(g.toLowerCase())&&!allIds.includes(g.toUpperCase()));
+            message = `Warning: Not all genes are found: ${missingGenes.join(",")}<br/>`;
+        }
+    }
+    return message;
+}
+
+function _renderDendroHeatmap(genes, tissues, queryTissues, data, heatmapRootId, violinRootId, urls=getGtexUrls(), useFilters=undefined){
+    const expression = parseMedianExpression(data); // the parser determines the orientations of the heatmap
+    const ids = {
+        root: heatmapRootId,
+        violin: violinRootId,
+        svg: `${heatmapRootId}-svg`,
+        tooltip: "heatmapTooltip",
+        toolbar: "heatmapToolbar",
+        clone: "heatmapClone",
+        buttons: {
+            save: "heatmapSave",
+            filter: "heatmapFilter",
+            sort: "heatmapSortTissue",
+            cluster: "heatmapClusterTissue"
+        }
+    };
+    // build the dom components
+    if($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($('body'));
+    ["toolbar", "clone"].forEach((key)=>{
+        $('<div/>').attr("id", ids[key]).appendTo($(`#${ids.root}`));
+    });
+    // jQuery
+    let WIDTH = $(`#${ids.root}`).parent().width()==0?window.innerWidth:$(`#${ids.root}`).parent().width();
+    const config = new DendroHeatmapConfig(WIDTH);
+    const dmap = new DendroHeatmap(data.clusters.tissue, data.clusters.gene, expression, "YlGnBu", 2, config);
+
+    // heatmap rendering
+    if (genes.length < 3){
+        // too few genes to cluster
+        dmap.render(ids.root, ids.svg, true, false)
+    }
+    else {dmap.render(ids.root, ids.svg)}
+
+    /***** customization for GTEx expression heatmap *****/
+    // tooltip
+    dmap.createTooltip(ids.tooltip);
+
+    // Change row labels to tissue names //
+    const tissueDict = tissues.reduce((a, d)=>{
+        if (!d.hasOwnProperty("tissueId")) throw "tissue has not attr tissue_id";
+        a[d.tissueId] = d;
+        return a;
+    }, {});
+    select("#" + dmap.config.panels.main.id).selectAll(".exp-map-xlabel")
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
+
+    // Change column labels to gene symbols //
+    const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
+        if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
+        a[d.gencodeId]=d;
+        return a;
+    }, {});
+    select("#" + dmap.config.panels.main.id).selectAll(".exp-map-ylabel")
+        .text((d) => geneDict[d]===undefined?d:geneDict[d].geneSymbol);
+
+    // Add tissue color boxes //
+    _addTissueColors(dmap, tissueDict);
+
+    // Add a toolbar
+    _addToolBar(dmap, ids, tissueDict, queryTissues, urls, useFilters);
+
+    // mouse events
+    _customizeMouseEvents(dmap, tissueDict, geneDict)
 }
 
 /**
@@ -126,7 +246,7 @@ export function renderTopExpressed(tissueId, domId, toolbarId, infoId, urls=getG
  * @param useFilters {Boolean} indicating whether gene filter is applied, or use undefined for no filtering
  * @returns {*}
  */
-export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGtexUrls(), useFilters=undefined, callback=undefined){
+export function searchByIdOld(glist, tlist, domId, toolbarId, infoId, urls = getGtexUrls(), useFilters=undefined, callback=undefined){
     reset([domId, toolbarId, infoId, "violinRoot"]);
     $('#spinner').show();
     if (select(`#${domId}`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
@@ -212,7 +332,6 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
         .catch(function(err){throw err});
 }
 
-
 /**
  * For top expressed query, highlight the query tissue label
  * @param tissueId {String} the tissue ID
@@ -221,22 +340,6 @@ export function searchById(glist, tlist, domId, toolbarId, infoId, urls = getGte
 function _styleSelectedTissue(tissueId){
     selectAll(".exp-map-xlabel").filter((d)=>d==tissueId)
         .classed("query", true);
-}
-
-/**
- * Customizes the GTEx gene expression heatmap labels
- * @param dmap {DendroHeatmap}
- * @param tissueDict {Dictionary} of GTEx tissue objects indexed by tissue ID
- * @param geneDict {Dictionary} of GTEx genes indexed by gencode ID
- */
-function _customizeLabels(dmap, tissueDict, geneDict){
-    /***** Change row labels to tissue names *****/
-    select("#" + dmap.config.panels.main.id).selectAll(".exp-map-xlabel")
-        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
-
-    /***** Change column labels to gene symbols *****/
-    select("#" + dmap.config.panels.main.id).selectAll(".exp-map-ylabel")
-        .text((d) => geneDict[d]===undefined?d:geneDict[d].geneSymbol);
 }
 
 /**
@@ -291,7 +394,7 @@ function _addTissueColors(dmap, tissueDict){
  */
 function _customizeMouseEvents(dmap, tissueDict, geneDict) {
     const svg = dmap.visualComponents.svg;
-    const tooltip = dmap.visualComponents.tooltip;
+    const tooltip = dmap.tooltip;
     dmap.data.external = [];
     const cellMouseover = function(d) {
         const selected = select(this);
@@ -334,7 +437,9 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         .on("mouseover", cellMouseover)
         .on("mouseout", cellMouseout);
 
-    svg.selectAll(".exp-map-ylabel").on("click", ylabelClick);
+    svg.selectAll(".exp-map-ylabel")
+        .style("cursor", "pointer")
+        .on("click", ylabelClick);
 }
 
 /**
@@ -392,8 +497,8 @@ function _renderViolinHelper(data, dmap, tissueDict){
     // error-checking the required DOM elements
     const rootId = `#${id.root}`;
     const tooltipId = `#${id.tooltip}`;
-    if ($(rootId).length == 0) throw "Violin Plot Error: rootId does not exist.";
-    if ($(tooltipId).length == 0) $('<div/>').attr("id", id.tooltip).appendTo($('body')); // create it if not already present on the html document
+    if ($(rootId).length == 0) throw 'Violin Plot Error: rootId does not exist.';
+    if ($(tooltipId).length == 0) $('<div/>').attr('id', id.tooltip).appendTo($('body')); // create it if not already present on the html document
 
     // clear previously rendered plot
     select(rootId).selectAll("*").remove();
@@ -507,98 +612,76 @@ function _changeViolinXLabel(dom, tissueDict){
 }
 
 /**
- * create the toolbar
- * @param domId {String} the dendropheatmap's DIV ID
- * @param barId {String} the toolbar DOM ID
- * @param infoId {String} the message box DOM ID
+ * Add the toolbar
  * @param dmap {DendroHeatmap}
- * @param tissueDict {Dictionary} of tissues indexed by tissue ID
- * @param queryTissues {List} of tissue IDs
- * @param urls {Object} of GTEx web service urls
- * @param useFilter {Boolean} indicating whether gene filter is on or off, and when the value is undefined, it means no filter
- * TODO: refactor this function with the new Toolbar.js
+ * @param ids {Dictionary} of dom IDs with buttons
+ * @param tissueDict {Dictionary} of tissue objects indexed by tissue ID
+ * @param queryTissues {List} of user-defined query tissues
+ * @param urls {Dictionary} of GTEx web service URLs
+ * @param useFilters {Boolean} whether the data uses gene list filters
+ * @private
  */
-function _createToolbar(domId, barId, infoId, dmap, tissueDict, queryTissues, urls=getGtexUrls(), useFilters=undefined){
-    // fontawesome reference: http://fontawesome.io/examples/
-    // jQuery syntax
-    $(`#${barId}`).show();
+function _addToolBar(dmap, ids, tissueDict, queryTissues=[], urls=getGtexUrls(), useFilters=undefined){
+    let toolbar = dmap.createToolbar(ids.toolbar, dmap.tooltip);
+    toolbar.createDownloadButton(ids.buttons.save, ids.svg, `${ids.root}-save.svg`, ids.clone);
 
-    let $barDiv = $("<div/>").addClass("btn-group btn-group-sm").appendTo(`#${barId}`);
+    const __addFilter = ()=>{
+        // so far this is only applicable for topExpressed gene heatmap
+        const id = ids.buttons.filter;
+        toolbar.createButton(id, 'fa-filter');
+        select(`#${id}`)
+            .on("click", function(){
+                // toggle the applied filter
+                renderTopExpressed(queryTissues[0], ids.root, ids.violin, urls, !useFilters);
+            })
+            .on("mouseover", function(){
+                if(useFilters) toolbar.tooltip.show("Include Mitochondrial Genes");
+                else toolbar.tooltip.show("Exclude Mitochondrial Genes");
+            })
+            .on("mouseout", function(){
+                toolbar.tooltip.hide();
+            });
+    };
 
-    if (useFilters !== undefined){ // so far only applicable for topExpressed gene heatmap
-        const id0 = "filterOptions";
-        let $button0 = $("<a/>").attr("id", id0)
-            .addClass("btn btn-default").appendTo($barDiv);
-        $("<i/>").addClass("fa fa-filter").appendTo($button0);
+    const __addSortTissues = ()=>{
+        const id = ids.buttons.sort;
+        toolbar.createButton(id, 'fa-sort-alpha-down');
+        select(`#${id}`)
+            .on("click", function(){
+                // hides the tissue dendrogram
+                select("#" + dmap.config.panels.top.id).style("display", "None");
+                // sort tissues
+                let xlist = dmap.objects.heatmap.xList.sort();
+                _sortTissues(xlist, dmap, tissueDict);
+            })
+            .on("mouseover", function(){
+                toolbar.tooltip.show("Sort Tissues Alphabetically");
+            })
+            .on("mouseout", function(){
+                toolbar.tooltip.hide();
+            });
 
-        select(`#${id0}`)
-        .on("click", function(){
-            // toggle the applied filter
-            renderTopExpressed(queryTissues[0], domId, barId, infoId, urls, !useFilters);
-        })
-        .on("mouseover", function(){
-            if(useFilters) dmap.visualComponents.tooltip.show("Include Mitochondrial Genes");
-            else dmap.visualComponents.tooltip.show("Exclude Mitochondrial Genes");
-        })
-        .on("mouseout", function(){
-            dmap.visualComponents.tooltip.hide();
-        });
-    }
+    };
 
-    const id1 = "sortTissues";
-    let $button1 = $("<a/>").attr("id", id1)
-        .addClass("btn btn-default").appendTo($barDiv);
-    $("<i/>").addClass("fa fa-sort-alpha-down").appendTo($button1); // a fontawesome icon
-
-    select(`#${id1}`)
-        .on("click", function(){
-            // hides the tissue dendrogram
-            select("#" + dmap.config.panels.top.id).style("display", "None");
-            // sort tissues
-            let xlist = dmap.objects.heatmap.xList.sort();
-            _sortTissues(xlist, dmap, tissueDict);
-        })
-        .on("mouseover", function(){
-            dmap.visualComponents.tooltip.show("Sort Tissues Alphabetically");
-        })
-        .on("mouseout", function(){
-            dmap.visualComponents.tooltip.hide();
-        });
-
-    const id2 = "clusterTissues";
-    let $button2 = $("<a/>").attr("id", id2)
-        .addClass("btn btn-default").appendTo($barDiv);
-    $("<i/>").addClass("fa fa-code-branch").appendTo($button2);
-
-    select(`#${id2}`)
+    const __addClusterTissues = ()=>{
+        const id = ids.buttons.cluster;
+        toolbar.createButton(id, `fa-code-branch`);
+        select(`#${id}`)
         .on("click", function(){
             select("#" + dmap.config.panels.top.id).style("display", "Block");  // shows the tissue dendrogram
             let xlist = dmap.objects.columnTree.xScale.domain();
             _sortTissues(xlist, dmap, tissueDict);
         })
         .on("mouseover", function(){
-            dmap.visualComponents.tooltip.show("Cluster Tissues");
+            toolbar.tooltip.show("Cluster Tissues");
         })
         .on("mouseout", function(){
-            dmap.visualComponents.tooltip.hide();
+            toolbar.tooltip.hide();
         });
-
-    const id3 = "expMapDownload";
-    let $button3 = $("<a/>").attr("id", id3)
-        .addClass("btn btn-default").appendTo($barDiv);
-    $("<i/>").addClass("fa fa-save").appendTo($button3);
-
-    select(`#${id3}`)
-        .on("click", function(){
-            let svgObj = $($($(`${"#" +dmap.config.id} svg`))[0]); // jQuery dependent
-            downloadSvg(svgObj, "heatmap.svg", "downloadTempDiv");
-        })
-        .on("mouseover", function(){
-            dmap.visualComponents.tooltip.show("Download Heatmap");
-        })
-        .on("mouseout", function(){
-            dmap.visualComponents.tooltip.hide();
-        });
+    };
+    if (useFilters !== undefined) __addFilter();
+    __addSortTissues();
+    __addClusterTissues();
 }
 
 /**

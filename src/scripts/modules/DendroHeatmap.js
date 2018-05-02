@@ -5,6 +5,7 @@ import DendroHeatmapConfig from "./DendroHeatmapConfig";
 import Dendrogram from "./Dendrogram";
 import Heatmap from "./Heatmap";
 import Tooltip from "./Tooltip";
+import Toolbar from "./Toolbar";
 
 export default class DendroHeatmap {
 
@@ -36,24 +37,51 @@ export default class DendroHeatmap {
             heatmap: new Heatmap(this.data.heatmap, color, useLog, base, r)
         };
         this.visualComponents = {
-            tooltip: new Tooltip("tooltip", false), // TODO: remove hard-coded tooltip DOM ID
+            // tooltip: new Tooltip("tooltip", false), // TODO: remove hard-coded tooltip DOM ID
             svg: undefined,
             columnTree: undefined,
             rowTree: undefined
         };
+
+        this.tooltip = undefined;
+        this.toolbar = undefined;
+    }
+
+    /**
+     * Create the toolbar panel
+     * @param domId {String} the toolbar's dom ID
+     * @param tooltip {Tooltip}
+     * @returns {Toolbar}
+     */
+
+    createToolbar(domId, tooltip){
+        this.toolbar = new Toolbar(domId, tooltip);
+        return this.toolbar;
+    }
+
+     /**
+     * Create the tooltip object
+     * @param domId {String} the tooltip's dom ID
+     * @returns {Tooltip}
+     */
+    createTooltip(domId){
+        this.tooltip = new Tooltip(domId);
+        select(`#${domId}`).classed('heatmap-tooltip', true);
+        return this.tooltip;
     }
 
     /**
      * Render the dendrograms and corresponding heatmap
-     * @param domId {String} the DOM id of the SVG
+     * @param domId {String} the parent DOM id of the SVG
+     * @param svgId {String} of the SVG
      * @param showColumnTree {Boolean} render the column dendrogram
      * @param showRowTree {Boolean} render the row dendrogram
      * @param legendPos {Enum} where to place the color legend: bottom, top
      * @param ticks {Integer} number of bins of the color legend
      */
-    render(domId, showColumnTree=true, showRowTree=true, legendPos="top", ticks=10){
+    render(domId, svgId, showColumnTree=true, showRowTree=true, legendPos="top", ticks=10){
         this._updateConfig(legendPos);
-        this.visualComponents.svg = createSvg(domId, this.config.w, this.config.h, this.config.margin);
+        this.visualComponents.svg = createSvg(domId, this.config.w, this.config.h, this.config.margin, svgId);
 
         let xlist = undefined,
             ylist = undefined;

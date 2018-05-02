@@ -37,13 +37,6 @@
         <div>
             <h4>Top Expressed Genes</h4>
         </div>
-        <!--mayo data set-->
-        <div id="external-datasets">
-            <ul>
-                <li id="dataset2" class="link">Mayo cerebellum AD.</li>
-            </ul>
-        </div>
-
         <!-- the tissue menu -->
         <div class="row">
             <div class="col-xs-12 col-md-6 col-lg-4">
@@ -62,8 +55,7 @@
         </div>
         <div id="messageBox" style="color:#4eb3d3;"></div>
         <div id="expMapToolbar" style="display:none;"></div> <!-- the toolbar Div -->
-        <div id="chart"></div> <!-- the heatmap Div -->
-        <!--<div id="boxplot"></div> &lt;!&ndash; the boxplot DIV &ndash;&gt;-->
+        <div id="heatmapRoot"></div> <!-- the heatmap Div -->
         <div id="violinRoot"></div>
 
     </body>
@@ -84,12 +76,7 @@
         });
         $("#datasetSelector").change(function(){
             const tissueId = $(this).val();
-            BatchGeneExpression.renderTopExpressed(tissueId, "chart", "expMapToolbar", "messageBox");
-        });
-
-        // mayo
-        $("#dataset2").click(function(){
-            BatchGeneExpression.renderMayo("chart", "expMapToolbar", "messageBox");
+            BatchGeneExpression.renderTopExpressed(tissueId, "heatmapRoot", "violinRoot");
         });
 
 

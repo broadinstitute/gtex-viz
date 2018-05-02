@@ -41,6 +41,8 @@ export default class GroupedViolin {
         this._sanityCheck(data);
         this.data = data;
         this.groupInfo = groupInfo;
+        this.toolbar = undefined;
+        this.tooltip = undefined;
     }
 
     /**
@@ -253,8 +255,8 @@ export default class GroupedViolin {
      * @returns {Toolbar}
      */
 
-    createToolbar(domId, tooltip=undefined){
-        if (tooltip === undefined) tooltip = this.createTooltip(domId);
+    createToolbar(domId, tooltip){
+        // if (tooltip === undefined) tooltip = this.createTooltip(domId);
         this.toolbar = new Toolbar(domId, tooltip);
         return this.toolbar;
     }

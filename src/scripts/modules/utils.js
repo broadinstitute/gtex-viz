@@ -8,10 +8,22 @@
  */
 
 import {select} from "d3-selection";
-export function createSvg(id, width, height, margin){
+
+/**
+ *
+ * @param id {String} the parent dom ID
+ * @param width {Numeric}
+ * @param height {Numeric}
+ * @param margin {Object} with attr: left, top
+ * @param svgId {String}
+ * @returns {*}
+ */
+export function createSvg(id, width, height, margin, svgId=undefined){
+    if (svgId===undefined) svgId=`${id}-svg`;
     return select("#"+id).append("svg")
         .attr("width", width)
         .attr("height", height)
+        .attr("id", svgId)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
 }

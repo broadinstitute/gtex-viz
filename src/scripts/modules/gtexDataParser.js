@@ -43,6 +43,13 @@ export function getGeneClusters(dataset){
     return trees[dataset];
 }
 
+export function parseGenes(data){
+    const attr = "geneId";
+    if(!data.hasOwnProperty(attr)) throw "Gene web service parsing error";
+    return data[attr];
+}
+
+
 export function parseTissues(data){
     const attr = "tissueInfo";
     if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseTissues input error.";
