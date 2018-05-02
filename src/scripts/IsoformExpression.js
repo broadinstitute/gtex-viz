@@ -276,6 +276,20 @@ function _customizeExonMap(tissues, geneModel, dmap){
             mapSvg.selectAll("*").classed('highlighted', false);
             tooltip.hide();
         });
+
+    // exon labels
+    mapSvg.selectAll(".exp-map-xlabel")
+        .on("mouseover", function(d){
+            select(this).classed("highlighted", true);
+
+            // highlight the exon on the gene model
+            const exonNumber = d.split("_")[1];
+            mapSvg.selectAll(`.exon${exonNumber}`).classed("highlighted", true);
+        })
+        .on("mouseout", function(){
+            select(this).classed("highlighted", false);
+            mapSvg.selectAll(".exon").classed("highlighted", false);
+        });
 }
 
 /**
