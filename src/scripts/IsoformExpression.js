@@ -225,6 +225,7 @@ function _createToolbar(dmap, ids){
 function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer, junctionScale, exonScale, isoformScale, junctionData, exonData, isoformData){
     const mapSvg = dmap.visualComponents.svg;
     const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
+    const tooltip = dmap.tooltip;
 
     //replace tissue ID with tissue name
     mapSvg.selectAll(".exp-map-xlabel")
