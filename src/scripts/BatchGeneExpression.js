@@ -608,7 +608,17 @@ function _changeViolinXLabel(dom, tissueDict){
 
 }
 
-function _addToolBar(dmap, ids, tissueDict, queryTissues, urls=getGtexUrls(), useFilters=undefined){
+/**
+ * Add the toolbar
+ * @param dmap {DendroHeatmap}
+ * @param ids {Dictionary} of dome IDs with a list of buttons
+ * @param tissueDict {Dictionary} of tissue objects indexed by tissue ID
+ * @param queryTissues {List} of user-defined query tissues
+ * @param urls {Dictionary} of GTEx web service URLs
+ * @param useFilters {Boolean} whether the data uses gene list filters
+ * @private
+ */
+function _addToolBar(dmap, ids, tissueDict, queryTissues=[], urls=getGtexUrls(), useFilters=undefined){
     let toolbar = dmap.createToolbar(ids.toolbar, dmap.tooltip);
     toolbar.createDownloadButton(ids.buttons.save, ids.svg, `${ids.root}-save.svg`, ids.clone);
 
