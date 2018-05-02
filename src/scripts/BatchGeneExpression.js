@@ -437,7 +437,9 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
         .on("mouseover", cellMouseover)
         .on("mouseout", cellMouseout);
 
-    svg.selectAll(".exp-map-ylabel").on("click", ylabelClick);
+    svg.selectAll(".exp-map-ylabel")
+        .style("cursor", "pointer")
+        .on("click", ylabelClick);
 }
 
 /**
