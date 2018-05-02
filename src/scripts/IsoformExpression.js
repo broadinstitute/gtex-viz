@@ -57,7 +57,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     const tissues = parseTissues(args[0]),
                         exons = parseExons(args[1]), // exons of the full gene model
                         exonsCurated = parseExons(args[2]), // exons of the curated gene model
-                        isoforms = parseIsoforms(args[3]),
+                        isoforms = parseIsoforms(args[3]), // by default, the parser sorts the isoforms in descending order by length
                         isoformExons = parseIsoformExons(args[3]), // exons of the individual isoforms
                         junctions = parseJunctions(args[4]),
                         junctionExpress = parseJunctionExpression(args[4]),
@@ -94,6 +94,12 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         let isoformTree = args[6].clusters.isoform;
                         dmap = new DendroHeatmap(isoformTree, tissueTree, isoformExpress, "Greys", 5, dmapConfig, true, 10);
                         dmap.render(ids.root, ids.svg, true, true, top, 5);
+                        isoforms.sort((a, b)=>{
+                            const orders = dmap.objects.columnTree.xScale.domain(); // the leaf order of the isoform dendrogram
+                            if (orders.indexOf(a.transcriptId) < orders.indexOf(b.transcriptId)) return -1;
+                            if (orders.indexOf(a.transcriptId) > orders.indexOf(b.transcriptId)) return 1;
+                            return 0;
+                        });
                         break;
                     }
                     case "junction": {
