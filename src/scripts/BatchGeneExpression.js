@@ -232,6 +232,7 @@ function _renderDendroHeatmap(genes, tissues, queryTissues, data, heatmapRootId,
     _addToolBar(dmap, ids, tissueDict, queryTissues, urls, useFilters);
 
     // mouse events
+    _customizeMouseEvents(dmap, tissueDict, geneDict)
 }
 
 /**
