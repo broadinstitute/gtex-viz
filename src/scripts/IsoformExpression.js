@@ -163,6 +163,9 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         _customizeJunctionMap(tissues, geneModel, dmap);
                         break;
                     }
+                    case "exon": {
+                        _customizeExonMap(tissues, geneModel, dmap);
+                    }
                     default: {
 
                     }
@@ -255,6 +258,26 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
         });
 }
 
+function _customizeExonMap(tissues, geneModel, dmap){
+    const mapSvg = dmap.visualComponents.svg;
+    const tooltip = dmap.tooltip;
+    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
+
+    // define the exon heatmap cells' mouse events
+    // note: to reference the element inside the function (e.g. d3.select(this)) here we must use a normal anonymous function.
+    mapSvg.selectAll(".exp-map-cell")
+        .on("mouseover", function(d){
+            const selected = select(this); // 'this' refers to the d3 DOM object
+            dmap.objects.heatmap.cellMouseover(selected);
+            const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName; // get tissue name or ID
+            tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.unit}: ${parseFloat(d.originalValue.toExponential()).toPrecision(3)}`)
+        })
+        .on("mouseout", function(d){
+            mapSvg.selectAll("*").classed('highlighted', false);
+            tooltip.hide();
+        });
+}
+
 /**
  * customizing the junction heat map
  * @param tissues {List} of the GTEx tissue objects with attr: tissueName
@@ -268,14 +291,13 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
     const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
 
     // define the junction heatmap cells' mouse events
-    // note: If you need to reference the element inside the function (e.g. d3.select(this)) you will need to use a normal anonymous function.
     mapSvg.selectAll(".exp-map-cell")
         .on("mouseover", function(d){
             const selected = select(this);
             dmap.objects.heatmap.cellMouseover(selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName; // get tissue name or ID
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0];
-            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName}<br/> Median read counts: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName}<br/> ${d.unit}: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);

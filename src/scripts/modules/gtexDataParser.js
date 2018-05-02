@@ -160,6 +160,7 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
         d.y = d.tissueId;
         d.id = d.gencodeId;
         d.chromStart = exon.chromStart;
+        d.unit = d.unit + " per base";
     });
     return exonObjects.sort((a,b)=>{
         if (a.chromStart<b.chromStart) return -1;
