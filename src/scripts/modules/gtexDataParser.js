@@ -219,6 +219,21 @@ export function parseIsoformExpression(data, useLog=true, adjust=1){
     return data[attr];
 }
 
+export function parseIsoformExpressionTranspose(data, useLog=true, adjust=1){
+    const attr = "isoformExpression";
+    if(!data.hasOwnProperty(attr)) throw("parseIsoformExpression input error");
+    // parse GTEx isoform median TPM
+    data[attr].forEach((d) => {
+        d.value = useLog?Math.log10(Number(d.data + adjust)):Number(d.data);
+        d.originalValue = Number(d.data);
+        d.y = d.transcriptId;
+        d.x = d.tissueId;
+        d.id = d.gencodeId;
+    });
+
+    return data[attr];
+}
+
 export function parseMedianExpression(data, useLog=true){
     const attr = "medianGeneExpression";
     if(!data.hasOwnProperty(attr)) throw "parseMedianExpression input error.";

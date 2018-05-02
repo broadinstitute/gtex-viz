@@ -10,6 +10,7 @@ import {getGtexUrls,
         parseExons,
         parseJunctions,
         parseIsoforms,
+        parseIsoformExpressionTranspose,
         parseIsoformExons,
         parseJunctionExpression,
         parseExonExpression,
@@ -17,7 +18,7 @@ import {getGtexUrls,
 } from "./modules/gtexDataParser";
 
 import {setColorScale, getColors, drawColorLegend} from "./modules/Colors";
-import {downloadSvg} from "./modules/utils";
+// import {downloadSvg} from "./modules/utils";
 
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
@@ -61,8 +62,8 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         isoformExons = parseIsoformExons(args[3]), // exons of the individual isoforms
                         junctions = parseJunctions(args[4]),
                         junctionExpress = parseJunctionExpression(args[4]),
-                        exonExpress = parseExonExpression(args[5],  exonsCurated),
-                        isoformExpress = parseIsoformExpression(args[6]);
+                        exonExpress = parseExonExpression(args[5],  exonsCurated);
+                    let isoformExpress = parseIsoformExpression(args[6]);
 
                     // define all the color scales
                     const exonColorScale = setColorScale(exonExpress.map(d=>d.value), "Blues");
@@ -89,13 +90,28 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 switch(type){
                     case "isoform": {
                         const dmapConfig = new DendroHeatmapConfig(window.innerWidth, 150, 100, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
-
                         let tissueTree = args[6].clusters.tissue;
                         let isoformTree = args[6].clusters.isoform;
                         dmap = new DendroHeatmap(isoformTree, tissueTree, isoformExpress, "Greys", 5, dmapConfig, true, 10);
                         dmap.render(ids.root, ids.svg, true, true, top, 5);
                         isoforms.sort((a, b)=>{
                             const orders = dmap.objects.columnTree.xScale.domain(); // the leaf order of the isoform dendrogram
+                            if (orders.indexOf(a.transcriptId) < orders.indexOf(b.transcriptId)) return -1;
+                            if (orders.indexOf(a.transcriptId) > orders.indexOf(b.transcriptId)) return 1;
+                            return 0;
+                        });
+                        break;
+                    }
+                    case "isoformTransposed": {
+                        const dmapConfig = new DendroHeatmapConfig(window.innerWidth, 150, 100, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
+                        let tissueTree = args[6].clusters.tissue;
+                        let isoformTree = args[6].clusters.isoform;
+                        let isoformExpressT = parseIsoformExpressionTranspose(args[6]);
+
+                        dmap = new DendroHeatmap(tissueTree, isoformTree, isoformExpressT, "Greys", 5, dmapConfig, true, 10);
+                        dmap.render(ids.root, ids.svg, true, true, top, 5);
+                        isoforms.sort((a, b)=>{
+                            const orders = dmap.objects.rowTree.yScale.domain(); // the leaf order of the isoform dendrogram
                             if (orders.indexOf(a.transcriptId) < orders.indexOf(b.transcriptId)) return -1;
                             if (orders.indexOf(a.transcriptId) > orders.indexOf(b.transcriptId)) return 1;
                             return 0;
@@ -162,18 +178,25 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 // customization
                 _addColorLegendsForGeneModel(dmap, junctionColorScale, exonColorScale, isoformColorScale);
                 _createToolbar(dmap, ids);
-                _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
 
                 switch(type){
                     case "isoform": {
+                        _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         _customizeIsoformMap(tissues, geneModel, dmap);
+
+                        break;
+                    }
+                    case "isoformTransposed": {
+                        _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         break;
                     }
                     case "junction": {
+                        _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         _customizeJunctionMap(tissues, geneModel, dmap);
                         break;
                     }
                     case "exon": {
+                        _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         _customizeExonMap(tissues, geneModel, dmap);
                         break;
                     }
@@ -197,6 +220,102 @@ function _createToolbar(dmap, ids){
     let toolbar = dmap.createToolbar(ids.toolbar, dmap.tooltip);
     toolbar.createDownloadButton(ids.buttons.save, ids.svg, `${ids.root}-save.svg`, ids.clone);
 }
+
+
+function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer, junctionScale, exonScale, isoformScale, junctionData, exonData, isoformData){
+    const mapSvg = dmap.visualComponents.svg;
+    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
+
+    //replace tissue ID with tissue name
+    mapSvg.selectAll(".exp-map-xlabel")
+        .text((d)=>tissueDict[d]!==undefined?tissueDict[d].tissueName:d)
+        .style("cursor", "pointer");
+
+    // add tissue bands
+    // TODO: refactor
+    mapSvg.select("#heatmap").selectAll(".exp-map-xcolor")
+        .data(dmap.objects.heatmap.xScale.domain())
+        .enter()
+        .append("rect")
+        .attr("x", (d)=>dmap.objects.heatmap.xScale(d))
+        .attr("y", dmap.objects.heatmap.yScale.range()[1] + 5)
+        .attr("width", dmap.objects.heatmap.xScale.bandwidth())
+        .attr("height", 5)
+        .classed("exp-map-xcolor", true)
+        .style("fill", (d)=>tissueDict[d].colorHex);
+
+    mapSvg.select("#heatmap").selectAll(".leaf-color")
+        .data(dmap.objects.heatmap.xScale.domain())
+        .enter()
+        .append("rect")
+        .attr("x", (d)=>dmap.objects.heatmap.xScale(d))
+        .attr("y", dmap.objects.heatmap.yScale.range()[0] - 10)
+        .attr("width", dmap.objects.heatmap.xScale.bandwidth())
+        .attr("height", 5)
+        .classed("leaf-color", true)
+        .style("fill", (d)=>tissueDict[d].colorHex);
+
+    // define tissue label mouse events
+    mapSvg.selectAll(".exp-map-xlabel")
+        .on("mouseover", function(){
+             select(this)
+                .classed('highlighted', true);
+
+        })
+        .on("mouseout", function(){
+             select(this)
+                .classed('highlighted', false);
+
+        })
+        .on("click", function(d){
+            mapSvg.selectAll(".exp-map-xlabel").classed("clicked", false);
+            select(this).classed("clicked", true);
+            const tissue = d;
+            const j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
+            const ex = exonData.filter((e)=>e.tissueId==tissue); // exon data
+            geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissue);
+            geneModel.addData(mapSvg.select("#geneModel"), j, ex, junctionScale, exonScale);
+
+            // isoforms update
+
+            const isoBarScale = scaleLinear()
+                .domain([min(isoformData.map(d=>d.value)), max(isoformData.map(d=>d.value))])
+                .range([0, -100]);
+            const isoData = isoformData.filter((iso)=>iso.tissueId==tissue);
+            isoTrackViewer.showData(isoData, isoformScale, isoBarScale);
+        });
+
+
+
+    // define the isoform heatmap cells' mouse events
+    // note: to reference the element inside the function (e.g. d3.select(this)) here we must use a normal anonymous function.
+    mapSvg.selectAll(".exp-map-cell")
+        .on("mouseover", function(d){
+            const selected = select(this); // 'this' refers to the d3 DOM object
+            dmap.objects.heatmap.cellMouseover(selected);
+            const tissue = tissueDict[d.x] === undefined?d.x:tissueDict[d.x].tissueName; // get tissue name or ID
+            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.id}<br/> ${d.unit}: ${parseFloat(d.originalValue.toExponential()).toPrecision(3)}`)
+        })
+        .on("mouseout", function(d){
+            mapSvg.selectAll("*").classed('highlighted', false);
+            tooltip.hide();
+        });
+
+    // isoform labels
+    mapSvg.selectAll(".exp-map-ylabel")
+        .on("mouseover", function(d){
+            select(this).classed("highlighted", true);
+
+            // highlight the isoform track
+            const id = d.replace(".", "_"); // dot is not an allowable character, so it has been replaced with an underscore
+            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the class name?
+        })
+        .on("mouseout", function(){
+            select(this).classed("highlighted", false);
+            mapSvg.selectAll(".exon-curated").classed("highlighted", false);
+        });
+}
+
 
 
 /**
@@ -288,7 +407,7 @@ function _customizeIsoformMap(tissues, geneModel, dmap){
         .on("mouseover", function(d){
             const selected = select(this); // 'this' refers to the d3 DOM object
             dmap.objects.heatmap.cellMouseover(selected);
-            const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName; // get tissue name or ID
+            const tissue = tissueDict[d.y] === undefined?d.y:tissueDict[d.y].tissueName; // get tissue name or ID
             tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.id}<br/> ${d.unit}: ${parseFloat(d.originalValue.toExponential()).toPrecision(3)}`)
         })
         .on("mouseout", function(d){
