@@ -56,8 +56,8 @@
 }
 
 .exon-curated.highlighted {
-    stroke: rgb(84, 219, 241);
-    stroke-width: 5px;
+    stroke: rgb(210, 17, 27);
+    stroke-width: 2px;
 }
 
 /*temporary solution*/

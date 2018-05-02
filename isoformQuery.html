@@ -39,6 +39,9 @@
                         <li class="nav-item">
                             <a id="isoform" class="nav-link" role="tab" data-toggle="tab">isoforms</a>
                         </li>
+                         <li class="nav-item">
+                            <a id="isoform2" class="nav-link" role="tab" data-toggle="tab">isoforms (transposed)</a>
+                        </li>
                         <li class="nav-item">
                             <a id="junction" class="nav-link active" role="tab" data-toggle="tab">junctions</a>
                         </li>
@@ -78,6 +81,7 @@
                 }
             });
             $('#isoform').click(function(){init("isoform")});
+            $('#isoform2').click(function(){init("isoformTransposed")});
             $('#exon').click(function(){init("exon")});
             $('#junction').click(function(){init("junction")});
 
