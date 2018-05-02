@@ -102,7 +102,7 @@ export function createDatasetMenu(domId, urls = getGtexUrls()){
 export function renderTopExpressed(tissueId, heatmapRootId, violinRootId, urls=getGtexUrls(), useFilters=true){
     // getting the top expressed genes in tissueId
     const url = useFilters?urls.topInTissueFiltered:urls.topInTissue;
-    const $filterInfoDiv = $(`#filterInfo`).length==0?$('<div/>').attr('id', 'filterInfo').appendTo(`#${heatmapRootId}`):$(`#filterInfo`);
+    const $filterInfoDiv = $(`#filterInfo`).length==0?$('<div/>').attr('id', 'filterInfo').appendTo('body'):$(`#filterInfo`);
     if(useFilters) $filterInfoDiv.html("Mitochondrial genes are excluded.<br/>");
     else $filterInfoDiv.html("Mitochondrial genes are included.<br/>");
 
@@ -181,7 +181,9 @@ function _renderDendroHeatmap(genes, tissues, queryTissues, data, heatmapRootId,
         clone: "heatmapClone",
         buttons: {
             save: "heatmapSave",
-            filter: "heatmapFilter"
+            filter: "heatmapFilter",
+            sort: "heatmapSortTissue",
+            cluster: "heatmapClusterTissue"
         }
     };
     // build the dom components
@@ -610,22 +612,63 @@ function _addToolBar(dmap, ids, tissueDict, queryTissues, urls=getGtexUrls(), us
     let toolbar = dmap.createToolbar(ids.toolbar, dmap.tooltip);
     toolbar.createDownloadButton(ids.buttons.save, ids.svg, `${ids.root}-save.svg`, ids.clone);
 
-    if (useFilters !== undefined){ // so far this is only applicable for topExpressed gene heatmap
+    const __addFilter = ()=>{
+        // so far this is only applicable for topExpressed gene heatmap
         const id = ids.buttons.filter;
-        let $button = toolbar.createButton(id, 'fa-filter');
+        toolbar.createButton(id, 'fa-filter');
+        select(`#${id}`)
+            .on("click", function(){
+                // toggle the applied filter
+                renderTopExpressed(queryTissues[0], ids.root, ids.violin, urls, !useFilters);
+            })
+            .on("mouseover", function(){
+                if(useFilters) toolbar.tooltip.show("Include Mitochondrial Genes");
+                else toolbar.tooltip.show("Exclude Mitochondrial Genes");
+            })
+            .on("mouseout", function(){
+                toolbar.tooltip.hide();
+            });
+    };
+
+    const __addSortTissues = ()=>{
+        const id = ids.buttons.sort;
+        toolbar.createButton(id, 'fa-sort-alpha-down');
+        select(`#${id}`)
+            .on("click", function(){
+                // hides the tissue dendrogram
+                select("#" + dmap.config.panels.top.id).style("display", "None");
+                // sort tissues
+                let xlist = dmap.objects.heatmap.xList.sort();
+                _sortTissues(xlist, dmap, tissueDict);
+            })
+            .on("mouseover", function(){
+                toolbar.tooltip.show("Sort Tissues Alphabetically");
+            })
+            .on("mouseout", function(){
+                toolbar.tooltip.hide();
+            });
+
+    };
+
+    const __addClusterTissues = ()=>{
+        const id = ids.buttons.cluster;
+        toolbar.createButton(id, `fa-code-branch`);
         select(`#${id}`)
         .on("click", function(){
-            // toggle the applied filter
-            renderTopExpressed(queryTissues[0], ids.root, ids.violin, urls, !useFilters);
+            select("#" + dmap.config.panels.top.id).style("display", "Block");  // shows the tissue dendrogram
+            let xlist = dmap.objects.columnTree.xScale.domain();
+            _sortTissues(xlist, dmap, tissueDict);
         })
         .on("mouseover", function(){
-            if(useFilters) toolbar.tooltip.show("Include Mitochondrial Genes");
-            else toolbar.tooltip.show("Exclude Mitochondrial Genes");
+            toolbar.tooltip.show("Cluster Tissues");
         })
         .on("mouseout", function(){
             toolbar.tooltip.hide();
         });
-    }
+    };
+    if (useFilters !== undefined) __addFilter();
+    __addSortTissues();
+    __addClusterTissues();
 }
 
 
