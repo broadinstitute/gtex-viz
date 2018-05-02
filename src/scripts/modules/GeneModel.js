@@ -213,12 +213,10 @@ export default class GeneModel {
 
         }
         else{
-            // if this is an isoform, render the intron lines
-            const intronLines = dom.selectAll(".intron")
-                .data(this.exonsCurated.filter((d, i) => i !== this.exonsCurated.length-1)); // filter the last element
-            intronLines.enter().append("line")
-                .attr("x1", (d) => d.x + d.w)
-                .attr("x2", (d, i) => this.exonsCurated[i+1].x)
+            // if this is an isoform, render the intron line
+            const intronLine = dom.append("line")
+                .attr("x1", this.exonsCurated[0].x)
+                .attr("x2", this.exonsCurated[this.exonsCurated.length-1].x)
                 .attr("y1", exonY + (15/2))
                 .attr("y2", exonY + (15/2))
                 .classed("intron", true);
