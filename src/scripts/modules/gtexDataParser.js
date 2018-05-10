@@ -15,8 +15,8 @@ export function getGtexUrls(){
         "junctionExp": host + "expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
         "isoformExp": host + "expression/isoformExpression?datasetId=gtex_v7&boxplotDetail=median&gencodeId=",
 
-        "geneModel": host + "reference/collapsedGeneModel?unfiltered=false&release=v7&gencode_id=",
-        "geneModelUnfiltered": host + "reference/collapsedGeneModel?unfiltered=true&release=v7&gencode_id=",
+        "geneModel": host + "reference/collapsedGeneModel?unfiltered=false&release=v7&geneId=",
+        "geneModelUnfiltered": host + "reference/collapsedGeneModel?unfiltered=true&release=v7&geneId=",
         "isoform": host + "reference/transcript?release=v7&gencode_id=",
 
         "liverGeneExp": "data/top50.genes.liver.genomic.median.tpm.json", // top 50 genes in GTEx liver
@@ -70,7 +70,12 @@ export function parseExons(data){
     ["featureType"].forEach((d)=>{
         if (!data[attr][0].hasOwnProperty(d)) throw "Fatal Error: parseExons attr not found: " + d;
     });
-    return data[attr].filter((d)=>d.featureType == "exon");
+    return data[attr].filter((d)=>d.featureType == "exon").map((d)=>{
+        d.chromStart = d.start;
+        d.chromEnd = d.end;
+        return d;
+    });
+
 }
 
 export function parseJunctions(data){
@@ -81,7 +86,7 @@ export function parseJunctions(data){
     // here we use Liver
     const attr = "medianJunctionExpression";
     if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseJunctions input error. " + data;
-    return data[attr].filter((d)=>{return d.tissueId=="Liver"})
+    return data[attr].filter((d)=>d.tissueId=="Liver")
                     .map((d) => {
                         let pos = d.junctionId.split("_");
                         return {
@@ -149,17 +154,18 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
     exonObjects.forEach((d) => {
         const exon = exonDict[d.exonId]; // for retrieving exon positions
         // error-checking
-        ["chromEnd", "chromStart"].forEach((p)=>{
+        ["end", "start"].forEach((p)=>{
             if (!exon.hasOwnProperty(p)) throw "Fatal Error: parseExonExpression attr not found: " + p;
         });
-        d.l = exon.chromEnd - exon.chromStart + 1;
+        d.l = exon.end - exon.start + 1;
         d.value = Number(d.data)/d.l;
         d.originalValue = Number(d.data)/d.l;
         if (useLog) d.value = Math.log2(d.value + 1);
         d.x = d.exonId;
         d.y = d.tissueId;
         d.id = d.gencodeId;
-        d.chromStart = exon.chromStart;
+        d.chromStart = exon.start;
+        d.chromEnd = exon.end;
         d.unit = d.unit + " per base";
     });
     return exonObjects.sort((a,b)=>{

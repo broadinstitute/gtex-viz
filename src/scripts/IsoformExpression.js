@@ -38,6 +38,19 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
 
              // get the gene object and its gencode Id
              if (!data.hasOwnProperty("geneId")) throw "Parsing Error: attribute geneId doesn't exist.";
+             if (data.geneId.length==0) throw "Fatal Error: gene not found";
+             if (data.geneId.length>1) {
+                 let filtered = data.geneId.filter((g)=>{
+                     return g.geneSymbolUpper==geneId.toUpperCase() || g.ensemblId==geneId.toUpperCase() || g.gencodeId == geneId.toUpperCase()
+                 });
+                 if (filtered.length > 1) {
+                     alert("Fatal Error: input gene ID is not unique.");
+                     throw "Fatal Error: input gene ID is not unique.";
+                 }
+                 else{
+                     data.geneId = filtered;
+                 }
+             }
              const gene = data.geneId[0];
              if (gene === undefined) throw "Fatal Error: gene not found";
              const gencodeId = gene.gencodeId;
@@ -243,7 +256,7 @@ function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer
         .attr("width", dmap.objects.heatmap.xScale.bandwidth())
         .attr("height", 5)
         .classed("exp-map-xcolor", true)
-        .style("fill", (d)=>tissueDict[d].colorHex);
+        .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
 
     mapSvg.select("#heatmap").selectAll(".leaf-color")
         .data(dmap.objects.heatmap.xScale.domain())
@@ -254,7 +267,7 @@ function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer
         .attr("width", dmap.objects.heatmap.xScale.bandwidth())
         .attr("height", 5)
         .classed("leaf-color", true)
-        .style("fill", (d)=>tissueDict[d].colorHex);
+        .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
 
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-xlabel")
@@ -350,7 +363,7 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
         .attr("width", 5)
         .attr("height", dmap.objects.heatmap.yScale.bandwidth())
         .classed("exp-map-ycolor", true)
-        .style("fill", (d)=>tissueDict[d].colorHex);
+        .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
 
     mapSvg.select("#heatmap").selectAll(".leaf-color")
         .data(dmap.objects.heatmap.yScale.domain())
@@ -361,7 +374,11 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
         .attr("width", 5)
         .attr("height", dmap.objects.heatmap.yScale.bandwidth())
         .classed("leaf-color", true)
-        .style("fill", (d)=>tissueDict[d].colorHex);
+        .style("fill", function(d){
+            console.log(d);
+            console.log(tissueDict[d].colorHex);
+            return `#${tissueDict[d].colorHex}`;
+        });
 
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")

@@ -24,7 +24,7 @@ export default class Toolbar {
      * @param cloneId {String} the cloned SVG dom ID
      * @param icon {String} a fontawesome's icon class name
      */
-    createDownloadButton(id, svgId, outfileName, cloneId, icon='fa-save'){
+    createDownloadButton(id, svgId, outfileName, cloneId, icon='fa-download'){
         const $button = this.createButton(id, icon);
         select(`#${id}`)
             .on('click', ()=>{
@@ -56,7 +56,7 @@ export default class Toolbar {
      * @param icon {String} a fontawesome icon class
      * Dependencies: Bootstrap, jQuery, Fontawesome
      */
-    createButton(id, icon='fa-save'){
+    createButton(id, icon='fa-download'){
         const $button = $('<a/>').attr('id', id)
             .addClass('btn btn-default').appendTo(this.bar);
         $('<i/>').addClass(`fa ${icon}`).appendTo($button);
