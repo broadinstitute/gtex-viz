@@ -40,8 +40,16 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
              if (!data.hasOwnProperty("geneId")) throw "Parsing Error: attribute geneId doesn't exist.";
              if (data.geneId.length==0) throw "Fatal Error: gene not found";
              if (data.geneId.length>1) {
-                 alert("Error: Gene ID is not unique.");
-                 throw "Fatal Error: the input gene ID is not unique.";
+                 let filtered = data.geneId.filter((g)=>{
+                     return g.geneSymbolUpper==geneId.toUpperCase() || g.ensemblId==geneId.toUpperCase() || g.gencodeId == geneId.toUpperCase()
+                 });
+                 if (filtered.length > 1) {
+                     alert("Fatal Error: input gene ID is not unique.");
+                     throw "Fatal Error: input gene ID is not unique.";
+                 }
+                 else{
+                     data.geneId = filtered;
+                 }
              }
              const gene = data.geneId[0];
              if (gene === undefined) throw "Fatal Error: gene not found";

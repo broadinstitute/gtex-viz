@@ -70,7 +70,12 @@ export function parseExons(data){
     ["featureType"].forEach((d)=>{
         if (!data[attr][0].hasOwnProperty(d)) throw "Fatal Error: parseExons attr not found: " + d;
     });
-    return data[attr].filter((d)=>d.featureType == "exon");
+    return data[attr].filter((d)=>d.featureType == "exon").map((d)=>{
+        d.chromStart = d.start;
+        d.chromEnd = d.end;
+        return d;
+    });
+
 }
 
 export function parseJunctions(data){
@@ -81,7 +86,7 @@ export function parseJunctions(data){
     // here we use Liver
     const attr = "medianJunctionExpression";
     if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseJunctions input error. " + data;
-    return data[attr].filter((d)=>{return d.tissueId=="Liver"})
+    return data[attr].filter((d)=>d.tissueId=="Liver")
                     .map((d) => {
                         let pos = d.junctionId.split("_");
                         return {
@@ -160,6 +165,7 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
         d.y = d.tissueId;
         d.id = d.gencodeId;
         d.chromStart = exon.start;
+        d.chromEnd = exon.end;
         d.unit = d.unit + " per base";
     });
     return exonObjects.sort((a,b)=>{
