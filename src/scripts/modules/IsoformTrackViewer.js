@@ -63,7 +63,7 @@ export default class IsoformTrackViewer {
         // add the axes
         lollipopGraph.append("g")
             .attr("class", "lollipop-axis")
-            .attr("transform", `translate(0,-10)`)
+            .attr("transform", `translate(0,-${this.yScale.bandwidth()/2})`)
             .call(
                 axisTop(barScale)
                     .ticks(3)
@@ -78,7 +78,7 @@ export default class IsoformTrackViewer {
 
         lollipopGraph.append("g")
             .attr("class", "lollipop-axis")
-            .attr("transform", `translate(0,-10)`)
+            .attr("transform", `translate(0,-${this.yScale.bandwidth()/2})`)
             .call(
                 axisRight(this.yScale)
                   .tickValues([]) // show no ticks
