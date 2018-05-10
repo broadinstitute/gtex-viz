@@ -61,8 +61,9 @@
 }
 
 /*temporary solution*/
-#modelLabel {
+#modelLabel, #lolliLabel {
     font-family: "Open Sans", "Helvetica", sans-serif;
+    font-size: 9px;
 }
 #modelInfo {
     font-family: "Open Sans", "Helvetica", sans-serif;
