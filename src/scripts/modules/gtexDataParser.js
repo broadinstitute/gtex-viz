@@ -176,7 +176,7 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
 
 /**
  * Parse junction median read count data
- * @param data {JSON} of the junciton expression web service
+ * @param data {JSON} of the junction expression web service
  * @param useLog {Boolean} perform log transformation
  * @param adjust {Number} for handling 0's when useLog is true
  * @returns {List} of junction objects
@@ -209,6 +209,13 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
     });
 }
 
+/**
+ * parse isoform expression
+ * @param data
+ * @param useLog
+ * @param adjust
+ * @returns {*}
+ */
 export function parseIsoformExpression(data, useLog=true, adjust=1){
     const attr = "isoformExpression";
     if(!data.hasOwnProperty(attr)) throw("parseIsoformExpression input error");
@@ -239,13 +246,22 @@ export function parseIsoformExpressionTranspose(data, useLog=true, adjust=1){
     return data[attr];
 }
 
+/**
+ * parse median gene expression
+ * @param data {Json} with attr medianGeneExpression
+ * @param useLog {Boolean} performs log10 transformation
+ * @returns {*}
+ */
 export function parseMedianExpression(data, useLog=true){
     const attr = "medianGeneExpression";
     if(!data.hasOwnProperty(attr)) throw "parseMedianExpression input error.";
     const adjust = 1;
     // parse GTEx median gene expression
+    // error-checking the required attributes:
+    ["median", "tissueId", "gencodeId"].forEach((d)=>{
+        if (!data.medianGeneExpression[0].hasOwnProperty(d)) throw `parseMedianExpression attr error. ${d} is not found`;
+    });
     data.medianGeneExpression.forEach(function(d){
-        // TODO: error-checking of the attributes
         d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
         d.x = d.tissueId;
         d.y = d.gencodeId;
@@ -255,23 +271,31 @@ export function parseMedianExpression(data, useLog=true){
     return data[attr];
 }
 
-export function parseMedianTPM(data, useLog=true){
-    // parse GTEx median TPM json static file
-    data.forEach(function(d){
-        d.value = useLog?Math.log10(+d.medianTPM + 1):+d.medianTPM;
-        d.x = d.tissueId;
-        d.y = d.geneSymbol;
-        d.originalValue = parseFloat(d.medianTPM);
-        d.id = d.gencodeId;
-    });
-    return data;
-}
+/**
+ * parse the median gene expression, no longer in use
+ * @param data {List} of data points with attr: value, tissueId, geneSymbol, gencodeId
+ * @param useLog {Boolean} perform log transformation using log10
+ * @returns {List}
+ */
+// export function parseMedianTPM(data, useLog=true){
+//     // parse GTEx median TPM json static file
+//     data.forEach(function(d){
+//         d.value = useLog?Math.log10(+d.medianTPM + 1):+d.medianTPM;
+//         d.x = d.tissueId;
+//         d.y = d.geneSymbol;
+//         d.originalValue = parseFloat(d.medianTPM);
+//         d.id = d.gencodeId;
+//     });
+//     return data;
+// }
 
+/**
+ * parse the gene expression
+ * @param gencodeId {String}
+ * @param data {Json} with attr: tissueId, geneSymbol
+ * @returns {{exp: {}, geneSymbol: string}}
+ */
 function parseGeneExpression(gencodeId, data){
-    /**
-     *
-     * @type {{exp: {}, geneSymbol: string}}
-     */
     let lookupTable = {
         exp: {}, // indexed by tissueId
         geneSymbol: ""
@@ -297,40 +321,40 @@ function parseGeneExpression(gencodeId, data){
  * @param xlist {List}: a list of tissue objects {id:String, name:String}
  * @returns {{x: Array, y: Array, name: string, type: string, line: {width: number}, marker: {color: string}}}
  */
-export function makeJsonForPlotly(gencodeId, data, useLog=false, color="grey", xlist){
-
-    // reference: https://plot.ly/javascript/box-plots/
-
-    let lookupTable = parseGeneExpression(gencodeId, data); // constructs the tissue lookup table indexed by tissue ID
-    let x = [];
-    let y = [];
-
-    // xlist: the tissues
-    xlist.forEach((d)=>{
-        // d: a tissue
-        if (lookupTable.exp[d.id]===undefined){
-            // when the gene has no expression data in tissue d,
-            // provide dummy data
-            x = x.concat([d.name]);
-            y = y.concat([-1]);
-        } else {
-            // concatenate a list of the tissue label repeatedly (lookupTable.exp[d].length times) to x
-            // concatenate all the expression values to y
-            // the number of elements in x and y must match
-            x = x.concat(Array(lookupTable.exp[d.id].length).fill(d.name));
-            y = y.concat(lookupTable.exp[d.id]);
-        }
-    });
-    return {
-        x: x,
-        y: y,
-        name: lookupTable.geneSymbol,
-        type: 'box',
-        line: {width:1},
-        marker: {color:color},
-    };
-
-}
+// export function makeJsonForPlotly(gencodeId, data, useLog=false, color="grey", xlist){
+//
+//     // reference: https://plot.ly/javascript/box-plots/
+//
+//     let lookupTable = parseGeneExpression(gencodeId, data); // constructs the tissue lookup table indexed by tissue ID
+//     let x = [];
+//     let y = [];
+//
+//     // xlist: the tissues
+//     xlist.forEach((d)=>{
+//         // d: a tissue
+//         if (lookupTable.exp[d.id]===undefined){
+//             // when the gene has no expression data in tissue d,
+//             // provide dummy data
+//             x = x.concat([d.name]);
+//             y = y.concat([-1]);
+//         } else {
+//             // concatenate a list of the tissue label repeatedly (lookupTable.exp[d].length times) to x
+//             // concatenate all the expression values to y
+//             // the number of elements in x and y must match
+//             x = x.concat(Array(lookupTable.exp[d.id].length).fill(d.name));
+//             y = y.concat(lookupTable.exp[d.id]);
+//         }
+//     });
+//     return {
+//         x: x,
+//         y: y,
+//         name: lookupTable.geneSymbol,
+//         type: 'box',
+//         line: {width:1},
+//         marker: {color:color},
+//     };
+//
+// }
 
 /**
  * parse the expression data of a gene for a grouped violin plot
