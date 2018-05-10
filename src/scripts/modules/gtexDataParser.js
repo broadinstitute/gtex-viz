@@ -75,7 +75,6 @@ export function parseExons(data){
         d.chromEnd = d.end;
         return d;
     });
-
 }
 
 export function parseJunctions(data){
@@ -290,7 +289,7 @@ function parseGeneExpression(gencodeId, data){
 }
 
 /**
- *
+ * Makes the json for the plotly boxplot, no longer in use
  * @param gencodeId {String}: a gencode ID
  * @param data {Object} gene expression API call
  * @param useLog {Boolean}
@@ -298,7 +297,6 @@ function parseGeneExpression(gencodeId, data){
  * @param xlist {List}: a list of tissue objects {id:String, name:String}
  * @returns {{x: Array, y: Array, name: string, type: string, line: {width: number}, marker: {color: string}}}
  */
-
 export function makeJsonForPlotly(gencodeId, data, useLog=false, color="grey", xlist){
 
     // reference: https://plot.ly/javascript/box-plots/
