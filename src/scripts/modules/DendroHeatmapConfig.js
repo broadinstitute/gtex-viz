@@ -23,7 +23,6 @@ export default class DendroHeatmapConfig {
             id: "leftTree"
         };
 
-
         this.cell = {
             w: undefined,
             h: cellH
