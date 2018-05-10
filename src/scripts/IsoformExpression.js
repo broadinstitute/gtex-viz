@@ -17,7 +17,7 @@ import {getGtexUrls,
         parseIsoformExpression
 } from "./modules/gtexDataParser";
 
-import {setColorScale, getColors, drawColorLegend} from "./modules/Colors";
+import {setColorScale, drawColorLegend} from "./modules/Colors";
 // import {downloadSvg} from "./modules/utils";
 
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
