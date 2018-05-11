@@ -374,11 +374,7 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
         .attr("width", 5)
         .attr("height", dmap.objects.heatmap.yScale.bandwidth())
         .classed("leaf-color", true)
-        .style("fill", function(d){
-            console.log(d);
-            console.log(tissueDict[d].colorHex);
-            return `#${tissueDict[d].colorHex}`;
-        });
+        .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
 
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")
