@@ -1,8 +1,8 @@
 /*
-    Dendrogram visualizes a text-based Newick tree using D3 V4.
+    Dendrogram visualizes a text-based Newick tree using D3 V5.
 
     dependencies:
-    d3 v4
+    d3 v5
     the newick parser: newick.js
 
     references:
@@ -37,21 +37,17 @@ import {hierarchy} from "d3-hierarchy";
 import {ascending} from "d3-array";
 import {axisBottom, axisLeft} from "d3-axis";
 import {scaleLinear, scaleBand} from "d3-scale";
-
 import {parseNewick} from "../external/newick";
 const verbose = false;
 export default class Dendrogram {
-
     constructor(newick, orientation='h'){
         this.newick = newick;
         this.orientation = orientation;
-
         this.postorder = [];
         this.root = hierarchy(parseNewick(newick), (d) => d.branchset)
             .sum((d)=>d.branchset?0:1)
             .sort((a,b)=>a.value-b.value||a.data.length-b.data.length);
         this.leaves = this.root.leaves().sort((a, b) => (a.value - b.value) || ascending(a.data.length, b.data.length));
-
         this.width = undefined;
         this.height = undefined;
         this.xScale = undefined;
@@ -102,7 +98,6 @@ export default class Dendrogram {
             .attr("stroke-width", 1);
 
         // for all internal nodes
-        // TODO: write a recursive function to draw the arms and nodes
         const inodes = this.root.descendants().filter((d)=>d.height).sort((a,b)=>b.height-a.height);
         dom.selectAll('.arm')
             .data(inodes)
@@ -120,8 +115,6 @@ export default class Dendrogram {
             .attr("cx", (d) => d.x)
             .attr("cy", (d) => d.y + this.yScale.bandwidth()/2)
             .attr("r", 2)
-            // .attr("fill", "#8DCDC1") // TODO: eliminate hard-coded value, use css class
-            // .attr("fill", "#4b8699")
             .attr('fill', '#333')
             .attr("opacity", 0.5)
             .attr("class", "dendrogram-node")

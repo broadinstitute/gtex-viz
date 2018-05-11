@@ -37,7 +37,6 @@ export default class DendroHeatmap {
             heatmap: new Heatmap(this.data.heatmap, color, useLog, base, r)
         };
         this.visualComponents = {
-            // tooltip: new Tooltip("tooltip", false), // TODO: remove hard-coded tooltip DOM ID
             svg: undefined,
             columnTree: undefined,
             rowTree: undefined
@@ -99,7 +98,7 @@ export default class DendroHeatmap {
     }
 
     /**
-     * renders a newick tree
+     * Render a newick tree
      * @param direction {enum} column or row
      * @param tree {Dendrogram} a Dendrogram object
      * @param config {Object} a panel config with attributes: x, y, width and height
@@ -143,7 +142,7 @@ export default class DendroHeatmap {
     }
 
     /**
-     * renders the heatmap and color legend
+     * Render the heatmap and color legend
      * @param heatmap {Heatmap} a Heatmap object
      * @param xList {List} a list of x labels
      * @param yList {List} a list of y labels
@@ -160,10 +159,8 @@ export default class DendroHeatmap {
         heatmap.drawColorLegend(dom, this.config.panels.legend, ticks);
     }
 
-
-
     /**
-     * adjusts the layout dimensions based on the actual data
+     * Adjust the layout dimensions based on the actual data
      * @param legendPos {String} bottom or top
      * @private
      */

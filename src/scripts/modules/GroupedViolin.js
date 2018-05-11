@@ -63,7 +63,9 @@ export default class GroupedViolin {
      * @param showSize
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis", showX=true, showSubX=true, subXAngle=0, showWhisker=false, showDivider=false, showLegend=false, showSize=false){
+    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis",
+           showX=true, showSubX=true, subXAngle=0,
+           showWhisker=false, showDivider=false, showLegend=false, showSize=false){
 
         // define the reset for this plot
         this.reset = () => {
@@ -297,8 +299,6 @@ export default class GroupedViolin {
 
             const min = Math.floor(this.scale.y.invert(s[1][1]));
             const max = Math.floor(this.scale.y.invert(s[0][1]));
-            // console.log(min+ " " + max);
-            // console.log(this.scale.y.range());
             this.scale.y.domain([min, max]); // todo: debug
 
             dom.select(".brush").call(theBrush.move, null);

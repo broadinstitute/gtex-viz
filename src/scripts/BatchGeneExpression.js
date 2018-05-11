@@ -4,61 +4,15 @@ import {select, selectAll, event} from "d3-selection";
 import {keys, values} from "d3-collection";
 
 import {getGtexUrls,
-        getTissueClusters,
-        getGeneClusters,
         parseGenes,
-        parseMedianTPM,
         parseTissues,
         parseMedianExpression,
         parseGeneExpressionForViolin
 } from "./modules/gtexDataParser";
 import {colorChart} from "./modules/Colors";
-import {downloadSvg} from "./modules/utils";
-
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GroupedViolin from "./modules/GroupedViolin";
-
-/**
- * Mayo demo
- * @param domId
- * @param toolbarId
- * @param urls
- */
-// export function renderMayo(domId, toolbarId, urls=getGtexUrls()){
-//     // - gets static data
-//     const tissueTree = getTissueClusters('top50Cerebellum_AD'),
-//           geneTree = getGeneClusters('top50Cerebellum_AD');
-//     Promise.all([json(urls.tissue), tsv(urls.mayoGeneExp)])
-//         .then(function(args){
-//             const tissues = parseTissues(args[0]);
-//             const expression = parseMedianTPM(args[1], true);
-//             const config = new DendroHeatmapConfig("chart", window.innerWidth);
-//             const dmap = new DendroHeatmap(tissueTree, geneTree, expression, "YlGnBu", 2, config, true, 10);
-//             dmap.render(domId);
-//             // customization for GTEx
-//             const tissueDict = tissues.reduce((a, d)=>{
-//                 if(!d.hasOwnProperty("tissueId")) throw "tissue has no attr tissue_id";
-//                 a[d.tissueId] = d;
-//                 return a;
-//             }, {});
-//             const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
-//                 if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
-//                 a[d.gencodeId]=d;
-//                 return a;
-//             }, {});
-//             _customizeLabels(dmap, tissueDict, geneDict);
-//             _addTissueColors(dmap, tissueDict);
-//             _customizeMouseEvents(dmap, tissueDict, geneDict);
-//             _createToolbar(domId, toolbarId, undefined, dmap, tissueDict, [], urls);
-//             $('#spinner').hide(); // TODO: remove hard-coded dom ID
-//         })
-//         .catch(function(err){throw err});
-// }
-
-// export function reset(ids){
-//     ids.forEach((d)=>{$(`#${d}`).empty()});
-// }
 
 /**
  * Create the tissue (dataset) dropdown menu using select2

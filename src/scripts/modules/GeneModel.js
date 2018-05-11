@@ -25,7 +25,6 @@ export default class GeneModel {
      */
     constructor (gene, exons, exonsCurated, junctions, isIsoform=false){
         this.gene = gene;
-        // console.log(this.gene); // for debugging
         this.exons = exons;
         if (this.gene.strand == "+") this.exons.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
         else this.exons.sort((a, b)=>{return Number(b.exonNumber)-Number(a.exonNumber)});
@@ -55,7 +54,6 @@ export default class GeneModel {
      * @param escale {D3 scale} of colors of exon data
      */
     addData(dom, jdata, edata, jscale, escale){
-        // TODO: bind data to the dom elements?
         dom.selectAll(".junc").style("fill", (d) => {
             const v = jdata.filter((z)=>z.junctionId==d.junctionId)[0];
             const jcolor = jscale(v.value);
@@ -250,8 +248,6 @@ export default class GeneModel {
             .attr("y", exonY + 7.5)
             .style("font-size", 9)
             .text(this.gene.transcriptId===undefined?`${this.gene.geneSymbol}`:this.gene.transcriptId);
-
-
     }
 
     setXscale(w){
