@@ -15,8 +15,8 @@
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
         <div class="row">
             <div class="col-xs-12 col-sm-2">
-                <h4>Splicing</h4>
-                <form id="junctionExpressForm" style="padding: 5px;">
+                <h4>Isoform Expression</h4>
+                <form id="isoformExpressForm" style="padding: 5px;">
                      <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
                         <input id="gene" type="text" class="form-control" placeholder="Enter a gencode ID or gene name" style="font-size:12px; text-transform:uppercase;"></input>
                          <small>e.g. ACTN1, ACTN3, NDRG4, ENGASE</small>
@@ -37,13 +37,13 @@
 
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item">
-                            <a id="isoform" class="nav-link" role="tab" data-toggle="tab">isoforms</a>
-                        </li>
-                         <li class="nav-item">
-                            <a id="isoform2" class="nav-link" role="tab" data-toggle="tab">isoforms (transposed)</a>
+                            <a id="isoform2" class="nav-link active" role="tab" data-toggle="tab">isoforms (transposed)</a>
                         </li>
                         <li class="nav-item">
-                            <a id="junction" class="nav-link active" role="tab" data-toggle="tab">junctions</a>
+                            <a id="isoform" class="nav-link" role="tab" data-toggle="tab">isoforms</a>
+                        </li>
+                        <li class="nav-item">
+                            <a id="junction" class="nav-link" role="tab" data-toggle="tab">junctions</a>
                         </li>
                         <li class="nav-item">
                             <a id="exon" class="nav-link" role="tab" data-toggle="tab">exons</a>
@@ -52,7 +52,6 @@
 
                     <!-- Tab panes -->
                     <div class="tab-content">
-                        <!--<div id="expMapToolbar" style="display:none;"></div> &lt;!&ndash; the toolbar Div &ndash;&gt;-->
                         <div id="vizRoot"></div> <!-- the heatmap/gene model Div -->
                     </div>
                 </div>
@@ -77,7 +76,7 @@
                 if(e.keyCode == 13){
                     // bind the enter key
                     e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
-                    init("isoform");
+                    init("isoformTransposed");
                 }
             });
             $('#isoform').click(function(){init("isoform")});
@@ -97,7 +96,7 @@
             $("#vizRoot").empty();
             // always reset the active tab to the isoform
             $(".nav-link").removeClass("active");
-            $("#isoform").addClass("active");
+            $("#isoform2").addClass("active");
         }
     </script>
 

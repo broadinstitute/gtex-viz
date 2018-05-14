@@ -1,7 +1,7 @@
 "use strict";
 
 export function getGtexUrls(){
-    const host = "https://dev.gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
+    const host = "https://gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
     return {
         // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
         "geneId": host + "reference/geneId?format=json&geneId=",
@@ -277,8 +277,9 @@ export function parseMedianExpression(data, useLog=true){
     const adjust = 1;
     // parse GTEx median gene expression
     // error-checking the required attributes:
+    if (data[attr].length == 0) throw "parseMedianExpression finds no data.";
     ["median", "tissueId", "gencodeId"].forEach((d)=>{
-        if (!data.medianGeneExpression[0].hasOwnProperty(d)) throw `parseMedianExpression attr error. ${d} is not found`;
+        if (!data[attr][0].hasOwnProperty(d)) throw `parseMedianExpression attr error. ${d} is not found`;
     });
     data.medianGeneExpression.forEach(function(d){
         d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
