@@ -91,17 +91,30 @@ export function searchById(glist, tlist, heatmapRootId, violinRootId, urls=getGt
            const genes = parseGenes(args[1]);
            // error-checking
            message += _validateGenes(heatmapRootId, genes, glist);
-           $message.html(message);
+
 
            // get median expression data and clusters of the input genes in all tissues
            json(urls.medExpById + genes.map((g)=>g.gencodeId).join(","))
                .then(function(eData){
                    $('#spinner').hide();
-                    _renderDendroHeatmap(genes, tissues, tlist, eData, heatmapRootId, violinRootId, urls, useFilters);
+                   const dataMessage = _validateExpressionData(eData);
+                   if (dataMessage !== undefined){
+                       $message.html(message + dataMessage);
+                   }
+                   else {
+                       _renderDendroHeatmap(genes, tissues, tlist, eData, heatmapRootId, violinRootId, urls, useFilters);
+                   }
                })
                .catch(function(err){console.error(err)});
        })
        .catch(function(err){console.error(err)});
+}
+
+function _validateExpressionData(data){
+    const attr = "medianGeneExpression";
+    if(!data.hasOwnProperty(attr)) throw "expression data json format error.";
+    if (data[attr].length == 0) return "No expression data found.";
+    return undefined;
 }
 
 function _validateGenes(domId, genes, input){
