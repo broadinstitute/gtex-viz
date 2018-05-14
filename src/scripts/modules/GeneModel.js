@@ -91,7 +91,10 @@ export default class GeneModel {
         this.exonsCurated.forEach((d, i) => {
             // map each curated exon to the original gene model--find the original exon
             d.oriExon = this._findExon(d.chromStart)||this._findExon(d.chromEnd);
-            if (d.oriExon === undefined) throw `${this.gene.transcriptId}-${d.exonId} can't map to full gene model`;
+            if (d.oriExon === undefined) {
+                console.warn(`${this.gene.transcriptId}-${d.exonId} can't map to full gene model`);
+                return; // ignore unmappable exons, this happens at times
+            }
             if (Number(d.oriExon.chromStart) == Number(d.chromStart)) d.x = d.oriExon.x;
             else{
                 // this exon doesn't start from the oriExon start pos
