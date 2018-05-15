@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+    <head>
+         <meta charset="utf-8">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+        <link rel="stylesheet" href="build/external/fontawesome-free-5.0.7/web-fonts-with-css/css/fontawesome-all.css">
+
+        <link rel="stylesheet" type="text/css" href="src/css/dendrogram.css">
+        <link rel="stylesheet" type="text/css" href="src/css/expressMap.css">
+        <link rel="stylesheet" type="text/css" href="src/css/violin.css">
+        <link href="https://fonts.googleapis.com/css?family=EB+Garamond|Libre+Franklin|Open+Sans|Roboto|Zilla+Slab" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="build/external/select2-4.0.4/css/select2.min.css">
+        <style>
+            body {
+                font-family: 'Open Sans', sans-serif;
+            }
+            div{
+                font-size: 14px;
+            }
+            a {
+                color: #4eb3d3;
+            }
+            .link:hover {
+                text-decoration: underline;
+                cursor: pointer;
+            }
+            label{
+                margin-right: 10px;
+            }
+            table.gtex-raw-data-matrix {
+                font-family: 'Open Sans', sans-serif;
+                font-size: 12px;
+                border: 1px solid #94a8b8;
+                border-spacing: 1px;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+
+            }
+            .gtex-raw-data-matrix .data-label {
+                padding: 0 0 0 10px;
+                caption-side:top;
+                background-color: #2a718b;
+                color: #fff;
+                font-size: 14px;
+                border: 1px solid #ffffff;
+
+            }
+            .gtex-raw-data-matrix th, .gtex-raw-data-matrix td {
+                padding: 0px 10px 0px 10px;
+                /*margin: 0;*/
+                /*display: table-cell;*/
+            }
+            .gtex-raw-data-matrix th[scope=col] {
+                background-color: #a9a9a9;
+                color: #fff;
+                border: 1px solid #ffffff;
+            }
+            .gtex-raw-data-matrix th[scope=row] {
+                background-color: #a9a9a9;
+                color: white;
+                border: 1px solid #ffffff;
+
+            }
+            .gtex-raw-data-matrix td {
+                text-align: right;
+                border: 1px solid #dfdfdf;
+            }
+            .gtex-raw-data-matrix td:hover{
+                background-color: cadetblue;
+            }
+        </style>
+
+    </head>
+    <body class="container" style="margin-top:20px;">
+        <h4>GTEx Raw File Search</h4>
+        <table id="gtex-v7-sample" class="gtex-raw-data-matrix">
+            <thead>
+                <th scope="col"></th>
+                <th scope="col">RNA-Seq</th>
+                <th scope="col">RNA-Seq with WGS</th>
+                <th scope="col">WGS</th>
+                <th scope="col">WES</th>
+            </thead>
+            <tr>
+                <th colspan="5" class="data-label">GTEx v7</th>
+            </tr>
+        </table>
+
+
+    </body>
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous">
+    </script>
+    <script src="src/scripts/external/plotly-latest.min.js"></script>
+    <script src="build/external/select2-4.0.4/js/select2.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+
+    <script src="build/js/raw-data-query.bundle.dev.js"></script>
+    <script>
+        $(document).ready(function(){
+            RawDataQuery.buildDataMatrix("gtex-v7-sample");
+        });
+    </script>
+
+</html>
