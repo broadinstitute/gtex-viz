@@ -1,9 +1,8 @@
 'use strict';
-import {json} from 'd3-fetch';
+import {json, tsv} from 'd3-fetch';
 import {select} from 'd3-selection';
 import {getGtexUrls,
-    parseTissues,
-    parseSamples
+    parseTissues
 } from './modules/gtexDataParser';
 import Toolbar from './modules/Toolbar';
 
@@ -23,23 +22,30 @@ first build a data matrix with the following structure
  * @param urls
  */
 
-export function buildDataMatrix(tableId, datasetId='gtex-v7', urls=getGtexUrls()){
+export function buildDataMatrix(tableId, datasetId='gtex_v7', urls=getGtexUrls()){
     const promises = [
         // TODO: urls for other datasets
         json(urls.tissue),
-        json(urls.sample + 'WGS'),
-        json(urls.sample + 'WES')
+        tsv(urls.sample),
     ];
 
     Promise.all(promises)
         .then(function(args){
             let tissues = parseTissues(args[0]);
-            let wgsTable = parseSamples(args[1]).reduce((a, d)=>{
+            let samples = args[1].filter((s)=>s.datasetId==datasetId);
+
+            // TODO: refactoring
+            let rnaseqTable = samples.filter((s)=>s.dataType=='RNASEQ').reduce((a, d)=>{
                 if(a[d.tissueId]===undefined) a[d.tissueId] = 0;
                 a[d.tissueId]= a[d.tissueId]+1;
                 return a;
                 }, {});
-            let wesTable = parseSamples(args[2]).reduce((a, d)=>{
+            let wgsTable = samples.filter((s)=>s.dataType=='WGS').reduce((a, d)=>{
+                if(a[d.tissueId]===undefined) a[d.tissueId] = 0;
+                a[d.tissueId]= a[d.tissueId]+1;
+                return a;
+                }, {});
+            let wesTable = samples.filter((s)=>s.dataType=='WES').reduce((a, d)=>{
                 if(a[d.tissueId]===undefined) a[d.tissueId] = 0;
                 a[d.tissueId]= a[d.tissueId]+1;
                 return a;
@@ -47,12 +53,12 @@ export function buildDataMatrix(tableId, datasetId='gtex-v7', urls=getGtexUrls()
             const columns = [
                 {
                     label: 'RNA-Seq',
-                    id: 'rnaSeqSampleCount'
+                    id: 'rnaseq'
                 },
-                {
-                    label: 'RNA-Seq with WGS',
-                    id: 'rnaSeqAndGenotypeSampleCount'
-                },
+                // {
+                //     label: 'RNA-Seq with WGS',
+                //     id: 'rnaSeqAndGenotypeSampleCount'
+                // },
                 {
                     label: 'WES',
                     id: 'wes'
@@ -65,21 +71,12 @@ export function buildDataMatrix(tableId, datasetId='gtex-v7', urls=getGtexUrls()
             const rows = tissues.map((t)=>{
                 t.id = t.tissueId;
                 t.label = t.tissueName;
+                t.rnaseq = rnaseqTable[t.tissueId] || undefined;
                 t.wes = wesTable[t.tissueId] || undefined;
                 t.wgs = wgsTable[t.tissueId] || undefined;
                 return t;
             });
-            // const theData = [];
-            // rows.forEach((row)=>{
-            //     columns.forEach((col)=>{
-            //         let value = row[col.id] || undefined;
-            //         theData.push({
-            //             x: row.id,
-            //             y: col.id,
-            //             value: value
-            //         })
-            //     })
-            // });
+
             const theMatrix = {
                 X: rows,
                 Y: columns,
@@ -87,7 +84,8 @@ export function buildDataMatrix(tableId, datasetId='gtex-v7', urls=getGtexUrls()
             };
             _renderMatrixTable(datasetId, tableId, theMatrix);
             _addClickEvents(tableId);
-            _addToolbar(tableId, theMatrix);
+            _addToolbar(tableId, theMatrix, samples);
+            select('#filter-menu').style('display', 'block'); // TODO: dynamically generate this filter menu
 
 
         })
@@ -103,7 +101,7 @@ export function buildDataMatrix(tableId, datasetId='gtex-v7', urls=getGtexUrls()
  */
 function _renderMatrixTable(datasetId, tableId, mat){
     const dataset = {
-        'gtex-v7': {
+        'gtex_v7': {
             label:'GTEX V7',
             bgcolor: '#2a718b'
         }
@@ -124,7 +122,13 @@ function _renderMatrixTable(datasetId, tableId, mat){
         .text(dataset[datasetId].label)
         .style('background-color',dataset[datasetId].bgcolor);
 
-    const theRows = theTable.select('tbody').selectAll('tr')
+    _renderCounts(theTable.select('tbody'), mat)
+
+}
+
+function _renderCounts(tbody, mat){
+    tbody.selectAll('td').remove();
+    const theRows = tbody.selectAll('tr')
         .data(mat.X)
         .enter()
         .append('tr');
@@ -134,21 +138,16 @@ function _renderMatrixTable(datasetId, tableId, mat){
         .attr('scope', 'row')
         .attr('class', (d, i)=>`x${i}`)
         .text((d)=>d.label);
-
     theRows.append('td')
         .attr('class', (d, i)=>`x${i} y1`)
-        .text((d)=>d.rnaSeqSampleCount||'');
+        .text((d)=>d.rnaseq||'');
 
     theRows.append('td')
         .attr('class', (d, i)=>`x${i} y2`)
-        .text((d)=>d.rnaSeqAndGenotypeSampleCount||'');
-
-    theRows.append('td')
-        .attr('class', (d, i)=>`x${i} y3`)
         .text((d)=>d.wes||'');
 
     theRows.append('td')
-        .attr('class', (d, i)=>`x${i} y4`)
+        .attr('class', (d, i)=>`x${i} y3`)
         .text((d)=>d.wgs||'');
 }
 
@@ -206,22 +205,31 @@ function _addToolbar(tableId, mat){
     const toolbar = new Toolbar('matrix-table-toolbar', undefined, true);
     toolbar.createButton('sample-download');
     toolbar.createButton('send-to-firecloud', 'fa-cloud-upload-alt');
+    toolbar.createButton('show-filters', 'fa-filter');
     select('#sample-download')
         .style('cursor', 'pointer')
-        .on("click", function(){
+        .on('click', function(){
             theCells.filter(`.selected`)
                 .each(function(d){
                     const marker = select(this).attr('class').split(' ').filter((c)=>{return c!='selected'});
                     const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
                     const y = mat.Y[parseInt(marker[1].replace('y', ''))-1].id;
-                    console.log("Download " + x + " : "+ y);
+                    console.log('Download ' + x + ' : '+ y);
                 })
         });
+
     select('#send-to-firecloud')
         .style('cursor', 'pointer')
-        .on("click", function(){
-            alert("Send to FireCloud. To be implemented.")
+        .on('click', function(){
+            alert('Send to FireCloud. To be implemented.')
         });
+
+    select('#show-filters')
+        .style('cursor', 'pointer')
+        .on('click', function(){
+            select('#filter-menu')
+                .style('display', 'block')
+        })
 }
 
 
