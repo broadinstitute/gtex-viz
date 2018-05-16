@@ -4,6 +4,8 @@ export function getGtexUrls(){
     const host = "https://gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
     return {
         // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
+
+        "sample": host + "dataset/sample?datasetId=gtex_v7&format=json&page_size=2000&sort_by=sampleId&sortDir=asc&dataType=",
         "geneId": host + "reference/geneId?format=json&geneId=",
         "geneExp": host + "expression/geneExpression?datasetId=gtex_v7&gencodeId=",
         "tissue":  host + "dataset/tissueInfo",
@@ -90,6 +92,14 @@ export function parseExons(data){
         return d;
     });
 }
+
+export function parseSamples(data){
+    const attr = "sample";
+    if (!data.hasOwnProperty(attr)) throw "Fatal Error: parseSamples input error. " + data;
+    return data[attr];
+}
+
+
 
 /**
  * parse the junctions

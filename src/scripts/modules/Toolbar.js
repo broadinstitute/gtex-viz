@@ -7,11 +7,12 @@ import {select} from "d3-selection";
 import {parseCssStyles} from "./utils";
 
 export default class Toolbar {
-    constructor(domId, tooltip=undefined){
+    constructor(domId, tooltip=undefined, vertical=false){
         $(`#${domId}`).show(); // if hidden
 
         // add a new bargroup div to domID with bootstrap button classes
-        this.bar = $('<div/>').addClass('btn-group btn-group-sm').appendTo(`#${domId}`);
+        const btnClasses = vertical?'btn-group-vertical btn-group-sm': 'btn-group btn-group-sm';
+        this.bar = $('<div/>').addClass(btnClasses).appendTo(`#${domId}`);
         this.buttons = {};
         this.tooltip = tooltip;
     }

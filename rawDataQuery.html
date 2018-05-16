@@ -27,7 +27,7 @@
             label{
                 margin-right: 10px;
             }
-            table.gtex-raw-data-matrix {
+            table.matrix-table {
                 font-family: 'Open Sans', sans-serif;
                 font-size: 12px;
                 border: 1px solid #94a8b8;
@@ -36,57 +36,66 @@
                 margin-bottom: 20px;
 
             }
-            .gtex-raw-data-matrix .data-label {
+            .table-label {
                 padding: 0 0 0 10px;
                 caption-side:top;
-                background-color: #2a718b;
                 color: #fff;
                 font-size: 14px;
                 border: 1px solid #ffffff;
 
             }
-            .gtex-raw-data-matrix th, .gtex-raw-data-matrix td {
+            .matrix-table th, .matrix-table td {
                 padding: 0px 10px 0px 10px;
                 /*margin: 0;*/
                 /*display: table-cell;*/
             }
-            .gtex-raw-data-matrix th[scope=col] {
-                background-color: #a9a9a9;
-                color: #fff;
-                border: 1px solid #ffffff;
-            }
-            .gtex-raw-data-matrix th[scope=row] {
+            .matrix-table th[scope=col] {
                 background-color: #a9a9a9;
                 color: white;
                 border: 1px solid #ffffff;
+                font-weight: normal;
+            }
+            .matrix-table th[scope=row] {
+                background-color: #a9a9a9;
+                color: white;
+                border: 1px solid #ffffff;
+                font-weight: normal;
 
             }
-            .gtex-raw-data-matrix td {
+            .matrix-table td {
                 text-align: right;
                 border: 1px solid #dfdfdf;
             }
-            .gtex-raw-data-matrix td:hover{
+            .matrix-table td:hover, .matrix-table th:hover {
                 background-color: cadetblue;
+            }
+            .matrix-table th[scope=selected] {
+                font-weight: bold;
+                background-color: #203549;
+                color: white;
+            }
+
+            td.selected {
+                font-weight: bold;
+                background-color: #203549;
+                color: white;
             }
         </style>
 
     </head>
     <body class="container" style="margin-top:20px;">
         <h4>GTEx Raw File Search</h4>
-        <table id="gtex-v7-sample" class="gtex-raw-data-matrix">
-            <thead>
-                <th scope="col"></th>
-                <th scope="col">RNA-Seq</th>
-                <th scope="col">RNA-Seq with WGS</th>
-                <th scope="col">WGS</th>
-                <th scope="col">WES</th>
-            </thead>
-            <tr>
-                <th colspan="5" class="data-label">GTEx v7</th>
-            </tr>
-        </table>
-
-
+        <div class="row">
+            <div class="col-xs-1">
+                <div id="matrix-table-toolbar"></div>
+            </div>
+            <div class="col-xs-11">
+                <table id="gtex-v7-sample" class="matrix-table">
+                    <thead></thead>
+                    <tr class="table-label"></tr>
+                </table>
+            </div>
+        </div>
     </body>
     <script
       src="https://code.jquery.com/jquery-3.2.1.min.js"
@@ -101,7 +110,7 @@
     <script src="build/js/raw-data-query.bundle.dev.js"></script>
     <script>
         $(document).ready(function(){
-            RawDataQuery.buildDataMatrix("gtex-v7-sample");
+            RawDataQuery.buildDataMatrix("gtex-v7-sample", "gtex-v7");
         });
     </script>
 
