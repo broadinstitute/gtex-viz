@@ -7,6 +7,22 @@ import {getGtexUrls,
 } from './modules/gtexDataParser';
 import Toolbar from './modules/Toolbar';
 
+/*
+TODO:
+first build a data matrix with the following structure
+{
+    col: tissues
+    row: data types
+    data: [ objects with col and row and value ]
+}
+ */
+/**
+ * build the data matrix table
+ * @param tableId {String}
+ * @param datasetId {String}
+ * @param urls
+ */
+
 export function buildDataMatrix(tableId, datasetId='gtex-v7', urls=getGtexUrls()){
     const promises = [
         // TODO: urls for other datasets
@@ -28,10 +44,11 @@ export function buildDataMatrix(tableId, datasetId='gtex-v7', urls=getGtexUrls()
                 a[d.tissueId]= a[d.tissueId]+1;
                 return a;
                 }, {});
+            const columns = ['', 'RNA-Seq', 'RNA-Seq with WGS', 'WES', 'WGS'];
 
-            _renderMatrixTable(datasetId, tableId, tissues, wesTable, wgsTable);
+            _renderMatrixTable(datasetId, tableId, tissues, wesTable, wgsTable, columns);
             _addClickEvents(tableId);
-            _addToolbar();
+            _addToolbar(tableId, tissues, columns);
 
 
         })
@@ -47,17 +64,15 @@ export function buildDataMatrix(tableId, datasetId='gtex-v7', urls=getGtexUrls()
  * @param wgsTable {Dictionary} of WGS sample counts indexed by tissueId
  * @private
  */
-function _renderMatrixTable(datasetId, tableId, tissues, wesTable, wgsTable){
+function _renderMatrixTable(datasetId, tableId, tissues, wesTable, wgsTable, columns){
     const dataset = {
         'gtex-v7': {
             label:'GTEX V7',
             bgcolor: '#2a718b'
         }
     };
-
     // rendering the column labels
     const theTable = select(`#${tableId}`);
-    const columns = ['', 'RNA-Seq', 'RNA-Seq with WGS', 'WES', 'WGS'];
     theTable.select('thead').selectAll('th')
         .data(columns)
         .enter()
@@ -148,10 +163,25 @@ function _addClickEvents(tableId){
         })
 }
 
-function _addToolbar(){
+function _addToolbar(tableId, tissues, columns){
+    const theCells = select(`#${tableId}`).select('tbody').selectAll('td');
+
     const toolbar = new Toolbar('matrix-table-toolbar', undefined, true);
     toolbar.createButton('sample-download');
     toolbar.createButton('send-to-firecloud', 'fa-cloud-upload-alt');
+    select('#sample-download')
+        .style('cursor', 'pointer')
+        .on("click", function(){
+            theCells.filter(`.selected`)
+                .each(function(d){
+                    console.log(select(this).attr('class'));
+                })
+        });
+    select('#send-to-firecloud')
+        .style('cursor', 'pointer')
+        .on("click", function(){
+            alert("Send to FireCloud. To be implemented.")
+        });
 }
 
 
