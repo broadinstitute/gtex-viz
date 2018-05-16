@@ -44,11 +44,50 @@ export function buildDataMatrix(tableId, datasetId='gtex-v7', urls=getGtexUrls()
                 a[d.tissueId]= a[d.tissueId]+1;
                 return a;
                 }, {});
-            const columns = ['', 'RNA-Seq', 'RNA-Seq with WGS', 'WES', 'WGS'];
-
-            _renderMatrixTable(datasetId, tableId, tissues, wesTable, wgsTable, columns);
+            const columns = [
+                {
+                    label: 'RNA-Seq',
+                    id: 'rnaSeqSampleCount'
+                },
+                {
+                    label: 'RNA-Seq with WGS',
+                    id: 'rnaSeqAndGenotypeSampleCount'
+                },
+                {
+                    label: 'WES',
+                    id: 'wes'
+                },
+                {
+                    label: 'WGS',
+                    id: 'wgs'
+                }
+            ];
+            const rows = tissues.map((t)=>{
+                t.id = t.tissueId;
+                t.label = t.tissueName;
+                t.wes = wesTable[t.tissueId] || undefined;
+                t.wgs = wgsTable[t.tissueId] || undefined;
+                return t;
+            });
+            // const theData = [];
+            // rows.forEach((row)=>{
+            //     columns.forEach((col)=>{
+            //         let value = row[col.id] || undefined;
+            //         theData.push({
+            //             x: row.id,
+            //             y: col.id,
+            //             value: value
+            //         })
+            //     })
+            // });
+            const theMatrix = {
+                X: rows,
+                Y: columns,
+                // data: theData
+            };
+            _renderMatrixTable(datasetId, tableId, theMatrix);
             _addClickEvents(tableId);
-            _addToolbar(tableId, tissues, columns);
+            _addToolbar(tableId, theMatrix);
 
 
         })
@@ -59,12 +98,10 @@ export function buildDataMatrix(tableId, datasetId='gtex-v7', urls=getGtexUrls()
  * Render the matrix in an HTML table format
  * @param datasetId {String}
  * @param tableId {String} the DOM ID of the table
- * @param tissues {List} of GTEx tissue objects with attr: tissueName, tissueId, rnaSeqSampleCount, rnsSeqAndGenotypeSampleCount
- * @param wesTable {Dictionary} of WES sample counts indexed by tissueId
- * @param wgsTable {Dictionary} of WGS sample counts indexed by tissueId
+ * @param mat {Object} of attr: X--a list of x objects, Y--a list of y objects, and data--a list of data objects
  * @private
  */
-function _renderMatrixTable(datasetId, tableId, tissues, wesTable, wgsTable, columns){
+function _renderMatrixTable(datasetId, tableId, mat){
     const dataset = {
         'gtex-v7': {
             label:'GTEX V7',
@@ -74,29 +111,29 @@ function _renderMatrixTable(datasetId, tableId, tissues, wesTable, wgsTable, col
     // rendering the column labels
     const theTable = select(`#${tableId}`);
     theTable.select('thead').selectAll('th')
-        .data(columns)
+        .data([{label:"", id:""}].concat(mat.Y))
         .enter()
         .append('th')
         .attr('scope', 'col')
         .attr('class', (d, i)=>`y${i}`)
-        .text((d)=>d);
+        .text((d)=>d.label);
 
     theTable.select('.table-label')
         .append('th')
-        .attr('colspan', columns.length)
+        .attr('colspan', mat.Y.length + 1)
         .text(dataset[datasetId].label)
         .style('background-color',dataset[datasetId].bgcolor);
 
-
     const theRows = theTable.select('tbody').selectAll('tr')
-        .data(tissues)
+        .data(mat.X)
         .enter()
         .append('tr');
 
+    // rendering the row label
     theRows.append('th')
         .attr('scope', 'row')
         .attr('class', (d, i)=>`x${i}`)
-        .text((d)=>d.tissueName);
+        .text((d)=>d.label);
 
     theRows.append('td')
         .attr('class', (d, i)=>`x${i} y1`)
@@ -108,11 +145,11 @@ function _renderMatrixTable(datasetId, tableId, tissues, wesTable, wgsTable, col
 
     theRows.append('td')
         .attr('class', (d, i)=>`x${i} y3`)
-        .text((d)=>wesTable[d.tissueId]||'');
+        .text((d)=>d.wes||'');
 
     theRows.append('td')
         .attr('class', (d, i)=>`x${i} y4`)
-        .text((d)=>wgsTable[d.tissueId]||'');
+        .text((d)=>d.wgs||'');
 }
 
 /**
@@ -136,7 +173,7 @@ function _addClickEvents(tableId){
                select(this).attr('scope', 'col');
                theCells.filter(`.${theColumn}`).classed('selected', false);
            }
-           console.log(theColumn);
+           // console.log(theColumn);
         });
 
     // row labels
@@ -151,8 +188,8 @@ function _addClickEvents(tableId){
                select(this).attr('scope', 'row');
                theCells.filter(`.${theRow}`).classed('selected', false);
            }
-           console.log('hey!');
-        })
+           // console.log(theRow);
+        });
 
 
     // data cells
@@ -163,7 +200,7 @@ function _addClickEvents(tableId){
         })
 }
 
-function _addToolbar(tableId, tissues, columns){
+function _addToolbar(tableId, mat){
     const theCells = select(`#${tableId}`).select('tbody').selectAll('td');
 
     const toolbar = new Toolbar('matrix-table-toolbar', undefined, true);
@@ -174,7 +211,10 @@ function _addToolbar(tableId, tissues, columns){
         .on("click", function(){
             theCells.filter(`.selected`)
                 .each(function(d){
-                    console.log(select(this).attr('class'));
+                    const marker = select(this).attr('class').split(' ').filter((c)=>{return c!='selected'});
+                    const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
+                    const y = mat.Y[parseInt(marker[1].replace('y', ''))-1].id;
+                    console.log("Download " + x + " : "+ y);
                 })
         });
     select('#send-to-firecloud')
