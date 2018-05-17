@@ -16,6 +16,10 @@ br.anatomogramBreak{
     line-height: 1;
     opacity: 1;
     z-index: 9999;
+    font-size:12px;
+    position: absolute;
+    display: none;
+    max-width: 250px;
 }
 
 .anatomogramRowHighlight {

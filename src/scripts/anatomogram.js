@@ -1,9 +1,60 @@
 /**
  * Created by lucyxu on 6/9/17.
+ * Modified by Kat on 5/17/2018.
  */
 
+
+import {json} from "d3-fetch";
+import {getGtexUrls} from "./modules/gtexDataParser";
+
+export function render(urls=getGtexUrls()){
+    const promises = [
+        json(urls.tissue),
+        json("data/AnatomogramDescriptionsCopy.json")
+    ]
+    Promise.all(promises)
+        .then(function(args){
+            let tissueMetadata = parseTissues(args[0]);
+            let jsonTissues = args[1];
+            _scaleSvgs("fullBodySvg")
+        })
+        .catch(function(err){
+            console.error(err);
+        })
+}
+
+function _scaleSvgs(type) {
+    // const fullBodyAnatomogramScaleFactor = 525;
+    // const fullBodyContainerScaleFactor = 1.85;
+    // const brainAnatomogramScaleFactor = 362;
+    // const brainContainerScaleFactor = 0.885;
+    // if (type==="fullBodySvg") {
+    //     const anatomogramScaleFactor = fullBodyAnatomogramScaleFactor;
+    //     const containerScaleFactor = fullBodyContainerScaleFactor;
+    // }
+    // else {
+    //     const anatomogramScaleFactor = brainAnatomogramScaleFactor;
+    //     const containerScaleFactor = brainContainerScaleFactor;
+    // }
+
+    const anatomogramScaleFactor = type=="fullBodySvg"?525:362;
+    const containerScaleFactor = type=="fullBodySvg"?1.85:0.885;
+
+    $("#" + type + " .svgContainer").css("height", ""+ $("#" + type +" .svgContainer").width()*containerScaleFactor);
+    if ($(window).width()>1200) {
+        $("#" + type +" .svgImage").attr("transform", "scale("+($(window).width()/anatomogramScaleFactor)+")");
+    }
+    else {
+        $("#" + type +" .svgImage").attr("transform", "scale("+($(window).width()/(anatomogramScaleFactor/2))+")");
+    }
+}
 var renderAnatomogram = function() {
-    $.getJSON("../home/tmpAnatomogramData/AnatomogramDescriptionsCopy.json", function (jsonTissues) {
+
+
+
+
+
+    $.getJSON("data/AnatomogramDescriptionsCopy.json", function (jsonTissues) {
 
         scaleSvgs("fullBodySvg");
         var specialTissues = ["UBERON_0002367", "UBERON_0000473", "UBERON_0000007", "UBERON_0000945", "UBERON_0001044", "UBERON_0003889", "UBERON_0000002"]; //tissues that need to be highlighted in special ways
@@ -227,4 +278,4 @@ var renderAnatomogram = function() {
             })
         }
     });
-}
+};
