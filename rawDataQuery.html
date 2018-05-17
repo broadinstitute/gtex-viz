@@ -92,7 +92,7 @@
             #filter-menu {
                 font-size: 12px;
                 /*display:none; */
-                padding: 0 15px 0 15px;
+                padding: 0 20px 0 20px;
                 border-left: 1px solid #eee;
                 border-right: 1px solid #eee;
             }
@@ -125,16 +125,21 @@
                     <form>
                         <div class="filter-section-title">GTEx Donors</div>
                         <label>Sex</label>
-                        <input type="radio" name="sex" value="male"> male <input type="radio" name="sex" value="female"> female
+                        <input type="radio" name="sex" value="both" checked> both
+                        <br/>
+                        <input type="radio" name="sex" value="male"> male
+                        <input type="radio" name="sex" value="female"> female
                         <br/><br/>
                         <label>Age</label>
-                        <input type="checkbox" name="age" value="20-29"> 20-29
-                        <input type="checkbox" name="age" value="30-39"> 30-39
-                        <input type="checkbox" name="age" value="40-49"> 40-49
+                        <input type="radio" name="age" value="all" checked> all
                         <br/>
-                        <input type="checkbox" name="age" value="50-59"> 50-59
-                        <input type="checkbox" name="age" value="60-69"> 60-69
-                        <input type="checkbox" name="age" value="70-79"> 70-79
+                        <input type="radio" name="age" value="20-29"> 20-29
+                        <input type="radio" name="age" value="30-39"> 30-39
+                        <input type="radio" name="age" value="40-49"> 40-49
+                        <br/>
+                        <input type="radio" name="age" value="50-59"> 50-59
+                        <input type="radio" name="age" value="60-69"> 60-69
+                        <input type="radio" name="age" value="70-79"> 70-79
                         <br/>
                     </form>
                 </div>
@@ -145,6 +150,7 @@
              <div class="col-xs-8">
                 <table id="gtex-v7-sample" class="matrix-table">
                     <thead></thead>
+
                     <tr class="table-label"></tr>
                 </table>
             </div>
@@ -154,7 +160,7 @@
     <script src="build/js/raw-data-query.bundle.dev.js"></script>
     <script>
         $(document).ready(function(){
-            RawDataQuery.buildDataMatrix("gtex-v7-sample", "gtex_v7");
+            RawDataQuery.launch("gtex-v7-sample", "gtex_v7");
         });
     </script>
 
