@@ -91,6 +91,10 @@
 
             #filter-menu {
                 font-size: 12px;
+                /*display:none; */
+                padding: 0 15px 0 15px;
+                border-left: 1px solid #eee;
+                border-right: 1px solid #eee;
             }
 
             div.filter-apply {
@@ -98,6 +102,8 @@
                 /*font-weight: bold;*/
                 text-decoration: underline;
             }
+
+
         </style>
 
         <script
@@ -114,32 +120,33 @@
     <body class="container" style="margin-top:20px;">
         <h4>GTEx Raw File Search</h4>
         <div class="row">
-            <div class="col-xs-8">
-                <table id="gtex-v7-sample" class="matrix-table">
-                    <thead></thead>
-                    <tr class="table-label"></tr>
-                </table>
-            </div>
-            <div class="col-xs-1">
-                <div id="matrix-table-toolbar"></div>
-            </div>
             <div class="col-xs-3">
-                <div id="filter-menu" style="display:none; padding-left: 15px; border-left: 1px solid #eee;">
+                <div id="filter-menu" style="">
                     <form>
                         <div class="filter-section-title">GTEx Donors</div>
                         <label>Sex</label>
                         <input type="radio" name="sex" value="male"> male <input type="radio" name="sex" value="female"> female
-                        <br/>
+                        <br/><br/>
                         <label>Age</label>
                         <input type="checkbox" name="age" value="20-29"> 20-29
                         <input type="checkbox" name="age" value="30-39"> 30-39
                         <input type="checkbox" name="age" value="40-49"> 40-49
+                        <br/>
                         <input type="checkbox" name="age" value="50-59"> 50-59
                         <input type="checkbox" name="age" value="60-69"> 60-69
                         <input type="checkbox" name="age" value="70-79"> 70-79
                         <br/>
                     </form>
                 </div>
+            </div>
+            <div class="col-xs-1">
+                <div id="matrix-table-toolbar"></div>
+            </div>
+             <div class="col-xs-8">
+                <table id="gtex-v7-sample" class="matrix-table">
+                    <thead></thead>
+                    <tr class="table-label"></tr>
+                </table>
             </div>
         </div>
     </body>

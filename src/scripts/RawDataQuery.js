@@ -34,53 +34,48 @@ export function buildDataMatrix(tableId, datasetId='gtex_v7', urls=getGtexUrls()
             let tissues = parseTissues(args[0]);
             let samples = args[1].filter((s)=>s.datasetId==datasetId);
 
-            // TODO: refactoring
-            let rnaseqTable = samples.filter((s)=>s.dataType=='RNASEQ').reduce((a, d)=>{
-                if(a[d.tissueId]===undefined) a[d.tissueId] = 0;
-                a[d.tissueId]= a[d.tissueId]+1;
-                return a;
+            const __buildHash = function(dataType){
+                return samples.filter((s)=>s.dataType==dataType).reduce((a, d)=>{
+                    if(a[d.tissueId]===undefined) a[d.tissueId] = 0;
+                    a[d.tissueId]= a[d.tissueId]+1;
+                    return a;
                 }, {});
-            let wgsTable = samples.filter((s)=>s.dataType=='WGS').reduce((a, d)=>{
-                if(a[d.tissueId]===undefined) a[d.tissueId] = 0;
-                a[d.tissueId]= a[d.tissueId]+1;
-                return a;
-                }, {});
-            let wesTable = samples.filter((s)=>s.dataType=='WES').reduce((a, d)=>{
-                if(a[d.tissueId]===undefined) a[d.tissueId] = 0;
-                a[d.tissueId]= a[d.tissueId]+1;
-                return a;
-                }, {});
+            };
             const columns = [
                 {
-                    label: 'RNA-Seq',
-                    id: 'rnaseq'
+                    label: 'OMNI',
+                    id: 'omni',
+                    data: __buildHash('OMNI')
                 },
-                // {
-                //     label: 'RNA-Seq with WGS',
-                //     id: 'rnaSeqAndGenotypeSampleCount'
-                // },
+                {
+                    label: 'RNA-Seq',
+                    id: 'rnaseq',
+                    data: __buildHash('RNASEQ')
+                },
+
                 {
                     label: 'WES',
-                    id: 'wes'
+                    id: 'wes',
+                    data: __buildHash('WES')
                 },
                 {
                     label: 'WGS',
-                    id: 'wgs'
+                    id: 'wgs',
+                    data: __buildHash('WGS')
                 }
             ];
             const rows = tissues.map((t)=>{
                 t.id = t.tissueId;
                 t.label = t.tissueName;
-                t.rnaseq = rnaseqTable[t.tissueId] || undefined;
-                t.wes = wesTable[t.tissueId] || undefined;
-                t.wgs = wgsTable[t.tissueId] || undefined;
+                columns.forEach((col)=>{
+                    t[col.id] = col.data[t.id] || undefined;
+                });
                 return t;
             });
 
             const theMatrix = {
                 X: rows,
                 Y: columns,
-                // data: theData
             };
             _renderMatrixTable(datasetId, tableId, theMatrix);
             _addClickEvents(tableId);
@@ -138,17 +133,12 @@ function _renderCounts(tbody, mat){
         .attr('scope', 'row')
         .attr('class', (d, i)=>`x${i}`)
         .text((d)=>d.label);
-    theRows.append('td')
-        .attr('class', (d, i)=>`x${i} y1`)
-        .text((d)=>d.rnaseq||'');
 
-    theRows.append('td')
-        .attr('class', (d, i)=>`x${i} y2`)
-        .text((d)=>d.wes||'');
-
-    theRows.append('td')
-        .attr('class', (d, i)=>`x${i} y3`)
-        .text((d)=>d.wgs||'');
+    mat.Y.forEach((y, j)=>{
+        theRows.append('td')
+            .attr('class', (d, i)=>`x${i} y${j}`)
+            .text((d)=>d[y.id]||'');
+    });
 }
 
 /**
@@ -205,7 +195,7 @@ function _addToolbar(tableId, mat){
     const toolbar = new Toolbar('matrix-table-toolbar', undefined, true);
     toolbar.createButton('sample-download');
     toolbar.createButton('send-to-firecloud', 'fa-cloud-upload-alt');
-    toolbar.createButton('show-filters', 'fa-filter');
+    // toolbar.createButton('show-filters', 'fa-filter');
     select('#sample-download')
         .style('cursor', 'pointer')
         .on('click', function(){
@@ -224,12 +214,12 @@ function _addToolbar(tableId, mat){
             alert('Send to FireCloud. To be implemented.')
         });
 
-    select('#show-filters')
-        .style('cursor', 'pointer')
-        .on('click', function(){
-            select('#filter-menu')
-                .style('display', 'block')
-        })
+    // select('#show-filters')
+    //     .style('cursor', 'pointer')
+    //     .on('click', function(){
+    //         select('#filter-menu')
+    //             .style('display', 'block')
+    //     })
 }
 
 
