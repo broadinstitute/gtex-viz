@@ -36,8 +36,6 @@ export function launch(tableId, datasetId='gtex_v7', urls=getGtexUrls()){
             const theMatrix = _buildMatrix(datasetId, samples, tissues);
 
             _renderMatrixTable(tableId, theMatrix);
-            _addClickEvents(tableId);
-            _addToolbar(tableId, theMatrix, samples);
             _addFilters(tableId, theMatrix, samples, tissues);
 
         })
@@ -49,13 +47,13 @@ function _addFilters(tableId, mat, samples, tissues){
         const sex = select('input[name="sex"]:checked').node().value;
         const age = select('input[name="age"]:checked').node().value;
         if (sex == 'both' && age == 'all'){
-            _renderCounts(select(`#${tableId}`).select('tbody'), _buildMatrix(mat.datasetId, samples, tissues));
+            _renderMatrixTable(tableId, _buildMatrix(mat.datasetId, samples, tissues));
         } else {
             let filteredMat = undefined;
             if (sex == 'both') filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.ageBracket==age), tissues);
             else if (age == 'all') filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.sex==sex), tissues);
             else filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.sex==sex && s.ageBracket==age), tissues);
-            _renderCounts(select(`#${tableId}`).select('tbody'), filteredMat);
+            _renderMatrixTable(tableId, filteredMat);
         }
     };
     select('#filter-menu').selectAll('input[name="sex"]').on('change', __filter);
@@ -72,16 +70,15 @@ function _buildMatrix(datasetId, samples, tissues){
     };
     const columns = [
         {
-            label: 'OMNI',
-            id: 'omni',
-            data: __buildHash('OMNI')
-        },
-        {
             label: 'RNA-Seq',
             id: 'rnaseq',
             data: __buildHash('RNASEQ')
         },
-
+        {
+            label: 'OMNI',
+            id: 'omni',
+            data: __buildHash('OMNI')
+        },
         {
             label: 'WES',
             id: 'wes',
@@ -105,7 +102,8 @@ function _buildMatrix(datasetId, samples, tissues){
     return {
         datasetId: datasetId,
         X: rows,
-        Y: columns
+        Y: columns,
+        data: samples
     };
 }
 
@@ -133,14 +131,15 @@ function _renderMatrixTable(tableId, mat){
         .attr('class', (d, i)=>d.id==""?'':`y${i-1}`)
         .text((d)=>d.label);
 
-    theTable.select('.table-label')
-        .append('th')
+    theTable.select('.table-label').selectAll('*').remove();
+    theTable.select('.table-label').append('th')
         .attr('colspan', mat.Y.length + 1)
         .text(dataset[mat.datasetId].label)
         .style('background-color',dataset[mat.datasetId].bgcolor);
 
-    _renderCounts(theTable.select('tbody'), mat)
-
+    _renderCounts(theTable.select('tbody'), mat);
+    _addClickEvents(tableId);
+    _addToolbar(tableId, mat);
 }
 
 function _renderCounts(tbody, mat){
@@ -162,6 +161,7 @@ function _renderCounts(tbody, mat){
             .attr('class', (d, i)=>`x${i} y${j}`)
             .text((d)=>d[y.id]||'');
     });
+
 }
 
 /**
@@ -213,8 +213,9 @@ function _addClickEvents(tableId){
 }
 
 function _addToolbar(tableId, mat){
+    // TODO: get rid of hard-coded dom IDs
     const theCells = select(`#${tableId}`).select('tbody').selectAll('td');
-
+    select('#matrix-table-toolbar').selectAll('*').remove();
     const toolbar = new Toolbar('matrix-table-toolbar', undefined, true);
     toolbar.createButton('sample-download');
     toolbar.createButton('send-to-firecloud', 'fa-cloud-upload-alt');
@@ -222,13 +223,17 @@ function _addToolbar(tableId, mat){
     select('#sample-download')
         .style('cursor', 'pointer')
         .on('click', function(){
-            theCells.filter(`.selected`)
-                .each(function(d){
+            let cells = theCells.filter(`.selected`);
+            if (cells.empty()) alert('You have not selected any samples to download.');
+            else {
+                cells.each(function(d){
                     const marker = select(this).attr('class').split(' ').filter((c)=>{return c!='selected'});
                     const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
                     const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
                     console.log('Download ' + x + ' : '+ y);
                 })
+            }
+
         });
 
     select('#send-to-firecloud')
