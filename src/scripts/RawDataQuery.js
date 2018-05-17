@@ -71,22 +71,22 @@ function _buildMatrix(datasetId, samples, tissues){
     const columns = [
         {
             label: 'RNA-Seq',
-            id: 'rnaseq',
+            id: 'RNASEQ',
             data: __buildHash('RNASEQ')
         },
         {
             label: 'OMNI',
-            id: 'omni',
+            id: 'OMNI',
             data: __buildHash('OMNI')
         },
         {
             label: 'WES',
-            id: 'wes',
+            id: 'WES',
             data: __buildHash('WES')
         },
         {
             label: 'WGS',
-            id: 'wgs',
+            id: 'WGS',
             data: __buildHash('WGS')
         }
     ];
@@ -231,6 +231,8 @@ function _addToolbar(tableId, mat){
                     const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
                     const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
                     console.log('Download ' + x + ' : '+ y);
+                    const selectedSamples = mat.data.filter((s)=>s.dataType==y&&s.tissueId==x);
+                    console.log(selectedSamples);
                 })
             }
 
