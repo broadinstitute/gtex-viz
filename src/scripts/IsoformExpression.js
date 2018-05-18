@@ -33,9 +33,8 @@ import IsoformTrackViewer from "./modules/IsoformTrackViewer";
  * @param urls {Object} of the GTEx web service urls with attr: geneId, tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
  */
 export function render(type, geneId, rootId, urls=getGtexUrls()){
-     json(urls.geneId + geneId)
-         .then(function(data){
-
+    json(urls.geneId + geneId) // query the gene by geneId--gene name or gencode ID with or without versioning
+        .then(function(data){
              // get the gene object and its gencode Id
              if (!data.hasOwnProperty("geneId")) throw "Parsing Error: attribute geneId doesn't exist.";
              if (data.geneId.length==0){
@@ -165,7 +164,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 // define the gene model and isoform tracks layout dimensions
                 const modelConfig = {
                     x: dmap.config.panels.main.x,
-                    y: dmap.config.panels.main.h + dmap.config.panels.main.y + 100,
+                    y: dmap.config.panels.main.h + dmap.config.panels.main.y + 130, // TODO: remove hard-coded values
                     w: dmap.config.panels.main.w,
                     h: 100
                 };
@@ -223,15 +222,15 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         throw "unrecognized type";
                     }
                 }
-            }).catch(function(err){
-                console.error(err);
-                $('#spinner').hide();
-            });
-         })
-         .catch(function(err){
-             console.error(err);
-             $('#spinner').hide();
-         })
+        }).catch(function(err){
+            console.error(err);
+            $('#spinner').hide();
+        });
+        })
+        .catch(function(err){
+            console.error(err);
+            $('#spinner').hide();
+        })
 }
 
 
@@ -270,16 +269,20 @@ function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer
         .classed("exp-map-xcolor", true)
         .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
 
-    mapSvg.select("#heatmap").selectAll(".leaf-color")
-        .data(dmap.objects.heatmap.xScale.domain())
-        .enter()
-        .append("rect")
-        .attr("x", (d)=>dmap.objects.heatmap.xScale(d))
-        .attr("y", dmap.objects.heatmap.yScale.range()[0] - 10)
-        .attr("width", dmap.objects.heatmap.xScale.bandwidth())
-        .attr("height", 5)
-        .classed("leaf-color", true)
-        .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
+    if (dmap.objects.heatmap.yScale.domain().length > 15){
+        // when there are more than 15 isoforms, add another tissue color bands under the dendrogram's leaf nodes
+         mapSvg.select("#heatmap").selectAll(".leaf-color")
+            .data(dmap.objects.heatmap.xScale.domain())
+            .enter()
+            .append("rect")
+            .attr("x", (d)=>dmap.objects.heatmap.xScale(d))
+            .attr("y", dmap.objects.heatmap.yScale.range()[0] - 10)
+            .attr("width", dmap.objects.heatmap.xScale.bandwidth())
+            .attr("height", 5)
+            .classed("leaf-color", true)
+            .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
+    }
+
 
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-xlabel")
@@ -377,16 +380,19 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
         .classed("exp-map-ycolor", true)
         .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
 
-    mapSvg.select("#heatmap").selectAll(".leaf-color")
-        .data(dmap.objects.heatmap.yScale.domain())
-        .enter()
-        .append("rect")
-        .attr("x", dmap.objects.heatmap.xScale.range()[0] - 10)
-        .attr("y", (d)=>dmap.objects.heatmap.yScale(d))
-        .attr("width", 5)
-        .attr("height", dmap.objects.heatmap.yScale.bandwidth())
-        .classed("leaf-color", true)
-        .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
+    if (dmap.objects.heatmap.xScale.domain().length > 15) {
+        // Add an extra tissue color band if the number of columns are larger than 15
+        mapSvg.select("#heatmap").selectAll(".leaf-color")
+            .data(dmap.objects.heatmap.yScale.domain())
+            .enter()
+            .append("rect")
+            .attr("x", dmap.objects.heatmap.xScale.range()[0] - 10)
+            .attr("y", (d) => dmap.objects.heatmap.yScale(d))
+            .attr("width", 5)
+            .attr("height", dmap.objects.heatmap.yScale.bandwidth())
+            .classed("leaf-color", true)
+            .style("fill", (d) => `#${tissueDict[d].colorHex}`);
+    }
 
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")

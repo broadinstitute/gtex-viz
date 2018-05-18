@@ -135,7 +135,7 @@ export default class GeneModel {
                     d.startX = d.startExon.x + this.xScale(dist);
                     d.endX = d.endExon.x + this.xScale(dist2);
                     d.cx = d.startX + (d.endX - d.startX + 1)/2; // junction is rendered at the midpoint between startX and endX
-                    d.cy = exonY - 15 * Math.abs(Number(d.endExon.exonNumber) - Number(d.startExon.exonNumber) + 1);
+                    d.cy = exonY - 15 * ( Math.abs(Number(d.endExon.exonNumber) - Number(d.startExon.exonNumber)) + 0.5 );
                     if (d.cy < 0) d.cy = 0;
                 }
             });
