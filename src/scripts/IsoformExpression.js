@@ -164,7 +164,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 // define the gene model and isoform tracks layout dimensions
                 const modelConfig = {
                     x: dmap.config.panels.main.x,
-                    y: dmap.config.panels.main.h + dmap.config.panels.main.y + 100,
+                    y: dmap.config.panels.main.h + dmap.config.panels.main.y + 130, // TODO: remove hard-coded values
                     w: dmap.config.panels.main.w,
                     h: 100
                 };
