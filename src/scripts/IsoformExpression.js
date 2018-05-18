@@ -33,9 +33,8 @@ import IsoformTrackViewer from "./modules/IsoformTrackViewer";
  * @param urls {Object} of the GTEx web service urls with attr: geneId, tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
  */
 export function render(type, geneId, rootId, urls=getGtexUrls()){
-     json(urls.geneId + geneId)
-         .then(function(data){
-
+    json(urls.geneId + geneId) // query the gene by geneId--gene name or gencode ID with or without versioning
+        .then(function(data){
              // get the gene object and its gencode Id
              if (!data.hasOwnProperty("geneId")) throw "Parsing Error: attribute geneId doesn't exist.";
              if (data.geneId.length==0){
@@ -223,15 +222,15 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         throw "unrecognized type";
                     }
                 }
-            }).catch(function(err){
-                console.error(err);
-                $('#spinner').hide();
-            });
-         })
-         .catch(function(err){
-             console.error(err);
-             $('#spinner').hide();
-         })
+        }).catch(function(err){
+            console.error(err);
+            $('#spinner').hide();
+        });
+        })
+        .catch(function(err){
+            console.error(err);
+            $('#spinner').hide();
+        })
 }
 
 
