@@ -41,7 +41,7 @@ export function render(urls=getGtexUrls()){
                     console.log(tissueId);
                     let tissueColor = "#" + jsonTissues[tissueId].colorHex;
                     $(t).css('fill', tissueColor);
-                    $(t).css('fill-opacity', 1);
+                    $(t).css('fill-opacity', 0.5);
                 }
 
             });
