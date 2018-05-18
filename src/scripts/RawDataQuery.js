@@ -26,13 +26,19 @@ export function launch(tableId, datasetId='gtex_v7', urls=getGtexUrls()){
     const promises = [
         // TODO: urls for other datasets
         json(urls.tissue),
+        tsv(urls.rnaseqCram),
+        tsv(urls.wgsCram),
         tsv(urls.sample),
     ];
 
     Promise.all(promises)
         .then(function(args){
             let tissues = parseTissues(args[0]);
-            let samples = args[1].filter((s)=>s.datasetId==datasetId);
+            const files = {
+                rnaseqFiles: args[1].reduce((a, d)=>{a[d.sample_id]=d; return a;}, {}),
+                wgsFiles: args[2].reduce((a, d)=>{a[d.sample_id]=d; return a;}, {})
+            };
+            let samples = args[3].filter((s)=>s.datasetId==datasetId);
             const theMatrix = _buildMatrix(datasetId, samples, tissues);
 
             _renderMatrixTable(tableId, theMatrix);
@@ -73,11 +79,6 @@ function _buildMatrix(datasetId, samples, tissues){
             label: 'RNA-Seq',
             id: 'RNASEQ',
             data: __buildHash('RNASEQ')
-        },
-        {
-            label: 'OMNI',
-            id: 'OMNI',
-            data: __buildHash('OMNI')
         },
         {
             label: 'WES',
