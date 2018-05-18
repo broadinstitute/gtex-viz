@@ -38,7 +38,10 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
 
              // get the gene object and its gencode Id
              if (!data.hasOwnProperty("geneId")) throw "Parsing Error: attribute geneId doesn't exist.";
-             if (data.geneId.length==0) throw "Fatal Error: gene not found";
+             if (data.geneId.length==0){
+                 alert("No gene is found with " + geneId);
+                 throw "Fatal Error: gene is not found";
+             }
              if (data.geneId.length>1) {
                  let filtered = data.geneId.filter((g)=>{
                      return g.geneSymbolUpper==geneId.toUpperCase() || g.ensemblId==geneId.toUpperCase() || g.gencodeId == geneId.toUpperCase()
@@ -52,7 +55,10 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                  }
              }
              const gene = data.geneId[0];
-             if (gene === undefined) throw "Fatal Error: gene not found";
+             if (gene === undefined) {
+                 alert("No gene is found with " + geneId);
+                 throw "Fatal Error: gene is not found";
+             }
              const gencodeId = gene.gencodeId;
 
              // build the promises
@@ -217,9 +223,15 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         throw "unrecognized type";
                     }
                 }
-            }).catch(function(err){console.error(err)});
+            }).catch(function(err){
+                console.error(err);
+                $('#spinner').hide();
+            });
          })
-         .catch(function(err){console.error(err);})
+         .catch(function(err){
+             console.error(err);
+             $('#spinner').hide();
+         })
 }
 
 
