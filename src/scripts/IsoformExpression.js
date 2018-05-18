@@ -269,16 +269,20 @@ function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer
         .classed("exp-map-xcolor", true)
         .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
 
-    mapSvg.select("#heatmap").selectAll(".leaf-color")
-        .data(dmap.objects.heatmap.xScale.domain())
-        .enter()
-        .append("rect")
-        .attr("x", (d)=>dmap.objects.heatmap.xScale(d))
-        .attr("y", dmap.objects.heatmap.yScale.range()[0] - 10)
-        .attr("width", dmap.objects.heatmap.xScale.bandwidth())
-        .attr("height", 5)
-        .classed("leaf-color", true)
-        .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
+    if (dmap.objects.heatmap.yScale.domain().length > 15){
+        // when there are more than 15 isoforms, add another tissue color bands under the dendrogram's leaf nodes
+         mapSvg.select("#heatmap").selectAll(".leaf-color")
+            .data(dmap.objects.heatmap.xScale.domain())
+            .enter()
+            .append("rect")
+            .attr("x", (d)=>dmap.objects.heatmap.xScale(d))
+            .attr("y", dmap.objects.heatmap.yScale.range()[0] - 10)
+            .attr("width", dmap.objects.heatmap.xScale.bandwidth())
+            .attr("height", 5)
+            .classed("leaf-color", true)
+            .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
+    }
+
 
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-xlabel")
@@ -376,16 +380,19 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
         .classed("exp-map-ycolor", true)
         .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
 
-    mapSvg.select("#heatmap").selectAll(".leaf-color")
-        .data(dmap.objects.heatmap.yScale.domain())
-        .enter()
-        .append("rect")
-        .attr("x", dmap.objects.heatmap.xScale.range()[0] - 10)
-        .attr("y", (d)=>dmap.objects.heatmap.yScale(d))
-        .attr("width", 5)
-        .attr("height", dmap.objects.heatmap.yScale.bandwidth())
-        .classed("leaf-color", true)
-        .style("fill", (d)=>`#${tissueDict[d].colorHex}`);
+    if (dmap.objects.heatmap.xScale.domain().length > 15) {
+        // Add an extra tissue color band if the number of columns are larger than 15
+        mapSvg.select("#heatmap").selectAll(".leaf-color")
+            .data(dmap.objects.heatmap.yScale.domain())
+            .enter()
+            .append("rect")
+            .attr("x", dmap.objects.heatmap.xScale.range()[0] - 10)
+            .attr("y", (d) => dmap.objects.heatmap.yScale(d))
+            .attr("width", 5)
+            .attr("height", dmap.objects.heatmap.yScale.bandwidth())
+            .classed("leaf-color", true)
+            .style("fill", (d) => `#${tissueDict[d].colorHex}`);
+    }
 
     // define tissue label mouse events
     mapSvg.selectAll(".exp-map-ylabel")
