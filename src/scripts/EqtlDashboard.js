@@ -2,6 +2,7 @@ import {json} from "d3-fetch";
 import {select} from "d3-selection";
 import {range} from "d3-array";
 import GroupedViolin from "./modules/GroupedViolin";
+import {getGtexUrls} from "./modules/gtexDataParser";
 
 /**
  * Build the eQTL Dashboard
@@ -18,7 +19,7 @@ import GroupedViolin from "./modules/GroupedViolin";
  * @param messageBoxId {String} message box <div> ID
  * @param urls {Dictionary} of GTEx web service URLs
  */
-export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls=_getGTExUrls()){
+export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls=getGtexUrls()){
     let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
     try{
         json(urls.tissueSites)
@@ -160,16 +161,16 @@ function _customizeViolinPlot(plot, dom){
 
 }
 
-function _getGTExUrls(){
-    const host = 'https://gtexportal.org/rest/v1/';
-    return {
-        gene: host + 'reference/geneId?format=json&release=v7&geneId=',
-        rsId: host + 'reference/snp?reference=current&format=json&snpId=',
-        variantId: host + 'reference/snp?format=json&reference=current&release=v7&variantId=',
-        dyneqtl: 'https://gtexportal.org/rest/v1/association/dyneqtl',
-        tissueSites: "https://gtexportal.org/rest/v1/dataset/tissueSiteDetail?format=json"
-    }
-}
+// function _getGTExUrls(){
+//     const host = 'https://gtexportal.org/rest/v1/';
+//     return {
+//         // gene: host + 'reference/geneId?format=json&release=v7&geneId=',
+//         // rsId: host + 'reference/snp?reference=current&format=json&snpId=',
+//         // variantId: host + 'reference/snp?format=json&reference=current&release=v7&variantId=',
+//         // dyneqtl: host + '/association/dyneqtl',
+//         // tissueSites: host + "/dataset/tissueSiteDetail?format=json"
+//     }
+// }
 
 /**
  * Build the two-level tissue menu
@@ -326,7 +327,7 @@ function _submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, me
                 gid = pair.split(',')[0];
 
             // retrieve gene and variant info from the web service
-            const geneUrl = urls.gene + gid;
+            const geneUrl = urls.geneId + gid;
             const variantUrl = vid.toLowerCase().startsWith('rs')?urls.rsId+vid:urls.variantId+vid;
             const promises = [];
 
@@ -415,7 +416,7 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
 
     // queue up all tissue IDs
     tissues.forEach((tId) => {
-        let urlRoot = _getGTExUrls()['dyneqtl'];
+        let urlRoot = getGtexUrls()['dyneqtl'];
         let url = `${urlRoot}?snp_id=${variant.variantId}&gene_id=${gene.gencodeId}&tissue=${tId}`; // use variant ID, gencode ID and tissue ID to query the dyneqtl
         promises.push(_apiCall(url, tId));
     });

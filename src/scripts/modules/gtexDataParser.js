@@ -1,32 +1,39 @@
-"use strict";
-import {json} from "d3-fetch";
+'use strict';
+import {json} from 'd3-fetch';
 export function getGtexUrls(){
-    const host = "https://gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
+    const host = 'https://gtexportal.org/rest/v1/'; // NOTE: top expressed genes are not yet in production
     return {
-        // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
+        dyneqtl: host + 'association/dyneqtl',
 
-        // "sample": host + "dataset/sample?datasetId=gtex_v7&format=json&sort_by=sampleId&sortDir=asc&dataType=",
-        "rnaseqCram": "data/rnaseq_cram_files_v7_dbGaP_011516.txt",
-        "wgsCram": "data/wgs_cram_files_v7_hg38_dbGaP_011516.txt",
-        "sample": "data/gtex.Sample.csv",
-        "geneId": host + "reference/geneId?format=json&geneId=",
-        "geneExp": host + "expression/geneExpression?datasetId=gtex_v7&gencodeId=",
-        "tissue":  host + "dataset/tissueInfo",
-        "topInTissueFiltered": host + "expression/topExpressedGenes?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
-        "topInTissue": host + "expression/topExpressedGenes?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=",
-        "medExpById": host + "expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=",
+        exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
 
-        "exonExp": host + "expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
-        "junctionExp": host + "expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=",
-        "isoformExp": host + "expression/isoformExpression?datasetId=gtex_v7&boxplotDetail=median&gencodeId=",
+        geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
+        geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
+        geneModel: host + 'reference/collapsedGeneModel?unfiltered=false&release=v7&geneId=',
+        geneModelUnfiltered: host + 'reference/collapsedGeneModel?unfiltered=true&release=v7&geneId=',
 
-        "geneModel": host + "reference/collapsedGeneModel?unfiltered=false&release=v7&geneId=",
-        "geneModelUnfiltered": host + "reference/collapsedGeneModel?unfiltered=true&release=v7&geneId=",
-        "isoform": host + "reference/transcript?release=v7&gencode_id=",
+        isoform: host + 'reference/transcript?release=v7&gencode_id=',
+        isoformExp: host + 'expression/isoformExpression?datasetId=gtex_v7&boxplotDetail=median&gencodeId=',
 
-        "liverGeneExp": "data/top50.genes.liver.genomic.median.tpm.json", // top 50 genes in GTEx liver
-        "cerebellumGeneExp": "data/top.gtex.cerebellum.genes.median.tpm.tsv",
-        "mayoGeneExp": "data/gtex+mayo.top.cerebellum_ad.genes.median.tpm.tsv" // the top 50 genes in Mayo Cerebellum_AD + their gtex expression values
+        junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
+
+        medExpById: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=',
+
+        sample: 'data/gtex.Sample.csv',
+        snp: host + 'reference/snp?reference=current&format=json&snpId=',
+
+        tissue:  host + 'dataset/tissueInfo',
+        tissueSites: host + 'dataset/tissueSiteDetail?format=json',
+
+        topInTissueFiltered: host + 'expression/topExpressedGenes?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
+        topInTissue: host + 'expression/topExpressedGenes?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
+
+        variantId: host + 'reference/snp?format=json&reference=current&release=v7&variantId=',
+
+        // local static files
+        rnaseqCram: 'data/rnaseq_cram_files_v7_dbGaP_011516.txt',
+        wgsCram: 'data/wgs_cram_files_v7_hg38_dbGaP_011516.txt',
+
     }
 }
 
@@ -71,8 +78,8 @@ export function createTissueMenu(domId, url = getGtexUrls().tissue){
  * @returns {List} of genes
  */
 export function parseGenes(data){
-    const attr = "geneId";
-    if(!data.hasOwnProperty(attr)) throw "Gene web service parsing error";
+    const attr = 'geneId';
+    if(!data.hasOwnProperty(attr)) throw 'Gene web service parsing error';
     return data[attr];
 }
 
@@ -82,13 +89,13 @@ export function parseGenes(data){
  * @returns {List} of tissues
  */
 export function parseTissues(data){
-    const attr = "tissueInfo";
-    if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseTissues input error.";
+    const attr = 'tissueInfo';
+    if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseTissues input error.';
     const tissues = data[attr];
 
     // sanity check
-    ["tissueId", "tissueName", "colorHex"].forEach((d)=>{
-        if (!tissues[0].hasOwnProperty(d)) throw "Fatal Error: parseTissue attr not found: " + d;
+    ['tissueId', 'tissueName', 'colorHex'].forEach((d)=>{
+        if (!tissues[0].hasOwnProperty(d)) throw 'Fatal Error: parseTissue attr not found: ' + d;
     });
 
     return tissues;
@@ -100,13 +107,13 @@ export function parseTissues(data){
  * @returns {List} of exons
  */
 export function parseExons(data){
-    const attr = "collapsedGeneModel";
-    if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseExons input error." + data;
+    const attr = 'collapsedGeneModel';
+    if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseExons input error.' + data;
     // sanity check
-    ["featureType", "start", "end"].forEach((d)=>{
-        if (!data[attr][0].hasOwnProperty(d)) throw "Fatal Error: parseExons attr not found: " + d;
+    ['featureType', 'start', 'end'].forEach((d)=>{
+        if (!data[attr][0].hasOwnProperty(d)) throw 'Fatal Error: parseExons attr not found: ' + d;
     });
-    return data[attr].filter((d)=>d.featureType == "exon").map((d)=>{
+    return data[attr].filter((d)=>d.featureType == 'exon').map((d)=>{
         d.chromStart = d.start;
         d.chromEnd = d.end;
         return d;
@@ -114,8 +121,8 @@ export function parseExons(data){
 }
 
 // export function parseSamples(data){
-//     const attr = "sample";
-//     if (!data.hasOwnProperty(attr)) throw "Fatal Error: parseSamples input error. " + data;
+//     const attr = 'sample';
+//     if (!data.hasOwnProperty(attr)) throw 'Fatal Error: parseSamples input error. ' + data;
 //     return data[attr];
 // }
 //
@@ -133,11 +140,11 @@ export function parseExons(data){
  */
 export function parseJunctions(data){
 
-    const attr = "medianJunctionExpression";
-    if(!data.hasOwnProperty(attr)) throw "Fatal Error: parseJunctions input error. " + data;
-    return data[attr].filter((d)=>d.tissueId=="Liver")
+    const attr = 'medianJunctionExpression';
+    if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseJunctions input error. ' + data;
+    return data[attr].filter((d)=>d.tissueId=='Liver')
                     .map((d) => {
-                        let pos = d.junctionId.split("_");
+                        let pos = d.junctionId.split('_');
                         return {
                             chrom: pos[0],
                             chromStart: pos[1],
@@ -148,14 +155,14 @@ export function parseJunctions(data){
 }
 
 /**
- * parse transcript isoforms from the GTEx web service: "reference/transcript?release=v7&gencode_id="
+ * parse transcript isoforms from the GTEx web service: 'reference/transcript?release=v7&gencode_id='
  * @param data {Json}
  * returns a dictionary of transcript exon object lists indexed by ENST IDs
  */
 export function parseIsoformExons(data){
-    const attr = "transcript";
-    if(!data.hasOwnProperty(attr)) throw "parseIsoforms input error " + data;
-    return data[attr].filter((d)=>{return "exon" == d.featureType})
+    const attr = 'transcript';
+    if(!data.hasOwnProperty(attr)) throw 'parseIsoforms input error ' + data;
+    return data[attr].filter((d)=>{return 'exon' == d.featureType})
         .reduce((a, d)=>{
         if (a[d.transcriptId] === undefined) a[d.transcriptId] = [];
         a[d.transcriptId].push(d);
@@ -165,14 +172,14 @@ export function parseIsoformExons(data){
 
 /**
  * parse transcript isoforms
- * @param data {Json} from GTEx web service "reference/transcript?release=v7&gencode_id="
+ * @param data {Json} from GTEx web service 'reference/transcript?release=v7&gencode_id='
  * returns a list of isoform objects
  */
 
 export function parseIsoforms(data){
-    const attr = "transcript";
-    if(!data.hasOwnProperty(attr)) throw("parseIsoforms input error");
-    return data[attr].filter((d)=>{return "transcript" == d.featureType}).sort((a, b)=>{
+    const attr = 'transcript';
+    if(!data.hasOwnProperty(attr)) throw('parseIsoforms input error');
+    return data[attr].filter((d)=>{return 'transcript' == d.featureType}).sort((a, b)=>{
         const l1 = Math.abs(a.chromEnd - a.chromStart) + 1;
         const l2 = Math.abs(b.chromEnd - b.chromStart) + 1;
         return -(l1-l2); // sort by isoform length in descending order
@@ -190,20 +197,20 @@ export function parseIsoforms(data){
  */
 export function parseExonExpression(data, exons, useLog=true, adjust=1){
     const exonDict = exons.reduce((a, d)=>{a[d.exonId] = d; return a;}, {});
-    const attr = "medianExonExpression";
-    if(!data.hasOwnProperty(attr)) throw("parseExonExpression input error");
+    const attr = 'medianExonExpression';
+    if(!data.hasOwnProperty(attr)) throw('parseExonExpression input error');
 
     const exonObjects = data[attr];
     // error-checking
-    ["data", "exonId", "tissueId"].forEach((d)=>{
-        if (!exonObjects[0].hasOwnProperty(d)) throw "Fatal Error: parseExonExpression attr not found: " + d;
+    ['data', 'exonId', 'tissueId'].forEach((d)=>{
+        if (!exonObjects[0].hasOwnProperty(d)) throw 'Fatal Error: parseExonExpression attr not found: ' + d;
     });
     // parse GTEx median exon counts
     exonObjects.forEach((d) => {
         const exon = exonDict[d.exonId]; // for retrieving exon positions
         // error-checking
-        ["end", "start"].forEach((p)=>{
-            if (!exon.hasOwnProperty(p)) throw "Fatal Error: parseExonExpression attr not found: " + p;
+        ['end', 'start'].forEach((p)=>{
+            if (!exon.hasOwnProperty(p)) throw 'Fatal Error: parseExonExpression attr not found: ' + p;
         });
         d.l = exon.end - exon.start + 1;
         d.value = Number(d.data)/d.l;
@@ -214,7 +221,7 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
         d.id = d.gencodeId;
         d.chromStart = exon.start;
         d.chromEnd = exon.end;
-        d.unit = d.unit + " per base";
+        d.unit = d.unit + ' per base';
     });
     return exonObjects.sort((a,b)=>{
         if (a.chromStart<b.chromStart) return -1;
@@ -231,14 +238,14 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
  * @returns {List} of junction objects
  */
 export function parseJunctionExpression(data, useLog=true, adjust=1){
-    const attr = "medianJunctionExpression";
-    if(!data.hasOwnProperty(attr)) throw("parseJunctionExpression input error");
+    const attr = 'medianJunctionExpression';
+    if(!data.hasOwnProperty(attr)) throw('parseJunctionExpression input error');
 
     const junctions = data[attr];
 
     // error-checking
-    ["tissueId", "junctionId", "data", "gencodeId"].forEach((d)=>{
-        if (!junctions[0].hasOwnProperty(d)) throw "Fatal Error: parseJunctionExpression attr not found: " + d;
+    ['tissueId', 'junctionId', 'data', 'gencodeId'].forEach((d)=>{
+        if (!junctions[0].hasOwnProperty(d)) throw 'Fatal Error: parseJunctionExpression attr not found: ' + d;
     });
 
     // parse GTEx median junction read counts
@@ -266,8 +273,8 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
  * @returns {*}
  */
 export function parseIsoformExpression(data, useLog=true, adjust=1){
-    const attr = "isoformExpression";
-    if(!data.hasOwnProperty(attr)) throw("parseIsoformExpression input error");
+    const attr = 'isoformExpression';
+    if(!data.hasOwnProperty(attr)) throw('parseIsoformExpression input error');
     // parse GTEx isoform median TPM
     data[attr].forEach((d) => {
         d.value = useLog?Math.log10(Number(d.data + adjust)):Number(d.data);
@@ -281,8 +288,8 @@ export function parseIsoformExpression(data, useLog=true, adjust=1){
 }
 
 export function parseIsoformExpressionTranspose(data, useLog=true, adjust=1){
-    const attr = "isoformExpression";
-    if(!data.hasOwnProperty(attr)) throw("parseIsoformExpression input error");
+    const attr = 'isoformExpression';
+    if(!data.hasOwnProperty(attr)) throw('parseIsoformExpression input error');
     // parse GTEx isoform median TPM
     data[attr].forEach((d) => {
         d.value = useLog?Math.log10(Number(d.data + adjust)):Number(d.data);
@@ -302,13 +309,13 @@ export function parseIsoformExpressionTranspose(data, useLog=true, adjust=1){
  * @returns {*}
  */
 export function parseMedianExpression(data, useLog=true){
-    const attr = "medianGeneExpression";
-    if(!data.hasOwnProperty(attr)) throw "parseMedianExpression input error.";
+    const attr = 'medianGeneExpression';
+    if(!data.hasOwnProperty(attr)) throw 'parseMedianExpression input error.';
     const adjust = 1;
     // parse GTEx median gene expression
     // error-checking the required attributes:
-    if (data[attr].length == 0) throw "parseMedianExpression finds no data.";
-    ["median", "tissueId", "gencodeId"].forEach((d)=>{
+    if (data[attr].length == 0) throw 'parseMedianExpression finds no data.';
+    ['median', 'tissueId', 'gencodeId'].forEach((d)=>{
         if (!data[attr][0].hasOwnProperty(d)) throw `parseMedianExpression attr error. ${d} is not found`;
     });
     data.medianGeneExpression.forEach(function(d){
@@ -348,15 +355,15 @@ export function parseMedianExpression(data, useLog=true){
 function parseGeneExpression(gencodeId, data){
     let lookupTable = {
         exp: {}, // indexed by tissueId
-        geneSymbol: ""
+        geneSymbol: ''
     };
-    if(!data.hasOwnProperty(attr)) throw ("parseGeneExpression input error.");
+    if(!data.hasOwnProperty(attr)) throw ('parseGeneExpression input error.');
     data[attr].forEach((d)=>{
         if (d.gencodeId == gencodeId) {
             // if the gencode ID matches the query gencodeId,
             // add the expression data to the lookup table
             lookupTable.exp[d.tissueId] = d.data;
-            if ("" == lookupTable.geneSymbol) lookupTable.geneSymbol = d.geneSymbol
+            if ('' == lookupTable.geneSymbol) lookupTable.geneSymbol = d.geneSymbol
         }
     });
     return lookupTable
@@ -371,7 +378,7 @@ function parseGeneExpression(gencodeId, data){
  * @param xlist {List}: a list of tissue objects {id:String, name:String}
  * @returns {{x: Array, y: Array, name: string, type: string, line: {width: number}, marker: {color: string}}}
  */
-// export function makeJsonForPlotly(gencodeId, data, useLog=false, color="grey", xlist){
+// export function makeJsonForPlotly(gencodeId, data, useLog=false, color='grey', xlist){
 //
 //     // reference: https://plot.ly/javascript/box-plots/
 //
@@ -412,13 +419,13 @@ function parseGeneExpression(gencodeId, data){
  * @param colors {Dictionary} the violin color for genes
  */
 export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined){
-    const attr = "geneExpression";
-    if(!data.hasOwnProperty(attr)) throw "parseGeneExpressionForViolin input error.";
+    const attr = 'geneExpression';
+    if(!data.hasOwnProperty(attr)) throw 'parseGeneExpressionForViolin input error.';
     data[attr].forEach((d)=>{
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
         d.group = d.tissueId;
         d.label = d.geneSymbol;
-        d.color = colors===undefined?"#90c1c1":colors[d.gencodeId];
+        d.color = colors===undefined?'#90c1c1':colors[d.gencodeId];
     });
     return data[attr];
 }
