@@ -34,11 +34,28 @@ export function launch(tableId, datasetId='gtex_v7', urls=getGtexUrls()){
     Promise.all(promises)
         .then(function(args){
             let tissues = parseTissues(args[0]);
-            const files = {
-                rnaseqFiles: args[1].reduce((a, d)=>{a[d.sample_id]=d; return a;}, {}),
-                wgsFiles: args[2].reduce((a, d)=>{a[d.sample_id]=d; return a;}, {})
+            const cram = {
+                rnaseq: args[1].reduce((a, d)=>{a[d.sample_id]=d; return a;}, {}),
+                wgs: args[2].reduce((a, d)=>{a[d.sample_id]=d; return a;}, {})
             };
-            let samples = args[3].filter((s)=>s.datasetId==datasetId);
+            let samples = args[3]
+                .filter((s)=>s.datasetId==datasetId)
+                .map((s)=>{
+                    switch (s.dataType){
+                        case "WGS": {
+                            s.cramFile = cram.wgs[s.sampleId];
+                            break;
+                        }
+                        case "RNASEQ": {
+                            s.cramFile = cram.rnaseq[s.sampleId];
+                            break;
+                        }
+                        default:
+                            // do nothing
+                    }
+
+                    return s;
+                });
             const theMatrix = _buildMatrix(datasetId, samples, tissues);
 
             _renderMatrixTable(tableId, theMatrix);
