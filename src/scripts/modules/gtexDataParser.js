@@ -6,6 +6,8 @@ export function getGtexUrls(){
         // "geneExp": "https://gtexportal.org/rest/v1/dataset/featureExpression?feature=gene&gencode_id=",
 
         // "sample": host + "dataset/sample?datasetId=gtex_v7&format=json&sort_by=sampleId&sortDir=asc&dataType=",
+        "rnaseqCram": "data/rnaseq_cram_files_v7_dbGaP_011516.txt",
+        "wgsCram": "data/wgs_cram_files_v7_hg38_dbGaP_011516.txt",
         "sample": "data/gtex.Sample.csv",
         "geneId": host + "reference/geneId?format=json&geneId=",
         "geneExp": host + "expression/geneExpression?datasetId=gtex_v7&gencodeId=",

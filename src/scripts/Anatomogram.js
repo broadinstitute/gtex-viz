@@ -43,9 +43,7 @@ export function render(urls=getGtexUrls()){
                     $(t).css('fill', tissueColor);
                     $(t).css('fill-opacity', 0.5);
                 }
-
             });
-
         })
         .catch(function(err){
             console.error(err);
