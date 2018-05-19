@@ -1,5 +1,5 @@
 "use strict";
-
+import {json} from "d3-fetch";
 export function getGtexUrls(){
     const host = "https://gtexportal.org/rest/v1/"; // NOTE: top expressed genes are not yet in production
     return {
@@ -29,6 +29,41 @@ export function getGtexUrls(){
         "mayoGeneExp": "data/gtex+mayo.top.cerebellum_ad.genes.median.tpm.tsv" // the top 50 genes in Mayo Cerebellum_AD + their gtex expression values
     }
 }
+
+/**
+ * Create the tissue (dataset) dropdown menu using select2
+ * @param domId {String} the dom ID of the menu
+ * @param urls {Object} of web service urls with attr: tissue
+ * dependency: select2
+ */
+export function createTissueMenu(domId, url = getGtexUrls().tissue){
+    json(url)
+        .then(function(results){
+            let tissues = parseTissues(results);
+            tissues.forEach((d) => {
+                d.id = d.tissueId;
+                d.text = d.tissueName;
+            });
+            tissues.sort((a, b) => {
+                if(a.tissueName < b.tissueName) return -1;
+                if(a.tissueName > b.tissueName) return 1;
+                return 0;
+            });
+
+            // external library dependency: select2
+            $(`#${domId}`).select2({
+                placeholder: 'Select a data set',
+                data: tissues
+            });
+
+        })
+        .catch(function(err){console.error(err)});
+
+}
+
+
+
+
 
 /**
  * Parse the genes from GTEx web service

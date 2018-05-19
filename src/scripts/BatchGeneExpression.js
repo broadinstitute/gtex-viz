@@ -4,44 +4,19 @@ import {select, selectAll, event} from "d3-selection";
 import {keys, values} from "d3-collection";
 
 import {getGtexUrls,
-        parseGenes,
-        parseTissues,
-        parseMedianExpression,
-        parseGeneExpressionForViolin
+    parseGenes,
+    parseTissues,
+    parseMedianExpression,
+    parseGeneExpressionForViolin,
+    createTissueMenu
 } from "./modules/gtexDataParser";
 import {colorChart} from "./modules/Colors";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GroupedViolin from "./modules/GroupedViolin";
 
-/**
- * Create the tissue (dataset) dropdown menu using select2
- * @param domId {String} the dom ID of the menu
- * @param urls {Object} of web service urls with attr: tissue
- */
-export function createDatasetMenu(domId, urls = getGtexUrls()){
-    json(urls.tissue)
-        .then(function(results){
-            let tissues = parseTissues(results);
-            tissues.forEach((d) => {
-                d.id = d.tissueId;
-                d.text = d.tissueName;
-            });
-            tissues.sort((a, b) => {
-                if(a.tissueName < b.tissueName) return -1;
-                if(a.tissueName > b.tissueName) return 1;
-                return 0;
-            });
-
-            // external library dependency: select2
-            $(`#${domId}`).select2({
-                placeholder: 'Select a data set',
-                data: tissues
-            });
-
-        })
-        .catch(function(err){console.error(err)});
-
+export function createDatasetMenu(domId, url=getGtexUrls().tissue){
+    createTissueMenu(domId, url); // currently datasets only include GTEx tissues
 }
 
 /**
