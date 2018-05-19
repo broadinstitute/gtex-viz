@@ -21,8 +21,8 @@ import {getGtexUrls} from "./modules/gtexDataParser";
  */
 export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls=getGtexUrls()){
     let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
-    try{
-        json(urls.tissueSites)
+
+    json(urls.tissueSites)
         .then(function(data){ // retrieve all tissue (sub)sites
             // filter out invalide tissues due to sample size < 70
             const invalidTissues = ['Bladder', 'Cervix_Ectocervix', 'Cervix_Endocervix', 'Fallopian_Tube', 'Kidney_Cortex']; // temp solution: a hard-coded list because the sample size is not easy to retrieve
@@ -52,10 +52,10 @@ export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxI
             });
             _buildTissueMenu(tissueGroups, menuId);
             $(`#${submitId}`).click(_submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls));
+        })
+        .catch(function(err){
+            console.error(err);
         });
-    } catch (err){
-        console.error(err);
-    }
 
 }
 
