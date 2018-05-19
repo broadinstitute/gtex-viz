@@ -120,14 +120,6 @@ export function parseExons(data){
     });
 }
 
-// export function parseSamples(data){
-//     const attr = 'sample';
-//     if (!data.hasOwnProperty(attr)) throw 'Fatal Error: parseSamples input error. ' + data;
-//     return data[attr];
-// }
-//
-
-
 /**
  * parse the junctions
  * @param data
@@ -329,24 +321,6 @@ export function parseMedianExpression(data, useLog=true){
 }
 
 /**
- * parse the median gene expression, no longer in use
- * @param data {List} of data points with attr: value, tissueId, geneSymbol, gencodeId
- * @param useLog {Boolean} perform log transformation using log10
- * @returns {List}
- */
-// export function parseMedianTPM(data, useLog=true){
-//     // parse GTEx median TPM json static file
-//     data.forEach(function(d){
-//         d.value = useLog?Math.log10(+d.medianTPM + 1):+d.medianTPM;
-//         d.x = d.tissueId;
-//         d.y = d.geneSymbol;
-//         d.originalValue = parseFloat(d.medianTPM);
-//         d.id = d.gencodeId;
-//     });
-//     return data;
-// }
-
-/**
  * parse the gene expression
  * @param gencodeId {String}
  * @param data {Json} with attr: tissueId, geneSymbol
@@ -368,50 +342,6 @@ function parseGeneExpression(gencodeId, data){
     });
     return lookupTable
 }
-
-/**
- * Makes the json for the plotly boxplot, no longer in use
- * @param gencodeId {String}: a gencode ID
- * @param data {Object} gene expression API call
- * @param useLog {Boolean}
- * @param color {String}
- * @param xlist {List}: a list of tissue objects {id:String, name:String}
- * @returns {{x: Array, y: Array, name: string, type: string, line: {width: number}, marker: {color: string}}}
- */
-// export function makeJsonForPlotly(gencodeId, data, useLog=false, color='grey', xlist){
-//
-//     // reference: https://plot.ly/javascript/box-plots/
-//
-//     let lookupTable = parseGeneExpression(gencodeId, data); // constructs the tissue lookup table indexed by tissue ID
-//     let x = [];
-//     let y = [];
-//
-//     // xlist: the tissues
-//     xlist.forEach((d)=>{
-//         // d: a tissue
-//         if (lookupTable.exp[d.id]===undefined){
-//             // when the gene has no expression data in tissue d,
-//             // provide dummy data
-//             x = x.concat([d.name]);
-//             y = y.concat([-1]);
-//         } else {
-//             // concatenate a list of the tissue label repeatedly (lookupTable.exp[d].length times) to x
-//             // concatenate all the expression values to y
-//             // the number of elements in x and y must match
-//             x = x.concat(Array(lookupTable.exp[d.id].length).fill(d.name));
-//             y = y.concat(lookupTable.exp[d.id]);
-//         }
-//     });
-//     return {
-//         x: x,
-//         y: y,
-//         name: lookupTable.geneSymbol,
-//         type: 'box',
-//         line: {width:1},
-//         marker: {color:color},
-//     };
-//
-// }
 
 /**
  * parse the expression data of a gene for a grouped violin plot

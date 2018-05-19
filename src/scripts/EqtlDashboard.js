@@ -161,17 +161,6 @@ function _customizeViolinPlot(plot, dom){
 
 }
 
-// function _getGTExUrls(){
-//     const host = 'https://gtexportal.org/rest/v1/';
-//     return {
-//         // gene: host + 'reference/geneId?format=json&release=v7&geneId=',
-//         // rsId: host + 'reference/snp?reference=current&format=json&snpId=',
-//         // variantId: host + 'reference/snp?format=json&reference=current&release=v7&variantId=',
-//         // dyneqtl: host + '/association/dyneqtl',
-//         // tissueSites: host + "/dataset/tissueSiteDetail?format=json"
-//     }
-// }
-
 /**
  * Build the two-level tissue menu
  * dependencies: eqtlDashboard.css classes
