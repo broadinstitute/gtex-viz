@@ -40,6 +40,7 @@ export function createTissueMenu(domId, url = getGtexUrls().tissue){
  * @param groups {Dictionary} of lists of tissues indexed by the group name, this is created by gtexDataParser:parseTissueSites()
  * @param domId {String} <div> ID
  * Dependencies: jQuery, Bootstrap, eqtlDashboard.css
+ * todo: add reset and select all options
  */
 export function createTissueGroupMenu(groups, domId){
     const mainClass="ed-tissue-main-level";
@@ -92,7 +93,6 @@ export function createTissueGroupMenu(groups, domId){
             });
         }
 
-
         // custom click event for the top-level tissues: toggle the check boxes
         $("#" + gId).click(function(){
             if ($('#' + gId).is(":checked")) {
@@ -112,4 +112,32 @@ export function createTissueGroupMenu(groups, domId){
         });
     });
 
+}
+
+/**
+ * Parse the two-level checkbox-style tissue menu
+ * @param groups {Dictionary} of lists of tissues indexed by the group name, this is created by gtexDataParser:parseTissueSites()
+ * @param domId {String} <div> ID
+ * Dependencies: jQuery
+ */
+export function parseTissueGroupMenu(groups, domId){
+    let queryTissueIds = [];
+    $(`#${domId}`).find(":input").each(function(){ // using jQuery to parse each input item
+        if ( $(this).is(":checked")) { // the jQuery way to fetch a checked tissue
+            const id = $(this).attr('id');
+            if ($(this).hasClass("tissueGroup")){
+                // this input item is a tissue group
+                // check if this tissue group is a single-site group using the tissueGroups dictionary
+                // if so, add the single site to the query list
+                let groupName = id.replace(/_/g, " "); // first convert the ID back to group name
+                if (groups[groupName].length == 1) {
+                    queryTissueIds.push(groups[groupName][0].id);
+                }
+            }
+            else{ // this input item is a tissue site
+                queryTissueIds.push(id);
+            }
+        }
+    });
+    return queryTissueIds;
 }
