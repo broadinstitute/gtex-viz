@@ -102,7 +102,7 @@
                     throw "Gene input error";
                 }
                 // BatchGeneExpression.searchById(glist, [], domId, "expMapToolbar", "messageBox");
-                BatchGeneExpression.searchById(glist, [], heatmapRootId, violinRootId);
+                BatchGeneExpression.searchById(heatmapRootId, violinRootId, glist);
                 return false;
             });
         }

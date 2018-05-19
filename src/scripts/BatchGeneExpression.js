@@ -32,13 +32,13 @@ export function createDatasetMenu(domId, url=getGtexUrls().tissue){
  * @param toolbarId {String} the tool bar DOM ID
  * @param infoId {String} the message box DOM ID
  * @param urls {Dictionary} of GTEx web services urls
- * @param useFilters {Boolean} if the filter is applied, and if undefined, it means no filter
+ * @param filterGenes {Boolean} turn on the filter of special categories of genes (e.g. mitochondrial genes)
  */
-export function renderTopExpressed(tissueId, heatmapRootId, violinRootId, urls=getGtexUrls(), useFilters=true){
+export function renderTopExpressed(tissueId, heatmapRootId, violinRootId, urls=getGtexUrls(), filterGenes=true){
     // getting the top expressed genes in tissueId
-    const url = useFilters?urls.topInTissueFiltered:urls.topInTissue;
+    const url = filterGenes?urls.topInTissueFiltered:urls.topInTissue;
     const $filterInfoDiv = $(`#filterInfo`).length==0?$('<div/>').attr('id', 'filterInfo').appendTo('body'):$(`#filterInfo`);
-    if(useFilters) $filterInfoDiv.html("Mitochondrial genes are excluded.<br/>");
+    if(filterGenes) $filterInfoDiv.html("Mitochondrial genes are excluded.<br/>");
     else $filterInfoDiv.html("Mitochondrial genes are included.<br/>");
 
     json(url+ tissueId)
@@ -47,14 +47,24 @@ export function renderTopExpressed(tissueId, heatmapRootId, violinRootId, urls=g
             const callback = function(){
                 _styleSelectedTissue(tissueId);
             };
-            searchById(topGeneList, [tissueId], heatmapRootId, violinRootId, urls, useFilters, callback);
+            searchById(heatmapRootId, violinRootId, topGeneList, urls, filterGenes, callback, tissueId);
         })
         .catch(function(err){
             console.error(err);
         });
 }
 
-export function searchById(glist, tlist, heatmapRootId, violinRootId, urls=getGtexUrls(), useFilters=undefined, callback=undefined){
+/**
+ * Search Gene Expression by ID
+ * @param heatmapRootId {String}
+ * @param violinRootId {String}
+ * @param glist {List} of genes
+ * @param urls
+ * @param filterGenes {Boolean} or undefined when it isn't applicable
+ * @param callback
+ * @param qTissue {String}: only applicable for the search of top expressed genes in the qTissue
+ */
+export function searchById(heatmapRootId, violinRootId, glist, urls=getGtexUrls(), filterGenes=undefined, callback=undefined, qTissue=undefined){
     $('#spinner').show();
     $(`#${heatmapRootId}`).empty(); // clear the root DOM content
     const MAX = 50;
@@ -83,7 +93,71 @@ export function searchById(glist, tlist, heatmapRootId, violinRootId, urls=getGt
                        $message.html(message + dataMessage);
                    }
                    else {
-                       _renderDendroHeatmap(genes, tissues, tlist, eData, heatmapRootId, violinRootId, urls, useFilters);
+                       /***** render the DendroHeatmap *****/
+                       const expression = parseMedianExpression(eData); // the parser determines the orientations of the heatmap
+                       const ids = {
+                           root: heatmapRootId,
+                           violin: violinRootId,
+                           svg: `${heatmapRootId}-svg`,
+                           tooltip: "heatmapTooltip",
+                           toolbar: "heatmapToolbar",
+                           clone: "heatmapClone",
+                           buttons: {
+                               save: "heatmapSave",
+                               filter: "heatmapFilter",
+                               sort: "heatmapSortTissue",
+                               cluster: "heatmapClusterTissue"
+                           }
+                       };
+                        /***** build dom components *****/
+                        if($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($('body'));
+                        ["toolbar", "clone"].forEach((key)=>{
+                            $('<div/>').attr("id", ids[key]).appendTo($(`#${ids.root}`));
+                        });
+
+                        /***** heatmap rendering *****/
+                        let rootW = $(`#${ids.root}`).parent().width()==0?window.innerWidth:$(`#${ids.root}`).parent().width();
+
+                        const config = new DendroHeatmapConfig(rootW);
+                        const dmap = new DendroHeatmap(eData.clusters.tissue, eData.clusters.gene, expression, "YlGnBu", 2, config);
+
+                        if (genes.length < 3){
+                            // too few genes to cluster
+                            dmap.render(ids.root, ids.svg, true, false)
+                        }
+                        else {dmap.render(ids.root, ids.svg)}
+
+                        // construct handy data lookup tables
+                        const tissueDict = tissues.reduce((a, d)=>{
+                            if (!d.hasOwnProperty("tissueId")) throw "tissue has not attr tissue_id";
+                            a[d.tissueId] = d;
+                            return a;
+                        }, {});
+
+                        const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
+                            if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
+                            a[d.gencodeId]=d;
+                            return a;
+                        }, {});
+
+                        /***** customization for GTEx expression heatmap *****/
+                        // tooltip
+                        dmap.createTooltip(ids.tooltip);
+
+                        // change row and column labels
+                        _customizeLabels(dmap, tissueDict, geneDict);
+
+                        // Add tissue color boxes //
+                        _addTissueColors(dmap, tissueDict);
+
+                        // Add a toolbar
+                        _addToolBar(dmap, ids, tissueDict, urls, filterGenes, qTissue);
+
+                        // mouse events
+                        _customizeMouseEvents(dmap, tissueDict, geneDict);
+
+                        callback();
+
                    }
                })
                .catch(function(err){console.error(err)});
@@ -118,69 +192,14 @@ function _validateGenes(domId, genes, input){
     return message;
 }
 
-function _renderDendroHeatmap(genes, tissues, queryTissues, data, heatmapRootId, violinRootId, urls=getGtexUrls(), useFilters=undefined){
-    const expression = parseMedianExpression(data); // the parser determines the orientations of the heatmap
-    const ids = {
-        root: heatmapRootId,
-        violin: violinRootId,
-        svg: `${heatmapRootId}-svg`,
-        tooltip: "heatmapTooltip",
-        toolbar: "heatmapToolbar",
-        clone: "heatmapClone",
-        buttons: {
-            save: "heatmapSave",
-            filter: "heatmapFilter",
-            sort: "heatmapSortTissue",
-            cluster: "heatmapClusterTissue"
-        }
-    };
-    // build the dom components
-    if($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($('body'));
-    ["toolbar", "clone"].forEach((key)=>{
-        $('<div/>').attr("id", ids[key]).appendTo($(`#${ids.root}`));
-    });
-    // jQuery
-    let WIDTH = $(`#${ids.root}`).parent().width()==0?window.innerWidth:$(`#${ids.root}`).parent().width();
-    const config = new DendroHeatmapConfig(WIDTH);
-    const dmap = new DendroHeatmap(data.clusters.tissue, data.clusters.gene, expression, "YlGnBu", 2, config);
-
-    // heatmap rendering
-    if (genes.length < 3){
-        // too few genes to cluster
-        dmap.render(ids.root, ids.svg, true, false)
-    }
-    else {dmap.render(ids.root, ids.svg)}
-
-    /***** customization for GTEx expression heatmap *****/
-    // tooltip
-    dmap.createTooltip(ids.tooltip);
-
+function _customizeLabels(dmap, tissueDict, geneDict){
     // Change row labels to tissue names //
-    const tissueDict = tissues.reduce((a, d)=>{
-        if (!d.hasOwnProperty("tissueId")) throw "tissue has not attr tissue_id";
-        a[d.tissueId] = d;
-        return a;
-    }, {});
     select("#" + dmap.config.panels.main.id).selectAll(".exp-map-xlabel")
         .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
 
-    // Change column labels to gene symbols //
-    const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
-        if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
-        a[d.gencodeId]=d;
-        return a;
-    }, {});
+
     select("#" + dmap.config.panels.main.id).selectAll(".exp-map-ylabel")
         .text((d) => geneDict[d]===undefined?d:geneDict[d].geneSymbol);
-
-    // Add tissue color boxes //
-    _addTissueColors(dmap, tissueDict);
-
-    // Add a toolbar
-    _addToolBar(dmap, ids, tissueDict, queryTissues, urls, useFilters);
-
-    // mouse events
-    _customizeMouseEvents(dmap, tissueDict, geneDict)
 }
 
 /**
@@ -465,12 +484,12 @@ function _changeViolinXLabel(dom, tissueDict){
  * @param dmap {DendroHeatmap}
  * @param ids {Dictionary} of dom IDs with buttons
  * @param tissueDict {Dictionary} of tissue objects indexed by tissue ID
- * @param queryTissues {List} of user-defined query tissues
  * @param urls {Dictionary} of GTEx web service URLs
- * @param useFilters {Boolean} whether the data uses gene list filters
+ * @param filterGenes {Boolean}
+ * @param qTissue {String} of user-defined query tissues
  * @private
  */
-function _addToolBar(dmap, ids, tissueDict, queryTissues=[], urls=getGtexUrls(), useFilters=undefined){
+function _addToolBar(dmap, ids, tissueDict, urls=getGtexUrls(), filterGenes=undefined, qTissue=undefined){
     let toolbar = dmap.createToolbar(ids.toolbar, dmap.tooltip);
     toolbar.createDownloadButton(ids.buttons.save, ids.svg, `${ids.root}-save.svg`, ids.clone);
 
@@ -481,10 +500,10 @@ function _addToolBar(dmap, ids, tissueDict, queryTissues=[], urls=getGtexUrls(),
         select(`#${id}`)
             .on("click", function(){
                 // toggle the applied filter
-                renderTopExpressed(queryTissues[0], ids.root, ids.violin, urls, !useFilters);
+                renderTopExpressed(qTissue, ids.root, ids.violin, urls, !filterGenes);
             })
             .on("mouseover", function(){
-                if(useFilters) toolbar.tooltip.show("Include Mitochondrial Genes");
+                if(filterGenes) toolbar.tooltip.show("Include Mitochondrial Genes");
                 else toolbar.tooltip.show("Exclude Mitochondrial Genes");
             })
             .on("mouseout", function(){
@@ -528,7 +547,7 @@ function _addToolBar(dmap, ids, tissueDict, queryTissues=[], urls=getGtexUrls(),
             toolbar.tooltip.hide();
         });
     };
-    if (useFilters !== undefined) __addFilter();
+    if (filterGenes !== undefined) __addFilter();
     __addSortTissues();
     __addClusterTissues();
 }
