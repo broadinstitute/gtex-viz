@@ -1,11 +1,15 @@
 import {json} from "d3-fetch";
 import {select} from "d3-selection";
-import {range} from "d3-array";
+// import {range} from "d3-array";
 import GroupedViolin from "./modules/GroupedViolin";
 import {
     getGtexUrls,
     parseTissueSites
 } from "./modules/gtexDataParser";
+
+import {
+    createTissueGroupMenu
+} from "./modules/gtexMenuBuilder";
 
 /**
  * Build the eQTL Dashboard
@@ -29,7 +33,7 @@ export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxI
         .then(function(data){ // retrieve all tissue (sub)sites
             const forEqtl = true;
             let tissueGroups = parseTissueSites(data, forEqtl);
-            _buildTissueMenu(tissueGroups, menuId);
+            createTissueGroupMenu(tissueGroups, menuId);
             $(`#${submitId}`).click(_submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls));
 
         })
