@@ -184,103 +184,6 @@ function _renderDendroHeatmap(genes, tissues, queryTissues, data, heatmapRootId,
 }
 
 /**
- * Search gene expression by gene IDs and tissue IDs
- * @param glist {List} of gencode IDs or gene IDs
- * @param tlist {List} of tissue IDs: to search by tissue IDs is not yet implemented
- * @param domId {String} the DIV ID of the svg
- * @param infoId {String} the DOM ID of the message info box
- * @param toolbarId {String} the DOM ID of the toolbar
- * @param urls {Object} of web service urls with attr: tissue, geneId, medExpById
- * @param useFilters {Boolean} indicating whether gene filter is applied, or use undefined for no filtering
- * @returns {*}
- */
-export function searchByIdOld(glist, tlist, domId, toolbarId, infoId, urls = getGtexUrls(), useFilters=undefined, callback=undefined){
-    reset([domId, toolbarId, infoId, "violinRoot"]);
-    $('#spinner').show();
-    if (select(`#${domId}`).empty()) throw `Fatal Error: DOM element with id ${domId} does not exist;`;
-    let message = "";
-
-    Promise.all([json(urls.tissue), json(urls.geneId+glist.join(","))])
-        .then(function(args){
-             const tissues = parseTissues(args[0]),
-                max = 50;
-
-             const attr = "geneId";
-            if (!args[1].hasOwnProperty(attr)) throw "gene web service parsing error";
-            let geneObjects = args[1][attr];
-            if (geneObjects.length == 0) {
-                // validate if gene list is empty
-                message = "Fatal Error: the gene list is empty.<br/>";
-            } else {
-                // more input validation
-                if (geneObjects.length < glist.length) { // validate if all input genes are found
-                    const allIds = [];
-                    geneObjects.forEach((d)=>{
-                        allIds.push(d.gencodeId);
-                        allIds.push(d.geneSymbolUpper);
-                        allIds.push(d.ensemblId);
-                    }); // gather all IDs in retrieved geneObjects
-                    const missingGenes = glist.filter((d) => !allIds.includes(d));
-
-                    message = `Warning: Not all genes are found: ${missingGenes.join(",")}<br/>`;
-                }
-                if (geneObjects.length > max) { // validate if the number of input genes exceeds the maximum
-                    //language=HTML
-                    message += `Warning: Too many genes. Input list truncated to the first ${max}.<br/>`;
-                    geneObjects = geneObjects.slice(0, max); // slice the input gene list to the maximum allowed entries
-                }
-
-                // visualization rendering
-                // get all median express data of these genes in all tissues
-                const gencodeIds = geneObjects.map((d) => d.gencodeId);
-                json(urls.medExpById + gencodeIds.join(","))
-                    .then(function(eData) {
-                        const tissueTree = eData.clusters.tissue,
-                            geneTree = eData.clusters.gene,
-                            expression = parseMedianExpression(eData);
-                        let WIDTH = $(`#${domId}`).parent().width();
-                        WIDTH = WIDTH == 0?window.innerWidth:WIDTH;
-                        const config = new DendroHeatmapConfig("chart", WIDTH);
-                        const dmap = new DendroHeatmap(tissueTree, geneTree, expression, "YlGnBu", 2, config);
-
-                        if (gencodeIds.length < 3) {
-                            dmap.render(domId, true, false)
-                        } else {
-                            dmap.render(domId);
-                        }
-
-                        $('#spinner').hide();
-                        // customization for GTEx
-                        const tissueDict = tissues.reduce((a, d)=>{
-                            if (!d.hasOwnProperty("tissueId")) throw "tissue has not attr tissue_id";
-                            a[d.tissueId] = d;
-                            return a;
-                        }, {});
-                        const geneDict = dmap.data.heatmap.reduce((a, d, i)=>{
-                            if (!d.hasOwnProperty("gencodeId")) throw "gene has no attr gencodeId";
-                            a[d.gencodeId]=d;
-                            return a;
-                        }, {});
-                        _customizeLabels(dmap, tissueDict, geneDict);
-                        _addTissueColors(dmap, tissueDict);
-                        _customizeMouseEvents(dmap, tissueDict, geneDict);
-                        _createToolbar(domId, toolbarId, infoId, dmap, tissueDict, tlist, urls, useFilters);
-                        if(useFilters !== undefined){
-                            message += useFilters?"Mitochondrial genes are excluded.":"Mitochondrial genes are included";
-                        }
-                        $(`#${infoId}`).html(message);
-
-                        if(callback !== undefined) callback();
-
-                    })
-                    .catch(function(err){console.error(err)});
-            }
-
-        })
-        .catch(function(err){throw err});
-}
-
-/**
  * For top expressed query, highlight the query tissue label
  * @param tissueId {String} the tissue ID
  * Dependencies: expressMap.css
@@ -399,8 +302,6 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
  * @param dmap {DendroHeatmap}
  */
 function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap) {
-
-
     // action
     switch(action) {
         case "delete": {
