@@ -61,7 +61,7 @@ export function launchTopExpressed(tissueId, heatmapRootId, violinRootId, urls=g
 }
 
 
-export function launch(menuId, urls=getGtexUrls()){
+export function launch(menuId, submitId, urls=getGtexUrls()){
     let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
 
     json(urls.tissueSites)
@@ -69,7 +69,25 @@ export function launch(menuId, urls=getGtexUrls()){
             const forEqtl = false;
             let tissueGroups = parseTissueSites(data, forEqtl);
             createTissueGroupMenu(tissueGroups, menuId);
-            // $(`#${submitId}`).click(_submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls));
+            $(`#${submitId}`).click(function(){
+                // get the input list of genes
+                let glist = $('#gene').val().replace(/ /g, '').toUpperCase().split(',').filter((d)=>d!='');
+                if (glist.length == 0){
+                    alert('Input Error: At least one gene must be provided.');
+                    throw('Gene input error');
+                }
+                // get the input tissue list
+                let queryTissueIds = parseTissueGroupMenu(tissueGroups, menuId);
+                // tissue input error-checking
+                if (queryTissueIds.length == 0) {
+                    alert("Input Error: At least one tissue must be selected.");
+                    throw "Tissue input error";
+                }
+
+                // search
+                ////////// NEXT //////////
+                searcById(heatmapRootId, violinRootId, glist, queryTissueIds);
+            });
 
         })
         .catch(function(err){
