@@ -33,40 +33,70 @@
     </head>
 
     <body class="container-fluid" style="margin-top:20px;">
-        <!--<div id="downloadTempDiv" style="display:none;"></div> &lt;!&ndash; a hidden div for svg download, a temp solution&ndash;&gt;-->
-        <!--<div id="tooltip" class="exp-map-tooltip"></div> &lt;!&ndash;a hidden div for the mouseover tooltip&ndash;&gt;-->
 
-        <div>
-            <h4>Batch Gene Expression Query</h4>
-        </div>
-        <div id="messageBox" style="color: #CB181D;" class="col-xs-12"></div>
-        <div class="row">
-            <div class="col-xs-12 col-md-2">
-                <ul style="font-size:12px; ">
-                    <li>Limited to 50 entries.</li>
-                    <li><a href="#" id="searchExample">A search example</a></li>
-                </ul>
+        <h4>Batch Gene Expression Query</h4>
+        <!-- input form -->
+        <p>
+            <button class="btn btn-info btn-sm"
+                type="button"
+                data-toggle="collapse"
+                data-target="#collapseForm"
+                aria-expanded="false"
+                aria-controls="collapseForm">
+                <i class="fa fa-bars"></i>
+            </button>
+        </p>
 
-                <hr>
-                <form id="geneExpressForm" style="background:#f2f7fd; padding: 15px;">
-                     <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
-                        <label for="genes" class="align-top">Enter Gencode IDs or Gene Names</label>
-                        <textarea id="genes" rows="20" class="form-control" style="font-size:12px; text-transform:uppercase;"></textarea>
+        <div class="row collapse show" id="collapseForm">
+            <div class="col-sm-12">
+                <form id="geneExpressionForm" style="background:#f2f7fd; padding: 5px;">
+                    <div class="form-group row"> <!-- form-group for optimum spacing between the label and its associated form input element -->
+                        <div class="col-sm-12 col-md-2">
+                            <label for="genes" class="align-top">Enter Gencode IDs or Gene Names</label>
+                            <ul style="font-size:12px; list-style-type:square; padding-left: 15px;">
+                                <li>Limited to 50 entries.</li>
+                                <li><a href="#" id="searchExample">A search example</a></li>
+                            </ul>
+                            <textarea id="genes" rows="20" class="form-control" style="font-size:12px; text-transform:uppercase;"></textarea>
+                            <br/>
 
-                     </div>
-                    <div id="batchSubmit" class="btn btn-info btn-sm" style="margin-bottom:1em;">Search</div>
+                            <div id="batchSubmit" class="btn btn-info btn-sm" style="margin-bottom:1em;">Search</div>
 
+                            </div>
+                            <div class="col-xs-12 col-md-10">
+                            <label>Select Tissue(s)</label>
+                            <div id="tissueMenu" class="form-group row"><!-- tissue menu check boxes --></div>
+                        </div>
+                    </div>
                 </form>
-                <div class="col-xs-1">
-                    <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
-                </div>
+
             </div>
-            <div class="col-xs-12 col-md-10" id="tissueMenu"></div>
         </div>
+
+        <!--<div class="ro">-->
+            <!--<div class="col-xs-12 col-md-2">-->
+
+                <!--<hr>-->
+                <!--&lt;!&ndash;<form id="geneExpressForm" style="background:#f2f7fd; padding: 15px;">&ndash;&gt;-->
+                     <!--&lt;!&ndash;<div class="form-group"> &lt;!&ndash; form-group for optimum spacing between the label and its associated form input element &ndash;&gt;&ndash;&gt;-->
+                        <!--&lt;!&ndash;<label for="genes" class="align-top">Enter Gencode IDs or Gene Names</label>&ndash;&gt;-->
+                        <!--&lt;!&ndash;<textarea id="genes" rows="20" class="form-control" style="font-size:12px; text-transform:uppercase;"></textarea>&ndash;&gt;-->
+
+                     <!--&lt;!&ndash;</div>&ndash;&gt;-->
+                    <!--&lt;!&ndash;<div id="batchSubmit" class="btn btn-info btn-sm" style="margin-bottom:1em;">Search</div>&ndash;&gt;-->
+
+                <!--&lt;!&ndash;</form>&ndash;&gt;-->
+
+            <!--</div>-->
+            <!--<div class="col-xs-12 col-md-10" id="tissueMenu"></div>-->
+        <!--</div>-->
         <div class="row">
             <div id="searchResult" class="col-xs-12">
                 <div class="row">
-                    <!--<div id="expMapToolbar" style="display:none;" class="col-xs-12"></div> &lt;!&ndash; the toolbar Div &ndash;&gt;-->
+                    <div class="col-xs-1">
+                        <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
+                    </div>
+                    <div id="messageBox" class="col-sm-12" style="color:firebrick; font-size: 10px;"></div>
                     <div id="heatmapRoot" class="col-xs-12"></div> <!-- the heatmap Div -->
                     <div id="violinRoot" class="col-xs-12"></div>
                 </div>
