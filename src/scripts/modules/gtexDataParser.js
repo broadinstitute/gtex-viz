@@ -36,11 +36,6 @@ export function getGtexUrls(){
     }
 }
 
-
-
-
-
-
 /**
  * Parse the genes from GTEx web service
  * @param data {Json}
@@ -53,7 +48,7 @@ export function parseGenes(data){
 }
 
 /**
- * parse the tissues
+ * Parse the tissues
  * @param data {Json}
  * @returns {List} of tissues
  */
@@ -69,6 +64,53 @@ export function parseTissues(data){
 
     return tissues;
 }
+
+/**
+ * Parse the tissue groups
+ * @param data {Json}
+ * @param forEqtl {Boolean}
+ * @returns {Dictionary} of lists of tissues indexed by the tissue group name
+ */
+export function parseTissueSites(data, forEqtl=false){
+    // the list of invalide eqtl tissues due to sample size < 70
+    // a hard-coded list because the sample size is not easy to retrieve
+    const invalidTissues = ['Bladder', 'Cervix_Ectocervix', 'Cervix_Endocervix', 'Fallopian_Tube', 'Kidney_Cortex'];
+
+    const attr = 'tissueSiteDetail';
+    if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseTissueSites input error.';
+    const tissues = forEqtl==false?data[attr]:data[attr].filter((d)=>{return !invalidTissues.includes(d.tissue_site_detail_id)}); // an array of tissue_site_detail objects
+
+    // build the tissueGroups lookup dictionary indexed by the tissue group name (i.e. the tissue main site name)
+    ['tissue_site', 'tissue_site_detail_id', 'tissue_site_detail'].forEach((d)=>{
+        if (!tissues[0].hasOwnProperty(d)) throw `parseTissueSites attr error. ${d} is not found`;
+    });
+    let tissueGroups = tissues.reduce((arr, d)=>{
+        let groupName = d.tissue_site;
+        let site = {
+            id: d.tissue_site_detail_id,
+            name: d.tissue_site_detail
+        };
+        if (!arr.hasOwnProperty(groupName)) arr[groupName] = []; // initiate an array
+        arr[groupName].push(site);
+        return arr;
+    }, {});
+
+    // modify the tissue groups that have only a single site
+    // by replacing the group's name with the single site's name -- for a better Alphabetical order of the tissue groups
+
+    Object.keys(tissueGroups).forEach((d)=>{
+        if (tissueGroups[d].length == 1){ // a single-site group
+            let site = tissueGroups[d][0]; // the single site
+            delete tissueGroups[d]; // remove the old group in the dictionary
+            tissueGroups[site.name] = [site]; // create a new group with the site's name
+        }
+    });
+
+    return tissueGroups;
+
+}
+
+
 
 /**
  * parse the exons
@@ -136,7 +178,6 @@ export function parseIsoformExons(data){
  * @param data {Json} from GTEx web service 'reference/transcript?release=v7&gencode_id='
  * returns a list of isoform objects
  */
-
 export function parseIsoforms(data){
     const attr = 'transcript';
     if(!data.hasOwnProperty(attr)) throw('parseIsoforms input error');
@@ -148,7 +189,7 @@ export function parseIsoforms(data){
 }
 
 /**
- * parse final gene model exon expression
+ * parse final (masked) gene model exon expression
  * expression is normalized to reads per kb
  * @param data {JSON} of exon expression web service
  * @param exons {List} of exons with positions
@@ -295,22 +336,22 @@ export function parseMedianExpression(data, useLog=true){
  * @param data {Json} with attr: tissueId, geneSymbol
  * @returns {{exp: {}, geneSymbol: string}}
  */
-function parseGeneExpression(gencodeId, data){
-    let lookupTable = {
-        exp: {}, // indexed by tissueId
-        geneSymbol: ''
-    };
-    if(!data.hasOwnProperty(attr)) throw ('parseGeneExpression input error.');
-    data[attr].forEach((d)=>{
-        if (d.gencodeId == gencodeId) {
-            // if the gencode ID matches the query gencodeId,
-            // add the expression data to the lookup table
-            lookupTable.exp[d.tissueId] = d.data;
-            if ('' == lookupTable.geneSymbol) lookupTable.geneSymbol = d.geneSymbol
-        }
-    });
-    return lookupTable
-}
+// function parseGeneExpression(gencodeId, data){
+//     let lookupTable = {
+//         exp: {}, // indexed by tissueId
+//         geneSymbol: ''
+//     };
+//     if(!data.hasOwnProperty(attr)) throw ('parseGeneExpression input error.');
+//     data[attr].forEach((d)=>{
+//         if (d.gencodeId == gencodeId) {
+//             // if the gencode ID matches the query gencodeId,
+//             // add the expression data to the lookup table
+//             lookupTable.exp[d.tissueId] = d.data;
+//             if ('' == lookupTable.geneSymbol) lookupTable.geneSymbol = d.geneSymbol
+//         }
+//     });
+//     return lookupTable
+// }
 
 /**
  * parse the expression data of a gene for a grouped violin plot

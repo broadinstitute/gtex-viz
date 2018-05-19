@@ -2,7 +2,10 @@ import {json} from "d3-fetch";
 import {select} from "d3-selection";
 import {range} from "d3-array";
 import GroupedViolin from "./modules/GroupedViolin";
-import {getGtexUrls} from "./modules/gtexDataParser";
+import {
+    getGtexUrls,
+    parseTissueSites
+} from "./modules/gtexDataParser";
 
 /**
  * Build the eQTL Dashboard
@@ -24,39 +27,15 @@ export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxI
 
     json(urls.tissueSites)
         .then(function(data){ // retrieve all tissue (sub)sites
-            // filter out invalide tissues due to sample size < 70
-            const invalidTissues = ['Bladder', 'Cervix_Ectocervix', 'Cervix_Endocervix', 'Fallopian_Tube', 'Kidney_Cortex']; // temp solution: a hard-coded list because the sample size is not easy to retrieve
-            let tissues = data.tissueSiteDetail.filter((d)=>{return !invalidTissues.includes(d.tissue_site_detail_id)}); // an array of tissue_site_detail objects
-
-            // guild the tissueGroups lookup dictionary
-            tissueGroups = tissues.reduce((arr, d)=>{
-                const groupName = d.tissue_site;
-                const site = {
-                    id: d.tissue_site_detail_id,
-                    name: d.tissue_site_detail
-                };
-                if (!arr.hasOwnProperty(groupName)) arr[groupName] = []; // initiate an array
-                arr[groupName].push(site);
-                return arr;
-            }, {});
-
-            // modification for the tissue groups with only a single site
-            Object.keys(tissueGroups).forEach((d)=>{
-                if (tissueGroups[d].length == 1){
-                    // a single-site group
-                    // replace the group's name with the single site's name, for a better alphabetical name order in the tissue menu
-                    const site = tissueGroups[d][0]; // the single site
-                    delete tissueGroups[d]; // remove the old group in the dictionary
-                    tissueGroups[site.name] = [site]; // create a new group with the site's name
-                }
-            });
+            const forEqtl = true;
+            let tissueGroups = parseTissueSites(data, forEqtl);
             _buildTissueMenu(tissueGroups, menuId);
             $(`#${submitId}`).click(_submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls));
+
         })
         .catch(function(err){
             console.error(err);
         });
-
 }
 
 /**

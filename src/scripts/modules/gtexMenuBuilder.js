@@ -31,3 +31,5 @@ export function createTissueMenu(domId, url = getGtexUrls().tissue){
         })
         .catch(function(err){console.error(err)});
 }
+
+export function createTissueGroupMenu()
