@@ -8,8 +8,9 @@ import {getGtexUrls,
     parseTissues,
     parseMedianExpression,
     parseGeneExpressionForViolin,
-    createTissueMenu
 } from "./modules/gtexDataParser";
+
+import {createTissueMenu} from "./modules/gtexMenuBuilder";
 import {colorChart} from "./modules/colors";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
