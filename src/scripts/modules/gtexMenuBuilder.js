@@ -36,15 +36,15 @@ export function createTissueMenu(domId, url = getGtexUrls().tissue){
 
 /**
  * Build the two-level checkbox-style tissue menu
- * dependencies: eqtlDashboard.css classes // todo: move related css somewhere else
+ * dependencies: tissueGroup.css classes
  * @param groups {Dictionary} of lists of tissues indexed by the group name, this is created by gtexDataParser:parseTissueSites()
  * @param domId {String} <div> ID
- * Dependencies: jQuery, Bootstrap, eqtlDashboard.css
+ * Dependencies: jQuery, Bootstrap, tissueGroup.css
  * todo: add reset and select all options
  */
 export function createTissueGroupMenu(groups, domId){
-    const mainClass="ed-tissue-main-level";
-    const subClass = "ed-tissue-sub-level";
+    const mainClass="tissue-group-main-level";
+    const subClass = "tissue-group-sub-level";
     const lastSiteClass = "last-site";
 
     // erase everything in domId in case it isn't empty

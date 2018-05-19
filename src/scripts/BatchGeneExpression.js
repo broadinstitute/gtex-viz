@@ -3,12 +3,18 @@ import {json, tsv} from "d3-fetch";
 import {select, selectAll, event} from "d3-selection";
 import {keys, values} from "d3-collection";
 
-import {getGtexUrls,
+import {
+    getGtexUrls,
     parseGenes,
     parseTissues,
     parseMedianExpression,
-    parseGeneExpressionForViolin,
+    parseGeneExpressionForViolin, parseTissueSites,
 } from "./modules/gtexDataParser";
+
+import {
+    createTissueGroupMenu,
+    parseTissueGroupMenu
+} from "./modules/gtexMenuBuilder";
 
 import {createTissueMenu} from "./modules/gtexMenuBuilder";
 import {colorChart} from "./modules/colors";
@@ -34,7 +40,7 @@ export function createDatasetMenu(domId, url=getGtexUrls().tissue){
  * @param urls {Dictionary} of GTEx web services urls
  * @param filterGenes {Boolean} turn on the filter of special categories of genes (e.g. mitochondrial genes)
  */
-export function renderTopExpressed(tissueId, heatmapRootId, violinRootId, urls=getGtexUrls(), filterGenes=true){
+export function launchTopExpressed(tissueId, heatmapRootId, violinRootId, urls=getGtexUrls(), filterGenes=true){
     // getting the top expressed genes in tissueId
     const url = filterGenes?urls.topInTissueFiltered:urls.topInTissue;
     const $filterInfoDiv = $(`#filterInfo`).length==0?$('<div/>').attr('id', 'filterInfo').appendTo('body'):$(`#filterInfo`);
@@ -54,6 +60,22 @@ export function renderTopExpressed(tissueId, heatmapRootId, violinRootId, urls=g
         });
 }
 
+
+export function launch(menuId, urls=getGtexUrls()){
+    let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
+
+    json(urls.tissueSites)
+        .then(function(data){ // retrieve all tissue (sub)sites
+            const forEqtl = false;
+            let tissueGroups = parseTissueSites(data, forEqtl);
+            createTissueGroupMenu(tissueGroups, menuId);
+            // $(`#${submitId}`).click(_submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls));
+
+        })
+        .catch(function(err){
+            console.error(err);
+        });
+}
 /**
  * Search Gene Expression by ID
  * @param heatmapRootId {String}

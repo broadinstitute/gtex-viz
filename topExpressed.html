@@ -76,7 +76,7 @@
         });
         $("#datasetSelector").change(function(){
             const tissueId = $(this).val();
-            BatchGeneExpression.renderTopExpressed(tissueId, "heatmapRoot", "violinRoot");
+            BatchGeneExpression.launchTopExpressed(tissueId, "heatmapRoot", "violinRoot");
         });
 
 

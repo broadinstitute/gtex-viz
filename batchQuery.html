@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
         <link rel="stylesheet" href="external/fontawesome-free-5.0.7/web-fonts-with-css/css/fontawesome-all.css">
+        <link rel="stylesheet" type="text/css" href="src/css/tissueGroup.css">
         <link rel="stylesheet" type="text/css" href="src/css/dendrogram.css">
         <link rel="stylesheet" type="text/css" href="src/css/expressMap.css">
         <link rel="stylesheet" type="text/css" href="src/css/violin.css">
@@ -60,8 +61,10 @@
                     <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
                 </div>
             </div>
-
-            <div id="searchResult" class="col-xs-12 col-md-10">
+            <div class="col-xs-12 col-md-10" id="tissueMenu"></div>
+        </div>
+        <div class="row">
+            <div id="searchResult" class="col-xs-12">
                 <div class="row">
                     <!--<div id="expMapToolbar" style="display:none;" class="col-xs-12"></div> &lt;!&ndash; the toolbar Div &ndash;&gt;-->
                     <div id="heatmapRoot" class="col-xs-12"></div> <!-- the heatmap Div -->
@@ -90,21 +93,23 @@
         function batchGeneQuery(){
             const heatmapRootId = "heatmapRoot";
             const violinRootId = "violinRoot";
+            const menuId = "tissueMenu";
             $('#searchExample').click(function(){
                 const examples = "FOO,ACTN3, SLK, ENSG00000121879.3, NDRG4, ENSG00000141510.11, ENSG00000039068.14, ENSG00000107485.11, ENSG00000095015.5, ENSG00000141027.16, ENSG00000065526.6, TP53";
                 $('#genes').val(examples);
                 return false; // this prevents a # sign being added to the URL...
             });
-            $('#batchSubmit').click(function(){
-                let glist = $('#genes').val().replace(/ /g, "").toUpperCase().split(",").filter((d) => {return d!=""});
-                if (glist.length == 0){
-                    alert("Must provide at least one gene");
-                    throw "Gene input error";
-                }
-                // BatchGeneExpression.searchById(glist, [], domId, "expMapToolbar", "messageBox");
-                BatchGeneExpression.searchById(heatmapRootId, violinRootId, glist);
-                return false;
-            });
+            BatchGeneExpression.launch(menuId);
+            // $('#batchSubmit').click(function(){
+            //     let glist = $('#genes').val().replace(/ /g, "").toUpperCase().split(",").filter((d) => {return d!=""});
+            //     if (glist.length == 0){
+            //         alert("Must provide at least one gene");
+            //         throw "Gene input error";
+            //     }
+            //     // BatchGeneExpression.searchById(glist, [], domId, "expMapToolbar", "messageBox");
+            //     BatchGeneExpression.searchById(heatmapRootId, violinRootId, glist);
+            //     return false;
+            // });
         }
 
     </script>
