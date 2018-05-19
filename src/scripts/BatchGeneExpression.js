@@ -15,6 +15,11 @@ import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GroupedViolin from "./modules/GroupedViolin";
 
+/**
+ * Create the tissue (dataset) dropdown menu using select2
+ * @param domId {String} the dom ID of the menu
+ * @param url {String} the tissue web service url
+ */
 export function createDatasetMenu(domId, url=getGtexUrls().tissue){
     createTissueMenu(domId, url); // currently datasets only include GTEx tissues
 }

@@ -33,7 +33,7 @@ export function getGtexUrls(){
 /**
  * Create the tissue (dataset) dropdown menu using select2
  * @param domId {String} the dom ID of the menu
- * @param urls {Object} of web service urls with attr: tissue
+ * @param url {String} the tissue web service url
  * dependency: select2
  */
 export function createTissueMenu(domId, url = getGtexUrls().tissue){
