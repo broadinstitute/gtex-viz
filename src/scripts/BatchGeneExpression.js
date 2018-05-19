@@ -10,7 +10,7 @@ import {getGtexUrls,
     parseGeneExpressionForViolin,
     createTissueMenu
 } from "./modules/gtexDataParser";
-import {colorChart} from "./modules/Colors";
+import {colorChart} from "./modules/colors";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GroupedViolin from "./modules/GroupedViolin";
