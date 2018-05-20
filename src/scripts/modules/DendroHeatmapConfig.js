@@ -1,10 +1,10 @@
 /**
- * TODO: a better way of handling layout configuration
+ * TODO: code review of how to preset parameter values
  * review all the position calculations
  */
 export default class DendroHeatmapConfig {
     /**
-     * @param mainPanelW {Number}
+     * @param mainPanelW {Number}, set this to determine the cellW
      * @param leftPanelW {Integer}, set to 0 if there's no left panel
      * @param topPanelH {Integer}, set to 0 if there's no top panel
      * @param margin {Object} with attr: top, right, bottom, left, smaller values than the default are not recommended for the heatmap
@@ -13,7 +13,7 @@ export default class DendroHeatmapConfig {
      */
     constructor(rootW=window.innerWidth, leftPanelW=100, topPanelH=100, margin={top:50, right:250, bottom:170, left:10}, cellH=12, adjust=10) {
         this.margin = margin;
-        this.rootW = rootW<1000?1000:rootW;
+        this.rootW = rootW;
 
         this.leftTreePanel = { // the row dendrogram panel
             x: margin.left,
@@ -24,7 +24,7 @@ export default class DendroHeatmapConfig {
         };
 
         this.cell = {
-            w: undefined,
+            w: undefined, // to be calculated based on the data and rootW
             h: cellH
         };
 

@@ -67,7 +67,7 @@ export default class Heatmap {
      * @param legendConfig {Object} with attr: x, y
      */
 
-    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=10){
+    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5){
         drawColorLegend(this.data[0].unit||"Value", dom, this.colorScale, legendConfig, this.useLog, ticks, this.base);
     }
 

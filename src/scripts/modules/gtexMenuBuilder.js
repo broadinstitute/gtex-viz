@@ -178,5 +178,5 @@ export function parseTissueGroupMenu(groups, domId){
             }
         }
     });
-    return queryTissueIds;
+    return queryTissueIds.filter((d)=>d!==undefined);
 }
