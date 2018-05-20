@@ -110,8 +110,6 @@ export function parseTissueSites(data, forEqtl=false){
 
 }
 
-
-
 /**
  * parse the exons
  * @param data {Json}

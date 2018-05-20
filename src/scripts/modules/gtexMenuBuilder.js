@@ -39,10 +39,11 @@ export function createTissueMenu(domId, url = getGtexUrls().tissue){
  * dependencies: tissueGroup.css classes
  * @param groups {Dictionary} of lists of tissues indexed by the group name, this is created by gtexDataParser:parseTissueSites()
  * @param domId {String} <div> ID
+ * @param forEqtl {Boolean}
  * Dependencies: jQuery, Bootstrap, tissueGroup.css
  * todo: add reset and select all options
  */
-export function createTissueGroupMenu(groups, domId){
+export function createTissueGroupMenu(groups, domId, forEqtl=false){
     const mainClass="tissue-group-main-level";
     const subClass = "tissue-group-sub-level";
     const lastSiteClass = "last-site";
@@ -50,6 +51,40 @@ export function createTissueGroupMenu(groups, domId){
     // erase everything in domId in case it isn't empty
     select(`#${domId}`).selectAll("*").remove();
 
+    // add check all and reset options
+    const $allTissueDiv = $('<div/>').attr('class', 'col-xs-12 col-md-12').appendTo($(`#${domId}`));
+    if (forEqtl){
+        $(`<label class=${mainClass}>` +
+        '<input type="radio" name="allTissues" value="reset"> Reset ' +
+        '</label><br/>').appendTo($allTissueDiv);
+    } else {
+        $(`<label class=${mainClass}>` +
+        '<input type="radio" name="allTissues" value="all"> All ' +
+        '<input type="radio" name="allTissues" value="reset"> Reset ' +
+        '</label><br/>').appendTo($allTissueDiv);
+    }
+
+
+    // check all or reset events
+    $('input[name="allTissues"]').change(function(){
+        let val = $(this).val();
+        switch(val){
+            case 'all': {
+                $('.tissueGroup').prop('checked', true);
+                $('.tissueSubGroup').prop('checked', true);
+                break;
+            }
+            case 'reset': {
+                $('.tissueGroup').prop('checked', false);
+                $('.tissueSubGroup').prop('checked', false);
+                break;
+            }
+            default:
+                // do nothing
+
+        }
+        // $(this).prop('checked', false);
+    });
     // sort the tissue groups alphabetically
     let groupNames = Object.keys(groups).sort();
 
@@ -85,28 +120,32 @@ export function createTissueGroupMenu(groups, domId){
             })
             .forEach(function(site, i){
                 let $siteDom = $(`<label class=${subClass}>`+
-                                `<input type="checkbox" id="${site.id}"> ` +
+                                `<input type="checkbox" id="${site.id}" class="tissueSubGroup"> ` +
                                 '<span class="checkmark"></span>' +
                                 `<span>${site.name}</span>` +
                                 '</label><br/>').appendTo($currentDom);
                 if (i == sites.length -1) $siteDom.addClass(lastSiteClass);
+                $siteDom.click(function(){
+                    $('input[name="allTissues"]').prop('checked', false);
+                })
             });
         }
 
         // custom click event for the top-level tissues: toggle the check boxes
         $("#" + gId).click(function(){
+            $('input[name="allTissues"]').prop('checked', false);
             if ($('#' + gId).is(":checked")) {
                 // when the group is checked, check all its tissues
                 sites.forEach(function (site) {
                     if ("id" == site.id) return;
-                    $('#' + site.id).attr('checked', true);
+                    $('#' + site.id).prop('checked', true);
                 });
             }
             else {
                 // when the group is unchecked, un-check all its tissues
                 sites.forEach(function (site) {
                     if ("id" == site.id) return;
-                    $('#' + site.id).attr('checked', false);
+                    $('#' + site.id).prop('checked', false);
                 });
             }
         });

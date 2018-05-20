@@ -34,7 +34,7 @@ export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxI
         .then(function(data){ // retrieve all tissue (sub)sites
             const forEqtl = true;
             let tissueGroups = parseTissueSites(data, forEqtl);
-            createTissueGroupMenu(tissueGroups, menuId);
+            createTissueGroupMenu(tissueGroups, menuId, forEqtl);
             $(`#${submitId}`).click(_submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls));
 
         })

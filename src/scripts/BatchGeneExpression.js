@@ -112,8 +112,10 @@ export function launch(formId, menuId, submitId, heatmapRootId, violinRootId, ur
 export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, urls=getGtexUrls(), filterGenes=undefined, callback=undefined, qTissue=undefined){
     $('#spinner').show();
     $(`#${heatmapRootId}`).empty(); // clear the root DOM content
+    $(`#${violinRootId}`).empty(); // clear the root DOM content
+
     const MAX = 50;
-    const $message = $('<div/>').appendTo(`#${heatmapRootId}`);
+    const $message = $('<div/>').attr('class', 'col-xs-12 col-md-12').css('color', 'firebrick').appendTo(`#${heatmapRootId}`);
     let message = "";
     if (glist.length > MAX) {
         message = `Warning: Too many genes. Input list truncated to the first ${MAX}. <br/>`;
@@ -140,6 +142,7 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
                        $message.html(message + dataMessage);
                    }
                    else {
+                       $message.html(message);
                        /***** render the DendroHeatmap *****/
                        const expression = parseMedianExpression(eData); // the parser determines the orientations of the heatmap
                        const ids = {
