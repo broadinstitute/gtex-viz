@@ -74,11 +74,11 @@
         </div>
 
         <div class="row">
+            <div class="col-xs-12">
+                <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
+            </div>
             <div id="searchResult" class="col-xs-12">
-                <div class="row">
-                    <div class="col-xs-1">
-                        <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
-                    </div>
+                <div class="row" style="margin-left: 10px;">
                     <div id="messageBox" class="col-sm-12" style="color:firebrick; font-size: 10px;"></div>
                     <div id="heatmapRoot" class="col-xs-12"></div> <!-- the heatmap Div -->
                     <div id="violinRoot" class="col-xs-12"></div>
@@ -106,13 +106,14 @@
         function batchGeneQuery(){
             const heatmapRootId = "heatmapRoot";
             const violinRootId = "violinRoot";
+            const submitId = 'batchSubmit';
             const menuId = "tissueMenu";
             $('#searchExample').click(function(){
                 const examples = "FOO,ACTN3, SLK, ENSG00000121879.3, NDRG4, ENSG00000141510.11, ENSG00000039068.14, ENSG00000107485.11, ENSG00000095015.5, ENSG00000141027.16, ENSG00000065526.6, TP53";
                 $('#genes').val(examples);
                 return false; // this prevents a # sign being added to the URL...
             });
-            BatchGeneExpression.launch(menuId);
+            BatchGeneExpression.launch(menuId, submitId, heatmapRootId, violinRootId);
             // $('#batchSubmit').click(function(){
             //     let glist = $('#genes').val().replace(/ /g, "").toUpperCase().split(",").filter((d) => {return d!=""});
             //     if (glist.length == 0){

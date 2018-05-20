@@ -61,7 +61,7 @@ export function launchTopExpressed(tissueId, heatmapRootId, violinRootId, urls=g
 }
 
 
-export function launch(menuId, submitId, urls=getGtexUrls()){
+export function launch(menuId, submitId, heatmapRootId, violinRootId, urls=getGtexUrls()){
     let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
 
     json(urls.tissueSites)
@@ -71,7 +71,7 @@ export function launch(menuId, submitId, urls=getGtexUrls()){
             createTissueGroupMenu(tissueGroups, menuId);
             $(`#${submitId}`).click(function(){
                 // get the input list of genes
-                let glist = $('#gene').val().replace(/ /g, '').toUpperCase().split(',').filter((d)=>d!='');
+                let glist = $('#genes').val().replace(/ /g, '').toUpperCase().split(',').filter((d)=>d!='');
                 if (glist.length == 0){
                     alert('Input Error: At least one gene must be provided.');
                     throw('Gene input error');
@@ -86,7 +86,7 @@ export function launch(menuId, submitId, urls=getGtexUrls()){
 
                 // search
                 ////////// NEXT //////////
-                searcById(heatmapRootId, violinRootId, glist, queryTissueIds);
+                searchById(heatmapRootId, violinRootId, glist, queryTissueIds);
             });
 
         })
@@ -99,12 +99,13 @@ export function launch(menuId, submitId, urls=getGtexUrls()){
  * @param heatmapRootId {String}
  * @param violinRootId {String}
  * @param glist {List} of genes
+ * @param tlist {List} of tissues
  * @param urls
  * @param filterGenes {Boolean} or undefined when it isn't applicable
  * @param callback
  * @param qTissue {String}: only applicable for the search of top expressed genes in the qTissue
  */
-export function searchById(heatmapRootId, violinRootId, glist, urls=getGtexUrls(), filterGenes=undefined, callback=undefined, qTissue=undefined){
+export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, urls=getGtexUrls(), filterGenes=undefined, callback=undefined, qTissue=undefined){
     $('#spinner').show();
     $(`#${heatmapRootId}`).empty(); // clear the root DOM content
     const MAX = 50;
@@ -125,7 +126,9 @@ export function searchById(heatmapRootId, violinRootId, glist, urls=getGtexUrls(
 
 
            // get median expression data and clusters of the input genes in all tissues
-           json(urls.medExpById + genes.map((g)=>g.gencodeId).join(","))
+           const gQuery = genes.map((g)=>g.gencodeId).join(",");
+           const tQuery = tlist.join(",");
+           json(urls.medGeneExp + "&gencodeId=" + gQuery + "&tissueId=" + tQuery)
                .then(function(eData){
                    $('#spinner').hide();
                    const dataMessage = _validateExpressionData(eData);
@@ -156,7 +159,7 @@ export function searchById(heatmapRootId, violinRootId, glist, urls=getGtexUrls(
                         });
 
                         /***** heatmap rendering *****/
-                        let rootW = $(`#${ids.root}`).parent().width()==0?window.innerWidth:$(`#${ids.root}`).parent().width();
+                        let rootW = window.innerWidth;
 
                         const config = new DendroHeatmapConfig(rootW);
                         const dmap = new DendroHeatmap(eData.clusters.tissue, eData.clusters.gene, expression, "YlGnBu", 2, config);
@@ -196,7 +199,7 @@ export function searchById(heatmapRootId, violinRootId, glist, urls=getGtexUrls(
                         // mouse events
                         _customizeMouseEvents(dmap, tissueDict, geneDict);
 
-                        callback();
+                        if (callback!= undefined) callback();
 
                    }
                })

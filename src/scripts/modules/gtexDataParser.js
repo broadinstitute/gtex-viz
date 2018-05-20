@@ -16,7 +16,7 @@ export function getGtexUrls(){
 
         junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
 
-        medExpById: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000&gencodeId=',
+        medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000',
 
         sample: 'data/gtex.Sample.csv',
         snp: host + 'reference/snp?reference=current&format=json&snpId=',
@@ -320,14 +320,16 @@ export function parseMedianExpression(data, useLog=true){
     ['median', 'tissueId', 'gencodeId'].forEach((d)=>{
         if (!data[attr][0].hasOwnProperty(d)) throw `parseMedianExpression attr error. ${d} is not found`;
     });
-    data.medianGeneExpression.forEach(function(d){
+    let results = data[attr];
+    results.forEach(function(d){
         d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
         d.x = d.tissueId;
         d.y = d.gencodeId;
         d.originalValue = Number(d.median);
-        d.id = d.gencodeId
+        d.id = d.gencodeId;
     });
-    return data[attr];
+
+    return results;
 }
 
 /**
