@@ -78,7 +78,7 @@ export default class DendroHeatmap {
      * @param legendPos {Enum} where to place the color legend: bottom, top
      * @param ticks {Integer} number of bins of the color legend
      */
-    render(domId, svgId, showColumnTree=true, showRowTree=true, legendPos="top", ticks=10){
+    render(domId, svgId, showColumnTree=true, showRowTree=true, legendPos="top", ticks=5){
         this._updateConfig(legendPos);
         this.visualComponents.svg = createSvg(domId, this.config.w, this.config.h, this.config.margin, svgId);
 
@@ -149,7 +149,7 @@ export default class DendroHeatmap {
      * @param ticks {Integer} the number of bins in the color legend
      * @private
      */
-    _renderHeatmap(heatmap, xList, yList, ticks=10){
+    _renderHeatmap(heatmap, xList, yList, ticks=5){
         let dom = this.visualComponents.svg;
         const config = this.config.panels.main;
         const g = dom.append("g")
