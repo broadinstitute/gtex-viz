@@ -115,7 +115,7 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
     $(`#${violinRootId}`).empty(); // clear the root DOM content
 
     const MAX = 50;
-    const $message = $('<div/>').attr('class', 'col-xs-12 col-md-12').css('color', 'firebrick').appendTo(`#${heatmapRootId}`);
+    const $message = $('<div/><br/>').attr('class', 'col-xs-12 col-md-12').css('color', 'firebrick').appendTo(`#${heatmapRootId}`);
     let message = "";
     if (glist.length > MAX) {
         message = `Warning: Too many genes. Input list truncated to the first ${MAX}. <br/>`;
@@ -166,9 +166,16 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
                         });
 
                         /***** heatmap rendering *****/
-                        let rootW = window.innerWidth;
+                        const maxCellW = 25;
+                        const minCellW = 25;
 
-                        const config = new DendroHeatmapConfig(rootW);
+                        let cellW = Math.ceil(window.innerWidth/tlist.length);
+                        cellW = cellW>maxCellW?maxCellW:(cellW<minCellW?minCellW:cellW); // this ensures a reasonable cellW
+                        let dmapMargin={top:50, right:250, bottom:170, left:10};
+                        let leftPanelW = 100;
+                        let rootW = cellW * tlist.length + leftPanelW + dmapMargin.right + dmapMargin.left;
+
+                        const config = new DendroHeatmapConfig(rootW, leftPanelW, 100, dmapMargin, 12, 10);
                         const dmap = new DendroHeatmap(eData.clusters.tissue, eData.clusters.gene, expression, "YlGnBu", 2, config);
 
                         if (genes.length < 3){
@@ -195,7 +202,13 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
                         dmap.createTooltip(ids.tooltip);
 
                         // change row and column labels
-                        _customizeLabels(dmap, tissueDict, geneDict);
+                        // Change row labels to tissue names //
+                        select("#" + dmap.config.panels.main.id).selectAll(".exp-map-xlabel")
+                            .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
+
+
+                        select("#" + dmap.config.panels.main.id).selectAll(".exp-map-ylabel")
+                            .text((d) => geneDict[d]===undefined?d:geneDict[d].geneSymbol);
 
                         // Add tissue color boxes //
                         _addTissueColors(dmap, tissueDict);
@@ -242,16 +255,6 @@ function _validateGenes(domId, genes, input){
     return message;
 }
 
-function _customizeLabels(dmap, tissueDict, geneDict){
-    // Change row labels to tissue names //
-    select("#" + dmap.config.panels.main.id).selectAll(".exp-map-xlabel")
-        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
-
-
-    select("#" + dmap.config.panels.main.id).selectAll(".exp-map-ylabel")
-        .text((d) => geneDict[d]===undefined?d:geneDict[d].geneSymbol);
-}
-
 /**
  * For top expressed query, highlight the query tissue label
  * @param tissueId {String} the tissue ID
@@ -291,17 +294,20 @@ function _addTissueColors(dmap, tissueDict){
         .merge(cells)
         .style("fill", (d) => tissueDict[d] === undefined? "#000000": `#${tissueDict[d].colorHex}`);
 
-    leaves.enter().append("rect")
-        .attr("x", (d)=>heatmap.xScale(d))
-        .attr("y", (d)=>heatmap.yScale.range()[0] - 10)
-        .attr("width", heatmap.xScale.bandwidth())
-        .attr("height", heatmap.yScale.bandwidth()*0.5)
-        .classed("leaf-color", true)
-        .merge(leaves)
-        .style("fill", (d) => tissueDict[d] === undefined? "#000000": `#${tissueDict[d].colorHex}`);
     // exit and remove
     cells.exit().remove();
-    leaves.exit().remove();
+
+    if (dmap.objects.heatmap.yScale.domain().length > 15){
+        leaves.enter().append("rect")
+            .attr("x", (d)=>heatmap.xScale(d))
+            .attr("y", (d)=>heatmap.yScale.range()[0] - 10)
+            .attr("width", heatmap.xScale.bandwidth())
+            .attr("height", heatmap.yScale.bandwidth()*0.5)
+            .classed("leaf-color", true)
+            .merge(leaves)
+            .style("fill", (d) => tissueDict[d] === undefined? "#000000": `#${tissueDict[d].colorHex}`);
+        leaves.exit().remove();
+    }
 
 }
 
