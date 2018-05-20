@@ -379,10 +379,16 @@ function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap) {
             const url = getGtexUrls().geneExp + gene;
             const colors = {};
             colors[gene] = geneDict[gene].color;
+            const tlist = dmap.objects.heatmap.xScale.domain();
             json(url)
                 .then(function (d) {
                     if (dmap.data.external === undefined) dmap.data.external = [];
-                    dmap.data.external = dmap.data.external.concat(parseGeneExpressionForViolin(d, true, colors));
+                    dmap.data.external = dmap.data.external
+                        .concat(parseGeneExpressionForViolin(d, true, colors))
+                        .filter((d)=>{
+                            // filtering the tissues that aren't selected
+                            return tlist.indexOf(d.group) > -1;
+                        });
                     _renderViolinHelper(dmap.data.external, dmap, tissueDict);
                 })
                 .catch(function(err){console.error(err)});
