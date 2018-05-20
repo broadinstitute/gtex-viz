@@ -3,7 +3,7 @@ import {scaleBand} from "d3-scale";
 import {nest} from "d3-collection";
 import {transition} from "d3-transition";
 
-import {setColorScale, drawColorLegend} from "./Colors";
+import {setColorScale, drawColorLegend} from "./colors";
 import Toolbar from "./Toolbar";
 import Tooltip from "./Tooltip";
 

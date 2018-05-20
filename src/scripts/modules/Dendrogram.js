@@ -37,7 +37,7 @@ import {hierarchy} from "d3-hierarchy";
 import {ascending} from "d3-array";
 import {axisBottom, axisLeft} from "d3-axis";
 import {scaleLinear, scaleBand} from "d3-scale";
-import {parseNewick} from "../external/newick";
+import {parseNewick} from "./newick";
 const verbose = false;
 export default class Dendrogram {
     constructor(newick, orientation='h'){

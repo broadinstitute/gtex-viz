@@ -1,7 +1,16 @@
 import {json} from "d3-fetch";
 import {select} from "d3-selection";
-import {range} from "d3-array";
+// import {range} from "d3-array";
 import GroupedViolin from "./modules/GroupedViolin";
+import {
+    getGtexUrls,
+    parseTissueSites
+} from "./modules/gtexDataParser";
+
+import {
+    createTissueGroupMenu,
+    parseTissueGroupMenu
+} from "./modules/gtexMenuBuilder";
 
 /**
  * Build the eQTL Dashboard
@@ -18,44 +27,20 @@ import GroupedViolin from "./modules/GroupedViolin";
  * @param messageBoxId {String} message box <div> ID
  * @param urls {Dictionary} of GTEx web service URLs
  */
-export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls=_getGTExUrls()){
+export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls=getGtexUrls()){
     let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
-    try{
-        json(urls.tissueSites)
+
+    json(urls.tissueSites)
         .then(function(data){ // retrieve all tissue (sub)sites
-            // filter out invalide tissues due to sample size < 70
-            const invalidTissues = ['Bladder', 'Cervix_Ectocervix', 'Cervix_Endocervix', 'Fallopian_Tube', 'Kidney_Cortex']; // temp solution: a hard-coded list because the sample size is not easy to retrieve
-            let tissues = data.tissueSiteDetail.filter((d)=>{return !invalidTissues.includes(d.tissue_site_detail_id)}); // an array of tissue_site_detail objects
-
-            // guild the tissueGroups lookup dictionary
-            tissueGroups = tissues.reduce((arr, d)=>{
-                const groupName = d.tissue_site;
-                const site = {
-                    id: d.tissue_site_detail_id,
-                    name: d.tissue_site_detail
-                };
-                if (!arr.hasOwnProperty(groupName)) arr[groupName] = []; // initiate an array
-                arr[groupName].push(site);
-                return arr;
-            }, {});
-
-            // modification for the tissue groups with only a single site
-            Object.keys(tissueGroups).forEach((d)=>{
-                if (tissueGroups[d].length == 1){
-                    // a single-site group
-                    // replace the group's name with the single site's name, for a better alphabetical name order in the tissue menu
-                    const site = tissueGroups[d][0]; // the single site
-                    delete tissueGroups[d]; // remove the old group in the dictionary
-                    tissueGroups[site.name] = [site]; // create a new group with the site's name
-                }
-            });
-            _buildTissueMenu(tissueGroups, menuId);
+            const forEqtl = true;
+            let tissueGroups = parseTissueSites(data, forEqtl);
+            createTissueGroupMenu(tissueGroups, menuId, forEqtl);
             $(`#${submitId}`).click(_submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls));
-        });
-    } catch (err){
-        console.error(err);
-    }
 
+        })
+        .catch(function(err){
+            console.error(err);
+        });
 }
 
 /**
@@ -160,98 +145,6 @@ function _customizeViolinPlot(plot, dom){
 
 }
 
-function _getGTExUrls(){
-    const host = 'https://gtexportal.org/rest/v1/';
-    return {
-        gene: host + 'reference/geneId?format=json&release=v7&geneId=',
-        rsId: host + 'reference/snp?reference=current&format=json&snpId=',
-        variantId: host + 'reference/snp?format=json&reference=current&release=v7&variantId=',
-        dyneqtl: 'https://gtexportal.org/rest/v1/association/dyneqtl',
-        tissueSites: "https://gtexportal.org/rest/v1/dataset/tissueSiteDetail?format=json"
-    }
-}
-
-/**
- * Build the two-level tissue menu
- * dependencies: eqtlDashboard.css classes
- * @param groups: a dictionary of list of tissues indexed by tissue groups
- * @param domId: the tissue menu <div> ID
- * @private
- * Dependencies: jQuery, Bootstrap, eqtlDashboard.css
- */
-function _buildTissueMenu(groups, domId){
-    const labelClass="ed-tissue-main-level";
-    const labelSubClass = "ed-tissue-sub-level";
-    const lastSiteClass = "last-site";
-
-    // erase everything in domId in case it isn't empty
-    select(`#${domId}`).selectAll("*").remove();
-
-    // sort the tissue groups alphabetically
-    let groupNames = Object.keys(groups).sort();
-
-    // TODO: find a better way to organize tissues into DIV sections
-    // create four <div> sections for the tissue menu
-    const $sections = range(0,4).map((d)=>{
-        return $(`<div id="section${d}" class="col-xs-12 col-md-3">`).appendTo($(`#${domId}`));
-    });
-
-    groupNames.forEach(function(gname){
-        let sites = groups[gname]; // a list of site objects with attr: name and id
-        const gId = gname.replace(/ /g, "_"); // replace the spaces with dashes to create a group <DOM> id
-        // figure out which dom section to append this tissue site
-        let $currentDom = $sections[3];
-        if("Brain" == gname) $currentDom = $sections[0];
-        else if (gname.match(/^[A-D]/)) $currentDom = $sections[1];
-        else if (gname.match(/^[E-P]/)) $currentDom = $sections[2];
-
-        // create the <label> for the tissue group
-        $(`<label class=${labelClass}>`+
-            `<input type="checkbox" id="${gId}" class="tissueGroup"> ` +
-            '<span class="checkmark"></span>' +
-            `<span>${gname}</span>` +
-            '</label><br/>').appendTo($currentDom);
-
-        // tissue sites in the group
-        if (sites.length > 1){
-             // sort sites alphabetically
-            sites.sort((a, b)=>{
-                if (a.id > b.id) return 1;
-                if (a.id < b.id) return -1;
-                return 0;
-            })
-            .forEach(function(site, i){
-                let $siteDom = $(`<label class=${labelSubClass}>`+
-                                `<input type="checkbox" id="${site.id}"> ` +
-                                '<span class="checkmark"></span>' +
-                                `<span>${site.name}</span>` +
-                                '</label><br/>').appendTo($currentDom);
-                if (i == sites.length -1) $siteDom.addClass(lastSiteClass);
-            });
-        }
-
-
-        // custom click event for the top-level tissues: toggle the check boxes
-        $("#" + gId).click(function(){
-            if ($('#' + gId).is(":checked")) {
-                // when the group is checked, check all its tissues
-                sites.forEach(function (site) {
-                    if ("id" == site.id) return;
-                    $('#' + site.id).attr('checked', true);
-                });
-            }
-            else {
-                // when the group is unchecked, un-check all its tissues
-                sites.forEach(function (site) {
-                    if ("id" == site.id) return;
-                    $('#' + site.id).attr('checked', false);
-                });
-            }
-        });
-    });
-
-}
-
 /**
  * Define the submit button's action
  * @param tissueGroups {Dictionary} of lists of tissues indexed by tissue groups
@@ -272,24 +165,7 @@ function _submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, me
         $(`#${dashboardId}`).html('');
 
         ////// validate tissue inputs and convert them to tissue IDs //////
-        let queryTissueIds = [];
-        $(`#${menuId}`).find(":input").each(function(){ // using jQuery to parse each input item
-            if ( $(this).is(":checked")) { // the jQuery way to fetch a checked tissue
-                const id = $(this).attr('id');
-                if ($(this).hasClass("tissueGroup")){
-                    // this input item is a tissue group
-                    // check if this tissue group is a single-site group using the tissueGroups dictionary
-                    // if so, add the single site to the query list
-                    let groupName = id.replace(/_/g, " "); // first convert the ID back to group name
-                    if (tissueGroups[groupName].length == 1) {
-                        queryTissueIds.push(tissueGroups[groupName][0].id);
-                    }
-                }
-                else{ // this input item is a tissue site
-                    queryTissueIds.push(id);
-                }
-            }
-        });
+        let queryTissueIds = parseTissueGroupMenu(tissueGroups, menuId);
 
         // tissue input error-checking
         if (queryTissueIds.length == 0) {
@@ -326,9 +202,8 @@ function _submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, me
                 gid = pair.split(',')[0];
 
             // retrieve gene and variant info from the web service
-            const geneUrl = urls.gene + gid;
+            const geneUrl = urls.geneId + gid;
             const variantUrl = vid.toLowerCase().startsWith('rs')?urls.rsId+vid:urls.variantId+vid;
-            const promises = [];
 
             Promise.all([json(geneUrl), json(variantUrl)])
                 .then(function(args){
@@ -415,7 +290,7 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
 
     // queue up all tissue IDs
     tissues.forEach((tId) => {
-        let urlRoot = _getGTExUrls()['dyneqtl'];
+        let urlRoot = getGtexUrls()['dyneqtl'];
         let url = `${urlRoot}?snp_id=${variant.variantId}&gene_id=${gene.gencodeId}&tissue=${tId}`; // use variant ID, gencode ID and tissue ID to query the dyneqtl
         promises.push(_apiCall(url, tId));
     });

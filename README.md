@@ -15,7 +15,7 @@ Then, you will be able to see the demo in a web browser at:
 ```export NODE_ENV="prod"```
 
 - Batch Gene Heatmap:
-```rollup -c rollup.batch.gene.expression.config.js```
+```rollup -c rollup/rollup.batch.gene.expression.config.js```
 
 
 
