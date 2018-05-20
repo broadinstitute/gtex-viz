@@ -61,7 +61,7 @@ export function launchTopExpressed(tissueId, heatmapRootId, violinRootId, urls=g
 }
 
 
-export function launch(menuId, submitId, heatmapRootId, violinRootId, urls=getGtexUrls()){
+export function launch(formId, menuId, submitId, heatmapRootId, violinRootId, urls=getGtexUrls()){
     let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
 
     json(urls.tissueSites)
@@ -70,6 +70,10 @@ export function launch(menuId, submitId, heatmapRootId, violinRootId, urls=getGt
             let tissueGroups = parseTissueSites(data, forEqtl);
             createTissueGroupMenu(tissueGroups, menuId);
             $(`#${submitId}`).click(function(){
+                // hide the search form after the eQTL violin plots are reported
+                    $(`#${formId}`).removeClass("show"); // for bootstrap 4
+                    $(`#${formId}`).removeClass("in"); // for boostrap 3
+
                 // get the input list of genes
                 let glist = $('#genes').val().replace(/ /g, '').toUpperCase().split(',').filter((d)=>d!='');
                 if (glist.length == 0){
