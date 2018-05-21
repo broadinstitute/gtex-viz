@@ -59,7 +59,8 @@ export function createTissueGroupMenu(groups, domId, forEqtl=false){
         '</label><br/>').appendTo($allTissueDiv);
     } else {
         $(`<label class=${mainClass}>` +
-        '<input type="radio" name="allTissues" value="all"> All ' +
+        '<input type="radio" name="allTissues" value="all"> All </label> ' +
+        `<label class=${mainClass}>` +
         '<input type="radio" name="allTissues" value="reset"> Reset ' +
         '</label><br/>').appendTo($allTissueDiv);
     }
