@@ -112,7 +112,7 @@ function _visualize(gene, variant, mainId, input, info){
     let violin = new GroupedViolin(input, info);
     const tooltip = violin.createTooltip(id.tooltip);
     const toolbar = violin.createToolbar(id.toolbar, tooltip);
-    toolbar.createDownloadButton(id.buttons.save, id.svg, `${id.main}-save.svg`, id.clone);
+    toolbar.createDownloadSvgButton(id.buttons.save, id.svg, `${id.main}-save.svg`, id.clone);
     violin.render(dom, innerWidth, innerHeight, 0.3, undefined, [], "Normalized Expression", false, true, 0, false, true, false, true);
     _customizeViolinPlot(violin, dom);
 }
