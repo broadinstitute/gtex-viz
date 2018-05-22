@@ -249,7 +249,7 @@ function _validateGenes(domId, genes, input){
                 allIds.push(g.ensemblId);
             });
             let missingGenes = input.filter((g)=>!allIds.includes(g.toLowerCase())&&!allIds.includes(g.toUpperCase()));
-            message = `Warning: Not all genes are found: ${missingGenes.join(",")}<br/>`;
+            if (missingGenes.length > 0) message = `Warning: Not all genes are found: ${missingGenes.join(",")}<br/>`;
         }
     }
     return message;
