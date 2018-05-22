@@ -230,6 +230,13 @@ function _addClickEvents(tableId){
         })
 }
 
+/**
+ *
+ * @param tableId
+ * @param mat
+ * @private
+ * Reference: https://github.com/eligrey/FileSaver.js/
+ */
 function _addToolbar(tableId, mat){
     // TODO: get rid of hard-coded dom IDs
     const theCells = select(`#${tableId}`).select('tbody').selectAll('td');
@@ -244,14 +251,43 @@ function _addToolbar(tableId, mat){
             let cells = theCells.filter(`.selected`);
             if (cells.empty()) alert('You have not selected any samples to download.');
             else {
+                let downloadContent = [
+                        'Sample ID',
+                        'Tissue Name',
+                        'Data Type',
+                        'CRAM File',
+                        'CRAM File AWS',
+                        'CRAM File MD5',
+                        'CRAM File Size',
+                        'CRAM Index',
+                        'CRAM Index AWS'
+                    ].join("\t") + '\n';
                 cells.each(function(d){
                     const marker = select(this).attr('class').split(' ').filter((c)=>{return c!='selected'});
                     const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
                     const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
                     console.log('Download ' + x + ' : '+ y);
-                    const selectedSamples = mat.data.filter((s)=>s.dataType==y&&s.tissueId==x);
+
+                    const selectedSamples = mat.data.filter((s)=>s.dataType==y&&s.tissueId==x)
+                        .map((s)=>{
+                            console.log(s);
+                            let cram = [
+                                'cram_file',
+                                'cram_file_aws',
+                                'cram_file_md5',
+                                'cram_file_size',
+                                'cram_index',
+                                'cram_index_aws'
+                            ].map((d)=>s.cramFile[d]);
+                            let columns = [s.sampleId, s.tissueName, s.dataType].concat(cram);
+                            return columns.join("\t");
+                        });
                     console.log(selectedSamples);
-                })
+                    downloadContent += selectedSamples.join("\n");
+                });
+                let file = new Blob([downloadContent], {type: 'text/plain;charset=utf-8'});
+                saveAs(file, 'GTEx.cram.txt', true); // saveAs() is a FileSaver file, disable auto BOM
+
             }
 
         });
