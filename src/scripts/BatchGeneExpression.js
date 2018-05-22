@@ -458,6 +458,7 @@ function _renderViolinHelper(data, dmap, tissueDict){
     const margin = _setViolinPlotMargins(50, 50, 150, dmap.config.panels.main.x);
     let width = 20 * Object.keys(genes).length * tissueOrder.length;
     width = width < dmap.config.panels.main.w? dmap.config.panels.main.w: width;
+    // width = width < 300?300: width;
     const dim = _setViolinPlotDimensions(width, 150, margin);
 
 
@@ -478,6 +479,13 @@ function _renderViolinHelper(data, dmap, tissueDict){
 
     const showDivider = gCounts == 1? false: true;
     violin.render(dom, dim.width, dim.height, 0.30, tissueOrder.map((d)=>d.id), [], "log10(TPM)", true, false, 0, false, showDivider, true);
+
+    // check and adjust the svg width
+    const violinLegendW = Number(dom.select('#violinLegend').select('rect').attr('width'));
+    let svgW = Number(select(`#${id.chart}`).select('svg').attr('width'));
+    svgW = svgW < violinLegendW + 150?violinLegendW + 150:svgW;
+    select(`#${id.chart}`).select('svg').attr('width', svgW);
+
     _addViolinTissueColorBand(violin, dom, tissueDict, "bottom");
     _changeViolinXLabel(dom, tissueDict);
 }
