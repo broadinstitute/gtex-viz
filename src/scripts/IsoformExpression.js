@@ -242,7 +242,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
  */
 function _createToolbar(dmap, ids){
     let toolbar = dmap.createToolbar(ids.toolbar, dmap.tooltip);
-    toolbar.createDownloadButton(ids.buttons.save, ids.svg, `${ids.root}-save.svg`, ids.clone);
+    toolbar.createDownloadSvgButton(ids.buttons.save, ids.svg, `${ids.root}-save.svg`, ids.clone);
 }
 
 

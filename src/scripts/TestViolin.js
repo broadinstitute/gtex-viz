@@ -81,7 +81,7 @@ export function buildGrouped(rootId){
             ///// creating the tooltip and toolbar, and the brush
             const tooltip = violin.createTooltip(domIds.tooltip);
             const toolbar = violin.createToolbar(domIds.toolbar, tooltip);
-            toolbar.createDownloadButton(domIds.buttons.save, domIds.svg, `${rootId}-save.svg`, domIds.clone);
+            toolbar.createDownloadSvgButton(domIds.buttons.save, domIds.svg, `${rootId}-save.svg`, domIds.clone);
 
             switch(rootId){
                 case "oneGene": {
@@ -149,7 +149,7 @@ export function build(rootId){
     const tooltip = violin.createTooltip(domIds.tooltip);
 
     const toolbar = violin.createToolbar(domIds.toolbar, tooltip);
-    toolbar.createDownloadButton('save', domIds.svg, "testViolin", domIds.clone);
+    toolbar.createDownloadSvgButton('save', domIds.svg, "testViolin", domIds.clone);
     const resetClickEvent = function(){
         violin.zoom(dom);
     };

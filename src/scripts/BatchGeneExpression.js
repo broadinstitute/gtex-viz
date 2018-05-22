@@ -474,7 +474,7 @@ function _renderViolinHelper(data, dmap, tissueDict){
     const violin = new GroupedViolin(data);
     const tooltip = violin.createTooltip(id.tooltip);
     const toolbar = violin.createToolbar(id.toolbar, tooltip);
-    toolbar.createDownloadButton(id.buttons.save, id.svg, `${id.root}-save.svg`, id.clone);
+    toolbar.createDownloadSvgButton(id.buttons.save, id.svg, `${id.root}-save.svg`, id.clone);
 
     const showDivider = gCounts == 1? false: true;
     violin.render(dom, dim.width, dim.height, 0.30, tissueOrder.map((d)=>d.id), [], "log10(TPM)", true, false, 0, false, showDivider, true);
@@ -553,7 +553,7 @@ function _changeViolinXLabel(dom, tissueDict){
  */
 function _addToolBar(dmap, ids, tissueDict, urls=getGtexUrls(), filterGenes=undefined, qTissue=undefined){
     let toolbar = dmap.createToolbar(ids.toolbar, dmap.tooltip);
-    toolbar.createDownloadButton(ids.buttons.save, ids.svg, `${ids.root}-save.svg`, ids.clone);
+    toolbar.createDownloadSvgButton(ids.buttons.save, ids.svg, `${ids.root}-save.svg`, ids.clone);
 
     const __addFilter = ()=>{
         // so far this is only applicable for topExpressed gene heatmap
