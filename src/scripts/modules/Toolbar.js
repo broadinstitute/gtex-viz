@@ -18,14 +18,14 @@ export default class Toolbar {
     }
 
     /**
-     * Create a download button
+     * Create a download button for SVG
      * @param id {String} the button dom ID
      * @param svgId {String} the SVG dom ID to grab and download
      * @param outfileName {String} the download file name
      * @param cloneId {String} the cloned SVG dom ID
      * @param icon {String} a fontawesome's icon class name
      */
-    createDownloadButton(id, svgId, outfileName, cloneId, icon='fa-download'){
+    createDownloadSvgButton(id, svgId, outfileName, cloneId, icon='fa-download'){
         const $button = this.createButton(id, icon);
         select(`#${id}`)
             .on('click', ()=>{
