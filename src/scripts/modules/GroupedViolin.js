@@ -189,10 +189,11 @@ export default class GroupedViolin {
 
         // adds the text label for the y axis
         dom.append("text")
-            .attr("y", -20) // todo: avoid hard-coded value
+            .attr("y", -40) // todo: avoid hard-coded value
             .attr("x", -40)
             .attr("class", "violin-axis-label")
             .attr("text-anchor", "start")
+            .attr("transform", "rotate(-90)")
             .text(yLabel);
 
         // plot mouse events
@@ -208,12 +209,13 @@ export default class GroupedViolin {
         // add color legend
         if (showLegend) {
             const legendG = dom.append("g")
+                .attr("id", "violinLegend")
                 .attr("transform", `translate(0, 0)`);
 
             legendG.append("rect")
-                .attr("x", 50 + this.scale.x.range()[0]-5)
+                .attr("x", this.scale.x.range()[0])
                 .attr("y", -35)
-                .attr("width", 70*(this.groups[0].values.length + 1))
+                .attr("width", 60*(this.groups[0].values.length) + 10)
                 .attr("height", 24)
                 .style("fill", "none")
                 .style("stroke", "silver");
@@ -224,7 +226,7 @@ export default class GroupedViolin {
             const g = legends.enter().append("g").classed("violin-legend", true);
             const w = 10;
             g.append("rect")
-                .attr("x", (d, i) => 70*(i + 1)  + this.scale.x.range()[0])
+                .attr("x", (d, i) => 5 + 60*(i)  + this.scale.x.range()[0])
                 .attr("y", -28)
                 .attr("width", w)
                 .attr("height", w)
@@ -233,9 +235,10 @@ export default class GroupedViolin {
             g.append("text")
                 .attr("class", "violin-legend-text")
                 .text((d) => d.label)
-                .attr("x", (d, i) => 15 + 70*(i + 1) + this.scale.x.range()[0])
+                .attr("x", (d, i) => 17 + 60*(i) + this.scale.x.range()[0])
                 .attr("y", -20);
         }
+
 
     }
 
