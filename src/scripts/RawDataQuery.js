@@ -176,7 +176,9 @@ function _renderCounts(tbody, mat){
 
     mat.Y.forEach((y, j)=>{
         theRows.append('td')
-            .attr('class', (d, i)=>`x${i} y${j}`)
+            .attr('class', (d, i)=>{
+                return d[y.id]===undefined?'':`x${i} y${j}`;
+            })
             .text((d)=>d[y.id]||'');
     });
 
@@ -255,11 +257,11 @@ function _addToolbar(tableId, mat){
                         'Sample ID',
                         'Tissue Name',
                         'Data Type',
-                        'CRAM File',
+                        'CRAM File GCP',
                         'CRAM File AWS',
                         'CRAM File MD5',
                         'CRAM File Size',
-                        'CRAM Index',
+                        'CRAM Index GCP',
                         'CRAM Index AWS'
                     ].join("\t") + '\n';
                 cells.each(function(d){
