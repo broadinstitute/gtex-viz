@@ -270,7 +270,8 @@ function _addToolbar(tableId, mat){
                     const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
                     console.log('Download ' + x + ' : '+ y);
 
-                    const selectedSamples = mat.data.filter((s)=>s.dataType==y&&s.tissueId==x)
+                    const selectedSamples = mat.data.filter((s)=>s.dataType==y&&s.tissueId==x&&s.dataType!='WES')
+                        /**** WARNING: no WES cram files available ATM ****/
                         .map((s)=>{
                             console.log(s);
                             let cram = [
@@ -297,8 +298,26 @@ function _addToolbar(tableId, mat){
     select('#send-to-firecloud')
         .style('cursor', 'pointer')
         .on('click', function(){
-            alert('Send to FireCloud. To be implemented.')
+             let cells = theCells.filter(`.selected`);
+             if (cells.empty()) alert('You have not selected any samples to download.');
+             else {
+                 cells.each(function(d) {
+                     const marker = select(this).attr('class').split(' ').filter((c) => {
+                         return c != 'selected'
+                     });
+                     const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
+                     const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
+                     console.log('Download ' + x + ' : ' + y);
+                 });
+                 select('#fire-cloud-form').style("display", "block");
+             }
         });
+
+    select('#submit-to-firecloud-btn')
+        .on('click', function(){
+            select('#fire-cloud-form').style("display", "none");
+            alert('Submitted!');
+        })
 }
 
 
