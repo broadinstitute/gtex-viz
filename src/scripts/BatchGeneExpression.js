@@ -53,7 +53,7 @@ export function launchTopExpressed(tissueId, heatmapRootId, violinRootId, urls=g
             const callback = function(){
                 _styleSelectedTissue(tissueId);
             };
-            searchById(heatmapRootId, violinRootId, topGeneList, urls, filterGenes, callback, tissueId);
+            searchById(heatmapRootId, violinRootId, topGeneList, undefined, urls, filterGenes, callback, tissueId);
         })
         .catch(function(err){
             console.error(err);
@@ -133,8 +133,9 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
 
            // get median expression data and clusters of the input genes in all tissues
            const gQuery = genes.map((g)=>g.gencodeId).join(",");
-           const tQuery = tlist.join(",");
-           json(urls.medGeneExp + "&gencodeId=" + gQuery + "&tissueId=" + tQuery)
+           const tQuery = tlist===undefined?undefined:tlist.join(",");
+           const fetchUrl = tQuery === undefined? urls.medGeneExp + "&gencodeId=" + gQuery: urls.medGeneExp + "&gencodeId=" + gQuery + "&tissueId=" + tQuery;
+           json(fetchUrl)
                .then(function(eData){
                    $('#spinner').hide();
                    const dataMessage = _validateExpressionData(eData);
@@ -169,11 +170,11 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
                         const maxCellW = 25;
                         const minCellW = 25;
 
-                        let cellW = Math.ceil(window.innerWidth/tlist.length);
+                        let cellW = tlist===undefined?Math.ceil(window.innerWidth/tissues.length):Math.ceil(window.innerWidth/tlist.length);
                         cellW = cellW>maxCellW?maxCellW:(cellW<minCellW?minCellW:cellW); // this ensures a reasonable cellW
                         let dmapMargin={top:50, right:250, bottom:170, left:10};
                         let leftPanelW = 100;
-                        let rootW = cellW * tlist.length + leftPanelW + dmapMargin.right + dmapMargin.left;
+                        let rootW = tlist===undefined?cellW * tissues.length + leftPanelW + dmapMargin.right + dmapMargin.left:cellW * tlist.length + leftPanelW + dmapMargin.right + dmapMargin.left;
 
                         const config = new DendroHeatmapConfig(rootW, leftPanelW, 100, dmapMargin, 12, 10);
                         const dmap = new DendroHeatmap(eData.clusters.tissue, eData.clusters.gene, expression, "YlGnBu", 2, config);
