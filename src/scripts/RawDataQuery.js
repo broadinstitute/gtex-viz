@@ -298,6 +298,7 @@ function _addToolbar(tableId, mat){
     select('#send-to-firecloud')
         .style('cursor', 'pointer')
         .on('click', function(){
+             renderSignInButton();
              let cells = theCells.filter(`.selected`);
              if (cells.empty()) alert('You have not selected any samples to download.');
              else {
@@ -319,5 +320,36 @@ function _addToolbar(tableId, mat){
             alert('Submitted!');
         })
 }
+
+/***** Google Sign in and FireCloud API *****/
+// reference: use this URL, https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=ya29.GlzNBQAr9O0sUinjuS-KCUWxs4Ct8u0vNXue5XnDrgLl8prynXNjaEFYW25QNYqk11vJt1ISPV3V07AgefijHLW5Mo98j1BNZtuZP6qmUS3brEczwUGEU12oHEt5NA, to check the access token info
+// reference: https://developers.google.com/identity/sign-in/web/build-button
+export function callFireCloud(googleUser) {
+
+    // let profile = googleUser.getBasicProfile();
+    // console.log('ID: ' + profile.getId());
+    // console.log('Name: ' + profile.getName());
+    // console.log('Email: ' + profile.getEmail());
+    // get the user's access token
+    let token = googleUser.getAuthResponse(true).access_token;
+    // console.log(token);
+    $.ajax({
+        url: 'https://api.firecloud.org/api/profile/billing',
+        type: 'GET',
+        xhrFields: {
+            withCredentials: false
+        },
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        },
+        contentType: 'application/json; charset=utf-8',
+        success: function(response){
+            console.log('To be implemented: A list of billing projects')
+            console.log(response);
+        }
+    });
+}
+
+
 
 

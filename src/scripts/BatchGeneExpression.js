@@ -571,7 +571,7 @@ function _addToolBar(dmap, ids, tissueDict, urls=getGtexUrls(), filterGenes=unde
         select(`#${id}`)
             .on("click", function(){
                 // toggle the applied filter
-                renderTopExpressed(qTissue, ids.root, ids.violin, urls, !filterGenes);
+                launchTopExpressed(qTissue, ids.root, ids.violin, urls, !filterGenes);
             })
             .on("mouseover", function(){
                 if(filterGenes) toolbar.tooltip.show("Include Mitochondrial Genes");

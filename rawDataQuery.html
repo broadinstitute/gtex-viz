@@ -5,9 +5,9 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
         <link rel="stylesheet" href="external/fontawesome-free-5.0.7/web-fonts-with-css/css/fontawesome-all.css">
 
-        <link rel="stylesheet" type="text/css" href="src/css/dendrogram.css">
-        <link rel="stylesheet" type="text/css" href="src/css/expressMap.css">
-        <link rel="stylesheet" type="text/css" href="src/css/violin.css">
+        <!--<link rel="stylesheet" type="text/css" href="src/css/dendrogram.css">-->
+        <!--<link rel="stylesheet" type="text/css" href="src/css/expressMap.css">-->
+        <!--<link rel="stylesheet" type="text/css" href="src/css/violin.css">-->
         <link href="https://fonts.googleapis.com/css?family=EB+Garamond|Libre+Franklin|Open+Sans|Roboto|Zilla+Slab" rel="stylesheet">
         <link rel="stylesheet" type="text/css" href="external/select2-4.0.4/css/select2.min.css">
         <style>
@@ -127,70 +127,22 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
         <script src="external/FileSaver/FileSaver.min.js"></script>
-        <!--<script src="https://apis.google.com/js/platform.js" async defer></script> &lt;!&ndash; Google Platform Library for Google Sign-In &ndash;&gt;-->
         <meta name="google-signin-client_id" content="786075537258-q243513l58k43knubcksmt2vvdb4o0il.apps.googleusercontent.com">
     </head>
     <body class="container" style="margin-top:20px;">
         <h4>GTEx Raw File Search</h4>
-
+        TODO:
+        <ul>
+            <li>When user clicks the FireCloud button, confirm Google sign in. Read GTEx google signin code for this.</li>
+            <li>Still need to get the CRAM file paths for WES samples.</li>
+        </ul>
         <div class="row" style="float: right">
             <div id="my-signin2"></div>
 
             <!--<div id="g-signin" onclick="onSignIn();" style="cursor: pointer;" class="btn btn-sm btn-default"><i class="fab fa-google"></i></div>-->
             <div id="g-signout" onclick="signOut();" style="display:none; cursor: pointer;" class="btn btn-sm btn-default"><i class="fas fa-sign-out-alt"></i></div>
         </div>
-        <script>
-            // reference: use this URL, https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=, to check the access token info
-            // reference: https://developers.google.com/identity/sign-in/web/build-button
-            function onSuccess(googleUser) {
-                $('#g-signout').show();
-                let profile = googleUser.getBasicProfile();
-                console.log('ID: ' + profile.getId());
-                console.log('Name: ' + profile.getName());
-                console.log('Email: ' + profile.getEmail());
-                // my access token
-                let token = googleUser.getAuthResponse(true).access_token;
-                console.log(token);
-                $.ajax({
-                    url: 'https://api.firecloud.org/api/profile/billing',
-                    type: 'GET',
-                    xhrFields: {
-                        withCredentials: false
-                    },
-                    beforeSend: function (xhr) {
-                        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-                    },
-                    contentType: 'application/json; charset=utf-8',
-                    success: function(response){
-                        console.log(response);
-                    }
-                });
-            }
-            function onFailure(error) {
-                console.log(error);
-            }
-            function renderButton(){
-                gapi.signin2.render('my-signin2', {
-                    'scope': 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me',
-                    'width': 240,
-                    'height': 50,
-                    'longtitle': true,
-                    'theme': 'dark',
-                    'onsuccess': onSuccess,
-                    'onfailure': onFailure
-                });
-            }
-
-            function signOut() {
-                let auth2 = gapi.auth2.getAuthInstance();
-                auth2.signOut().then(function() {
-                    console.log('User signed out');
-                });
-                $('#g-signout').hide();
-
-            }
-        </script>
-        <script src="https://apis.google.com/js/platform.js?onload=renderButton" async defer></script>
+        <script src="https://apis.google.com/js/platform.js?onload=renderSignInButton" async defer></script>
         <div class="row">
             <div class="col-xs-2">
                 <div id="filter-menu" style="">
@@ -248,6 +200,31 @@
         $(document).ready(function(){
             RawDataQuery.launch("gtex-v7-sample", "gtex_v7");
         });
+        function renderSignInButton(){
+            gapi.signin2.render('my-signin2', {
+                'scope': 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me',
+                'width': 240,
+                'height': 50,
+                'longtitle': true,
+                'theme': 'dark',
+                'onsuccess': onSuccess,
+                'onfailure': onFailure
+            })
+        }
+        function onSuccess(googleUser){
+            $('#g-signout').show();
+            RawDataQuery.callFireCloud(googleUser);
+        }
+        function signOut() {
+            let auth2 = gapi.auth2.getAuthInstance();
+            auth2.signOut().then(function() {
+                console.log('User signed out');
+            });
+            $('#g-signout').hide();
+        }
+        function onFailure(error){
+            console.error(error)
+        }
     </script>
 
 </html>
