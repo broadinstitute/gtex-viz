@@ -5,9 +5,6 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
         <link rel="stylesheet" href="external/fontawesome-free-5.0.7/web-fonts-with-css/css/fontawesome-all.css">
 
-        <!--<link rel="stylesheet" type="text/css" href="src/css/dendrogram.css">-->
-        <!--<link rel="stylesheet" type="text/css" href="src/css/expressMap.css">-->
-        <!--<link rel="stylesheet" type="text/css" href="src/css/violin.css">-->
         <link href="https://fonts.googleapis.com/css?family=EB+Garamond|Libre+Franklin|Open+Sans|Roboto|Zilla+Slab" rel="stylesheet">
         <link rel="stylesheet" type="text/css" href="external/select2-4.0.4/css/select2.min.css">
         <style>
@@ -142,7 +139,6 @@
             <!--<div id="g-signin" onclick="onSignIn();" style="cursor: pointer;" class="btn btn-sm btn-default"><i class="fab fa-google"></i></div>-->
             <div id="g-signout" onclick="signOut();" style="display:none; cursor: pointer;" class="btn btn-sm btn-default"><i class="fas fa-sign-out-alt"></i></div>
         </div>
-        <script src="https://apis.google.com/js/platform.js?onload=renderSignInButton" async defer></script>
         <div class="row">
             <div class="col-xs-2">
                 <div id="filter-menu" style="">
@@ -182,10 +178,15 @@
                     <form id="fire-cloud-form" style="display:none;">
                         <div class="fire-cloud-form-box">
                             <div class="filter-section-title">Send Samples to FireCloud</div>
-                            Provide Your Billing Project:<br>
-                            <input type="text" name="billingProject"><br/>
-                            Name Your New Workspace:<br>
+                            Provide Your Billing Project<br/>
+
+                            <div id="billing-project-list" class="input-group" style="font-size:11px;">
+                                <!--<input type="radio" name="billing-project" value="broad-firecloud-gtex">broad-firecloud-gtex</input>-->
+                            </div>
+                            Name Your New Workspace:<br/>
                             <input type="text" name="workspace"><br/>
+                            <div id="cancel-firecloud-btn" class="btn btn-sm btn-gtex-d3" style="margin-top: 5px;cursor: pointer;">Cancel</div>
+
                             <div id="submit-to-firecloud-btn" class="btn btn-sm btn-gtex-d3" style="margin-top: 5px;cursor: pointer;">Submit</div>
                         </div>
                     </form>
@@ -196,35 +197,14 @@
     </body>
 
     <script src="build/js/raw-data-query.bundle.dev.js"></script>
+    <script src="build/js/googleUser.js"></script>
     <script>
         $(document).ready(function(){
             RawDataQuery.launch("gtex-v7-sample", "gtex_v7");
         });
-        function renderSignInButton(){
-            gapi.signin2.render('my-signin2', {
-                'scope': 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me',
-                'width': 240,
-                'height': 50,
-                'longtitle': true,
-                'theme': 'dark',
-                'onsuccess': onSuccess,
-                'onfailure': onFailure
-            })
-        }
-        function onSuccess(googleUser){
-            $('#g-signout').show();
-            RawDataQuery.callFireCloud(googleUser);
-        }
-        function signOut() {
-            let auth2 = gapi.auth2.getAuthInstance();
-            auth2.signOut().then(function() {
-                console.log('User signed out');
-            });
-            $('#g-signout').hide();
-        }
-        function onFailure(error){
-            console.error(error)
-        }
+
     </script>
+    <script src="https://apis.google.com/js/platform.js?onload=renderSignInButton" async defer></script>
+
 
 </html>

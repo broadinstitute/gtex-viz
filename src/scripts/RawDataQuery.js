@@ -238,6 +238,7 @@ function _addClickEvents(tableId){
  * @param mat
  * @private
  * Reference: https://github.com/eligrey/FileSaver.js/
+ * Dependencies: googleUser.js
  */
 function _addToolbar(tableId, mat){
     // TODO: get rid of hard-coded dom IDs
@@ -298,33 +299,45 @@ function _addToolbar(tableId, mat){
     select('#send-to-firecloud')
         .style('cursor', 'pointer')
         .on('click', function(){
-             renderSignInButton();
-             let cells = theCells.filter(`.selected`);
-             if (cells.empty()) alert('You have not selected any samples to download.');
-             else {
-                 cells.each(function(d) {
-                     const marker = select(this).attr('class').split(' ').filter((c) => {
-                         return c != 'selected'
-                     });
-                     const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
-                     const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
-                     console.log('Download ' + x + ' : ' + y);
-                 });
-                 select('#fire-cloud-form').style("display", "block");
+             if (!checkSignedIn()){
+                 alert("You need to sign in first");
              }
+
+            _reportBillingProjects(getUser());
+
+            let cells = theCells.filter(`.selected`);
+            if (cells.empty()) alert('You have not selected any samples to download.');
+            else {
+                cells.each(function(d) {
+                    const marker = select(this).attr('class').split(' ').filter((c) => {
+                        return c != 'selected'
+                    });
+                    const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
+                    const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
+                    console.log('Download ' + x + ' : ' + y);
+                });
+                select('#fire-cloud-form').style("display", "block");
+            }
         });
 
     select('#submit-to-firecloud-btn')
         .on('click', function(){
             select('#fire-cloud-form').style("display", "none");
             alert('Submitted!');
+        });
+
+    select('#cancel-firecloud-btn')
+        .on('click', function(){
+            select('#fire-cloud-form').style("display", "none");
+            alert('Canceled!');
         })
 }
 
 /***** Google Sign in and FireCloud API *****/
 // reference: use this URL, https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=ya29.GlzNBQAr9O0sUinjuS-KCUWxs4Ct8u0vNXue5XnDrgLl8prynXNjaEFYW25QNYqk11vJt1ISPV3V07AgefijHLW5Mo98j1BNZtuZP6qmUS3brEczwUGEU12oHEt5NA, to check the access token info
 // reference: https://developers.google.com/identity/sign-in/web/build-button
-export function callFireCloud(googleUser) {
+// dependencies: jQuery
+function _reportBillingProjects(googleUser, domId="billing-project-list") {
 
     // let profile = googleUser.getBasicProfile();
     // console.log('ID: ' + profile.getId());
@@ -344,8 +357,17 @@ export function callFireCloud(googleUser) {
         },
         contentType: 'application/json; charset=utf-8',
         success: function(response){
-            console.log('To be implemented: A list of billing projects')
-            console.log(response);
+            // Can't figure out how to generate this form using D3... so here I'm using jQuery syntax
+            $(`#${domId}`).empty();
+            response.forEach((d)=>{
+                $('<label>' +
+                    `<input type="radio" name="billing-project" value="${d.projectName}"> ` +
+                    d.projectName +
+                   '</label><br/>'
+                ).appendTo($(`#${domId}`));
+            });
+
+            console.log(response[0]);
         }
     });
 }
