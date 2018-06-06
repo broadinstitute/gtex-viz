@@ -94,7 +94,7 @@ export default class IsoformTrackViewer {
         this.render(true);
     }
 
-    render(redraw=false, dom=undefined, duration=1000){
+    render(redraw=false, dom=undefined, labelOn='left', duration=1000){
         if (dom === undefined && this.visualDom === undefined) throw "Fatal Error: must provide a dom element";
         if (dom === undefined) dom = this.visualDom;
         else this.visualDom = dom;
@@ -123,15 +123,15 @@ export default class IsoformTrackViewer {
 
         if (redraw) return;
 
-        this._renderModels(this.config.w);
+        this._renderModels(this.config.w, labelOn);
 
     }
 
-    _renderModels(w){
+    _renderModels(w, labelOn = 'left'){
         this.isoforms.forEach((isoform) => {
             const model = new GeneModel(isoform, this.modelExons, this.isoformExons[isoform.transcriptId], [], true);
             const isoformG = select(`#${isoform.transcriptId.replace(".", "_")}`);
-            model.render(isoformG, {w:w, h: this.yScale.bandwidth()});
+            model.render(isoformG, {w:w, h: this.yScale.bandwidth(), labelOn: labelOn});
         });
 
     }

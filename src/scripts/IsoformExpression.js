@@ -107,6 +107,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 });
                 switch(type){
                     case "isoform": {
+                        // not in use
                         const dmapConfig = new DendroHeatmapConfig(window.innerWidth, 150, 100, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
                         let tissueTree = args[6].clusters.tissue;
                         let isoformTree = args[6].clusters.isoform;
@@ -162,9 +163,10 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 dmap.createTooltip(ids.tooltip);
 
                 // define the gene model and isoform tracks layout dimensions
+                const yAdjust = type.startsWith('isoform')?70:130;
                 const modelConfig = {
                     x: dmap.config.panels.main.x,
-                    y: dmap.config.panels.main.h + dmap.config.panels.main.y + 130, // TODO: remove hard-coded values
+                    y: dmap.config.panels.main.h + dmap.config.panels.main.y + yAdjust, // TODO: remove hard-coded values
                     w: dmap.config.panels.main.w,
                     h: 100
                 };
@@ -174,7 +176,8 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     x: modelConfig.x,
                     y: modelConfig.y + modelConfig.h,
                     w: modelConfig.w,
-                    h: exonH*isoforms.length
+                    h: exonH*isoforms.length,
+                    labelOn: 'left'
                 };
 
                 // extend the SVG height to accommondate the gene model and isoform tracks
@@ -185,25 +188,25 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
                 const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel")
                     .attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
-                geneModel.render(modelG, modelConfig);
+                if (!type.startsWith("isoform")) geneModel.render(modelG, modelConfig); // gene model is not rendered in isoform view
 
                 // render isoform tracks, ignoring intron lengths
                 const isoformTrackViewer = new IsoformTrackViewer(isoforms, isoformExons, exons, isoTrackViewerConfig);
                 const trackViewerG = dmap.visualComponents.svg.append("g")
                     .attr("transform", `translate(${isoTrackViewerConfig.x}, ${isoTrackViewerConfig.y})`);
-                isoformTrackViewer.render(false, trackViewerG);
+                const labelOn = type.startsWith('isoform')?'both':'left';
+                isoformTrackViewer.render(false, trackViewerG, labelOn);
 
                 // customization
-                _addColorLegendsForGeneModel(dmap, junctionColorScale, exonColorScale, isoformColorScale);
+                if(!type.startsWith('isoform')) _addColorLegendsForGeneModel(dmap, junctionColorScale, exonColorScale);
                 _createToolbar(dmap, ids);
 
                 switch(type){
-                    case "isoform": {
-                        _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
-                        _customizeIsoformMap(tissues, geneModel, dmap);
-
-                        break;
-                    }
+                    // case "isoform": {
+                    //     _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
+                    //     _customizeIsoformMap(tissues, geneModel, dmap);
+                    //     break;
+                    // }
                     case "isoformTransposed": {
                         _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         break;
@@ -593,7 +596,7 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
 
 }
 
-function _addColorLegendsForGeneModel(dmap, junctionScale, exonScale, isoformScale){
+function _addColorLegendsForGeneModel(dmap, junctionScale, exonScale){
     const mapSvg = dmap.visualComponents.svg;
     let X = dmap.objects.heatmap.xScale.range()[1] + 50;
     const Y = 30;
@@ -602,8 +605,5 @@ function _addColorLegendsForGeneModel(dmap, junctionScale, exonScale, isoformSca
 
     X = X + inc;
     drawColorLegend("Junction read counts", mapSvg.select("#geneModel"), junctionScale, {x: X, y:Y}, true, 5, 10, {h:20, w:10}, 'v');
-
-    // X = X + inc;
-    // drawColorLegend("Isoform TPM", mapSvg.select("#geneModel"), isoformScale, {x: X, y:Y}, true, 5, 10, {h:20, w:10}, 'v');
 
 }

@@ -211,7 +211,6 @@ export default class GeneModel {
                 .attr("y", exonY-10)
                 .style("font-size", 12)
                 .text("Gene Model");
-
         }
         else{
             // if this is an isoform, render the intron line
@@ -243,14 +242,27 @@ export default class GeneModel {
             .style("cursor", "default");
 
         /***** rendering text labels */
-
-        dom.append("text")
+        if (config.labelOn == 'left' || config.labelOn == 'both'){
+            dom.append("text")
             .attr("id", "modelLabel") // TODO: no hard-coded value
             .style("text-anchor", "end")
-            .attr("x", this.xScale(0) - 5)
+            .attr("x", this.xScale.range()[0] - 5)
             .attr("y", exonY + 7.5)
             .style("font-size", 9)
             .text(this.gene.transcriptId===undefined?`${this.gene.geneSymbol}`:this.gene.transcriptId);
+
+
+        }
+        if (config.labelOn == 'right' || config.labelOn == 'both'){
+            dom.append("text")
+            .attr("id", "modelLabelRight") // TODO: no hard-coded value
+            .style("text-anchor", "start")
+            .attr("x", this.xScale.range()[1] + 5)
+            .attr("y", exonY + 7.5)
+            .style("font-size", 9)
+            .text(this.gene.transcriptId===undefined?`${this.gene.geneSymbol}`:this.gene.transcriptId);
+
+        }
     }
 
     setXscale(w){
