@@ -17,10 +17,13 @@ export default class IsoformTrackViewer {
         this.config = config;
     }
 
-    showData(data, colorScale, barScale, dataLabel){
-        data.sort((a,b)=>{return -(a.originalValue - b.originalValue)}); // first sort the expression data
-        const ids = data.map((d)=>d.transcriptId);
-        this.sortTracks(ids);
+    showData(data, colorScale, barScale, dataLabel, sort=true){
+
+        if (sort){
+            data.sort((a,b)=>{return -(a.originalValue - b.originalValue)}); // first sort the expression data
+            const ids = data.map((d)=>d.transcriptId);
+            this.sortTracks(ids);
+        }
 
         data.forEach((d)=>{
             const isoform = this.visualDom.select(`#${d.transcriptId.replace(".", "_")}`);
@@ -88,11 +91,11 @@ export default class IsoformTrackViewer {
         // data label
         lollipopGraph.append("text")
             .attr("id", "lolliLabel")
-            .attr("x", 60)
-            .attr("y", -50)
-            .style("text-anchor", "end")
+            .attr("x", 10)
+            .attr("y", -20)
+            .style("text-anchor", "start")
             .style("font-size", 12)
-            .text(dataLabel);
+            .text(`Isoform Expression in ${dataLabel}`);
 
 
     }

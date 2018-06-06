@@ -318,7 +318,8 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
                 .domain([min(isoformData.map(d=>d.value)), max(isoformData.map(d=>d.value))])
                 .range([0, -100]);
             const isoData = isoformData.filter((iso)=>iso.tissueId==tissue);
-            isoTrackViewer.showData(isoData, isoformScale, isoBarScale, tissueDict[tissue].tissueName);
+            const sort = false;
+            isoTrackViewer.showData(isoData, isoformScale, isoBarScale, tissueDict[tissue].tissueName, sort);
         });
 
 
