@@ -17,7 +17,7 @@ export default class IsoformTrackViewer {
         this.config = config;
     }
 
-    showData(data, colorScale, barScale){
+    showData(data, colorScale, barScale, dataLabel){
         data.sort((a,b)=>{return -(a.originalValue - b.originalValue)}); // first sort the expression data
         const ids = data.map((d)=>d.transcriptId);
         this.sortTracks(ids);
@@ -68,13 +68,14 @@ export default class IsoformTrackViewer {
                 axisTop(barScale)
                     .ticks(3)
             );
+
         lollipopGraph.append("text")
             .attr("id", "lolliLabel")
             .attr("x", 0)
             .attr("y", -40)
             .style("text-anchor", "end")
             .style("font-size", 9)
-            .text("log10(TPM)");
+            .text("log10(TPM)"); // TODO: this should be a user-defined text
 
         lollipopGraph.append("g")
             .attr("class", "lollipop-axis")
@@ -84,6 +85,14 @@ export default class IsoformTrackViewer {
                   .tickValues([]) // show no ticks
             );
 
+        // data label
+        lollipopGraph.append("text")
+            .attr("id", "lolliLabel")
+            .attr("x", 60)
+            .attr("y", -50)
+            .style("text-anchor", "end")
+            .style("font-size", 12)
+            .text(dataLabel);
 
 
     }

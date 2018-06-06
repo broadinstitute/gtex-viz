@@ -202,13 +202,8 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 _createToolbar(dmap, ids);
 
                 switch(type){
-                    // case "isoform": {
-                    //     _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
-                    //     _customizeIsoformMap(tissues, geneModel, dmap);
-                    //     break;
-                    // }
                     case "isoformTransposed": {
-                        _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
+                        _customizeIsoformTransposedMap(tissues, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         break;
                     }
                     case "junction": {
@@ -248,8 +243,20 @@ function _createToolbar(dmap, ids){
     toolbar.createDownloadSvgButton(ids.buttons.save, ids.svg, `${ids.root}-save.svg`, ids.clone);
 }
 
-
-function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer, junctionScale, exonScale, isoformScale, junctionData, exonData, isoformData){
+/**
+ *
+ * @param tissues {List} of the GTEx tissue objects with attr: tissueName
+ * @param dmap {Object} of DendroHeatmap
+ * @param isoTrackViewer {IsoTrackViewer}
+ * @param junctionScale
+ * @param exonScale
+ * @param isoformScale
+ * @param junctionData {List} of junction expression data objects
+ * @param exonData {List} of exon expression data objects
+ * @param isoformData {List} of isoform expression data objects
+ * @private
+ */
+function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionScale, exonScale, isoformScale, junctionData, exonData, isoformData){
     const mapSvg = dmap.visualComponents.svg;
     const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
     const tooltip = dmap.tooltip;
@@ -304,8 +311,6 @@ function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer
             const tissue = d;
             const j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
             const ex = exonData.filter((e)=>e.tissueId==tissue); // exon data
-            geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissue);
-            geneModel.addData(mapSvg.select("#geneModel"), j, ex, junctionScale, exonScale);
 
             // isoforms update
 
@@ -313,7 +318,7 @@ function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer
                 .domain([min(isoformData.map(d=>d.value)), max(isoformData.map(d=>d.value))])
                 .range([0, -100]);
             const isoData = isoformData.filter((iso)=>iso.tissueId==tissue);
-            isoTrackViewer.showData(isoData, isoformScale, isoBarScale);
+            isoTrackViewer.showData(isoData, isoformScale, isoBarScale, tissueDict[tissue].tissueName);
         });
 
 
@@ -344,10 +349,11 @@ function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer
         .on("mouseout", function(){
             select(this).classed("highlighted", false);
             mapSvg.selectAll(".exon-curated").classed("highlighted", false);
+        })
+        .on ("click", function(){
+            // no action implemented
         });
 }
-
-
 
 /**
  * customizing the heatmap
@@ -355,9 +361,13 @@ function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer
  * @param tissues {List} of GTEx tissue objects with attr: colorHex, tissueId, tissueName
  * @param geneModel {GeneModel} of the collapsed gene model
  * @param dmap {Object} of DendroHeatmap
- * @param jdata {List} of junction expression data objects
- * @param edata {List} of exon expression data objects
- * @param idata {List} of isoform expression data objects
+ * @param isoTrackViewer {IsoformTrackViewer}
+ * @param junctionScale
+ * @param exonScale
+ * @param isoformScale
+ * @param junctionData {List} of junction expression data objects
+ * @param exonData {List} of exon expression data objects
+ * @param isoformData {List} of isoform expression data objects
  * @private
  */
 function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionScale, exonScale, isoformScale, junctionData, exonData, isoformData){
@@ -409,58 +419,15 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
             const tissue = d;
             const j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
             const ex = exonData.filter((e)=>e.tissueId==tissue); // exon data
-            geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissue);
+            // geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissueDict[tissue].tissueName);
             geneModel.addData(mapSvg.select("#geneModel"), j, ex, junctionScale, exonScale);
 
             // isoforms update
-
             const isoBarScale = scaleLinear()
                 .domain([min(isoformData.map(d=>d.value)), max(isoformData.map(d=>d.value))])
                 .range([0, -100]);
             const isoData = isoformData.filter((iso)=>iso.tissueId==tissue);
-            isoTrackViewer.showData(isoData, isoformScale, isoBarScale);
-        });
-}
-
-/**
- * customizing the isoform heat map
- * @param tissues {List} of the GTEx tissue objects with attr: tissueName
- * @param geneModel {GeneModel}
- * @param dmap {DendroHeatmap}
-
- * @private
- */
-function _customizeIsoformMap(tissues, geneModel, dmap){
-    const mapSvg = dmap.visualComponents.svg;
-    const tooltip = dmap.tooltip;
-    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
-
-    // define the isoform heatmap cells' mouse events
-    // note: to reference the element inside the function (e.g. d3.select(this)) here we must use a normal anonymous function.
-    mapSvg.selectAll(".exp-map-cell")
-        .on("mouseover", function(d){
-            const selected = select(this); // 'this' refers to the d3 DOM object
-            dmap.objects.heatmap.cellMouseover(selected);
-            const tissue = tissueDict[d.y] === undefined?d.y:tissueDict[d.y].tissueName; // get tissue name or ID
-            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.id}<br/> ${d.unit}: ${parseFloat(d.originalValue.toExponential()).toPrecision(3)}`)
-        })
-        .on("mouseout", function(d){
-            mapSvg.selectAll("*").classed('highlighted', false);
-            tooltip.hide();
-        });
-
-    // isoform labels
-    mapSvg.selectAll(".exp-map-xlabel")
-        .on("mouseover", function(d){
-            select(this).classed("highlighted", true);
-
-            // highlight the isoform track
-            const id = d.replace(".", "_"); // dot is not an allowable character, so it has been replaced with an underscore
-            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the class name?
-        })
-        .on("mouseout", function(){
-            select(this).classed("highlighted", false);
-            mapSvg.selectAll(".exon-curated").classed("highlighted", false);
+            isoTrackViewer.showData(isoData, isoformScale, isoBarScale, tissueDict[tissue].tissueName);
         });
 }
 
