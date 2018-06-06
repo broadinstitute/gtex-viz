@@ -257,7 +257,6 @@ function _customizeIsoformTransposedMap(tissues, geneModel, dmap, isoTrackViewer
         .style("cursor", "pointer");
 
     // add tissue bands
-    // TODO: refactor
     mapSvg.select("#heatmap").selectAll(".exp-map-xcolor")
         .data(dmap.objects.heatmap.xScale.domain())
         .enter()
