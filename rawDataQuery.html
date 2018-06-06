@@ -130,8 +130,8 @@
         <h4>GTEx Raw File Search</h4>
         TODO:
         <ul>
-            <li>When user clicks the FireCloud button, confirm Google sign in. Read GTEx google signin code for this.</li>
-            <li>Still need to get the CRAM file paths for WES samples.</li>
+            <li>Bug: the download button isn't responding.</li>
+            <li>Requirement: the CRAM file paths for WES samples.</li>
         </ul>
         <div class="row" style="float: right">
             <div id="my-signin2"></div>
@@ -175,21 +175,22 @@
 
             <div class="col-xs-2" style="margin-left: 10px;">
                 <div id="matrix-table-toolbar"></div>
-                    <form id="fire-cloud-form" style="display:none;">
-                        <div class="fire-cloud-form-box">
-                            <div class="filter-section-title">Send Samples to FireCloud</div>
-                            Provide Your Billing Project<br/>
-
-                            <div id="billing-project-list" class="input-group" style="font-size:11px;">
-                                <!--<input type="radio" name="billing-project" value="broad-firecloud-gtex">broad-firecloud-gtex</input>-->
-                            </div>
-                            Name Your New Workspace:<br/>
-                            <input type="text" name="workspace"><br/>
-                            <div id="cancel-firecloud-btn" class="btn btn-sm btn-gtex-d3" style="margin-top: 5px;cursor: pointer;">Cancel</div>
-
-                            <div id="submit-to-firecloud-btn" class="btn btn-sm btn-gtex-d3" style="margin-top: 5px;cursor: pointer;">Submit</div>
+                <form id="fire-cloud-form" style="display:none;">
+                    <div class="fire-cloud-form-box">
+                        <div class="filter-section-title">Send Samples to FireCloud</div>
+                        Provide your billing project<br/>
+                        <div id="billing-project-list" class="input-group" style="font-size:11px;">
+                            <!--<input type="radio" name="billing-project" value="broad-firecloud-gtex">broad-firecloud-gtex</input>-->
                         </div>
-                    </form>
+                        <!--Provide -->
+                        Name your new workspace:<br/>
+                        <input type="text" name="workspace"><br/>
+                        <div id="cancel-firecloud-btn" class="btn btn-sm btn-gtex-d3" style="margin-top: 5px;cursor: pointer;">Cancel</div>
+
+                        <div id="submit-to-firecloud-btn" class="btn btn-sm btn-gtex-d3" style="margin-top: 5px;cursor: pointer;">Submit</div>
+                    </div>
+                </form>
+                <div id="fire-cloud-status"></div>
             </div>
 
             </div>
