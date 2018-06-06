@@ -456,7 +456,7 @@ function _submitToFireCloud(googleUser, samples){
                     console.log("finished importing participant IDs...");
                     let sampleEntity = [['entity:sample_id', 'participant_id', 'sample_type', 'bam_file', 'bam_index'].join('\t')];
                     sampleEntity = sampleEntity.concat(samples.map(d=>{
-                        return [d.sampleId, d.donorId, d.dataType, d.cramFile.cram_file, d.cramFile.cram_file_index].join('\t');
+                        return [d.sampleId, d.donorId, d.dataType, d.cramFile.cram_file, d.cramFile.cram_index].join('\t');
                     }));
                     const sampleEntityString = `entities=${sampleEntity.join('\n')}\n`;
                     const sampleEntityUrlEncode = encodeURI(sampleEntityString);
