@@ -13,9 +13,9 @@
     </head>
 
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
+    <h4>Exon, Junction, Isoform Expression</h4>
         <div class="row">
             <div class="col-xs-12 col-sm-2">
-                <h4>Isoform Expression</h4>
                 <form id="isoformExpressForm" style="padding: 5px;">
                      <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
                         <input id="gene" type="text" class="form-control" placeholder="Enter a gencode ID or gene name" style="font-size:12px; text-transform:uppercase;"></input>
@@ -37,17 +37,17 @@
 
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item active">
-                            <a id="isoform2" class="nav-link" role="tab" data-toggle="tab">isoforms (view 1)</a>
+                            <a id="exon" class="nav-link active" role="tab" data-toggle="tab">Exon Expression</a>
                         </li>
+
                         <li class="nav-item">
-                            <a id="isoform" class="nav-link" role="tab" data-toggle="tab">isoforms (view 2)</a>
+                            <a id="junction" class="nav-link" role="tab" data-toggle="tab">Junction Expression</a>
                         </li>
+
                         <li class="nav-item">
-                            <a id="junction" class="nav-link" role="tab" data-toggle="tab">junctions</a>
+                            <a id="isoform2" class="nav-link" role="tab" data-toggle="tab">Isoform Expression</a>
                         </li>
-                        <li class="nav-item">
-                            <a id="exon" class="nav-link" role="tab" data-toggle="tab">exons</a>
-                        </li>
+
                     </ul>
 
                     <!-- Tab panes -->
@@ -75,7 +75,7 @@
                 if(e.keyCode == 13){
                     // bind the enter key
                     e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
-                    init("isoformTransposed");
+                    init("exon");
                 }
             });
             $('#isoform').click(function(){init("isoform")});
@@ -95,7 +95,7 @@
             $("#vizRoot").empty();
             // always reset the active tab to the isoform
             $(".nav-link").removeClass("active");
-            $("#isoform2").addClass("active");
+            $("#exon").addClass("active");
         }
     </script>
 

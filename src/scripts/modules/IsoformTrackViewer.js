@@ -17,10 +17,13 @@ export default class IsoformTrackViewer {
         this.config = config;
     }
 
-    showData(data, colorScale, barScale){
-        data.sort((a,b)=>{return -(a.originalValue - b.originalValue)}); // first sort the expression data
-        const ids = data.map((d)=>d.transcriptId);
-        this.sortTracks(ids);
+    showData(data, colorScale, barScale, dataLabel, sort=true){
+
+        if (sort){
+            data.sort((a,b)=>{return -(a.originalValue - b.originalValue)}); // first sort the expression data
+            const ids = data.map((d)=>d.transcriptId);
+            this.sortTracks(ids);
+        }
 
         data.forEach((d)=>{
             const isoform = this.visualDom.select(`#${d.transcriptId.replace(".", "_")}`);
@@ -68,13 +71,14 @@ export default class IsoformTrackViewer {
                 axisTop(barScale)
                     .ticks(3)
             );
+
         lollipopGraph.append("text")
             .attr("id", "lolliLabel")
             .attr("x", 0)
             .attr("y", -40)
             .style("text-anchor", "end")
             .style("font-size", 9)
-            .text("log10(TPM)");
+            .text("log10(TPM)"); // TODO: this should be a user-defined text
 
         lollipopGraph.append("g")
             .attr("class", "lollipop-axis")
@@ -84,6 +88,14 @@ export default class IsoformTrackViewer {
                   .tickValues([]) // show no ticks
             );
 
+        // data label
+        lollipopGraph.append("text")
+            .attr("id", "lolliLabel")
+            .attr("x", 10)
+            .attr("y", -20)
+            .style("text-anchor", "start")
+            .style("font-size", 12)
+            .text(`Isoform Expression in ${dataLabel}`);
 
 
     }
@@ -94,7 +106,7 @@ export default class IsoformTrackViewer {
         this.render(true);
     }
 
-    render(redraw=false, dom=undefined, duration=1000){
+    render(redraw=false, dom=undefined, labelOn='left', duration=1000){
         if (dom === undefined && this.visualDom === undefined) throw "Fatal Error: must provide a dom element";
         if (dom === undefined) dom = this.visualDom;
         else this.visualDom = dom;
@@ -123,15 +135,15 @@ export default class IsoformTrackViewer {
 
         if (redraw) return;
 
-        this._renderModels(this.config.w);
+        this._renderModels(this.config.w, labelOn);
 
     }
 
-    _renderModels(w){
+    _renderModels(w, labelOn = 'left'){
         this.isoforms.forEach((isoform) => {
             const model = new GeneModel(isoform, this.modelExons, this.isoformExons[isoform.transcriptId], [], true);
             const isoformG = select(`#${isoform.transcriptId.replace(".", "_")}`);
-            model.render(isoformG, {w:w, h: this.yScale.bandwidth()});
+            model.render(isoformG, {w:w, h: this.yScale.bandwidth(), labelOn: labelOn});
         });
 
     }
