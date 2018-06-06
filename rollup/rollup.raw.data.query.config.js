@@ -1,6 +1,8 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 import replace from 'rollup-plugin-replace';
+import copy from 'rollup-plugin-copy';
+
 import {minify} from 'uglify-es';
 
 /*
@@ -22,6 +24,9 @@ export default {
         nodeResolve({jsnext: true, main: true}),
         replace({
           ENV: JSON.stringify(process.env.NODE_ENV || 'dev'),
+        }),
+        copy({
+            "src/scripts/modules/googleUser.js": "build/js/googleUser.js"
         }),
         (process.env.NODE_ENV === 'prod' && uglify({}, minify)) // uglify for production: NODE_ENV=production rollup -c
     ]

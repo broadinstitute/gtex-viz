@@ -238,6 +238,7 @@ function _addClickEvents(tableId){
  * @param mat
  * @private
  * Reference: https://github.com/eligrey/FileSaver.js/
+ * Dependencies: googleUser.js
  */
 function _addToolbar(tableId, mat){
     // TODO: get rid of hard-coded dom IDs
@@ -298,26 +299,196 @@ function _addToolbar(tableId, mat){
     select('#send-to-firecloud')
         .style('cursor', 'pointer')
         .on('click', function(){
-             let cells = theCells.filter(`.selected`);
-             if (cells.empty()) alert('You have not selected any samples to download.');
-             else {
-                 cells.each(function(d) {
-                     const marker = select(this).attr('class').split(' ').filter((c) => {
-                         return c != 'selected'
-                     });
-                     const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
-                     const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
-                     console.log('Download ' + x + ' : ' + y);
-                 });
-                 select('#fire-cloud-form').style("display", "block");
+             if (!checkSignedIn()){
+                 alert("You need to sign in first");
              }
+
+            _reportBillingProjects(getUser());
+            _reportWorkspaces(getUser());
+
+            let cells = theCells.filter(`.selected`);
+            if (cells.empty()) alert('You have not selected any samples to download.');
+            else {
+                select('#fire-cloud-form').style("display", "block");
+            }
         });
 
     select('#submit-to-firecloud-btn')
         .on('click', function(){
+            let cells = theCells.filter(`.selected`);
+            let allSelectedSamples = [];
+            cells.each(function(d) {
+                const marker = select(this).attr('class').split(' ').filter((c) => {
+                    return c != 'selected'
+                });
+                const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
+                const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
+                console.log('Download ' + x + ' : ' + y);
+                const selected = mat.data.filter((s)=>s.dataType==y&&s.tissueId==x&&s.dataType!='WES').map(d=> {
+                    let temp = d.sampleId.split('-');
+                    d.donorId = temp[0] + '-' + temp[1];
+                    return d;
+                }); // NOTE: currently we don't have WES CRAM file paths
+                allSelectedSamples = allSelectedSamples.concat(selected)
+            });
+
+            _submitToFireCloud(getUser(), allSelectedSamples);
             select('#fire-cloud-form').style("display", "none");
-            alert('Submitted!');
+        });
+
+    select('#cancel-firecloud-btn')
+        .on('click', function(){
+            select('#fire-cloud-form').style("display", "none");
+            alert('Canceled!');
         })
 }
+
+/***** FireCloud API *****/
+// reference: use this URL, https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=MyAccessToken, to check the access token info
+// reference: https://developers.google.com/identity/sign-in/web/build-button
+// dependencies: jQuery
+function _reportBillingProjects(googleUser, domId="billing-project-list") {
+
+    // let profile = googleUser.getBasicProfile();
+    // console.log('ID: ' + profile.getId());
+    // console.log('Name: ' + profile.getName());
+    // console.log('Email: ' + profile.getEmail());
+    // get the user's access token
+    let token = googleUser.getAuthResponse(true).access_token;
+    $.ajax({
+        url: 'https://api.firecloud.org/api/profile/billing',
+        type: 'GET',
+        xhrFields: {
+            withCredentials: false
+        },
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        },
+        contentType: 'application/json; charset=utf-8',
+        success: function(response){
+            // Can't figure out how to generate this form using D3... so here I'm using jQuery syntax
+            $(`#${domId}`).empty();
+            response.forEach((d)=>{
+                $('<label>' +
+                    `<input type="radio" name="billing-project" value="${d.projectName}"> ` +
+                    d.projectName +
+                   '</label><br/>'
+                ).appendTo($(`#${domId}`));
+            });
+
+            console.log(response[0]);
+        }
+    });
+}
+
+function _reportWorkspaces(googleUser){
+    let token = googleUser.getAuthResponse(true).access_token;
+     // list User's workspaces
+    $.ajax({
+        url: 'https://api.firecloud.org/api/workspaces',
+        type: 'GET',
+        xhrFields: {
+            withCredentials: false
+        },
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        },
+
+        success: function(response){
+            const workspaces = response.filter((d)=>!d.public);
+            console.log(workspaces);
+        },
+        error: function(error){
+            console.error(error);
+        }
+    });
+}
+
+function _submitToFireCloud(googleUser, samples){
+    const token = googleUser.getAuthResponse(true).access_token;
+    const namespace = $('input[name="billing-project"]').val();
+    const workspace = $('input[name="workspace"]').val();
+    console.log(workspace);
+    console.log(samples);
+
+    // create the workspace
+    $.ajax({
+        url: 'https://api.firecloud.org/api/workspaces',
+        type: 'POST',
+        xhrFields: {
+            withCredentials: false
+        },
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        },
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+            "namespace": namespace,
+            "name": workspace,
+            "attributes": {},
+            "authorizationDomain": []
+        }),
+        success: function(response){ // callback function after workspace is created
+            console.log("finished creating workspace...");
+            const donors = samples.map(d=>{
+                if (!d.hasOwnProperty('donorId')) throw 'Sample does not contain attr donorId.';
+                return d.donorId;
+            });
+            const donorEntityString = `entities=entity:participant_id\n${donors.join('\n')}\n`;
+            const donorEntityUrlEncode = encodeURI(donorEntityString);
+
+            // submitting participant IDs
+            $.ajax({
+                url: `https://api.firecloud.org/api/workspaces/${namespace}/${workspace}/importEntities`,
+                type: 'POST',
+                xhrFields: {
+                    withCredentials: false
+                },
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                },
+                contentType: 'application/x-www-form-urlencoded',
+                dataType: 'text',
+                data: donorEntityUrlEncode,
+                success: function(response){
+                    // finally, submitting samples
+                    // prepare the sampleEntityString for FireCloud API
+                    console.log("finished importing participant IDs...");
+                    let sampleEntity = [['entity:sample_id', 'participant_id', 'sample_type', 'bam_file', 'bam_index'].join('\t')];
+                    sampleEntity = sampleEntity.concat(samples.map(d=>{
+                        return [d.sampleId, d.donorId, d.dataType, d.cramFile.cram_file, d.cramFile.cram_index].join('\t');
+                    }));
+                    const sampleEntityString = `entities=${sampleEntity.join('\n')}\n`;
+                    const sampleEntityUrlEncode = encodeURI(sampleEntityString);
+                    console.log(sampleEntityString);
+
+                    $.ajax({
+                        url: `https://api.firecloud.org/api/workspaces/${namespace}/${workspace}/importEntities`,
+                        type: 'POST',
+                        xhrFields: {
+                            withCredentials: false
+                        },
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                        },
+                        contentType: 'application/x-www-form-urlencoded',
+                        dataType: 'text',
+                        data: sampleEntityUrlEncode,
+                        success: function(response){
+                            console.log("finished importing samples...");
+                            const fcURL = `https://portal.firecloud.org/#workspaces/${namespace}/${workspace}/data`;
+                            $('#fire-cloud-status').html(`Submitted! <br/> Go to your <br/> <a target="_blank" href="${fcURL}">FireCloud workspace</a>`);
+                        },
+                        error: function(error){console.error(error)}
+                    });
+                },
+                error: function(error){console.error(error)}
+            });
+        },
+        error: function(error){console.error(error)}
+    });
+}
+
+
 
 

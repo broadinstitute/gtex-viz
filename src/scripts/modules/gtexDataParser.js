@@ -18,7 +18,8 @@ export function getGtexUrls(){
 
         medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000',
 
-        sample: 'data/gtex.Sample.csv',
+        // sample: 'data/gtex.Sample.csv',
+        sample: 'tmpSummaryData/gtex.Sample.csv',
         snp: host + 'reference/snp?reference=current&format=json&snpId=',
 
         tissue:  host + 'dataset/tissueInfo',
@@ -30,8 +31,8 @@ export function getGtexUrls(){
         variantId: host + 'reference/snp?format=json&reference=current&release=v7&variantId=',
 
         // local static files
-        rnaseqCram: 'data/rnaseq_cram_files_v7_dbGaP_011516.txt',
-        wgsCram: 'data/wgs_cram_files_v7_hg38_dbGaP_011516.txt',
+        rnaseqCram: 'tmpSummaryData/rnaseq_cram_files_v7_dbGaP_011516.txt',
+        wgsCram: 'tmpSummaryData/wgs_cram_files_v7_hg38_dbGaP_011516.txt',
 
     }
 }
