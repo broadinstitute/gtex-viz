@@ -346,10 +346,12 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
             // highlight the isoform track
             const id = d.replace(".", "_"); // dot is not an allowable character, so it has been replaced with an underscore
             mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the class name?
+            mapSvg.select(`#${id}`).selectAll(".intron").classed("highlighted", true);
         })
         .on("mouseout", function(){
             select(this).classed("highlighted", false);
             mapSvg.selectAll(".exon-curated").classed("highlighted", false);
+            mapSvg.selectAll(".intron").classed("highlighted", false);
         })
         .on ("click", function(){
             // no action implemented

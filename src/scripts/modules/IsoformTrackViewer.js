@@ -93,9 +93,10 @@ export default class IsoformTrackViewer {
             .attr("id", "lolliLabel")
             .attr("x", 10)
             .attr("y", -20)
+
+            .text(`Isoform Expression in ${dataLabel}`)
             .style("text-anchor", "start")
-            .style("font-size", 12)
-            .text(`Isoform Expression in ${dataLabel}`);
+            .style("font-size", "12px");
 
 
     }
