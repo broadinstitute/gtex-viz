@@ -28,7 +28,7 @@ text.exp-map-ylabel.highlighted {
     font-size: 12px;
     text-decoration: underline;
 }
-text.exp-map-ylabel.clicked {
+text.exp-map-ylabel.clicked, text.exp-map-xlabel.clicked {
     fill: #D25C43;
 }
 

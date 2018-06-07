@@ -248,7 +248,7 @@ export default class GeneModel {
             .style("text-anchor", "end")
             .attr("x", this.xScale.range()[0] - 5)
             .attr("y", exonY + 7.5)
-            .style("font-size", 9)
+            .style("font-size", "9px")
             .text(this.gene.transcriptId===undefined?`${this.gene.geneSymbol}`:this.gene.transcriptId);
 
 
@@ -259,7 +259,7 @@ export default class GeneModel {
             .style("text-anchor", "start")
             .attr("x", this.xScale.range()[1] + 5)
             .attr("y", exonY + 7.5)
-            .style("font-size", 9)
+            .style("font-size", "9px")
             .text(this.gene.transcriptId===undefined?`${this.gene.geneSymbol}`:this.gene.transcriptId);
 
         }

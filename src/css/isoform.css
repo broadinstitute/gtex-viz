@@ -55,7 +55,7 @@
     stroke: rgb(85, 95, 102);
 }
 
-.exon-curated.highlighted {
+.exon-curated.highlighted, .intron.highlighted{
     stroke: rgb(210, 17, 27);
     stroke-width: 2px;
 }
