@@ -454,6 +454,11 @@ function _customizeExonMap(tissues, geneModel, dmap){
 
     // exon labels
     mapSvg.selectAll(".exp-map-xlabel")
+        .each(function(d){
+            // simplified the exon label
+            const exonNumber = d.split("_")[1];
+            select(this).text(`exon_${exonNumber}`);
+        })
         .on("mouseover", function(d){
             select(this).classed("highlighted", true);
 
