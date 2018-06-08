@@ -463,11 +463,11 @@ function _customizeExonMap(tissues, geneModel, dmap){
 
             // highlight the exon on the gene model
             const exonNumber = d.split("_")[1];
-            mapSvg.selectAll(`.exon${exonNumber}`).classed("highlighted", true);
+            mapSvg.selectAll(`.exon-curated${exonNumber}`).classed("highlighted", true);
         })
         .on("mouseout", function(){
             select(this).classed("highlighted", false);
-            mapSvg.selectAll(".exon").classed("highlighted", false);
+            mapSvg.selectAll(".exon-curated").classed("highlighted", false);
         });
 
 }
