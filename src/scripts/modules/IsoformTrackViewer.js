@@ -49,17 +49,17 @@ export default class IsoformTrackViewer {
             .attr("x1", 0)
             .attr("y1", (d)=>this.yScale(d.transcriptId))
             .attr("y2", (d)=>this.yScale(d.transcriptId))
-            .style("stroke", (d)=>colorScale(d.value))
+            .style("stroke", (d)=>d.value==0?this.nullColor:colorScale(d.value))
             .style("stroke-width", 2)
             .transition()
             .duration(1000)
-            .attr("x2", (d)=>barScale(d.value));
+            .attr("x2", (d)=>d.value==0?this.nullColor:barScale(d.value));
 
         g.append("circle")
             .attr("cx", 0)
             .attr("cy", (d)=>this.yScale(d.transcriptId) )
             .attr("r", 5)
-            .style("fill", (d)=>colorScale(d.value))
+            .style("fill", (d)=>d.value==0?this.nullColor:colorScale(d.value))
             .transition()
             .duration(1000)
             .attr("cx", (d)=>barScale(d.value));
