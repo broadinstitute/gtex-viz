@@ -106,11 +106,11 @@ export default class GeneModel {
 
         });
 
-        // evaluates whether it's an isoform or gene model
+        // evaluates whether it's an individual isoform or a gene model
         if(!this.isIsoform){
-            // NOTE: the rendering order is important. Do not casually change it.
+            // NOTE: do not alter the rendering order of visual components.
             // if this is a gene model, not an isoform
-            // calculating x for each junction
+            // calculating positions for each junction
             this.junctions.forEach((d) => {
                 d.startExon = this._findExon(d.chromStart);
                 d.endExon = this._findExon(d.chromEnd);
@@ -222,7 +222,7 @@ export default class GeneModel {
                 .classed("intron", true);
         }
 
-        /***** rendering curated exons or isoform exons */
+        /***** rendering curated exons on the final gene model or isoform exons */
         const exonRects2 = dom.selectAll(".exon-curated")
             .data(this.exonsCurated);
 
@@ -240,6 +240,7 @@ export default class GeneModel {
             .merge(exonRects2)
             .style("fill", "#eee")
             .style("cursor", "default");
+
 
         /***** rendering text labels */
         if (config.labelOn == 'left' || config.labelOn == 'both'){
