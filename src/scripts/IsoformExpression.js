@@ -220,7 +220,6 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
         })
 }
 
-
 /**
  * Create the SVG toolbar
  * @param dmap {DendroHeatmap}
@@ -275,7 +274,7 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
             .data(dmap.objects.heatmap.yScale.domain())
             .enter()
             .append("rect")
-            .attr("x", dmap.objects.heatmap.xScale.range()[0] - 10)
+            .attr("x", dmap.objects.heatmap.xScale.range()[0] - 5)
             .attr("y", (d) => dmap.objects.heatmap.yScale(d))
             .attr("width", 5)
             .attr("height", dmap.objects.heatmap.yScale.bandwidth())
