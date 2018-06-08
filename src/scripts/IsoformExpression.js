@@ -186,9 +186,9 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
 
                 // render the gene model
                 const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
-                const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel")
+                const modelG = dmap.visualComponents.svg.append("g").attr("id", "geneModel") // TODO: remove hard-coded id
                     .attr("transform", `translate(${modelConfig.x}, ${modelConfig.y})`);
-                if (!type.startsWith("isoform")) geneModel.render(modelG, modelConfig); // gene model is not rendered in isoform view
+                if (!type.startsWith("isoform")) geneModel.render(modelG, modelConfig); // gene model is not rendered when the page is in isoform view mode
 
                 // render isoform tracks, ignoring intron lengths
                 const isoformTrackViewer = new IsoformTrackViewer(isoforms, isoformExons, exons, isoTrackViewerConfig);
@@ -209,11 +209,13 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     case "junction": {
                         _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         _customizeJunctionMap(tissues, geneModel, dmap);
+                        _customizeGeneModel(tissues, geneModel, dmap);
                         break;
                     }
                     case "exon": {
                         _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         _customizeExonMap(tissues, geneModel, dmap);
+                        _customizeGeneModel(tissues, geneModel, dmap);
                         break;
                     }
                     default: {
@@ -474,7 +476,48 @@ function _customizeExonMap(tissues, geneModel, dmap){
             select(this).classed("highlighted", false);
             mapSvg.selectAll(".exon").classed("highlighted", false);
         });
+
 }
+
+function _customizeGeneModel(tissues, geneModel, dmap){
+    const mapSvg = dmap.visualComponents.svg;
+    const tooltip = dmap.tooltip;
+    const model = mapSvg.select('#geneModel');
+    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
+    // mouse events on the gene model
+    mapSvg.selectAll(".junc")
+        .on("mouseover", function(d){
+            selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
+            tooltip.show(`Junction ${d.junctionId} <br/> ${d.displayName}`);
+            console.log(d);
+
+            if (d.startExon !== undefined){
+                model.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);
+                model.selectAll(".exon").filter(`.exon${d.endExon.exonNumber}`).classed("highlighted", true);
+            }
+
+            // on the junction heat map, label the xlabel
+            model.select(`.junc${d.junctionId}`).classed("highlighted", true)
+                .classed("normal", false);
+        })
+        .on("mouseout", function(d){
+            selectAll(`.junc${d.junctionId}`).classed("highlighted", false);
+            model.selectAll(".exon").classed("highlighted", false);
+            model.selectAll(".xLabel").classed("highlighted", false)
+                .classed("normal", true);
+            tooltip.hide();
+        });
+    model.selectAll(".exon-curated")
+        .on('mouseover', function(d){
+            select(this).classed("highlighted", true);
+            tooltip.show(`Exon ${d.exonNumber}: ${d.chromStart} - ${d.chromEnd}`)
+        })
+        .on('mouseout', function(d){
+            select(this).classed("highlighted", false);
+            tooltip.hide();
+        });
+}
+
 
 /**
  * customizing the junction heat map
@@ -494,7 +537,7 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
             const selected = select(this);
             dmap.objects.heatmap.cellMouseover(selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName; // get tissue name or ID
-            const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0];
+            const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0]; // get the junction display name
             tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName}<br/> ${d.unit}: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
         })
         .on("mouseout", function(d){
@@ -534,35 +577,6 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
             mapSvg.selectAll(".exon").classed("highlighted", false);
         });
 
-    mapSvg.selectAll(".junc")
-        .on("mouseover", function(d){
-            selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
-            console.log(`Junction ${d.junctionId}: ${d.chromStart} - ${d.chromEnd}`);
-
-            if (d.startExon !== undefined){
-                mapSvg.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);
-                mapSvg.selectAll(".exon").filter(`.exon${d.endExon.exonNumber}`).classed("highlighted", true);
-            }
-
-
-            // on the junction heat map, label the xlabel
-            mapSvg.select(`.junc${d.junctionId}`).classed("highlighted", true)
-                .classed("normal", false);
-        })
-        .on("mouseout", function(d){
-            selectAll(`.junc${d.junctionId}`).classed("highlighted", false);
-            mapSvg.selectAll(".exon").classed("highlighted", false);
-            mapSvg.selectAll(".xLabel").classed("highlighted", false)
-                .classed("normal", true);
-        });
-    mapSvg.selectAll(".exon-curated")
-        .on('mouseover', function(d){
-            select(this).classed("highlighted", true);
-            console.log(`Exon ${d.exonNumber}: ${d.chromStart} - ${d.chromEnd}. RPK: ${d.originalValue}`)
-        })
-        .on('mouseout', function(d){
-            select(this).classed("highlighted", false);
-        });
 
 }
 
