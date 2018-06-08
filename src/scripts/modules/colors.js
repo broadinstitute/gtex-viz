@@ -152,7 +152,7 @@ export function setColorScale(data, colors="YlGnBu", dmin = 0) {
  */
 export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:50}, orientation="h"){
 
-    const data = scale.ticks(ticks).slice(1); // why doesn't this provide consistent number of ticks??
+    const data = [0].concat(scale.ticks(ticks).slice(1)); // why doesn't this provide consistent number of ticks??
 
 
     // legend groups
