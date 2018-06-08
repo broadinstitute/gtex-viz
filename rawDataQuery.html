@@ -125,6 +125,7 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
         <script src="external/FileSaver/FileSaver.min.js"></script>
         <meta name="google-signin-client_id" content="786075537258-q243513l58k43knubcksmt2vvdb4o0il.apps.googleusercontent.com">
+
     </head>
     <body class="container" style="margin-top:20px;">
         <h4>GTEx Raw File Search</h4>
@@ -135,8 +136,6 @@
         </ul>
         <div class="row" style="float: right">
             <div id="my-signin2"></div>
-
-            <!--<div id="g-signin" onclick="onSignIn();" style="cursor: pointer;" class="btn btn-sm btn-default"><i class="fab fa-google"></i></div>-->
             <div id="g-signout" onclick="signOut();" style="display:none; cursor: pointer;" class="btn btn-sm btn-default"><i class="fas fa-sign-out-alt"></i></div>
         </div>
         <div class="row">
@@ -198,11 +197,17 @@
     </body>
 
     <script src="build/js/raw-data-query.bundle.dev.js"></script>
-    <script src="build/js/googleUser.js"></script>
+    <!--<script src="build/js/googleUser.js"></script>-->
     <script>
         $(document).ready(function(){
             RawDataQuery.launch("gtex-v7-sample", "gtex_v7");
         });
+        function renderSignInButton(){
+            RawDataQuery.renderSignInButton();
+        }
+        function signOut(){
+            RawDataQuery.signOut();
+        }
 
     </script>
     <script src="https://apis.google.com/js/platform.js?onload=renderSignInButton" async defer></script>

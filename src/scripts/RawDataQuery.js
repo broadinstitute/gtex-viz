@@ -5,6 +5,7 @@ import {getGtexUrls,
     parseTissues
 } from './modules/gtexDataParser';
 import Toolbar from './modules/Toolbar';
+import {googleFunc} from './modules/googleUser';
 
 /*
 TODO:
@@ -15,14 +16,24 @@ first build a data matrix with the following structure
     data: [ objects with col and row and value ]
 }
  */
+
+export function renderSignInButton(callback=googleFunc().signInButton){
+    callback();
+}
+
+export function signOut(callback=googleFunc().signOut){
+    callback();
+}
+
 /**
  * build the data matrix table
  * @param tableId {String}
  * @param datasetId {String}
+ * @param googleFunc {Object}
  * @param urls
  */
 
-export function launch(tableId, datasetId='gtex_v7', urls=getGtexUrls()){
+export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc(), urls=getGtexUrls()){
     const promises = [
         // TODO: urls for other datasets
         json(urls.tissue),
@@ -58,7 +69,7 @@ export function launch(tableId, datasetId='gtex_v7', urls=getGtexUrls()){
                 });
             const theMatrix = _buildMatrix(datasetId, samples, tissues);
 
-            _renderMatrixTable(tableId, theMatrix);
+            _renderMatrixTable(tableId, theMatrix, googleFuncDict);
             _addFilters(tableId, theMatrix, samples, tissues);
 
         })
@@ -132,7 +143,7 @@ function _buildMatrix(datasetId, samples, tissues){
  * @param mat {Object} of attr: datasetId, X--a list of x objects, Y--a list of y objects
  * @private
  */
-function _renderMatrixTable(tableId, mat){
+function _renderMatrixTable(tableId, mat, googleFuncDict){
     const dataset = {
         'gtex_v7': {
             label:'GTEX V7',
@@ -157,7 +168,7 @@ function _renderMatrixTable(tableId, mat){
 
     _renderCounts(theTable.select('tbody'), mat);
     _addClickEvents(tableId);
-    _addToolbar(tableId, mat);
+    _addToolbar(tableId, mat, googleFuncDict); // rebuild the toolbar with the new matrix
 }
 
 function _renderCounts(tbody, mat){
@@ -240,7 +251,7 @@ function _addClickEvents(tableId){
  * Reference: https://github.com/eligrey/FileSaver.js/
  * Dependencies: googleUser.js
  */
-function _addToolbar(tableId, mat){
+function _addToolbar(tableId, mat, googleFuncDict){
     // TODO: get rid of hard-coded dom IDs
     const theCells = select(`#${tableId}`).select('tbody').selectAll('td');
     select('#matrix-table-toolbar').selectAll('*').remove();
@@ -299,12 +310,12 @@ function _addToolbar(tableId, mat){
     select('#send-to-firecloud')
         .style('cursor', 'pointer')
         .on('click', function(){
-             if (!checkSignedIn()){
+             if (!googleFuncDict.checkSignedIn()){
                  alert("You need to sign in first");
              }
 
-            _reportBillingProjects(getUser());
-            _reportWorkspaces(getUser());
+            _reportBillingProjects(googleFuncDict.getUser());
+            _reportWorkspaces(googleFuncDict.getUser());
 
             let cells = theCells.filter(`.selected`);
             if (cells.empty()) alert('You have not selected any samples to download.');
@@ -332,7 +343,7 @@ function _addToolbar(tableId, mat){
                 allSelectedSamples = allSelectedSamples.concat(selected)
             });
 
-            _submitToFireCloud(getUser(), allSelectedSamples);
+            _submitToFireCloud(googleFuncDict, allSelectedSamples);
             select('#fire-cloud-form').style("display", "none");
         });
 
@@ -404,8 +415,8 @@ function _reportWorkspaces(googleUser){
     });
 }
 
-function _submitToFireCloud(googleUser, samples){
-    const token = googleUser.getAuthResponse(true).access_token;
+function _submitToFireCloud(googleFuncDict, samples){
+    const token = googleFuncDict.getUser().getAuthResponse(true).access_token;
     const namespace = $('input[name="billing-project"]').val();
     const workspace = $('input[name="workspace"]').val();
     console.log(workspace);
