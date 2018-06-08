@@ -106,21 +106,6 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     $('<div/>').attr("id", ids[key]).appendTo($(`#${ids.root}`));
                 });
                 switch(type){
-                    case "isoform": {
-                        // not in use
-                        const dmapConfig = new DendroHeatmapConfig(window.innerWidth, 150, 100, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
-                        let tissueTree = args[6].clusters.tissue;
-                        let isoformTree = args[6].clusters.isoform;
-                        dmap = new DendroHeatmap(isoformTree, tissueTree, isoformExpress, "Greys", 5, dmapConfig, true, 10);
-                        dmap.render(ids.root, ids.svg, true, true, top, 5);
-                        isoforms.sort((a, b)=>{
-                            const orders = dmap.objects.columnTree.xScale.domain(); // the leaf order of the isoform dendrogram
-                            if (orders.indexOf(a.transcriptId) < orders.indexOf(b.transcriptId)) return -1;
-                            if (orders.indexOf(a.transcriptId) > orders.indexOf(b.transcriptId)) return 1;
-                            return 0;
-                        });
-                        break;
-                    }
                     case "isoformTransposed": {
                         const dmapConfig = new DendroHeatmapConfig(window.innerWidth, 150, 100, {top: 30, right: 350, bottom: 200, left: 50}, 12, 10);
                         let tissueTree = args[6].clusters.tissue;
