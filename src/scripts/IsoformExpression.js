@@ -148,7 +148,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 dmap.createTooltip(ids.tooltip);
 
                 // define the gene model and isoform tracks layout dimensions
-                const yAdjust = type.startsWith('isoform')?70:130;
+                const yAdjust = type.startsWith('isoform')?60:80; // vertical space between the heatmap and gene model/isoform tracks
                 const modelConfig = {
                     x: dmap.config.panels.main.x,
                     y: dmap.config.panels.main.h + dmap.config.panels.main.y + yAdjust, // TODO: remove hard-coded values
