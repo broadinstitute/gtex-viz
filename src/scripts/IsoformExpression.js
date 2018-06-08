@@ -85,7 +85,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
 
                     // define all the color scales
                     const exonColorScale = setColorScale(exonExpress.map(d=>d.value), "Blues");
-                    const isoformColorScale = setColorScale(isoformExpress.map(d=>d.value), "Greys");
+                    const isoformColorScale = setColorScale(isoformExpress.map(d=>d.value), "Purples");
                     const junctionColorScale = setColorScale(junctionExpress.map(d=>d.value), "Reds");
 
                 // heat map
@@ -112,7 +112,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         let isoformTree = args[6].clusters.isoform;
                         let isoformExpressT = parseIsoformExpressionTranspose(args[6]);
 
-                        dmap = new DendroHeatmap(tissueTree, isoformTree, isoformExpressT, "Greys", 5, dmapConfig, true, 10);
+                        dmap = new DendroHeatmap(tissueTree, isoformTree, isoformExpressT, "Purples", 5, dmapConfig, true, 10);
                         dmap.render(ids.root, ids.svg, true, true, top, 5);
                         isoforms.sort((a, b)=>{
                             const orders = dmap.objects.rowTree.yScale.domain(); // the leaf order of the isoform dendrogram
@@ -161,13 +161,15 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     x: modelConfig.x,
                     y: modelConfig.y + modelConfig.h,
                     w: modelConfig.w,
-                    h: exonH*isoforms.length,
+                    h: exonH*(isoforms.length),
                     labelOn: 'left'
                 };
 
                 // extend the SVG height to accommondate the gene model and isoform tracks
                 let h = +select(`#${ids.svg}`).attr("height"); // get the current height
-                select(`#${ids.svg}`).attr("height", h + modelConfig.h + isoTrackViewerConfig.h);
+                let adjust = h + modelConfig.h + isoTrackViewerConfig.h;
+                if (!type.startsWith('isoform')) adjust = adjust < 1200?1200:adjust;
+                select(`#${ids.svg}`).attr("height", adjust); // set minimum height to 1200 for color legends // TODO: code review, remove hard-coded values
 
                 // render the gene model
                 const geneModel = new GeneModel(gene, exons, exonsCurated, junctions);
