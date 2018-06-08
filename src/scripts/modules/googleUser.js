@@ -1,4 +1,13 @@
 /****** Google SignIn ******/
+export function googleFunc(){
+    return {
+        checkSignedIn: checkSignedIn,
+        getUser: getUser,
+        signInButton: renderSignInButton,
+        signOut: signOut
+    }
+}
+
 function renderSignInButton(){
     gapi.signin2.render('my-signin2', {
         'scope': 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me',

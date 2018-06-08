@@ -233,7 +233,7 @@ export default class GeneModel {
 
         // entering new elements
         exonRects2.enter().append("rect")
-            .attr("class", (d)=>`exon-curated`)
+            .attr("class", (d)=>this.isIsoform?'exon-curated':`exon-curated exon-curated${d.exonNumber}`)
             .attr("y", exonY)
             .attr("width", (d) => d.w)
             .attr("height", 15) // TODO: remove hard-coded values
