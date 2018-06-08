@@ -15,6 +15,7 @@ export default class IsoformTrackViewer {
         this.modelExons = modelExons;
         this.visualDom = undefined;
         this.config = config;
+        this.nullColor = "#DDDDDD";
     }
 
     showData(data, colorScale, barScale, dataLabel, sort=true){
@@ -28,7 +29,7 @@ export default class IsoformTrackViewer {
         data.forEach((d)=>{
             const isoform = this.visualDom.select(`#${d.transcriptId.replace(".", "_")}`);
             isoform.selectAll(".exon-curated")
-                .style("fill", colorScale(d.value))
+                .style("fill", d.value==0?this.nullColor:colorScale(d.value))
         });
 
         // render the lollipop graph

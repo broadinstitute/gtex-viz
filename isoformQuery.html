@@ -36,7 +36,7 @@
                     <!-- Nav tabs -->
 
                     <ul class="nav nav-tabs" role="tablist">
-                        <li class="nav-item active">
+                        <li id="defaultTab" class="nav-item">
                             <a id="exon" class="nav-link active" role="tab" data-toggle="tab">Exon Expression</a>
                         </li>
 
@@ -76,6 +76,9 @@
                     // bind the enter key
                     e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
                     init("exon");
+                    $('.nav-link').removeClass("active");
+                    $('#exon').addClass("active");
+
                 }
             });
             $('#isoform').click(function(){init("isoform")});
@@ -93,9 +96,6 @@
         }
         function reset(){
             $("#vizRoot").empty();
-            // always reset the active tab to the isoform
-            $(".nav-link").removeClass("active");
-            $("#exon").addClass("active");
         }
     </script>
 
