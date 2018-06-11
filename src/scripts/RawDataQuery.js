@@ -17,10 +17,18 @@ first build a data matrix with the following structure
 }
  */
 
+/**
+ * Render the google signed in button (if there isn't one provided already)
+ * @param callback {Function}
+ */
 export function renderSignInButton(callback=googleFunc().signInButton){
     callback();
 }
 
+/**
+ * Define the Google sign out function
+ * @param callback {Function}
+ */
 export function signOut(callback=googleFunc().signOut){
     callback();
 }
@@ -29,7 +37,7 @@ export function signOut(callback=googleFunc().signOut){
  * build the data matrix table
  * @param tableId {String}
  * @param datasetId {String}
- * @param googleFunc {Object}
+ * @param googleFunc {Object} with function attributes: checkSignedIn, getUser
  * @param urls
  */
 
@@ -46,29 +54,29 @@ export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc()
         .then(function(args){
             let tissues = parseTissues(args[0]);
             const cram = {
-                rnaseq: args[1].reduce((a, d)=>{a[d.sample_id]=d; return a;}, {}),
-                wgs: args[2].reduce((a, d)=>{a[d.sample_id]=d; return a;}, {})
+                rnaseq: args[1].reduce((a, d)=>{a[d.sample_id.toUpperCase()]=d; return a;}, {}),
+                wgs: args[2].reduce((a, d)=>{a[d.sample_id.toUpperCase()]=d; return a;}, {})
             };
             let samples = args[3]
                 .filter((s)=>s.datasetId==datasetId)
                 .map((s)=>{
                     switch (s.dataType){
                         case "WGS": {
+                            if (!cram.wgs.hasOwnProperty(s.sampleId)) throw s.sampleId + ' has no cram files';
                             s.cramFile = cram.wgs[s.sampleId];
                             break;
                         }
                         case "RNASEQ": {
+                            if (!cram.rnaseq.hasOwnProperty(s.sampleId)) throw s.sampleId + ' has no cram files';
                             s.cramFile = cram.rnaseq[s.sampleId];
                             break;
                         }
                         default:
                             // do nothing
                     }
-
                     return s;
                 });
             const theMatrix = _buildMatrix(datasetId, samples, tissues);
-
             _renderMatrixTable(tableId, theMatrix, googleFuncDict);
             _addFilters(tableId, theMatrix, samples, tissues);
 
@@ -294,7 +302,7 @@ function _addToolbar(tableId, mat, googleFuncDict){
                                 'cram_index',
                                 'cram_index_aws'
                             ].map((d)=>s.cramFile[d]);
-                            let columns = [s.sampleId, s.tissueName, s.dataType].concat(cram);
+                            let columns = [s.cramFile.sample_id, s.tissueName, s.dataType].concat(cram);
                             return columns.join("\t");
                         });
                     console.log(selectedSamples);
@@ -310,10 +318,12 @@ function _addToolbar(tableId, mat, googleFuncDict){
     select('#send-to-firecloud')
         .style('cursor', 'pointer')
         .on('click', function(){
+            $('#fire-cloud-status').empty();
              if (!googleFuncDict.checkSignedIn()){
                  alert("You need to sign in first");
              }
-
+             const scopes = 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me';
+            googleFuncDict.grantScopes(scopes);
             _reportBillingProjects(googleFuncDict.getUser());
             _reportWorkspaces(googleFuncDict.getUser());
 
@@ -326,6 +336,7 @@ function _addToolbar(tableId, mat, googleFuncDict){
 
     select('#submit-to-firecloud-btn')
         .on('click', function(){
+            $('#fire-cloud-status').empty();
             let cells = theCells.filter(`.selected`);
             let allSelectedSamples = [];
             cells.each(function(d) {
@@ -342,7 +353,7 @@ function _addToolbar(tableId, mat, googleFuncDict){
                 }); // NOTE: currently we don't have WES CRAM file paths
                 allSelectedSamples = allSelectedSamples.concat(selected)
             });
-
+            console.log(allSelectedSamples.length);
             _submitToFireCloud(googleFuncDict, allSelectedSamples);
             select('#fire-cloud-form').style("display", "none");
         });
@@ -365,7 +376,9 @@ function _reportBillingProjects(googleUser, domId="billing-project-list") {
     // console.log('Name: ' + profile.getName());
     // console.log('Email: ' + profile.getEmail());
     // get the user's access token
+
     let token = googleUser.getAuthResponse(true).access_token;
+    console.log(token);
     $.ajax({
         url: 'https://api.firecloud.org/api/profile/billing',
         type: 'GET',
@@ -419,9 +432,19 @@ function _submitToFireCloud(googleFuncDict, samples){
     const token = googleFuncDict.getUser().getAuthResponse(true).access_token;
     const namespace = $('input[name="billing-project"]').val();
     const workspace = $('input[name="workspace"]').val();
+    if(namespace === undefined) {
+        alert('You must provide a billin project');
+        throw("billing project is not provided");
+        return;
+    }
+    if (workspace === undefined || workspace == ''){
+        alert('You must provide a new workspace name');
+        throw('workspace name is not provided');
+        return;
+    }
     console.log(workspace);
     console.log(samples);
-
+    $('#spinner').show();
     // create the workspace
     $.ajax({
         url: 'https://api.firecloud.org/api/workspaces',
@@ -444,7 +467,7 @@ function _submitToFireCloud(googleFuncDict, samples){
             const donors = samples.map(d=>{
                 if (!d.hasOwnProperty('donorId')) throw 'Sample does not contain attr donorId.';
                 return d.donorId;
-            });
+            }).filter((d, i, a) => a.indexOf(d) === i); // obtain unique donors
             const donorEntityString = `entities=entity:participant_id\n${donors.join('\n')}\n`;
             const donorEntityUrlEncode = encodeURI(donorEntityString);
 
@@ -462,12 +485,16 @@ function _submitToFireCloud(googleFuncDict, samples){
                 dataType: 'text',
                 data: donorEntityUrlEncode,
                 success: function(response){
+                    $('#spinner').hide();
                     // finally, submitting samples
                     // prepare the sampleEntityString for FireCloud API
                     console.log("finished importing participant IDs...");
                     let sampleEntity = [['entity:sample_id', 'participant_id', 'sample_type', 'bam_file', 'bam_index'].join('\t')];
                     sampleEntity = sampleEntity.concat(samples.map(d=>{
-                        return [d.sampleId, d.donorId, d.dataType, d.cramFile.cram_file, d.cramFile.cram_index].join('\t');
+                        if (d.cramFile === undefined) throw "Data Error: " + d;
+                        if(!d.cramFile.hasOwnProperty('cram_file')) throw "Data Error: " + d;
+                        // Note: use cramFile.sample_id instead of d.sampleId to preserve the occasional mixed case sample IDs
+                        return [d.cramFile.sample_id, d.donorId, d.dataType, d.cramFile.cram_file, d.cramFile.cram_index].join('\t');
                     }));
                     const sampleEntityString = `entities=${sampleEntity.join('\n')}\n`;
                     const sampleEntityUrlEncode = encodeURI(sampleEntityString);
