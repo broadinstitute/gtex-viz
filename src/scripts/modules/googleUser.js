@@ -4,13 +4,15 @@ export function googleFunc(){
         checkSignedIn: checkSignedIn,
         getUser: getUser,
         signInButton: renderSignInButton,
-        signOut: signOut
+        signOut: signOut,
+        grantScopes: grantScopes
     }
 }
 
 function renderSignInButton(){
     gapi.signin2.render('my-signin2', {
-        'scope': 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me',
+        // 'scope': 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me',
+        'scope': 'profile email',
         'width': 240,
         'height': 50,
         'longtitle': true,
@@ -22,7 +24,6 @@ function renderSignInButton(){
 
 function onSuccess(googleUser){
     $('#g-signout').show();
-    // RawDataQuery.callFireCloud(googleUser);
 }
 
 function signOut() {
@@ -47,4 +48,15 @@ function checkSignedIn(){
 
 function getUser(){
     return gapi.auth2.getAuthInstance().currentUser.get()
+}
+
+function grantScopes(scopes){
+    this.getUser().grant({scope: scopes}).then(
+        function(success){
+            console.log(JSON.stringify({message: "success", value: success}));
+        },
+        function(fail){
+            console.error(JSON>stringify({message: "fail", value: fail}));
+        }
+    );
 }
