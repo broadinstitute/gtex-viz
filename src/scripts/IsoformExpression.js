@@ -182,7 +182,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 const trackViewerG = dmap.visualComponents.svg.append("g")
                     .attr("transform", `translate(${isoTrackViewerConfig.x}, ${isoTrackViewerConfig.y})`);
                 const labelOn = type.startsWith('isoform')?'both':'left';
-                //isoformTrackViewer.render(false, trackViewerG, labelOn);
+                isoformTrackViewer.render(false, trackViewerG, labelOn);
 
                 // customization
                 if(!type.startsWith('isoform')) _addColorLegendsForGeneModel(dmap, junctionColorScale, exonColorScale);
