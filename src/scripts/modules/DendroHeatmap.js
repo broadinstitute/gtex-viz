@@ -19,7 +19,7 @@ export default class DendroHeatmap {
      * @param config {DendroHeatmapConfig}
      * @param useLog {Boolean}
      */
-    constructor(columnTree, rowTree, heatmapData, color="YlGnBu", r=2, config=new DendroHeatmapConfig(), useLog=true, base=10){
+    constructor(columnTree, rowTree, heatmapData, color="YlGnBu", r=2, config=new DendroHeatmapConfig(), useLog=true, base=10, title = ''){
         this.config = config.get();
         //input evaluations
         columnTree = columnTree===undefined||columnTree.startsWith("Not enough data")?undefined:columnTree;
@@ -41,6 +41,8 @@ export default class DendroHeatmap {
             columnTree: undefined,
             rowTree: undefined
         };
+
+        this.title = title;
 
         this.tooltip = undefined;
         this.toolbar = undefined;
@@ -92,6 +94,14 @@ export default class DendroHeatmap {
         if (showRowTree && this.objects.rowTree !== undefined){
             this.visualComponents.rowTree = this._renderTree("row", this.objects.rowTree, this.config.panels.left);
             ylist = this.objects.rowTree.yScale.domain();
+        }
+
+        if (this.title != '') {
+            console.log(this.title);
+            select(`#${domId}-svg`).append('text')
+                .attr('x', 0)
+                .attr('y', 20)
+                .text(this.title);
         }
 
         this._renderHeatmap(this.objects.heatmap, xlist, ylist, ticks);
