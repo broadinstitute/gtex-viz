@@ -7,7 +7,7 @@ export default class DendroHeatmapConfig {
      * @param mainPanelW {Number}, set this to determine the cellW
      * @param leftPanelW {Integer}, set to 0 if there's no left panel
      * @param topPanelH {Integer}, set to 0 if there's no top panel
-     * @param margin {Object} with attr: top, right, bottom, left, smaller values than the default are not recommended for the heatmap
+     * @param margin {Object} with attr: top, right, bottom, left, smaller values than the default are not recommended for the heatmap, top margin should be at least 50
      * @param cellH {Integer}
      * @param adjust {Integer}, adjusted spacing between the heatmap and the dendrogram
      */
