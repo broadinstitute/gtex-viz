@@ -106,9 +106,11 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     $('<div/>').attr("id", ids[key]).appendTo($(`#${ids.root}`));
                 });
                 const svgTitle = `${gene.geneSymbol}: ${gene.gencodeId} ${gene.description}`;
+                const width = $(`#${rootId}`).innerWidth()||window.innerWidth;
+               
                 switch(type){
                     case "isoformTransposed": {
-                        const dmapConfig = new DendroHeatmapConfig(window.innerWidth, 150, 100, {top: 60, right: 350, bottom: 200, left: 50}, 12, 10);
+                        const dmapConfig = new DendroHeatmapConfig(width, 150, 100, {top: 60, right: 350, bottom: 200, left: 50}, 12, 10);
                         let tissueTree = args[6].clusters.tissue;
                         let isoformTree = args[6].clusters.isoform;
                         let isoformExpressT = parseIsoformExpressionTranspose(args[6]);
@@ -124,7 +126,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         break;
                     }
                     case "junction": {
-                        const dmapConfig = new DendroHeatmapConfig(window.innerWidth, 150, 0, {top: 60, right: 350, bottom: 200, left: 50}, 12, 10);
+                        const dmapConfig = new DendroHeatmapConfig(width, 150, 0, {top: 60, right: 350, bottom: 200, left: 50}, 12, 10);
                         let tissueTree = args[4].clusters.tissue;
                         dmap = new DendroHeatmap(undefined, tissueTree, junctionExpress, "Reds", 5, dmapConfig, true, 10, `Junction Expression of ${svgTitle}`);
                         dmap.render(ids.root, ids.svg, false, true, top, 5);
@@ -132,7 +134,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         break;
                     }
                     case "exon": {
-                        const dmapConfig = new DendroHeatmapConfig(window.innerWidth, 150, 0, {top: 60, right: 350, bottom: 200, left: 50}, 12, 10);
+                        const dmapConfig = new DendroHeatmapConfig(width, 150, 0, {top: 60, right: 350, bottom: 200, left: 50}, 12, 10);
                         let tissueTree = args[5].clusters.tissue;
                         dmap = new DendroHeatmap(undefined, tissueTree, exonExpress, "Blues", 5, dmapConfig, true, 2, `Exon Expression of ${svgTitle}`);
                         dmap.render(ids.root, ids.svg, false, true, top, 5);
