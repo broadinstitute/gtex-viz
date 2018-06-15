@@ -133,7 +133,8 @@ export function getColorInterpolator(name){
  * @param colors {String} a color name that is available in getColorInterpolator()
  */
 export function setColorScale(data, colors="YlGnBu", dmin = 0) {
-    let dmax = Math.round(max(data));
+    // let dmax = Math.round(max(data));
+    let dmax = max(data);
     const scale = scaleSequential(getColorInterpolator(colors));
     scale.domain([dmin, dmax]);
     return scale;
