@@ -584,7 +584,7 @@ function _customizeGeneModel(tissues, geneModel, dmap){
     model.selectAll(".exon-curated")
         .on('mouseover', function(d){
             select(this).classed("highlighted", true);
-            tooltip.show(`Exon ${d.exonNumber}: ${d.chromStart} - ${d.chromEnd}`)
+            tooltip.show(`Exon ${d.exonNumber}: ${d.chromStart} - ${d.chromEnd} (${d.chromEnd-d.chromStart+1} bp)`)
         })
         .on('mouseout', function(d){
             select(this).classed("highlighted", false);
