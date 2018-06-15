@@ -83,10 +83,18 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         exonExpress = parseExonExpression(args[5],  exonsCurated);
                     let isoformExpress = parseIsoformExpression(args[6]);
 
+                    // error checking
+                    let exonColorScale, isoformColorScale, junctionColorScale;
+                    if (junctions.length >= 0){
+                        // scenario1: not a single-exon gene
+                        if (junctionExpress !== undefined){
+                            junctionColorScale = setColorScale(junctionExpress.map(d=>d.value), "Reds");
+                        }
+                    }
+
                     // define all the color scales
-                    const exonColorScale = setColorScale(exonExpress.map(d=>d.value), "Blues");
-                    const isoformColorScale = setColorScale(isoformExpress.map(d=>d.value), "Purples");
-                    const junctionColorScale = setColorScale(junctionExpress.map(d=>d.value), "Reds");
+                    exonColorScale = setColorScale(exonExpress.map(d=>d.value), "Blues");
+                    isoformColorScale = setColorScale(isoformExpress.map(d=>d.value), "Purples");
 
                 // heat map
                 let dmap = undefined;
@@ -126,6 +134,10 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         break;
                     }
                     case "junction": {
+                        if (junctions.length == 0) {
+                            $(`#${rootId}`).text('This gene has no junctions available.');
+                            break;
+                        }
                         const dmapConfig = new DendroHeatmapConfig(width, 150, 0, {top: 60, right: 350, bottom: 200, left: 50}, 12, 10);
                         let tissueTree = args[4].clusters.tissue;
                         dmap = new DendroHeatmap(undefined, tissueTree, junctionExpress, "Reds", 5, dmapConfig, true, 10, `Junction Expression of ${svgTitle}`);
@@ -147,6 +159,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 }
                 $('#spinner').hide();
 
+                // TODO: code review
                 // tooltip
                 dmap.createTooltip(ids.tooltip);
 
@@ -197,6 +210,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         break;
                     }
                     case "junction": {
+                        if (junctions.length == 0) break;
                         _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         _customizeJunctionMap(tissues, geneModel, dmap);
                         _customizeGeneModel(tissues, geneModel, dmap);
@@ -296,7 +310,8 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
             mapSvg.selectAll(".exp-map-ylabel").classed("clicked", false);
             select(this).classed("clicked", true);
             const tissue = d;
-            const j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
+            let j;
+            if (junctionData !== undefined) j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
             const ex = exonData.filter((e)=>e.tissueId==tissue); // exon data
             // geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissueDict[tissue].tissueName);
             geneModel.addData(mapSvg.select("#geneModel"), j, ex, junctionScale, exonScale);
@@ -376,7 +391,8 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
             mapSvg.selectAll(".exp-map-xlabel").classed("clicked", false);
             select(this).classed("clicked", true);
             const tissue = d;
-            const j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
+            let j;
+            if (junctionData !== undefined) j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
             const ex = exonData.filter((e)=>e.tissueId==tissue); // exon data
 
             // isoforms update
@@ -584,6 +600,6 @@ function _addColorLegendsForGeneModel(dmap, junctionScale, exonScale){
     drawColorLegend("Exon read counts per base", mapSvg.select("#geneModel"), exonScale, {x: X, y:Y}, true, 5, 2, {h:20, w:10}, 'v');
 
     X = X + inc;
-    drawColorLegend("Junction read counts", mapSvg.select("#geneModel"), junctionScale, {x: X, y:Y}, true, 5, 10, {h:20, w:10}, 'v');
+    if (junctionScale !== undefined) drawColorLegend("Junction read counts", mapSvg.select("#geneModel"), junctionScale, {x: X, y:Y}, true, 5, 10, {h:20, w:10}, 'v');
 
 }

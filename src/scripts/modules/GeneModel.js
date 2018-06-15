@@ -55,12 +55,15 @@ export default class GeneModel {
      * @param escale {D3 scale} of colors of exon data
      */
     addData(dom, jdata, edata, jscale, escale){
-        dom.selectAll(".junc").style("fill", (d) => {
-            const v = jdata.filter((z)=>z.junctionId==d.junctionId)[0];
-            const jcolor = v.value==0?this.nullColor:jscale(v.value);
-            dom.selectAll(".junc-curve").filter((`.junc${d.junctionId}`)).style("stroke", jcolor);
-            return jcolor;
-        });
+        if (jdata !== undefined){
+            dom.selectAll(".junc").style("fill", (d) => {
+                const v = jdata.filter((z)=>z.junctionId==d.junctionId)[0];
+                const jcolor = v.value==0?this.nullColor:jscale(v.value);
+                dom.selectAll(".junc-curve").filter((`.junc${d.junctionId}`)).style("stroke", jcolor);
+                return jcolor;
+            });
+        }
+
         dom.selectAll(".exon-curated").style("fill", (d) => {
             const v = edata.filter((z)=>z.exonId==d.exonId)[0];
             if (v === undefined) throw `${d.exonId} has no data`;

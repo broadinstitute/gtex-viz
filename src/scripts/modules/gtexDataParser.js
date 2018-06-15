@@ -245,6 +245,10 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
     const junctions = data[attr];
 
     // error-checking
+    if (junctions === undefined || junctions.length == 0) {
+        console.warn('No junction data found');
+        return undefined;
+    }
     ['tissueId', 'junctionId', 'data', 'gencodeId'].forEach((d)=>{
         if (!junctions[0].hasOwnProperty(d)) throw 'Fatal Error: parseJunctionExpression attr not found: ' + d;
     });
