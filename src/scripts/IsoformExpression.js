@@ -391,7 +391,8 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
             mapSvg.selectAll(".exp-map-xlabel").classed("clicked", false);
             select(this).classed("clicked", true);
             const tissue = d;
-            const j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
+            let j;
+            if (junctionData !== undefined) j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
             const ex = exonData.filter((e)=>e.tissueId==tissue); // exon data
 
             // isoforms update
