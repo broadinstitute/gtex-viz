@@ -78,24 +78,24 @@ export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc()
                 });
             const theMatrix = _buildMatrix(datasetId, samples, tissues);
             _renderMatrixTable(tableId, theMatrix, googleFuncDict);
-            _addFilters(tableId, theMatrix, samples, tissues);
+            _addFilters(tableId, theMatrix, samples, tissues, googleFuncDict);
 
         })
         .catch(function(err){console.error(err)});
 }
 
-function _addFilters(tableId, mat, samples, tissues){
+function _addFilters(tableId, mat, samples, tissues, googleFuncDict){
     const __filter = ()=>{
         const sex = select('input[name="sex"]:checked').node().value;
         const age = select('input[name="age"]:checked').node().value;
         if (sex == 'both' && age == 'all'){
-            _renderMatrixTable(tableId, _buildMatrix(mat.datasetId, samples, tissues));
+            _renderMatrixTable(tableId, _buildMatrix(mat.datasetId, samples, tissues), googleFuncDict);
         } else {
             let filteredMat = undefined;
             if (sex == 'both') filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.ageBracket==age), tissues);
             else if (age == 'all') filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.sex==sex), tissues);
             else filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.sex==sex && s.ageBracket==age), tissues);
-            _renderMatrixTable(tableId, filteredMat);
+            _renderMatrixTable(tableId, filteredMat, googleFuncDict);
         }
     };
     select('#filter-menu').selectAll('input[name="sex"]').on('change', __filter);
