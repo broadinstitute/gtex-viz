@@ -125,12 +125,15 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
 
                         dmap = new DendroHeatmap(tissueTree, isoformTree, isoformExpressT, "Purples", 5, dmapConfig, true, 10, `Isoform Expression of ${svgTitle}`);
                         dmap.render(ids.root, ids.svg, true, true, top, 5);
-                        isoforms.sort((a, b)=>{
+                        if (!isoformTree.startsWith("Not enough data")){
                             const orders = dmap.objects.rowTree.yScale.domain(); // the leaf order of the isoform dendrogram
-                            if (orders.indexOf(a.transcriptId) < orders.indexOf(b.transcriptId)) return -1;
-                            if (orders.indexOf(a.transcriptId) > orders.indexOf(b.transcriptId)) return 1;
-                            return 0;
-                        });
+                            isoforms.sort((a, b)=>{
+                                if (orders.indexOf(a.transcriptId) < orders.indexOf(b.transcriptId)) return -1;
+                                if (orders.indexOf(a.transcriptId) > orders.indexOf(b.transcriptId)) return 1;
+                                return 0;
+                            });
+                        }
+
                         break;
                     }
                     case "junction": {
