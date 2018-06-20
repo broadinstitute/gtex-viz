@@ -203,7 +203,7 @@ function _submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, me
 
             // retrieve gene and variant info from the web service
             const geneUrl = urls.geneId + gid;
-            const variantUrl = vid.toLowerCase().startsWith('rs')?urls.rsId+vid:urls.variantId+vid;
+            const variantUrl = vid.toLowerCase().startsWith('rs')?urls.snp+vid:urls.variantId+vid;
 
             Promise.all([json(geneUrl), json(variantUrl)])
                 .then(function(args){
@@ -221,7 +221,7 @@ function _submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, me
                     }
 
                     // calculate eQTLs and display the eQTL violin plots
-                    _renderEqtlPlot(tissueDict, dashboardId, gene, variant, queryTissueIds, i);
+                    _renderEqtlPlot(tissueDict, dashboardId, gene, variant, queryTissueIds, i, urls);
 
                     // hide the search form after the eQTL violin plots are reported
                     $(`#${formId}`).removeClass("show"); // for bootstrap 4
@@ -274,7 +274,7 @@ function _parseVariant(vjson){
  * @param i {Integer} the boxplot DIV's index
  * @private
  */
-function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
+function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i, urls=getGtexUrls()) {
     // display gene-variant pair names
     const id = `violinplot${i}`;
     $(`#${dashboardId}`).append(`<div id="${id}" class="col-sm-12"></div>`);
@@ -290,7 +290,7 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i) {
 
     // queue up all tissue IDs
     tissues.forEach((tId) => {
-        let urlRoot = getGtexUrls()['dyneqtl'];
+        let urlRoot = urls['dyneqtl'];
         let url = `${urlRoot}?snp_id=${variant.variantId}&gene_id=${gene.gencodeId}&tissue=${tId}`; // use variant ID, gencode ID and tissue ID to query the dyneqtl
         promises.push(_apiCall(url, tId));
     });
