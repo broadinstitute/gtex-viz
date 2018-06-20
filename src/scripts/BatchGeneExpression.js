@@ -90,7 +90,7 @@ export function launch(formId, menuId, submitId, heatmapRootId, violinRootId, ur
 
                 // search
                 ////////// NEXT //////////
-                searchById(heatmapRootId, violinRootId, glist, queryTissueIds);
+                searchById(heatmapRootId, violinRootId, glist, queryTissueIds, urls);
             });
 
         })

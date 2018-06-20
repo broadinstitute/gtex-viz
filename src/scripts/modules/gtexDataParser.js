@@ -25,8 +25,8 @@ export function getGtexUrls(){
         tissue:  host + 'dataset/tissueInfo',
         tissueSites: host + 'dataset/tissueSiteDetail?format=json',
 
-        topInTissueFiltered: host + 'expression/topExpressedGenes?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
-        topInTissue: host + 'expression/topExpressedGenes?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
+        topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
+        topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
 
         variantId: host + 'reference/snp?format=json&reference=current&release=v7&variantId=',
 
@@ -34,6 +34,10 @@ export function getGtexUrls(){
         rnaseqCram: 'tmpSummaryData/rnaseq_cram_files_v7_dbGaP_011516.txt',
         wgsCram: 'tmpSummaryData/wgs_cram_files_v7_hg38_dbGaP_011516.txt',
 
+        // fireCloud
+        fcBilling: 'https://api.firecloud.org/api/profile/billing',
+        fcWorkSpace: 'https://api.firecloud.org/api/workspaces',
+        fcPortalWorkSpace: 'https://portal.firecloud.org/#workspaces'
     }
 }
 
