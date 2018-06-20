@@ -210,6 +210,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 switch(type){
                     case "isoformTransposed": {
                         _customizeIsoformTransposedMap(tissues, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
+                        _customizeIsoformTracks(dmap);
                         break;
                     }
                     case "junction": {
@@ -217,12 +218,16 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         _customizeJunctionMap(tissues, geneModel, dmap);
                         _customizeGeneModel(tissues, geneModel, dmap);
+                        _customizeIsoformTracks(dmap);
+
                         break;
                     }
                     case "exon": {
                         _customizeHeatMap(tissues, geneModel, dmap, isoformTrackViewer, junctionColorScale, exonColorScale, isoformColorScale, junctionExpress, exonExpress, isoformExpress);
                         _customizeExonMap(tissues, geneModel, dmap);
                         _customizeGeneModel(tissues, geneModel, dmap);
+                        _customizeIsoformTracks(dmap);
+
                         break;
                     }
                     default: {
@@ -443,6 +448,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
         .on ("click", function(){
             // no action implemented
         });
+
 }
 
 /**
@@ -466,7 +472,7 @@ function _customizeExonMap(tissues, geneModel, dmap){
             dmap.objects.heatmap.cellMouseover(selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName; // get tissue name or ID
             const value = parseFloat(d.originalValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd)-Number(d.chromStart) + 1}bp) <br/>${d.unit}: ${value==0?'NA':value}`)
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -514,7 +520,7 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName; // get tissue name or ID
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0]; // get the junction display name
             const value = parseFloat(d.originalValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName}<br/> ${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName} (${Number(junc.chromEnd) - Number(junc.chromStart)} bp)<br/> ${d.unit}: ${value==0?'NA':value}`)
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -565,7 +571,7 @@ function _customizeGeneModel(tissues, geneModel, dmap){
     mapSvg.selectAll(".junc")
         .on("mouseover", function(d){
             selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
-            tooltip.show(`Junction ${d.junctionId} <br/> ${d.displayName}`);
+            tooltip.show(`${d.displayName}<br/>Junction ${d.junctionId} (${Number(d.chromEnd) - Number(d.chromStart) + 1} bp)`);
             console.log(d);
 
             if (d.startExon !== undefined){
@@ -593,6 +599,21 @@ function _customizeGeneModel(tissues, geneModel, dmap){
             select(this).classed("highlighted", false);
             tooltip.hide();
         });
+}
+
+function _customizeIsoformTracks(dmap){
+    const mapSvg = dmap.visualComponents.svg;
+    const tooltip = dmap.tooltip;
+
+    mapSvg.selectAll(".isotrack").selectAll('.exon-curated')
+        .on("mouseover", function(d){
+            select(this).classed("highlighted", true);
+            tooltip.show(`Exon ${d.oriExon.exonNumber}: ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd) - Number(d.chromStart) + 1} bp)`);
+        })
+        .on("mouseout", function(){
+            select(this).classed("highlighted", false);
+            mapSvg.selectAll(".exon-curated").classed("highlighted", false);
+        })
 }
 
 function _addColorLegendsForGeneModel(dmap, junctionScale, exonScale){
