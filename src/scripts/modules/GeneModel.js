@@ -19,12 +19,13 @@ export default class GeneModel {
      * @param junctions {List} of junction objects with attributes: chrom, chromStart, chromEnd, junctionId
      * @param isIsoform {Boolean}
      * @param maxIntronLength {Integer} the maximum length of intron. Intron rendering is capped at this value
+     * @param minExonWidth {Integer} the minimum width (pixels) of the exon rectangle.
      */
 
     /** NOTE: the exonNumber in exons & exonsCurated don't refer to the same exons (at least this is the case in GTEx)
      *  To ensure correct exon mapping of the curated gene model to the original model, here we use genomic position.
      */
-    constructor (gene, exons, exonsCurated, junctions, isIsoform=false, maxIntronLength=1000){
+    constructor (gene, exons, exonsCurated, junctions, isIsoform=false, maxIntronLength=1000, minExonWidth=0){
         this.gene = gene;
         this.exons = exons;
         if (this.gene.strand == "+") this.exons.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
@@ -39,8 +40,8 @@ export default class GeneModel {
         this.maxIntronLength = maxIntronLength;
 
         // hard-coded for now
-        this.intronLength = 0; // fixed fake intron length in base pairs
-        this.minExonWidth = 5; // minimum exon width in pixels
+        this.intronLength = 0; // fixed fake intron length in base pairs, obsolete?
+        this.minExonWidth = minExonWidth; // minimum exon width in pixels
         this.nullColor = '#DDDDDD';
     }
 

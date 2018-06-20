@@ -613,6 +613,7 @@ function _customizeIsoformTracks(dmap){
         .on("mouseout", function(){
             select(this).classed("highlighted", false);
             mapSvg.selectAll(".exon-curated").classed("highlighted", false);
+            tooltip.hide();
         })
 }
 
