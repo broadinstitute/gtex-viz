@@ -1,8 +1,11 @@
 "use strict";
 export function getGtexUrls(){
-    const host = 'https://gtexportal.org/rest/v1/'; // NOTE: top expressed genes are not yet in production
+    const host = 'https://gtexportal.org/rest/v1/';
     return {
+        // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
+        snp: host + 'reference/variantDev?format=json&snpId=',
+        variantId: host + 'reference/variantDev?format=json&variantId=',
 
         exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
 
@@ -18,19 +21,15 @@ export function getGtexUrls(){
 
         medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000',
 
-        // sample: 'data/gtex.Sample.csv',
-        sample: 'tmpSummaryData/gtex.Sample.csv',
-        snp: host + 'reference/snp?reference=current&format=json&snpId=',
-
         tissue:  host + 'dataset/tissueInfo',
         tissueSites: host + 'dataset/tissueSiteDetail?format=json',
 
         topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
         topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
 
-        variantId: host + 'reference/snp?format=json&reference=current&release=v7&variantId=',
-
         // local static files
+        sample: 'tmpSummaryData/gtex.Sample.csv',
+
         rnaseqCram: 'tmpSummaryData/rnaseq_cram_files_v7_dbGaP_011516.txt',
         wgsCram: 'tmpSummaryData/wgs_cram_files_v7_hg38_dbGaP_011516.txt',
 
