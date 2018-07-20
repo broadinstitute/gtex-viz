@@ -318,9 +318,13 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
             mapSvg.selectAll(".exp-map-ylabel").classed("clicked", false);
             select(this).classed("clicked", true);
             const tissue = d;
+            const tissueKey = 'tissueSiteDetailId';
             let j;
             if (junctionData !== undefined) j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
-            const ex = exonData.filter((e)=>e.tissueId==tissue); // exon data
+            const ex = exonData.filter((e)=>{
+                if(!e.hasOwnProperty(tissueKey)) throw "Parser Error: Exon does not have tissue attribute " + tissueKey;
+                return e[tissueKey]==tissue;
+            }); // exon data
             // geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissueDict[tissue].tissueName);
             geneModel.addData(mapSvg.select("#geneModel"), j, ex, junctionScale, exonScale);
 

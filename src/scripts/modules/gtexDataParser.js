@@ -7,7 +7,7 @@ export function getGtexUrls(){
         snp: host + 'reference/variantDev?format=json&snpId=',
         variantId: host + 'reference/variantDev?format=json&variantId=',
 
-        exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
+        exonExp: host + 'expression/medianExonExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
 
         geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
         geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
@@ -206,7 +206,7 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
 
     const exonObjects = data[attr];
     // error-checking
-    ['data', 'exonId', 'tissueId'].forEach((d)=>{
+    ['median', 'exonId', 'tissueSiteDetailId'].forEach((d)=>{
         if (!exonObjects[0].hasOwnProperty(d)) throw 'Fatal Error: parseExonExpression attr not found: ' + d;
     });
     // parse GTEx median exon counts
@@ -214,18 +214,18 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
         const exon = exonDict[d.exonId]; // for retrieving exon positions
         // error-checking
         ['end', 'start'].forEach((p)=>{
-            if (!exon.hasOwnProperty(p)) throw 'Fatal Error: parseExonExpression attr not found: ' + p;
+            if (!exon.hasOwnProperty(p)) throw 'Fatal Error: parseExonExpression position attr not found: ' + p;
         });
         d.l = exon.end - exon.start + 1;
-        d.value = Number(d.data)/d.l;
-        d.originalValue = Number(d.data)/d.l;
+        d.value = Number(d.median)/d.l;
+        d.originalValue = Number(d.median)/d.l;
         if (useLog) d.value = Math.log2(d.value + 1);
         d.x = d.exonId;
-        d.y = d.tissueId;
+        d.y = d.tissueSiteDetailId;
         d.id = d.gencodeId;
         d.chromStart = exon.start;
         d.chromEnd = exon.end;
-        d.unit = d.unit + ' per base';
+        d.unit = 'median ' + d.unit + ' per base';
     });
     return exonObjects.sort((a,b)=>{
         if (a.chromStart<b.chromStart) return -1;
