@@ -69,6 +69,7 @@ export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc()
                         case "RNASEQ": {
                             if (!cram.rnaseq.hasOwnProperty(s.sampleId)) throw s.sampleId + ' has no cram files';
                             s.cramFile = cram.rnaseq[s.sampleId];
+                            s.dataType = 'RNA-Seq';
                             break;
                         }
                         default:
@@ -113,8 +114,10 @@ function _buildMatrix(datasetId, samples, tissues){
     const columns = [
         {
             label: 'RNA-Seq',
-            id: 'RNASEQ',
-            data: __buildHash('RNASEQ')
+            id: 'RNA-Seq',
+            data: __buildHash('RNA-Seq')
+            // id: 'RNASEQ',
+            // data: __buildHash('RNASEQ')
         },
         {
             label: 'WES',
