@@ -103,7 +103,6 @@ export default class IsoformTrackViewer {
     }
 
     sortTracks(ylist){
-        console.log(ylist);
         this.setYscale(this.config.h, ylist);
         this.render(true);
     }
