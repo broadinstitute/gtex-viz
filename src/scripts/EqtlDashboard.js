@@ -257,7 +257,7 @@ function _parseGene(gjson, id){
  * @private
  */
 function _parseVariant(vjson){
-    const attr = 'snp';
+    const attr = 'variant';
     if(!vjson.hasOwnProperty(attr)) throw 'Fatal Error: parse variant error';
     const variants = vjson[attr];
     if (variants.length == 0) return null;
