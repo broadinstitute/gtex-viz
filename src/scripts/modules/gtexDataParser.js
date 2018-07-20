@@ -1,6 +1,6 @@
 "use strict";
 export function getGtexUrls(){
-    const host = 'https://gtexportal.org/rest/v1/';
+    const host = 'http://0.0.0.0:9009/rest/v1/';
     return {
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
@@ -10,7 +10,7 @@ export function getGtexUrls(){
         // transcript, exon, junction expression specific
         exonExp: host + 'expression/medianExonExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
         transcriptExp: host + 'expression/medianTranscriptExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
-        junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
+        junctionExp: host + 'expression/medianJunctionExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
 
         isoform: host + 'reference/transcript?release=v7&gencode_id=',
         geneModel: host + 'reference/collapsedGeneModel?unfiltered=false&release=v7&geneId=',
@@ -136,17 +136,26 @@ export function parseExons(data){
  * parse the junctions
  * @param data
  * @returns {List} of junctions
- * // we do not store junction structure annotations in Mongo
-    // so here we use the junction expression web service to retrieve the junction genomic locations
+ * // junction annotations are not stored in Mongo
+    // so here we use the junction expression web service to parse the junction ID for its genomic location
     // assuming that each tissue has the same junctions,
-    // to grab all the known junctions of a gene, we only need to look at one tissue
+    // to grab all the known junctions of a gene, we only need to query one tissue
     // here we arbitrarily pick Liver.
  */
-export function parseJunctions(data){
+export function parseJunctions(json){
 
     const attr = 'medianJunctionExpression';
-    if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseJunctions input error. ' + data;
-    return data[attr].filter((d)=>d.tissueId=='Liver')
+    if(!json.hasOwnProperty(attr)) throw 'Parse Error: parseJunctions input error. ' + attr;
+
+    // check required json attributes
+    ['tissueSiteDetailId', 'junctionId'].forEach((d)=>{
+        // use the first element in the json objects as a test case
+        if(!json[attr][0].hasOwnProperty(d)){
+            console.error(json[attr][0]);
+            throw 'Parse Error: required junction attribute is missing: ' + d;
+        }
+    });
+    return json[attr].filter((d)=>d.tissueSiteDetailId=='Liver')
                     .map((d) => {
                         let pos = d.junctionId.split('_');
                         return {
@@ -252,17 +261,24 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
         console.warn('No junction data found');
         return undefined;
     }
-    ['tissueId', 'junctionId', 'data', 'gencodeId'].forEach((d)=>{
-        if (!junctions[0].hasOwnProperty(d)) throw 'Fatal Error: parseJunctionExpression attr not found: ' + d;
-    });
+
 
     // parse GTEx median junction read counts
     junctions.forEach((d) => {
-        d.value = useLog?Math.log10(Number(d.data + adjust)):Number(d.data);
+        ['tissueSiteDetailId', 'junctionId', 'median', 'gencodeId'].forEach((k)=>{
+            if (!d.hasOwnProperty(k)) {
+                console.error(d);
+                throw 'Parser Error: parseJunctionExpression attr not found: ' + k;
+            }
+        });
+        let median = d.median;
+        let tissueId = d.tissueSiteDetailId;
+        d.tissueId = tissueId;
+        d.id = d.gencodeId;
         d.x = d.junctionId;
-        d.y = d.tissueId;
-        d.originalValue = Number(d.data);
-        d.id = d.gencodeId
+        d.y = tissueId;
+        d.value = useLog?Math.log10(Number(median + adjust)):Number(median);
+        d.originalValue = Number(median);
     });
 
     // sort by genomic location in ascending order
