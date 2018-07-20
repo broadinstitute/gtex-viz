@@ -7,11 +7,11 @@ import {min, max} from "d3-array";
 
 import {getGtexUrls,
         parseTissues,
-        parseExons,
+        parseModelExons,
         parseJunctions,
-        parseIsoforms,
+        parseTranscripts,
         parseTranscriptExpressionTranspose,
-        parseIsoformExons,
+        parseExons,
         parseJunctionExpression,
         parseExonExpression,
         parseTranscriptExpression
@@ -65,19 +65,20 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 json(urls.tissue),
                 json(urls.geneModelUnfiltered + gencodeId),
                 json(urls.geneModel + gencodeId),
-                json(urls.isoform + gencodeId),
+                json(urls.transcript + gencodeId),
                 json(urls.junctionExp + gencodeId),
                 json(urls.exonExp + gencodeId),
-                json(urls.transcriptExp + gencodeId)
+                json(urls.transcriptExp + gencodeId),
+                 json(urls.exon + gencodeId)
              ];
 
              Promise.all(promises)
                  .then(function(args){
                     const tissues = parseTissues(args[0]),
-                        exons = parseExons(args[1]), // exons of the full gene model
-                        exonsCurated = parseExons(args[2]), // exons of the curated gene model
-                        isoforms = parseIsoforms(args[3]), // by default, the parser sorts the isoforms in descending order by length
-                        isoformExons = parseIsoformExons(args[3]), // exons of the individual isoforms
+                        exons = parseModelExons(args[1]), // exons of the full gene model
+                        exonsCurated = parseModelExons(args[2]), // exons of the curated final gene model
+                        isoforms = parseTranscripts(args[3]), // by default, the parser sorts the isoforms in descending order by length
+                        isoformExons = parseExons(args[7]), // exons of the individual isoforms
                         junctions = parseJunctions(args[4]),
                         junctionExpress = parseJunctionExpression(args[4]),
                         exonExpress = parseExonExpression(args[5],  exonsCurated);
