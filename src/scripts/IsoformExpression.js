@@ -10,11 +10,11 @@ import {getGtexUrls,
         parseExons,
         parseJunctions,
         parseIsoforms,
-        parseIsoformExpressionTranspose,
+        parseTranscriptExpressionTranspose,
         parseIsoformExons,
         parseJunctionExpression,
         parseExonExpression,
-        parseIsoformExpression
+        parseTranscriptExpression
 } from "./modules/gtexDataParser";
 
 import {setColorScale, drawColorLegend} from "./modules/colors";
@@ -68,7 +68,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 json(urls.isoform + gencodeId),
                 json(urls.junctionExp + gencodeId),
                 json(urls.exonExp + gencodeId),
-                json(urls.isoformExp + gencodeId)
+                json(urls.transcriptExp + gencodeId)
              ];
 
              Promise.all(promises)
@@ -81,7 +81,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         junctions = parseJunctions(args[4]),
                         junctionExpress = parseJunctionExpression(args[4]),
                         exonExpress = parseExonExpression(args[5],  exonsCurated);
-                    let isoformExpress = parseIsoformExpression(args[6]);
+                    let isoformExpress = parseTranscriptExpression(args[6]);
 
                     // error checking
                     let exonColorScale, isoformColorScale, junctionColorScale;
@@ -119,9 +119,16 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 switch(type){
                     case "isoformTransposed": {
                         const dmapConfig = new DendroHeatmapConfig(width, 150, 100, {top: 60, right: 350, bottom: 200, left: 50}, 12, 10);
+                        // TODO: move cluster data parsing to gtexDataParser.js
+                        ['tissue', 'transcript'].forEach((k)=>{
+                            if(!args[6].clusters.hasOwnProperty(k)) {
+                                console.error(args[6].clusters);
+                                throw('Parse Error: Required cluster attribute is missing: ' + k);
+                            }
+                        });
                         let tissueTree = args[6].clusters.tissue;
-                        let isoformTree = args[6].clusters.isoform;
-                        let isoformExpressT = parseIsoformExpressionTranspose(args[6]);
+                        let isoformTree = args[6].clusters.transcript;
+                        let isoformExpressT = parseTranscriptExpressionTranspose(args[6]);
 
                         dmap = new DendroHeatmap(tissueTree, isoformTree, isoformExpressT, "Purples", 5, dmapConfig, true, 10, `Isoform Expression of ${svgTitle}`);
                         dmap.render(ids.root, ids.svg, true, true, top, 5);
@@ -320,7 +327,7 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
             const tissue = d;
             let j;
             if (junctionData !== undefined) j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
-            const ex = exonData.filter((e)=>e.tissueId==tissue); // exon data
+            const ex = exonData.filter((e)=> e.tissueId==tissue); // exon data
             // geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissueDict[tissue].tissueName);
             geneModel.addData(mapSvg.select("#geneModel"), j, ex, junctionScale, exonScale);
 
