@@ -11,8 +11,9 @@ export function getGtexUrls(){
         exonExp: host + 'expression/medianExonExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
         transcriptExp: host + 'expression/medianTranscriptExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
         junctionExp: host + 'expression/medianJunctionExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
+        transcript: host + 'reference/transcriptDev?datasetId=gtex_v7&gencodeId=',
+        exon: host + 'reference/exonDev?datasetId=gtex_v7&gencodeId=',
 
-        isoform: host + 'reference/transcript?release=v7&gencode_id=',
         geneModel: host + 'reference/collapsedGeneModel?unfiltered=false&release=v7&geneId=',
         geneModelUnfiltered: host + 'reference/collapsedGeneModel?unfiltered=true&release=v7&geneId=',
 
@@ -118,7 +119,7 @@ export function parseTissueSites(data, forEqtl=false){
  * @param data {Json}
  * @returns {List} of exons
  */
-export function parseExons(data){
+export function parseModelExons(data){
     const attr = 'collapsedGeneModel';
     if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseExons input error.' + data;
     // sanity check
@@ -170,14 +171,23 @@ export function parseJunctions(json){
 /**
  * parse transcript isoforms from the GTEx web service: 'reference/transcript?release=v7&gencode_id='
  * @param data {Json}
- * returns a dictionary of transcript exon object lists indexed by ENST IDs
+ * returns a dictionary of transcript exon object lists indexed by transcript IDs -- ENST IDs
  */
-export function parseIsoformExons(data){
-    const attr = 'transcript';
-    if(!data.hasOwnProperty(attr)) throw 'parseIsoforms input error ' + data;
-    return data[attr].filter((d)=>{return 'exon' == d.featureType})
-        .reduce((a, d)=>{
+export function parseExons(json){
+    const attr = 'exon';
+    if(!json.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: exon';
+    return json[attr].reduce((a, d)=>{
+        // check required attributes
+        ['transcriptId', 'chromosome', 'start', 'end', 'exonNumber', 'exonId'].forEach((k)=>{
+            if(!d.hasOwnProperty(k)) {
+                console.error(d);
+                throw 'Parse Error: required json attribute is missing: ' + k
+            }
+        });
         if (a[d.transcriptId] === undefined) a[d.transcriptId] = [];
+        d.chrom = d.chromosome;
+        d.chromStart = d.start;
+        d.chromEnd = d.end;
         a[d.transcriptId].push(d);
         return a;
     }, {});
@@ -186,14 +196,23 @@ export function parseIsoformExons(data){
 /**
  * parse transcript isoforms
  * @param data {Json} from GTEx web service 'reference/transcript?release=v7&gencode_id='
- * returns a list of isoform objects
+ * returns a list of isoform objects sorted by length in descending order
  */
-export function parseIsoforms(data){
+export function parseTranscripts(json){
     const attr = 'transcript';
-    if(!data.hasOwnProperty(attr)) throw('parseIsoforms input error');
-    return data[attr].filter((d)=>{return 'transcript' == d.featureType}).sort((a, b)=>{
-        const l1 = Math.abs(a.chromEnd - a.chromStart) + 1;
-        const l2 = Math.abs(b.chromEnd - b.chromStart) + 1;
+    if(!json.hasOwnProperty(attr)) throw('parseIsoforms input error');
+
+    // check required attributes, use the first transcript as the test case
+    ['transcriptId', 'start', 'end'].forEach((k)=>{
+        if(!json[attr][0].hasOwnProperty(k)) {
+            console.error(d);
+            throw 'Parse Error: required json attribute is missing: ' + k
+        }
+    });
+
+    return json[attr].sort((a, b)=>{
+        const l1 = Math.abs(a.end - a.start) + 1;
+        const l2 = Math.abs(b.end - b.start) + 1;
         return -(l1-l2); // sort by isoform length in descending order
     });
 }
