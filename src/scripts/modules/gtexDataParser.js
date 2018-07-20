@@ -7,18 +7,17 @@ export function getGtexUrls(){
         snp: host + 'reference/variantDev?format=json&snpId=',
         variantId: host + 'reference/variantDev?format=json&variantId=',
 
+        // transcript, exon, junction expression specific
         exonExp: host + 'expression/medianExonExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
+        transcriptExp: host + 'expression/medianTranscriptExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
+        junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
 
-        geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
-        geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
+        isoform: host + 'reference/transcript?release=v7&gencode_id=',
         geneModel: host + 'reference/collapsedGeneModel?unfiltered=false&release=v7&geneId=',
         geneModelUnfiltered: host + 'reference/collapsedGeneModel?unfiltered=true&release=v7&geneId=',
 
-        isoform: host + 'reference/transcript?release=v7&gencode_id=',
-        isoformExp: host + 'expression/isoformExpression?datasetId=gtex_v7&boxplotDetail=median&gencodeId=',
-
-        junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
-
+        geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
+        geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
         medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000',
 
         tissue:  host + 'dataset/tissueInfo',
@@ -226,6 +225,7 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
         d.chromStart = exon.start;
         d.chromEnd = exon.end;
         d.unit = 'median ' + d.unit + ' per base';
+        d.tissueId = d.tissueSiteDetailId;
     });
     return exonObjects.sort((a,b)=>{
         if (a.chromStart<b.chromStart) return -1;
@@ -274,37 +274,56 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
 }
 
 /**
- * parse isoform expression
+ * parse transcript expression
  * @param data
  * @param useLog
  * @param adjust
  * @returns {*}
  */
-export function parseIsoformExpression(data, useLog=true, adjust=1){
-    const attr = 'isoformExpression';
-    if(!data.hasOwnProperty(attr)) throw('parseIsoformExpression input error');
+export function parseTranscriptExpression(data, useLog=true, adjust=1){
+    const attr = 'medianTranscriptExpression';
+    if(!data.hasOwnProperty(attr)) throw('Parse Error: parseTranscriptExpression input error');
     // parse GTEx isoform median TPM
     data[attr].forEach((d) => {
-        d.value = useLog?Math.log10(Number(d.data + adjust)):Number(d.data);
-        d.originalValue = Number(d.data);
+        ['median', 'transcriptId', 'tissueSiteDetailId', 'gencodeId'].forEach((k)=>{
+            if(!d.hasOwnProperty(k)) {
+                console.error(d);
+                throw('Parse Error: required transcipt attribute is missing: ' + k);
+            }
+        });
+        d.value = useLog?Math.log10(Number(d.median + adjust)):Number(d.median);
+        d.originalValue = Number(d.median);
         d.x = d.transcriptId;
-        d.y = d.tissueId;
+        d.y = d.tissueSiteDetailId;
         d.id = d.gencodeId;
+        d.tissueId = d.tissueSiteDetailId;
     });
 
     return data[attr];
 }
 
-export function parseIsoformExpressionTranspose(data, useLog=true, adjust=1){
-    const attr = 'isoformExpression';
-    if(!data.hasOwnProperty(attr)) throw('parseIsoformExpression input error');
+export function parseTranscriptExpressionTranspose(data, useLog=true, adjust=1){
+    const attr = 'medianTranscriptExpression';
+    if(!data.hasOwnProperty(attr)) {
+        console.error(data);
+        throw('Parse Error: parseTranscriptExpressionTranspose input error.');
+    }
     // parse GTEx isoform median TPM
     data[attr].forEach((d) => {
-        d.value = useLog?Math.log10(Number(d.data + adjust)):Number(d.data);
-        d.originalValue = Number(d.data);
+        ['median', 'transcriptId', 'tissueSiteDetailId', 'gencodeId'].forEach((k)=>{
+            if(!d.hasOwnProperty(k)) {
+                console.error(d);
+                throw('Parse Error: Required transcript attribute is missing: ' + k);
+            }
+        });
+        const median = d.median;
+        const tissueId = d.tissueSiteDetailId;
+        d.value = useLog?Math.log10(Number(median + adjust)):Number(median);
+        d.originalValue = Number(median);
         d.y = d.transcriptId;
-        d.x = d.tissueId;
+        d.x = tissueId;
         d.id = d.gencodeId;
+        d.tissueId = tissueId;
     });
 
     return data[attr];
