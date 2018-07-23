@@ -291,7 +291,8 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i, url
     // queue up all tissue IDs
     tissues.forEach((tId) => {
         let urlRoot = urls['dyneqtl'];
-        let url = `${urlRoot}?snp_id=${variant.variantId}&gene_id=${gene.gencodeId}&tissue=${tId}`; // use variant ID, gencode ID and tissue ID to query the dyneqtl
+        // let url = `${urlRoot}?snp_id=${variant.variantId}&gene_id=${gene.gencodeId}&tissue=${tId}`; // use variant ID, gencode ID and tissue ID to query the dyneqtl
+        let url = `${urlRoot}?variantId=${variant.variantId}&gencodeId=${gene.gencodeId}&tissueSiteDetailId=${tId}`; // use variant ID, gencode ID and tissue ID to query the dyneqtl
         promises.push(_apiCall(url, tId));
     });
 
@@ -301,57 +302,57 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i, url
             let info = {};
             results.forEach((d) => {
                 if (d.status == "failed"){
-                // if eQTLs aren't available for this query, create an empty space for the layout of the report
-                let group = tissueDict[d.tissue]; // group refers to the tissue name, map tissue ID to tissue name
-                // genotype expression data
-                input = input.concat([
-                    {
-                        group: group,
-                        label: ref.length>2?"ref":ref,
-                        values: [0]
-                    },
-                    {
-                        group: group,
-                        label: het.length>2?"het":het,
-                        values: [0]
-                    },
-                    {
-                        group: group,
-                        label: alt.length>2?"alt":alt,
-                        values: [0]
-                    }
-                ])
-            }
-                else {
-                d = _parseEqtl(d); // reformat eQTL results d
-                let group = tissueDict[d.tissue]; // group is the tissue name, map tissue ID to tissue name
-
-                input = input.concat([
-                    {
-                        group: group,
-                        label: ref.length>2?"ref":ref,
-                        size: d.homoRefExp.length,
-                        values: d.homoRefExp
-                    },
-                    {
-                        group: group,
-                        label: het.length>2?"het":het,
-                        size: d.heteroExp.length,
-                        values: d.heteroExp
-                    },
-                    {
-                        group: group,
-                        label: alt.length>2?"alt":alt,
-                        size: d.homoAltExp.length,
-                        values: d.homoAltExp
-                    }
-                ]);
-                // additional info of the group goes here
-                info[group] = {
-                    "pvalue": d["p-value"]===null?1:parseFloat(d["p-value"]).toPrecision(3),
-                    "pvalueThreshold": d["p-value_threshold"]===null?0:parseFloat(d["p-value_threshold"]).toPrecision(3)
+                    // if eQTLs aren't available for this query, create an empty space for the layout of the report
+                    let group = tissueDict[d.tissue]; // group refers to the tissue name, map tissue ID to tissue name
+                    // genotype expression data
+                    input = input.concat([
+                        {
+                            group: group,
+                            label: ref.length>2?"ref":ref,
+                            values: [0]
+                        },
+                        {
+                            group: group,
+                            label: het.length>2?"het":het,
+                            values: [0]
+                        },
+                        {
+                            group: group,
+                            label: alt.length>2?"alt":alt,
+                            values: [0]
+                        }
+                    ])
                 }
-            }
+                else {
+                    d = _parseEqtl(d); // reformat eQTL results d
+                    let group = tissueDict[d.tissueSiteDetailId]; // group is the tissue name, map tissue ID to tissue name
+
+                    input = input.concat([
+                        {
+                            group: group,
+                            label: ref.length>2?"ref":ref,
+                            size: d.homoRefExp.length,
+                            values: d.homoRefExp
+                        },
+                        {
+                            group: group,
+                            label: het.length>2?"het":het,
+                            size: d.heteroExp.length,
+                            values: d.heteroExp
+                        },
+                        {
+                            group: group,
+                            label: alt.length>2?"alt":alt,
+                            size: d.homoAltExp.length,
+                            values: d.homoAltExp
+                        }
+                    ]);
+                    // additional info of the group goes here
+                    info[group] = {
+                        "pvalue": d["pValue"]===null?1:parseFloat(d["pValue"]).toPrecision(3),
+                        "pvalueThreshold": d["pValueThreshold"]===null?0:parseFloat(d["pValueThreshold"]).toPrecision(3)
+                    }
+                }
 
             });
             _visualize(gene, variant, id, input, info);
@@ -365,20 +366,28 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i, url
  * @returns data {JSON} modified data
  * @private
  */
-function _parseEqtl(data){
-    data.expression_values = data.expression_values.split(",").map((d)=>parseFloat(d));
-    data.genotypes = data.genotypes.split(",").map((d)=>parseFloat(d));
+function _parseEqtl(json){
+    // check required json attributes
+    ['data', 'genotypes', 'pValue', 'pValueThreshold', 'tissueSiteDetailId'].forEach((d)=>{
+        if(!json.hasOwnProperty(d)){
+            console.error(json);
+            throw 'Parse Error: Required json attribute is missing: ' + d;
+        }
+    });
 
-    data.homoRefExp = data.expression_values.filter((d,i) => {
-        return data.genotypes[i] == 0
+    json.expression_values = json.data.map((d)=>parseFloat(d));
+    json.genotypes = json.genotypes.map((d)=>parseFloat(d));
+
+    json.homoRefExp = json.expression_values.filter((d,i) => {
+        return json.genotypes[i] == 0
     });
-    data.homoAltExp = data.expression_values.filter((d,i) => {
-        return data.genotypes[i] == 2
+    json.homoAltExp = json.expression_values.filter((d,i) => {
+        return json.genotypes[i] == 2
     });
-    data.heteroExp = data.expression_values.filter((d,i) => {
-        return data.genotypes[i] == 1
+    json.heteroExp = json.expression_values.filter((d,i) => {
+        return json.genotypes[i] == 1
     });
-    return data;
+    return json;
 }
 
 function _apiCall(url, tissue){

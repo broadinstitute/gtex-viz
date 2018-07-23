@@ -3,7 +3,7 @@ export function getGtexUrls(){
     const host = 'http://0.0.0.0:9009/rest/v1/';
     return {
         // eqtl Dashboard specific
-        dyneqtl: host + 'association/dyneqtl',
+        dyneqtl: host + 'association/dyneqtlDev',
         snp: host + 'reference/variantDev?format=json&snpId=',
         variantId: host + 'reference/variantDev?format=json&variantId=',
 
