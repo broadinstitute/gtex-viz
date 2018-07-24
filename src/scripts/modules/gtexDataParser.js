@@ -17,7 +17,7 @@ export function getGtexUrls(){
         geneModelUnfiltered: host + 'reference/collapsedGeneModelExonDev?unfiltered=true&datasetId=gtex_v7&gencodeId=',
 
         // gene expression violin plot specific
-        geneExp: 'https://gtexportal.org/rest/v1/' + 'expression/geneExpressionDev?datasetId=gtex_v7&gencodeId=',
+        geneExp: 'https://dev.gtexportal.org/rest/v1/' + 'expression/geneExpressionDev?datasetId=gtex_v7&gencodeId=',
 
         // gene expression heat map specific
         medGeneExp: host + 'expression/medianGeneExpressionDev?datasetId=gtex_v7&hcluster=true&page_size=10000',
@@ -408,10 +408,16 @@ export function parseMedianExpression(data, useLog=true){
  */
 export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined){
     const attr = 'geneExpression';
-    if(!data.hasOwnProperty(attr)) throw 'parseGeneExpressionForViolin input error.';
+    if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
     data[attr].forEach((d)=>{
+        ['data', 'tissueSiteDetailId', 'geneSymbol', 'gencodeId'].forEach((k)=>{
+            if(!d.hasOwnProperty(k)){
+                console.error(d);
+                throw 'Parse Error: required json attribute is missing: ' + k;
+            }
+        });
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
-        d.group = d.tissueId;
+        d.group = d.tissueSiteDetailId;
         d.label = d.geneSymbol;
         d.color = colors===undefined?'#90c1c1':colors[d.gencodeId];
     });
