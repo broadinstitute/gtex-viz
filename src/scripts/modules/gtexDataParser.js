@@ -22,14 +22,16 @@ export function getGtexUrls(){
         // gene expression heat map specific
         medGeneExp: host + 'expression/medianGeneExpressionDev?datasetId=gtex_v7&hcluster=true&page_size=10000',
 
+        // top expressed gene expression specific
+        topInTissueFiltered: host + 'expression/topExpressedGeneDev?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueSiteDetailId=',
+        topInTissue: host + 'expression/topExpressedGeneDev?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueSiteDetailId=',
+
+        geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
+
         // tissue menu specific
         tissue:  host + 'dataset/tissueInfo',
 
-        geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
         tissueSites: host + 'dataset/tissueSiteDetail?format=json',
-
-        topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
-        topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
 
         // local static files
         sample: 'tmpSummaryData/gtex.Sample.csv',

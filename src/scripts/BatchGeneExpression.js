@@ -49,7 +49,18 @@ export function launchTopExpressed(tissueId, heatmapRootId, violinRootId, urls=g
 
     json(url+ tissueId)
         .then(function(results){ // top 50 expressed genes in tissueId
-            const topGeneList = results.topExpressedGene.map(d=>d.gencodeId);
+            const attr = 'topExpressedGene';
+            if(!results.hasOwnProperty(attr)){
+                console.error(results);
+                throw 'Parse Error: required json attribute is missing: ' + attr;
+            }
+            const topGeneList = results[attr].map((d)=>{
+                if(!d.hasOwnProperty('gencodeId')){
+                    console.error(d);
+                    throw 'Parse Error: required json attribute is missing: gencodeId';
+                }
+                return d.gencodeId
+            });
             const callback = function(){
                 _styleSelectedTissue(tissueId);
             };
