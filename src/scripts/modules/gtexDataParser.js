@@ -17,7 +17,7 @@ export function getGtexUrls(){
         geneModelUnfiltered: host + 'reference/collapsedGeneModelExonDev?unfiltered=true&datasetId=gtex_v7&gencodeId=',
 
         // gene expression violin plot specific
-        geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
+        geneExp: 'https://gtexportal.org/rest/v1/' + 'expression/geneExpressionDev?datasetId=gtex_v7&gencodeId=',
 
         // gene expression heat map specific
         medGeneExp: host + 'expression/medianGeneExpressionDev?datasetId=gtex_v7&hcluster=true&page_size=10000',
@@ -400,29 +400,6 @@ export function parseMedianExpression(data, useLog=true){
 
     return results;
 }
-
-/**
- * parse the gene expression
- * @param gencodeId {String}
- * @param data {Json} with attr: tissueId, geneSymbol
- * @returns {{exp: {}, geneSymbol: string}}
- */
-// function parseGeneExpression(gencodeId, data){
-//     let lookupTable = {
-//         exp: {}, // indexed by tissueId
-//         geneSymbol: ''
-//     };
-//     if(!data.hasOwnProperty(attr)) throw ('parseGeneExpression input error.');
-//     data[attr].forEach((d)=>{
-//         if (d.gencodeId == gencodeId) {
-//             // if the gencode ID matches the query gencodeId,
-//             // add the expression data to the lookup table
-//             lookupTable.exp[d.tissueId] = d.data;
-//             if ('' == lookupTable.geneSymbol) lookupTable.geneSymbol = d.geneSymbol
-//         }
-//     });
-//     return lookupTable
-// }
 
 /**
  * parse the expression data of a gene for a grouped violin plot
