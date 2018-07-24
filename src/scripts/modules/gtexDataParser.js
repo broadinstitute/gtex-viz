@@ -13,15 +13,19 @@ export function getGtexUrls(){
         junctionExp: host + 'expression/medianJunctionExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
         transcript: host + 'reference/transcriptDev?datasetId=gtex_v7&gencodeId=',
         exon: host + 'reference/exonDev?datasetId=gtex_v7&gencodeId=',
+        geneModel: host + 'reference/collapsedGeneModelExonDev?unfiltered=false&datasetId=gtex_v7&gencodeId=',
+        geneModelUnfiltered: host + 'reference/collapsedGeneModelExonDev?unfiltered=true&datasetId=gtex_v7&gencodeId=',
 
-        geneModel: host + 'reference/collapsedGeneModel?unfiltered=false&release=v7&geneId=',
-        geneModelUnfiltered: host + 'reference/collapsedGeneModel?unfiltered=true&release=v7&geneId=',
+        // gene expression violin plot specific
+        geneExp: 'https://dev.gtexportal.org/rest/v1/' + 'expression/geneExpressionDev?datasetId=gtex_v7&gencodeId=',
+
+        // gene expression heat map specific
+        medGeneExp: host + 'expression/medianGeneExpressionDev?datasetId=gtex_v7&hcluster=true&page_size=10000',
+
+        // tissue menu specific
+        tissue:  host + 'dataset/tissueInfo',
 
         geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
-        geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
-        medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000',
-
-        tissue:  host + 'dataset/tissueInfo',
         tissueSites: host + 'dataset/tissueSiteDetail?format=json',
 
         topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
@@ -29,7 +33,6 @@ export function getGtexUrls(){
 
         // local static files
         sample: 'tmpSummaryData/gtex.Sample.csv',
-
         rnaseqCram: 'tmpSummaryData/rnaseq_cram_files_v7_dbGaP_011516.txt',
         wgsCram: 'tmpSummaryData/wgs_cram_files_v7_hg38_dbGaP_011516.txt',
 
@@ -119,14 +122,17 @@ export function parseTissueSites(data, forEqtl=false){
  * @param data {Json}
  * @returns {List} of exons
  */
-export function parseModelExons(data){
-    const attr = 'collapsedGeneModel';
-    if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseExons input error.' + data;
+export function parseModelExons(json){
+    const attr = 'collapsedGeneModelExon';
+    if(!json.hasOwnProperty(attr)){
+        console.error(json);
+        throw 'Parse Error: Required json attribute is missing: ' + attr;
+    }
     // sanity check
-    ['featureType', 'start', 'end'].forEach((d)=>{
-        if (!data[attr][0].hasOwnProperty(d)) throw 'Fatal Error: parseExons attr not found: ' + d;
+    ['start', 'end'].forEach((d)=>{
+        if (!json[attr][0].hasOwnProperty(d)) throw 'Parse Error: Required json attribute is missing: ' + d;
     });
-    return data[attr].filter((d)=>d.featureType == 'exon').map((d)=>{
+    return json[attr].map((d)=>{
         d.chromStart = d.start;
         d.chromEnd = d.end;
         return d;
@@ -372,18 +378,21 @@ export function parseTranscriptExpressionTranspose(data, useLog=true, adjust=1){
  */
 export function parseMedianExpression(data, useLog=true){
     const attr = 'medianGeneExpression';
-    if(!data.hasOwnProperty(attr)) throw 'parseMedianExpression input error.';
+    if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
     const adjust = 1;
     // parse GTEx median gene expression
     // error-checking the required attributes:
     if (data[attr].length == 0) throw 'parseMedianExpression finds no data.';
-    ['median', 'tissueId', 'gencodeId'].forEach((d)=>{
-        if (!data[attr][0].hasOwnProperty(d)) throw `parseMedianExpression attr error. ${d} is not found`;
+    ['median', 'tissueSiteDetailId', 'gencodeId'].forEach((d)=>{
+        if (!data[attr][0].hasOwnProperty(d)) {
+            console.error(data[attr][0]);
+            throw `Parse Error: required json attribute is missingp: ${d}`;
+        }
     });
     let results = data[attr];
     results.forEach(function(d){
         d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
-        d.x = d.tissueId;
+        d.x = d.tissueSiteDetailId;
         d.y = d.gencodeId;
         d.originalValue = Number(d.median);
         d.id = d.gencodeId;
@@ -393,39 +402,22 @@ export function parseMedianExpression(data, useLog=true){
 }
 
 /**
- * parse the gene expression
- * @param gencodeId {String}
- * @param data {Json} with attr: tissueId, geneSymbol
- * @returns {{exp: {}, geneSymbol: string}}
- */
-// function parseGeneExpression(gencodeId, data){
-//     let lookupTable = {
-//         exp: {}, // indexed by tissueId
-//         geneSymbol: ''
-//     };
-//     if(!data.hasOwnProperty(attr)) throw ('parseGeneExpression input error.');
-//     data[attr].forEach((d)=>{
-//         if (d.gencodeId == gencodeId) {
-//             // if the gencode ID matches the query gencodeId,
-//             // add the expression data to the lookup table
-//             lookupTable.exp[d.tissueId] = d.data;
-//             if ('' == lookupTable.geneSymbol) lookupTable.geneSymbol = d.geneSymbol
-//         }
-//     });
-//     return lookupTable
-// }
-
-/**
  * parse the expression data of a gene for a grouped violin plot
  * @param data {JSON} from GTEx gene expression web service
  * @param colors {Dictionary} the violin color for genes
  */
 export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined){
     const attr = 'geneExpression';
-    if(!data.hasOwnProperty(attr)) throw 'parseGeneExpressionForViolin input error.';
+    if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
     data[attr].forEach((d)=>{
+        ['data', 'tissueSiteDetailId', 'geneSymbol', 'gencodeId'].forEach((k)=>{
+            if(!d.hasOwnProperty(k)){
+                console.error(d);
+                throw 'Parse Error: required json attribute is missing: ' + k;
+            }
+        });
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
-        d.group = d.tissueId;
+        d.group = d.tissueSiteDetailId;
         d.label = d.geneSymbol;
         d.color = colors===undefined?'#90c1c1':colors[d.gencodeId];
     });

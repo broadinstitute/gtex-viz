@@ -218,7 +218,7 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
                         _addToolBar(dmap, ids, tissueDict, urls, filterGenes, qTissue);
 
                         // mouse events
-                        _customizeMouseEvents(dmap, tissueDict, geneDict);
+                        _customizeMouseEvents(dmap, tissueDict, geneDict, urls);
 
                         if (callback!= undefined) callback();
 
@@ -319,7 +319,7 @@ function _addTissueColors(dmap, tissueDict){
  * @param tissueDict {Dictionary}: tissue objects indexed by tissue_id, with attr: tissue_name
  * @param geneDict {Dictionary}: gene objects indexed by gencode ID, with attr: geneSymbol
  */
-function _customizeMouseEvents(dmap, tissueDict, geneDict) {
+function _customizeMouseEvents(dmap, tissueDict, geneDict, urls=getGtexUrls()) {
     const svg = dmap.visualComponents.svg;
     const tooltip = dmap.tooltip;
     dmap.data.external = [];
@@ -357,7 +357,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
             s.classed("clicked", true); // click this DOM element
             action = "add";
         }
-        _renderViolinPlot(action, d, geneDict, tissueDict, dmap);
+        _renderViolinPlot(action, d, geneDict, tissueDict, dmap, urls);
     };
 
     svg.selectAll(".exp-map-cell")
@@ -377,7 +377,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict) {
  * @param tissueDict {Dictionary} tissue objects indexed by tissue ID
  * @param dmap {DendroHeatmap}
  */
-function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap) {
+function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap, urls=getGtexUrls()) {
     // action
     switch(action) {
         case "delete": {
@@ -386,7 +386,7 @@ function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap) {
             break;
         }
         case "add": {
-            const url = getGtexUrls().geneExp + gene;
+            const url = urls.geneExp + gene;
             const colors = {};
             colors[gene] = geneDict[gene].color;
             const tlist = dmap.objects.heatmap.xScale.domain();
