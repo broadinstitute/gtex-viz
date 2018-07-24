@@ -15,12 +15,17 @@ export function getGtexUrls(){
         exon: host + 'reference/exonDev?datasetId=gtex_v7&gencodeId=',
         geneModel: host + 'reference/collapsedGeneModelExonDev?unfiltered=false&datasetId=gtex_v7&gencodeId=',
         geneModelUnfiltered: host + 'reference/collapsedGeneModelExonDev?unfiltered=true&datasetId=gtex_v7&gencodeId=',
-        medGeneExp: host + 'expression/medianGeneExpressionDev?datasetId=gtex_v7&hcluster=true&page_size=10000',
 
-        geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
+        // gene expression violin plot specific
         geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
 
+        // gene expression heat map specific
+        medGeneExp: host + 'expression/medianGeneExpressionDev?datasetId=gtex_v7&hcluster=true&page_size=10000',
+
+        // tissue menu specific
         tissue:  host + 'dataset/tissueInfo',
+
+        geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
         tissueSites: host + 'dataset/tissueSiteDetail?format=json',
 
         topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueId=',
@@ -28,7 +33,6 @@ export function getGtexUrls(){
 
         // local static files
         sample: 'tmpSummaryData/gtex.Sample.csv',
-
         rnaseqCram: 'tmpSummaryData/rnaseq_cram_files_v7_dbGaP_011516.txt',
         wgsCram: 'tmpSummaryData/wgs_cram_files_v7_hg38_dbGaP_011516.txt',
 
