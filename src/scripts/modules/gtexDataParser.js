@@ -13,13 +13,12 @@ export function getGtexUrls(){
         junctionExp: host + 'expression/medianJunctionExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
         transcript: host + 'reference/transcriptDev?datasetId=gtex_v7&gencodeId=',
         exon: host + 'reference/exonDev?datasetId=gtex_v7&gencodeId=',
-
-        geneModel: host + 'reference/collapsedGeneModel?unfiltered=false&release=v7&geneId=',
-        geneModelUnfiltered: host + 'reference/collapsedGeneModel?unfiltered=true&release=v7&geneId=',
+        geneModel: host + 'reference/collapsedGeneModelExonDev?unfiltered=false&datasetId=gtex_v7&gencodeId=',
+        geneModelUnfiltered: host + 'reference/collapsedGeneModelExonDev?unfiltered=true&datasetId=gtex_v7&gencodeId=',
+        medGeneExp: host + 'expression/medianGeneExpressionDev?datasetId=gtex_v7&hcluster=true&page_size=10000',
 
         geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
         geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
-        medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000',
 
         tissue:  host + 'dataset/tissueInfo',
         tissueSites: host + 'dataset/tissueSiteDetail?format=json',
@@ -119,14 +118,17 @@ export function parseTissueSites(data, forEqtl=false){
  * @param data {Json}
  * @returns {List} of exons
  */
-export function parseModelExons(data){
-    const attr = 'collapsedGeneModel';
-    if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseExons input error.' + data;
+export function parseModelExons(json){
+    const attr = 'collapsedGeneModelExon';
+    if(!json.hasOwnProperty(attr)){
+        console.error(json);
+        throw 'Parse Error: Required json attribute is missing: ' + attr;
+    }
     // sanity check
-    ['featureType', 'start', 'end'].forEach((d)=>{
-        if (!data[attr][0].hasOwnProperty(d)) throw 'Fatal Error: parseExons attr not found: ' + d;
+    ['start', 'end'].forEach((d)=>{
+        if (!json[attr][0].hasOwnProperty(d)) throw 'Parse Error: Required json attribute is missing: ' + d;
     });
-    return data[attr].filter((d)=>d.featureType == 'exon').map((d)=>{
+    return json[attr].map((d)=>{
         d.chromStart = d.start;
         d.chromEnd = d.end;
         return d;
@@ -372,18 +374,21 @@ export function parseTranscriptExpressionTranspose(data, useLog=true, adjust=1){
  */
 export function parseMedianExpression(data, useLog=true){
     const attr = 'medianGeneExpression';
-    if(!data.hasOwnProperty(attr)) throw 'parseMedianExpression input error.';
+    if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
     const adjust = 1;
     // parse GTEx median gene expression
     // error-checking the required attributes:
     if (data[attr].length == 0) throw 'parseMedianExpression finds no data.';
-    ['median', 'tissueId', 'gencodeId'].forEach((d)=>{
-        if (!data[attr][0].hasOwnProperty(d)) throw `parseMedianExpression attr error. ${d} is not found`;
+    ['median', 'tissueSiteDetailId', 'gencodeId'].forEach((d)=>{
+        if (!data[attr][0].hasOwnProperty(d)) {
+            console.error(data[attr][0]);
+            throw `Parse Error: required json attribute is missingp: ${d}`;
+        }
     });
     let results = data[attr];
     results.forEach(function(d){
         d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
-        d.x = d.tissueId;
+        d.x = d.tissueSiteDetailId;
         d.y = d.gencodeId;
         d.originalValue = Number(d.median);
         d.id = d.gencodeId;
