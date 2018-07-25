@@ -10,7 +10,7 @@
   "license": "ISC",
   "devDependencies": {
     "rollup-plugin-copy": "^0.2.3",
-    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-node-resolve": "^3.3.0",
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-uglify": "^2.0.1"
   },

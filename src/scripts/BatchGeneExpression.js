@@ -145,7 +145,7 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
            // get median expression data and clusters of the input genes in all tissues
            const gQuery = genes.map((g)=>g.gencodeId).join(",");
            const tQuery = tlist===undefined?undefined:tlist.join(",");
-           const fetchUrl = tQuery === undefined? urls.medGeneExp + "&gencodeId=" + gQuery: urls.medGeneExp + "&gencodeId=" + gQuery + "&tissueId=" + tQuery;
+           const fetchUrl = tQuery === undefined? urls.medGeneExp + "&gencodeId=" + gQuery: urls.medGeneExp + "&gencodeId=" + gQuery + "&tissueSiteDetailId=" + tQuery;
            json(fetchUrl)
                .then(function(eData){
                    $('#spinner').hide();
@@ -198,7 +198,7 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
 
                         // construct handy data lookup tables
                         const tissueDict = tissues.reduce((a, d)=>{
-                            if (!d.hasOwnProperty("tissueId")) throw "tissue has not attr tissue_id";
+                            if (!d.hasOwnProperty("tissueId")) throw "tissue has not attr tissueId";
                             a[d.tissueId] = d;
                             return a;
                         }, {});
