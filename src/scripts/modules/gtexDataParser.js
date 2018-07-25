@@ -3,9 +3,9 @@ export function getGtexUrls(){
     const host = 'http://0.0.0.0:9009/rest/v1/';
     return {
         // eqtl Dashboard specific
-        dyneqtl: host + 'association/dyneqtlDev',
-        snp: host + 'reference/variantDev?format=json&snpId=',
-        variantId: host + 'reference/variantDev?format=json&variantId=',
+        dyneqtl: host + 'association/dyneqtl',
+        snp: host + 'reference/variant?format=json&snpId=',
+        variantId: host + 'reference/variant?format=json&variantId=',
 
         // transcript, exon, junction expression specific
         exonExp: host + 'expression/medianExonExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
@@ -20,11 +20,11 @@ export function getGtexUrls(){
         geneExp: 'https://dev.gtexportal.org/rest/v1/' + 'expression/geneExpressionDev?datasetId=gtex_v7&gencodeId=',
 
         // gene expression heat map specific
-        medGeneExp: host + 'expression/medianGeneExpressionDev?datasetId=gtex_v7&hcluster=true&page_size=10000',
+        medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000',
 
         // top expressed gene expression specific
-        topInTissueFiltered: host + 'expression/topExpressedGeneDev?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueSiteDetailId=',
-        topInTissue: host + 'expression/topExpressedGeneDev?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueSiteDetailId=',
+        topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueSiteDetailId=',
+        topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueSiteDetailId=',
 
         geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
 
