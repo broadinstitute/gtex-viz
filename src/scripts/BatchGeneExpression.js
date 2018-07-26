@@ -43,7 +43,7 @@ export function createDatasetMenu(domId, url=getGtexUrls().tissue){
 export function launchTopExpressed(tissueId, heatmapRootId, violinRootId, urls=getGtexUrls(), filterGenes=true){
     // getting the top expressed genes in tissueId
     const url = filterGenes?urls.topInTissueFiltered:urls.topInTissue;
-    const $filterInfoDiv = $(`#filterInfo`).length==0?$('<div/>').attr('id', 'filterInfo').appendTo('body'):$(`#filterInfo`);
+    const $filterInfoDiv = $(`#filterInfo`).length==0?$('<div/>').attr('id', 'filterInfo').appendTo('#messageBox'):$(`#filterInfo`);
     if(filterGenes) $filterInfoDiv.html("Mitochondrial genes are excluded.<br/>");
     else $filterInfoDiv.html("Mitochondrial genes are included.<br/>");
 
