@@ -1,6 +1,6 @@
 "use strict";
 export function getGtexUrls(){
-    const host = 'http://0.0.0.0:9009/rest/v1/';
+    const host = 'https://dev.gtexportal.org/rest/v1/';
     return {
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
@@ -8,16 +8,16 @@ export function getGtexUrls(){
         variantId: host + 'reference/variant?format=json&variantId=',
 
         // transcript, exon, junction expression specific
-        exonExp: host + 'expression/medianExonExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
+        exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
         transcriptExp: host + 'expression/medianTranscriptExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
-        junctionExp: host + 'expression/medianJunctionExpressionDev?datasetId=gtex_v7&hcluster=true&gencodeId=',
-        transcript: host + 'reference/transcriptDev?datasetId=gtex_v7&gencodeId=',
-        exon: host + 'reference/exonDev?datasetId=gtex_v7&gencodeId=',
-        geneModel: host + 'reference/collapsedGeneModelExonDev?unfiltered=false&datasetId=gtex_v7&gencodeId=',
-        geneModelUnfiltered: host + 'reference/collapsedGeneModelExonDev?unfiltered=true&datasetId=gtex_v7&gencodeId=',
+        junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
+        transcript: host + 'reference/transcript?datasetId=gtex_v7&gencodeId=',
+        exon: host + 'reference/exon?datasetId=gtex_v7&gencodeId=',
+        geneModel: host + 'reference/collapsedGeneModelExon?unfiltered=false&datasetId=gtex_v7&gencodeId=',
+        geneModelUnfiltered: host + 'reference/collapsedGeneModelExon?unfiltered=true&datasetId=gtex_v7&gencodeId=',
 
         // gene expression violin plot specific
-        geneExp: 'https://dev.gtexportal.org/rest/v1/' + 'expression/geneExpressionDev?datasetId=gtex_v7&gencodeId=',
+        geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
 
         // gene expression heat map specific
         medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000',
