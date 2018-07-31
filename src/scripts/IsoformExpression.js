@@ -267,7 +267,7 @@ function _createToolbar(dmap, ids){
 /**
  * customizing the heatmap
  * dependencies: CSS classes from expressMap.css, junctionMap.css
- * @param tissues {List} of GTEx tissue objects with attr: colorHex, tissueId, tissueName
+ * @param tissues {List} of GTEx tissue objects with attr: colorHex, tissueSiteDetailId, tissueSiteDetail
  * @param geneModel {GeneModel} of the collapsed gene model
  * @param dmap {Object} of DendroHeatmap
  * @param isoTrackViewer {IsoformTrackViewer}
@@ -281,11 +281,11 @@ function _createToolbar(dmap, ids){
  */
 function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionScale, exonScale, isoformScale, junctionData, exonData, isoformData){
     const mapSvg = dmap.visualComponents.svg;
-    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
+    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueSiteDetailId] = d; return arr;},{});
 
-    // replace tissue ID with tissue name
+    // replace tissue ID with tissue site detail
     mapSvg.selectAll(".exp-map-ylabel")
-        .text((d)=>tissueDict[d]!==undefined?tissueDict[d].tissueName:d)
+        .text((d)=>tissueDict[d]!==undefined?tissueDict[d].tissueSiteDetail:d)
         .style("cursor", "pointer")
         .attr("x", dmap.objects.heatmap.xScale.range()[1] + 15); // make room for tissue color boxes
 
@@ -327,23 +327,23 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
             select(this).classed("clicked", true);
             const tissue = d;
             let j;
-            if (junctionData !== undefined) j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
-            const ex = exonData.filter((e)=> e.tissueId==tissue); // exon data
-            // geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissueDict[tissue].tissueName);
+            if (junctionData !== undefined) j = junctionData.filter((j)=>j.tissueSiteDetailId==tissue); // junction data
+            const ex = exonData.filter((e)=> e.tissueSiteDetailId==tissue); // exon data
+            // geneModel.changeTextlabel(mapSvg.select("#geneModel"), tissueDict[tissue].tissueSiteDetail);
             geneModel.addData(mapSvg.select("#geneModel"), j, ex, junctionScale, exonScale);
 
             // isoforms update
             const isoBarScale = scaleLinear()
                 .domain([min(isoformData.map(d=>d.value)), max(isoformData.map(d=>d.value))])
                 .range([0, -100]);
-            const isoData = isoformData.filter((iso)=>iso.tissueId==tissue);
-            isoTrackViewer.showData(isoData, isoformScale, isoBarScale, tissueDict[tissue].tissueName);
+            const isoData = isoformData.filter((iso)=>iso.tissueSiteDetailId==tissue);
+            isoTrackViewer.showData(isoData, isoformScale, isoBarScale, tissueDict[tissue].tissueSiteDetail);
         });
 }
 
 /**
  *
- * @param tissues {List} of the GTEx tissue objects with attr: tissueName
+ * @param tissues {List} of the GTEx tissue objects with attr: tissueSiteDetail
  * @param dmap {Object} of DendroHeatmap
  * @param isoTrackViewer {IsoTrackViewer}
  * @param junctionScale
@@ -356,12 +356,12 @@ function _customizeHeatMap(tissues, geneModel, dmap, isoTrackViewer, junctionSca
  */
 function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionScale, exonScale, isoformScale, junctionData, exonData, isoformData){
     const mapSvg = dmap.visualComponents.svg;
-    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
+    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueSiteDetailId] = d; return arr;},{});
     const tooltip = dmap.tooltip;
 
-    //replace tissue ID with tissue name
+    //replace tissue site detail ID with tissue site detail
     mapSvg.selectAll(".exp-map-xlabel")
-        .text((d)=>tissueDict[d]!==undefined?tissueDict[d].tissueName:d)
+        .text((d)=>tissueDict[d]!==undefined?tissueDict[d].tissueSiteDetail:d)
         .style("cursor", "pointer");
 
     // add tissue bands
@@ -408,17 +408,17 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
             select(this).classed("clicked", true);
             const tissue = d;
             let j;
-            if (junctionData !== undefined) j = junctionData.filter((j)=>j.tissueId==tissue); // junction data
-            const ex = exonData.filter((e)=>e.tissueId==tissue); // exon data
+            if (junctionData !== undefined) j = junctionData.filter((j)=>j.tissueSiteDetailId==tissue); // junction data
+            const ex = exonData.filter((e)=>e.tissueSiteDetailId==tissue); // exon data
 
             // isoforms update
 
             const isoBarScale = scaleLinear()
                 .domain([min(isoformData.map(d=>d.value)), max(isoformData.map(d=>d.value))])
                 .range([0, -100]);
-            const isoData = isoformData.filter((iso)=>iso.tissueId==tissue);
+            const isoData = isoformData.filter((iso)=>iso.tissueSiteDetailId==tissue);
             const sort = false;
-            isoTrackViewer.showData(isoData, isoformScale, isoBarScale, tissueDict[tissue].tissueName, sort);
+            isoTrackViewer.showData(isoData, isoformScale, isoBarScale, tissueDict[tissue].tissueSiteDetail, sort);
         });
 
 
@@ -429,7 +429,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
         .on("mouseover", function(d){
             const selected = select(this); // 'this' refers to the d3 DOM object
             dmap.objects.heatmap.cellMouseover(selected);
-            const tissue = tissueDict[d.x] === undefined?d.x:tissueDict[d.x].tissueName; // get tissue name or ID
+            const tissue = tissueDict[d.x] === undefined?d.x:tissueDict[d.x].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.originalValue.toExponential()).toPrecision(3);
             tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.id}<br/> ${d.unit}: ${value==0?'NA':value}`)
         })
@@ -461,7 +461,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
 
 /**
  * customizing the exon heat map
- * @param tissues {List} of the GTEx tissue objects with attr: tissueName
+ * @param tissues {List} of the GTEx tissue objects with attr: tissueSiteDetail
  * @param geneModel {GeneModel}
  * @param dmap {DendroHeatmap}
 
@@ -470,7 +470,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
 function _customizeExonMap(tissues, geneModel, dmap){
     const mapSvg = dmap.visualComponents.svg;
     const tooltip = dmap.tooltip;
-    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
+    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueSiteDetailId] = d; return arr;},{});
 
     // define the exon heatmap cells' mouse events
     // note: to reference the element inside the function (e.g. d3.select(this)) here we must use a normal anonymous function.
@@ -478,7 +478,7 @@ function _customizeExonMap(tissues, geneModel, dmap){
         .on("mouseover", function(d){
             const selected = select(this); // 'this' refers to the d3 DOM object
             dmap.objects.heatmap.cellMouseover(selected);
-            const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName; // get tissue name or ID
+            const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.originalValue.toExponential()).toPrecision(3);
             tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd)-Number(d.chromStart) + 1}bp) <br/>${d.unit}: ${value==0?'NA':value}`)
         })
@@ -510,7 +510,7 @@ function _customizeExonMap(tissues, geneModel, dmap){
 
 /**
  * customizing the junction heat map
- * @param tissues {List} of the GTEx tissue objects with attr: tissueName
+ * @param tissues {List} of the GTEx tissue objects with attr: tissueSiteDetail
  * @param geneModel {GeneModel}
  * @param dmap {DendroHeatmap}
  * @private
@@ -518,14 +518,14 @@ function _customizeExonMap(tissues, geneModel, dmap){
 function _customizeJunctionMap(tissues, geneModel, dmap){
     const mapSvg = dmap.visualComponents.svg;
     const tooltip = dmap.tooltip;
-    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
+    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueSiteDetailId] = d; return arr;},{});
 
     // define the junction heatmap cells' mouse events
     mapSvg.selectAll(".exp-map-cell")
         .on("mouseover", function(d){
             const selected = select(this);
             dmap.objects.heatmap.cellMouseover(selected);
-            const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueName; // get tissue name or ID
+            const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0]; // get the junction display name
             const value = parseFloat(d.originalValue.toExponential()).toPrecision(3);
             tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName} (${Number(junc.chromEnd) - Number(junc.chromStart)} bp)<br/> ${d.unit}: ${value==0?'NA':value}`)
@@ -574,7 +574,7 @@ function _customizeGeneModel(tissues, geneModel, dmap){
     const mapSvg = dmap.visualComponents.svg;
     const tooltip = dmap.tooltip;
     const model = mapSvg.select('#geneModel');
-    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueId] = d; return arr;},{});
+    const tissueDict = tissues.reduce((arr, d)=>{arr[d.tissueSiteDetailId] = d; return arr;},{});
     // mouse events on the gene model
     mapSvg.selectAll(".junc")
         .on("mouseover", function(d){

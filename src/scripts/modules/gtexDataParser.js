@@ -29,9 +29,9 @@ export function getGtexUrls(){
         geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
 
         // tissue menu specific
-        tissue:  host + 'dataset/tissueInfo',
+        tissue:  host + 'metadata/tissueSiteDetail?format=json',
 
-        tissueSites: host + 'dataset/tissueSiteDetail?format=json',
+        tissueSites: host + 'metadata/tissueSiteDetail?format=json',
 
         // local static files
         sample: 'tmpSummaryData/gtex.Sample.csv',
@@ -62,12 +62,12 @@ export function parseGenes(data){
  * @returns {List} of tissues
  */
 export function parseTissues(data){
-    const attr = 'tissueInfo';
+    const attr = 'tissueSiteDetail';
     if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseTissues input error.';
     const tissues = data[attr];
 
     // sanity check
-    ['tissueId', 'tissueName', 'colorHex'].forEach((d)=>{
+    ['tissueSiteDetailId', 'tissueSiteDetail', 'colorHex'].forEach((d)=>{
         if (!tissues[0].hasOwnProperty(d)) throw 'Fatal Error: parseTissue attr not found: ' + d;
     });
 
@@ -87,17 +87,17 @@ export function parseTissueSites(data, forEqtl=false){
 
     const attr = 'tissueSiteDetail';
     if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseTissueSites input error.';
-    const tissues = forEqtl==false?data[attr]:data[attr].filter((d)=>{return !invalidTissues.includes(d.tissue_site_detail_id)}); // an array of tissue_site_detail objects
+    const tissues = forEqtl==false?data[attr]:data[attr].filter((d)=>{return !invalidTissues.includes(d.tissueSiteDetailId)}); // an array of tissueSiteDetailId objects
 
     // build the tissueGroups lookup dictionary indexed by the tissue group name (i.e. the tissue main site name)
-    ['tissue_site', 'tissue_site_detail_id', 'tissue_site_detail'].forEach((d)=>{
+    ['tissueSite', 'tissueSiteDetailId', 'tissueSiteDetail'].forEach((d)=>{
         if (!tissues[0].hasOwnProperty(d)) throw `parseTissueSites attr error. ${d} is not found`;
     });
     let tissueGroups = tissues.reduce((arr, d)=>{
-        let groupName = d.tissue_site;
+        let groupName = d.tissueSite;
         let site = {
-            id: d.tissue_site_detail_id,
-            name: d.tissue_site_detail
+            id: d.tissueSiteDetailId,
+            name: d.tissueSiteDetail
         };
         if (!arr.hasOwnProperty(groupName)) arr[groupName] = []; // initiate an array
         arr[groupName].push(site);
