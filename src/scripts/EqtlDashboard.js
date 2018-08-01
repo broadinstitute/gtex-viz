@@ -243,7 +243,7 @@ function _submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, me
  * @private
  */
 function _parseGene(gjson, id){
-    const attr = 'geneId';
+    const attr = 'gene';
     if(!gjson.hasOwnProperty(attr)) throw 'Fatal Error: parse gene error';
     let genes = gjson[attr].filter((d) => {return d.geneSymbolUpper == id.toUpperCase() || d.gencodeId == id.toUpperCase()}); // find the exact match
     if (genes.length ==0) return null;
