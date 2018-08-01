@@ -26,7 +26,7 @@ export function getGtexUrls(){
         topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueSiteDetailId=',
         topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueSiteDetailId=',
 
-        geneId: host + 'reference/geneId?format=json&release=v7&geneId=',
+        geneId: host + 'reference/gene?format=json&gencodeVersion=v19&genomeBuild=GRCh37%2Fhg19&geneId=',
 
         // tissue menu specific
         tissue:  host + 'metadata/tissueSiteDetail?format=json',
@@ -51,7 +51,7 @@ export function getGtexUrls(){
  * @returns {List} of genes
  */
 export function parseGenes(data){
-    const attr = 'geneId';
+    const attr = 'gene';
     if(!data.hasOwnProperty(attr)) throw 'Gene web service parsing error';
     return data[attr];
 }
