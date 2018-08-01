@@ -198,8 +198,8 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
 
                         // construct handy data lookup tables
                         const tissueDict = tissues.reduce((a, d)=>{
-                            if (!d.hasOwnProperty("tissueId")) throw "tissue has not attr tissueId";
-                            a[d.tissueId] = d;
+                            if (!d.hasOwnProperty("tissueSiteDetailId")) throw "tissue has not attr tissueSiteDetailId";
+                            a[d.tissueSiteDetailId] = d;
                             return a;
                         }, {});
 
@@ -216,7 +216,7 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
                         // change row and column labels
                         // Change row labels to tissue names //
                         select("#" + dmap.config.panels.main.id).selectAll(".exp-map-xlabel")
-                            .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
+                            .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueSiteDetail);
 
 
                         select("#" + dmap.config.panels.main.id).selectAll(".exp-map-ylabel")
@@ -337,7 +337,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict, urls=getGtexUrls()) {
     const cellMouseover = function(d) {
         const selected = select(this);
         dmap.objects.heatmap.cellMouseover(selected); // call the default heatmap mouse over event first
-        let tissue = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueName;
+        let tissue = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueSiteDetail;
         let gene = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
         tooltip.show(`Tissue: ${tissue}<br/> Gene: ${gene}<br/> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
@@ -456,7 +456,7 @@ function _renderViolinHelper(data, dmap, tissueDict){
         return;
     }
     // tissueOrder is a list of tissue objects {id:display name} in the same order as the x axis of the heat map.
-    let tissueOrder = dmap.objects.heatmap.xScale.domain().map((d, i) => {return {id:d, name:tissueDict[d].tissueName}});
+    let tissueOrder = dmap.objects.heatmap.xScale.domain().map((d, i) => {return {id:d, name:tissueDict[d].tissueSiteDetail}});
     const genes = data.reduce((arr, d)=>{arr[d.label]=1; return arr}, {});
     const gCounts = Object.keys(genes).length;
 
@@ -557,7 +557,7 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
 function _changeViolinXLabel(dom, tissueDict){
     /***** Change row labels to tissue names *****/
     dom.select(".violin-x-axis").selectAll("text")
-        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName);
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueSiteDetail);
 
 }
 
@@ -654,7 +654,7 @@ function _sortTissues (xlist, dmap, tissueDict){
 
     // change the tissue display text to tissue names
     selectAll(".exp-map-xlabel")
-        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueName)
+        .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueSiteDetail)
         .classed("query", false);
     _addTissueColors(dmap, tissueDict);
 
