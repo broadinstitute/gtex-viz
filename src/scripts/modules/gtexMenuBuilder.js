@@ -15,12 +15,12 @@ export function createTissueMenu(domId, url = getGtexUrls().tissue){
         .then(function(results){
             let tissues = parseTissues(results);
             tissues.forEach((d) => {
-                d.id = d.tissueId;
-                d.text = d.tissueName;
+                d.id = d.tissueSiteDetailId;
+                d.text = d.tissueSiteDetail;
             });
             tissues.sort((a, b) => {
-                if(a.tissueName < b.tissueName) return -1;
-                if(a.tissueName > b.tissueName) return 1;
+                if(a.tissueSiteDetail < b.tissueSiteDetail) return -1;
+                if(a.tissueSiteDetail > b.tissueSiteDetail) return 1;
                 return 0;
             });
 
