@@ -1,6 +1,6 @@
 "use strict";
 export function getGtexUrls(){
-    const host = 'https://dev.gtexportal.org/rest/v1/';
+    const host = 'https://gtexportal.org/rest/v1/';
     return {
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
