@@ -61,14 +61,14 @@ export function parseGenes(data){
  * @param data {Json}
  * @returns {List} of tissues
  */
-export function parseTissues(data){
+export function parseTissues(json){
     const attr = 'tissueSiteDetail';
-    if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseTissues input error.';
-    const tissues = data[attr];
+    if(!json.hasOwnProperty(attr)) throw 'Parse Error: required json attr is missing: ' + attr;
+    const tissues = json[attr];
 
     // sanity check
     ['tissueSiteDetailId', 'tissueSiteDetail', 'colorHex'].forEach((d)=>{
-        if (!tissues[0].hasOwnProperty(d)) throw 'Fatal Error: parseTissue attr not found: ' + d;
+        if (!tissues[0].hasOwnProperty(d)) throw 'Parse Error: required json attr is missing: ' + d;
     });
 
     return tissues;
@@ -77,7 +77,7 @@ export function parseTissues(data){
 /**
  * Parse the tissue groups
  * @param data {Json}
- * @param forEqtl {Boolean}
+ * @param forEqtl {Boolean} restrict to eqtl tissues
  * @returns {Dictionary} of lists of tissues indexed by the tissue group name
  */
 export function parseTissueSites(data, forEqtl=false){
@@ -86,13 +86,14 @@ export function parseTissueSites(data, forEqtl=false){
     const invalidTissues = ['Bladder', 'Cervix_Ectocervix', 'Cervix_Endocervix', 'Fallopian_Tube', 'Kidney_Cortex'];
 
     const attr = 'tissueSiteDetail';
-    if(!data.hasOwnProperty(attr)) throw 'Fatal Error: parseTissueSites input error.';
-    const tissues = forEqtl==false?data[attr]:data[attr].filter((d)=>{return !invalidTissues.includes(d.tissueSiteDetailId)}); // an array of tissueSiteDetailId objects
-
-    // build the tissueGroups lookup dictionary indexed by the tissue group name (i.e. the tissue main site name)
+    if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
+    let tissues = data[attr]
     ['tissueSite', 'tissueSiteDetailId', 'tissueSiteDetail'].forEach((d)=>{
         if (!tissues[0].hasOwnProperty(d)) throw `parseTissueSites attr error. ${d} is not found`;
     });
+    tissues = forEqtl==false?tissues:tissues.filter((d)=>{return !invalidTissues.includes(d.tissueSiteDetailId)}); // an array of tissueSiteDetailId objects
+
+    // build the tissueGroups lookup dictionary indexed by the tissue group name (i.e. the tissue main site name)
     let tissueGroups = tissues.reduce((arr, d)=>{
         let groupName = d.tissueSite;
         let site = {
@@ -105,7 +106,7 @@ export function parseTissueSites(data, forEqtl=false){
     }, {});
 
     // modify the tissue groups that have only a single site
-    // by replacing the group's name with the single site's name -- for a better Alphabetical order of the tissue groups
+    // by replacing the group's name with the single site's name -- resulting a better Alphabetical order of the tissue groups
 
     Object.keys(tissueGroups).forEach((d)=>{
         if (tissueGroups[d].length == 1){ // a single-site group
