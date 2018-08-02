@@ -497,7 +497,8 @@ function _submitToFireCloud(googleFuncDict, samples, urls){
                         if (d.cramFile === undefined) throw "Data Error: " + d;
                         if(!d.cramFile.hasOwnProperty('cram_file')) throw "Data Error: " + d;
                         // Note: use cramFile.sample_id instead of d.sampleId to preserve the occasional mixed case sample IDs
-                        return [d.cramFile.sample_id, d.donorId, d.dataType, d.cramFile.cram_file, d.cramFile.cram_index].join('\t');
+                        return [d.cramFile.sample_id, d.donorId, d.dataTypel
+                            , d.cramFile.cram_file, d.cramFile.cram_index].join('\t');
                     }));
                     const sampleEntityString = `entities=${sampleEntity.join('\n')}\n`;
                     const sampleEntityUrlEncode = encodeURI(sampleEntityString);
