@@ -11,11 +11,11 @@ in a terminal window (bash)
 export NODE_ENV="development"
 echo $NODE_ENV
  */
-const name = 'RawDataQuery';
+const name = 'CramFileQuery';
 export default {
     input:'src/scripts/' + name + '.js',
     output: {
-        file: process.env.NODE_ENV=='prod'?'build/js/raw-data-query.bundle.min.js':'build/js/raw-data-query.bundle.dev.js',
+        file: process.env.NODE_ENV=='prod'?'build/js/cram-file-query.bundle.min.js':'build/js/cram-file-query.bundle.dev.js',
         format: 'iife'
     },
     sourcemap: 'inline',

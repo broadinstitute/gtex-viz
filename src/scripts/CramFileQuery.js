@@ -45,9 +45,9 @@ export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc()
     const promises = [
         // TODO: urls for other datasets
         json(urls.tissue),
-        tsv(urls.rnaseqCram),
-        tsv(urls.wgsCram),
-        tsv(urls.sample),
+        tsv(urls.rnaseqCram), // rnaseq cram file info
+        tsv(urls.wgsCram), // wgs cram file info
+        tsv(urls.sample), // GTEx sample TSV file: for better performance
     ];
 
     Promise.all(promises)
@@ -131,8 +131,14 @@ function _buildMatrix(datasetId, samples, tissues){
         }
     ];
     const rows = tissues.map((t)=>{
-        t.id = t.tissueId;
-        t.label = t.tissueName;
+        ['tissueSiteDetailId', 'tissueSiteDetail'].forEach((d)=>{
+            if (!t.hasOwnProperty(d)) {
+                console.error(t);
+                throw 'Tissue parsing error: required attribute is missing: ' + d;
+            }
+        });
+        t.id = t.tissueSiteDetailId;
+        t.label = t.tissueSiteDetail;
         columns.forEach((col)=>{
             t[col.id] = col.data[t.id] || undefined;
         });
@@ -194,7 +200,9 @@ function _renderCounts(tbody, mat){
     theRows.append('th')
         .attr('scope', 'row')
         .attr('class', (d, i)=>`x${i}`)
-        .text((d)=>d.label);
+        .text((d)=>{
+            return d.label
+        });
 
     mat.Y.forEach((y, j)=>{
         theRows.append('td')
@@ -497,7 +505,8 @@ function _submitToFireCloud(googleFuncDict, samples, urls){
                         if (d.cramFile === undefined) throw "Data Error: " + d;
                         if(!d.cramFile.hasOwnProperty('cram_file')) throw "Data Error: " + d;
                         // Note: use cramFile.sample_id instead of d.sampleId to preserve the occasional mixed case sample IDs
-                        return [d.cramFile.sample_id, d.donorId, d.dataType, d.cramFile.cram_file, d.cramFile.cram_index].join('\t');
+                        return [d.cramFile.sample_id, d.donorId, d.dataTypel
+                            , d.cramFile.cram_file, d.cramFile.cram_index].join('\t');
                     }));
                     const sampleEntityString = `entities=${sampleEntity.join('\n')}\n`;
                     const sampleEntityUrlEncode = encodeURI(sampleEntityString);
