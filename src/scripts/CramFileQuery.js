@@ -357,7 +357,15 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                 const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
                 const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
                 console.log('Download ' + x + ' : ' + y);
-                const selected = mat.data.filter((s)=>s.dataType==y&&s.tissueId==x&&s.dataType!='WES').map(d=> {
+                const selected = mat.data.filter((s)=>{
+                    ['dataType', 'tissueId'].forEach((k)=>{
+                        if(!s.hasOwnProperty(k)){
+                            console.error(s);
+                            throw 'Matrix parsing error: required attribute is missing: ' + k;
+                        }
+                    });
+                    return s.dataType==y&&s.tissueId==x&&s.dataType!='WES'
+                }).map(d=> {
                     let temp = d.sampleId.split('-');
                     d.donorId = temp[0] + '-' + temp[1];
                     return d;
@@ -505,7 +513,7 @@ function _submitToFireCloud(googleFuncDict, samples, urls){
                         if (d.cramFile === undefined) throw "Data Error: " + d;
                         if(!d.cramFile.hasOwnProperty('cram_file')) throw "Data Error: " + d;
                         // Note: use cramFile.sample_id instead of d.sampleId to preserve the occasional mixed case sample IDs
-                        return [d.cramFile.sample_id, d.donorId, d.dataTypel
+                        return [d.cramFile.sample_id, d.donorId, d.dataType
                             , d.cramFile.cram_file, d.cramFile.cram_index].join('\t');
                     }));
                     const sampleEntityString = `entities=${sampleEntity.join('\n')}\n`;
