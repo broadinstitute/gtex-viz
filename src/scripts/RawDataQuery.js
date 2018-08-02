@@ -69,6 +69,7 @@ export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc()
                         case "RNASEQ": {
                             if (!cram.rnaseq.hasOwnProperty(s.sampleId)) throw s.sampleId + ' has no cram files';
                             s.cramFile = cram.rnaseq[s.sampleId];
+                            s.dataType = 'RNA-Seq';
                             break;
                         }
                         default:
@@ -77,25 +78,25 @@ export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc()
                     return s;
                 });
             const theMatrix = _buildMatrix(datasetId, samples, tissues);
-            _renderMatrixTable(tableId, theMatrix, googleFuncDict);
-            _addFilters(tableId, theMatrix, samples, tissues);
+            _renderMatrixTable(tableId, theMatrix, googleFuncDict, urls);
+            _addFilters(tableId, theMatrix, samples, tissues, googleFuncDict, urls);
 
         })
         .catch(function(err){console.error(err)});
 }
 
-function _addFilters(tableId, mat, samples, tissues){
+function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
     const __filter = ()=>{
         const sex = select('input[name="sex"]:checked').node().value;
         const age = select('input[name="age"]:checked').node().value;
         if (sex == 'both' && age == 'all'){
-            _renderMatrixTable(tableId, _buildMatrix(mat.datasetId, samples, tissues));
+            _renderMatrixTable(tableId, _buildMatrix(mat.datasetId, samples, tissues), googleFuncDict, urls);
         } else {
             let filteredMat = undefined;
             if (sex == 'both') filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.ageBracket==age), tissues);
             else if (age == 'all') filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.sex==sex), tissues);
             else filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.sex==sex && s.ageBracket==age), tissues);
-            _renderMatrixTable(tableId, filteredMat);
+            _renderMatrixTable(tableId, filteredMat, googleFuncDict, urls);
         }
     };
     select('#filter-menu').selectAll('input[name="sex"]').on('change', __filter);
@@ -113,8 +114,10 @@ function _buildMatrix(datasetId, samples, tissues){
     const columns = [
         {
             label: 'RNA-Seq',
-            id: 'RNASEQ',
-            data: __buildHash('RNASEQ')
+            id: 'RNA-Seq',
+            data: __buildHash('RNA-Seq')
+            // id: 'RNASEQ',
+            // data: __buildHash('RNASEQ')
         },
         {
             label: 'WES',
@@ -151,7 +154,7 @@ function _buildMatrix(datasetId, samples, tissues){
  * @param mat {Object} of attr: datasetId, X--a list of x objects, Y--a list of y objects
  * @private
  */
-function _renderMatrixTable(tableId, mat, googleFuncDict){
+function _renderMatrixTable(tableId, mat, googleFuncDict, urls){
     const dataset = {
         'gtex_v7': {
             label:'GTEX V7',
@@ -176,7 +179,7 @@ function _renderMatrixTable(tableId, mat, googleFuncDict){
 
     _renderCounts(theTable.select('tbody'), mat);
     _addClickEvents(tableId);
-    _addToolbar(tableId, mat, googleFuncDict); // rebuild the toolbar with the new matrix
+    _addToolbar(tableId, mat, googleFuncDict, urls); // rebuild the toolbar with the new matrix
 }
 
 function _renderCounts(tbody, mat){
@@ -259,7 +262,7 @@ function _addClickEvents(tableId){
  * Reference: https://github.com/eligrey/FileSaver.js/
  * Dependencies: googleUser.js
  */
-function _addToolbar(tableId, mat, googleFuncDict){
+function _addToolbar(tableId, mat, googleFuncDict, urls){
     // TODO: get rid of hard-coded dom IDs
     const theCells = select(`#${tableId}`).select('tbody').selectAll('td');
     select('#matrix-table-toolbar').selectAll('*').remove();
@@ -354,7 +357,7 @@ function _addToolbar(tableId, mat, googleFuncDict){
                 allSelectedSamples = allSelectedSamples.concat(selected)
             });
             console.log(allSelectedSamples.length);
-            _submitToFireCloud(googleFuncDict, allSelectedSamples);
+            _submitToFireCloud(googleFuncDict, allSelectedSamples, urls);
             select('#fire-cloud-form').style("display", "none");
         });
 
@@ -428,7 +431,7 @@ function _reportWorkspaces(googleUser){
     });
 }
 
-function _submitToFireCloud(googleFuncDict, samples){
+function _submitToFireCloud(googleFuncDict, samples, urls){
     const token = googleFuncDict.getUser().getAuthResponse(true).access_token;
     const namespace = $('input[name="billing-project"]').val();
     const workspace = $('input[name="workspace"]').val();
@@ -447,7 +450,7 @@ function _submitToFireCloud(googleFuncDict, samples){
     $('#spinner').show();
     // create the workspace
     $.ajax({
-        url: 'https://api.firecloud.org/api/workspaces',
+        url: urls.fcWorkSpace,
         type: 'POST',
         xhrFields: {
             withCredentials: false
@@ -473,7 +476,7 @@ function _submitToFireCloud(googleFuncDict, samples){
 
             // submitting participant IDs
             $.ajax({
-                url: `https://api.firecloud.org/api/workspaces/${namespace}/${workspace}/importEntities`,
+                url: `${urls.fcWorkSpace}/${namespace}/${workspace}/importEntities`,
                 type: 'POST',
                 xhrFields: {
                     withCredentials: false
@@ -501,7 +504,7 @@ function _submitToFireCloud(googleFuncDict, samples){
                     console.log(sampleEntityString);
 
                     $.ajax({
-                        url: `https://api.firecloud.org/api/workspaces/${namespace}/${workspace}/importEntities`,
+                        url: `${urls.fcWorkSpace}/${namespace}/${workspace}/importEntities`,
                         type: 'POST',
                         xhrFields: {
                             withCredentials: false
@@ -514,7 +517,7 @@ function _submitToFireCloud(googleFuncDict, samples){
                         data: sampleEntityUrlEncode,
                         success: function(response){
                             console.log("finished importing samples...");
-                            const fcURL = `https://portal.firecloud.org/#workspaces/${namespace}/${workspace}/data`;
+                            const fcURL = `${urls.fcPortalWorkSpace}/${namespace}/${workspace}/data`;
                             $('#fire-cloud-status').html(`Submitted! <br/> Go to your <br/> <a target="_blank" href="${fcURL}">FireCloud workspace</a>`);
                         },
                         error: function(error){console.error(error)}

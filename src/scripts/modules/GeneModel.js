@@ -18,12 +18,14 @@ export default class GeneModel {
      * @param exonsCurated {List} of exon objects in the final gene model. This is pretty specific to GTEx. If this list isn't available for your data, then just pass in the same exon list again.
      * @param junctions {List} of junction objects with attributes: chrom, chromStart, chromEnd, junctionId
      * @param isIsoform {Boolean}
+     * @param maxIntronLength {Integer} the maximum length of intron. Intron rendering is capped at this value
+     * @param minExonWidth {Integer} the minimum width (pixels) of the exon rectangle.
      */
 
     /** NOTE: the exonNumber in exons & exonsCurated don't refer to the same exons (at least this is the case in GTEx)
      *  To ensure correct exon mapping of the curated gene model to the original model, here we use genomic position.
      */
-    constructor (gene, exons, exonsCurated, junctions, isIsoform=false){
+    constructor (gene, exons, exonsCurated, junctions, isIsoform=false, maxIntronLength=1000, minExonWidth=0){
         this.gene = gene;
         this.exons = exons;
         if (this.gene.strand == "+") this.exons.sort((a, b)=>{return Number(a.exonNumber)-Number(b.exonNumber)});
@@ -35,10 +37,11 @@ export default class GeneModel {
             return 0;
         }); // sorted by junction ID
         this.isIsoform = isIsoform;
+        this.maxIntronLength = maxIntronLength;
 
         // hard-coded for now
-        this.intronLength = 0; // fixed fake intron length in base pairs
-        this.minExonWidth = 5; // minimum exon width in pixels
+        this.intronLength = 0; // fixed fake intron length in base pairs, obsolete?
+        this.minExonWidth = minExonWidth; // minimum exon width in pixels
         this.nullColor = '#DDDDDD';
     }
 
@@ -86,8 +89,11 @@ export default class GeneModel {
         // calculating x and w for each exon
         const exonY = config.h/2; // TODO: remove hard-coded values
         this.exons.forEach((d, i) => {
-            if (i == 0) d.x = 0;
-            if(i > 0) d.x = this.exons[i-1].x + this.exons[i-1].w + this.xScale(this.intronLength);
+            if (i == 0) {
+                d.x = 0;
+            } else {
+                d.x = this.exons[i-1].x + this.exons[i-1].w + this.xScale(d.intronLength>this.maxIntronLength?this.maxIntronLength:d.intronLength);
+            }
             d.w = this.xScale(d.length)<this.minExonWidth?this.minExonWidth:this.xScale(d.length);
         });
 
@@ -280,7 +286,7 @@ export default class GeneModel {
             dom.append("text")
             .attr("id", "modelLabelRight") // TODO: no hard-coded value
             .style("text-anchor", "start")
-            .attr("x", this.xScale.range()[1] + 5)
+            .attr("x", this.xScale.range()[1] + 50)
             .attr("y", exonY + 7.5)
             .style("font-size", "9px")
             .text(this.gene.transcriptId===undefined?`${this.gene.geneSymbol}`:this.gene.transcriptId);
@@ -298,7 +304,42 @@ export default class GeneModel {
         // the fixed intron width is calculated as such:
         // ((max(exon length) * exon counts) - total exon length)/(exon counts - 1)
 
-        // use a linear scale to
+        this.exons.sort((a,b)=>{
+            if (Number(a.chromStart) < Number(b.chromStart)) return -1;
+            if (Number(a.chromStart) > Number(b.chromStart)) return 1;
+            return 0;
+        });
+
+        let sum = 0;
+        this.exons.forEach((d, i)=>{
+            d.length = Number(d.chromEnd) - Number(d.chromStart) + 1;
+            if (i == 0){
+                // the first exon
+                sum += d.length;
+            } else {
+                let nb = this.exons[i-1]; // the upstream neighbor exon
+                d.intronLength = Number(d.chromStart) - Number(nb.chromEnd) + 1;
+                sum += d.length + (d.intronLength>this.maxIntronLength?this.maxIntronLength:d.intronLength);
+            }
+        });
+
+        const domain = [0, sum];
+        const range = [0, w];
+        this.xScale = scaleLinear()
+            .domain(domain)
+            .range(range);
+    }
+
+    setXscaleFixIntron(w){
+        // concept explained:
+        // assuming the canvas width is fixed
+        // the task is how to render all exons + fixed-width introns within the canvas
+        // first find the largest exon,
+        // then set the x scale of the canvas to accommodate max(exon length)*exon counts,
+        // this ensures that there's always space for rendering introns
+        // the fixed intron width is calculated as such:
+        // ((max(exon length) * exon counts) - total exon length)/(exon counts - 1)
+
         this.exons.forEach((d) => {d.length = Number(d.chromEnd) - Number(d.chromStart) + 1});
         const maxExonLength = max(this.exons, (d)=>d.length);
 

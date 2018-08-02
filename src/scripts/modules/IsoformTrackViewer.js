@@ -53,7 +53,7 @@ export default class IsoformTrackViewer {
             .style("stroke-width", 2)
             .transition()
             .duration(1000)
-            .attr("x2", (d)=>d.value==0?this.nullColor:barScale(d.value));
+            .attr("x2", (d)=>d.value==0?0:barScale(d.value));
 
         g.append("circle")
             .attr("cx", 0)
@@ -103,7 +103,6 @@ export default class IsoformTrackViewer {
     }
 
     sortTracks(ylist){
-        console.log(ylist);
         this.setYscale(this.config.h, ylist);
         this.render(true);
     }

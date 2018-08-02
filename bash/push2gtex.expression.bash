@@ -1,4 +1,5 @@
 HOME=/Users/khhuang/Sites
+HOME=/var/www/html
 SOURCE=$HOME/gtex-d3
 DEST=$HOME/gtex-cloud/contexts/external/gtex/media/expressHeatmap
 
