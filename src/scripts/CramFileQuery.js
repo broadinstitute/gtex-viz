@@ -105,9 +105,14 @@ function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
 
 function _buildMatrix(datasetId, samples, tissues){
     const __buildHash = function(dataType){
+        const attr = 'tissueSiteDetailId';
         return samples.filter((s)=>s.dataType==dataType).reduce((a, d)=>{
-            if(a[d.tissueId]===undefined) a[d.tissueId] = 0;
-            a[d.tissueId]= a[d.tissueId]+1;
+            if(!d.hasOwnProperty(attr)){
+                console.error(d);
+                throw 'Parse Error: required attribute is missing:' + attr;
+            }
+            if(a[d[attr]]===undefined) a[d[attr]] = 0;
+            a[d[attr]]= a[d[attr]]+1;
             return a;
         }, {});
     };
@@ -512,7 +517,7 @@ function _submitToFireCloud(googleFuncDict, samples, urls){
                     sampleEntity = sampleEntity.concat(samples.map(d=>{
                         if (d.cramFile === undefined) throw "Data Error: " + d;
                         if(!d.cramFile.hasOwnProperty('cram_file')) throw "Data Error: " + d;
-                        // Note: use cramFile.sample_id instead of d.sampleId to preserve the occasional mixed case sample IDs
+                        // Note: use cramFile.sample_id instead of d.sampleId to preserve the mixed case sample IDs
                         return [d.cramFile.sample_id, d.donorId, d.dataType
                             , d.cramFile.cram_file, d.cramFile.cram_index].join('\t');
                     }));
