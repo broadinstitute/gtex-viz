@@ -57,6 +57,7 @@ export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc()
                 rnaseq: args[1].reduce((a, d)=>{a[d.sample_id.toUpperCase()]=d; return a;}, {}),
                 wgs: args[2].reduce((a, d)=>{a[d.sample_id.toUpperCase()]=d; return a;}, {})
             };
+            // parse Samples
             let samples = args[3]
                 .filter((s)=>s.datasetId==datasetId)
                 .map((s)=>{
@@ -64,16 +65,19 @@ export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc()
                         case "WGS": {
                             if (!cram.wgs.hasOwnProperty(s.sampleId)) throw s.sampleId + ' has no cram files';
                             s.cramFile = cram.wgs[s.sampleId];
+                            s._type = "WGS"; // create a private data type for customized UI grouping
                             break;
                         }
                         case "RNASEQ": {
                             if (!cram.rnaseq.hasOwnProperty(s.sampleId)) throw s.sampleId + ' has no cram files';
                             s.cramFile = cram.rnaseq[s.sampleId];
-                            s.dataType = 'RNA-Seq';
+                            s._type = 'RNA-Seq';
+                            s.dataType = 'RNA-Seq'; // replace RNASEQ with RNA-Seq
                             break;
                         }
                         default:
-                            // do nothing
+                            s._type = s.dataType;
+                            // so far, we do not have cram files for other data types, so do nothing
                     }
                     return s;
                 });
@@ -103,10 +107,24 @@ function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
     select('#filter-menu').selectAll('input[name="age"]').on('change', __filter);
 }
 
+/**
+ *
+ * @param datasetId
+ * @param samples: a list of sample objects in dataset ID
+ * @param tissues
+ * @returns {{datasetId: *, X: *, Y: *[], data: *}}
+ * @private
+ */
 function _buildMatrix(datasetId, samples, tissues){
     const __buildHash = function(dataType){
         const attr = 'tissueSiteDetailId';
-        return samples.filter((s)=>s.dataType==dataType).reduce((a, d)=>{
+        return samples.filter((s)=>{
+            if(!s.hasOwnProperty('_type')) {
+                console.error(s);
+                throw 'Parse Error: required attribute is missing: _type';
+            }
+            return s._type==dataType;
+        }).reduce((a, d)=>{
             if(!d.hasOwnProperty(attr)){
                 console.error(d);
                 throw 'Parse Error: required attribute is missing:' + attr;
@@ -116,13 +134,51 @@ function _buildMatrix(datasetId, samples, tissues){
             return a;
         }, {});
     };
+
+    // the following function is to find RNA-Seq samples that have WGS data available.
+    const __buildRnaSeqWithWgsHash = function(){
+        const wgsHash = samples.filter((s) => {
+            if(!s.hasOwnProperty('_type')) {
+                console.error(s);
+                throw 'Parse Error: required attribute is missing: _type';
+            }
+            return s._type == 'WGS';
+        }).reduce((a, d) => {
+            if (!d.hasOwnProperty('subjectId')) throw 'Parse Error: required attribute is missing.';
+            a[d.subjectId] = 1;
+            return a;
+        }, {});
+        const attr = 'tissueSiteDetailId';
+        const RNAseqWithWgs = samples.filter((s)=>{
+            if(!s.hasOwnProperty('_type') || !s.hasOwnProperty('subjectId')) throw 'Parse Error: required attribute is missing.';
+            if (s._type == 'RNA-Seq' && wgsHash.hasOwnProperty(s.subjectId)){
+                s._type = 'RNA-Seq-WGS'; // modified the _type to RNA-Seq-WGS
+                return true;
+            } else {
+                return false;
+            }
+        });
+        return RNAseqWithWgs.reduce((a, d)=>{
+            if(!d.hasOwnProperty(attr)){
+                console.error(d);
+                throw 'Parse Error: required attribute is missing:' + attr;
+            }
+            if(a[d[attr]]===undefined) a[d[attr]] = 0;
+            a[d[attr]]= a[d[attr]]+1;
+            return a;
+        }, {});
+    };
+
     const columns = [
         {
             label: 'RNA-Seq',
             id: 'RNA-Seq',
             data: __buildHash('RNA-Seq')
-            // id: 'RNASEQ',
-            // data: __buildHash('RNASEQ')
+        },
+        {
+            label: 'RNA-Seq With WGS',
+            id: 'RNA-Seq-WGS',
+            data: __buildRnaSeqWithWgsHash()
         },
         {
             label: 'WES',
@@ -157,7 +213,6 @@ function _buildMatrix(datasetId, samples, tissues){
         data: samples
     };
 }
-
 
 /**
  * Render the matrix in an HTML table format
@@ -282,7 +337,20 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
     const toolbar = new Toolbar('matrix-table-toolbar', undefined, true);
     toolbar.createButton('sample-download');
     toolbar.createButton('send-to-firecloud', 'fa-cloud-upload-alt');
-
+    const __filterSample = (s, x, y)=>{
+        ['_type', 'tissueSiteDetailId'].forEach((k)=>{
+            if(!s.hasOwnProperty(k)){
+                console.error(s);
+                throw 'Matrix parsing error: required attribute is missing: ' + k;
+            }
+        });
+        /**** WARNING: no WES cram files available ATM ****/
+        if (s.tissueSiteDetailId==x && y!='WES'){
+            if (y == 'RNA-Seq') return s._type.startsWith(y);
+            else return s._type == y;
+        }
+        return false;
+    };
     select('#sample-download')
         .style('cursor', 'pointer')
         .on('click', function(){
@@ -306,9 +374,7 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                     const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
                     console.log('Download ' + x + ' : '+ y);
 
-                    const selectedSamples = mat.data.filter((s)=>s.dataType==y&&s.tissueId==x&&s.dataType!='WES')
-                        /**** WARNING: no WES cram files available ATM ****/
-                        .map((s)=>{
+                    const selectedSamples = mat.data.filter((s)=>__filterSample(s, x, y)).map((s)=>{
                             console.log(s);
                             let cram = [
                                 'cram_file',
@@ -318,7 +384,10 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                                 'cram_index',
                                 'cram_index_aws'
                             ].map((d)=>s.cramFile[d]);
-                            let columns = [s.cramFile.sample_id, s.tissueName, s.dataType].concat(cram);
+                            ['cramFile', 'tissueSiteDetail', 'dataType'].forEach((k)=>{
+                                if(!s.hasOwnProperty(k)) throw 'Parse Error: required attribute is missing: ' + k;
+                            });
+                            let columns = [s.cramFile.sample_id, s.tissueSiteDetail, s.dataType].concat(cram);
                             return columns.join("\t");
                         });
                     console.log(selectedSamples);
@@ -362,22 +431,14 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                 const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
                 const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
                 console.log('Download ' + x + ' : ' + y);
-                const selected = mat.data.filter((s)=>{
-                    ['dataType', 'tissueId'].forEach((k)=>{
-                        if(!s.hasOwnProperty(k)){
-                            console.error(s);
-                            throw 'Matrix parsing error: required attribute is missing: ' + k;
-                        }
-                    });
-                    return s.dataType==y&&s.tissueId==x&&s.dataType!='WES'
-                }).map(d=> {
+
+                const selected = mat.data.filter((s)=>__filterSample(s, x, y)).map(d=> {
                     let temp = d.sampleId.split('-');
                     d.donorId = temp[0] + '-' + temp[1];
                     return d;
                 }); // NOTE: currently we don't have WES CRAM file paths
                 allSelectedSamples = allSelectedSamples.concat(selected)
             });
-            console.log(allSelectedSamples.length);
             _submitToFireCloud(googleFuncDict, allSelectedSamples, urls);
             select('#fire-cloud-form').style("display", "none");
         });
