@@ -11,11 +11,10 @@ export function googleFunc(){
 
 function renderSignInButton(){
     gapi.signin2.render('my-signin2', {
-        // 'scope': 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me',
         'scope': 'profile email',
-        'width': 240,
-        'height': 50,
-        'longtitle': true,
+        'width': 130,
+        'height': 30,
+        'longtitle': false,
         'theme': 'dark',
         'onsuccess': onSuccess,
         'onfailure': onFailure
