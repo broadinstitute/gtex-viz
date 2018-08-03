@@ -120,7 +120,7 @@ function _checkRnaSeqWithGenotype(samples){
 function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
     const __filter = ()=>{
         const sex = select('input[name="sex"]:checked').node().value;
-        const age = select('input[name="age"]:checked').node().value;
+        const age = select('input[name="age"]:checked').node().value; // TODO: allow multiple
         if (sex == 'both' && age == 'all'){
             _renderMatrixTable(tableId, _buildMatrix(mat.datasetId, samples, tissues), googleFuncDict, urls);
         } else {
@@ -153,13 +153,13 @@ function _buildMatrix(datasetId, samples, tissues){
             }
             if (dataType == 'RNA-Seq-WGS') return s._type == dataType;
             else return s.dataType==dataType;
-        }).reduce((a, d)=>{
-            if(!d.hasOwnProperty(attr)){
-                console.error(d);
+        }).reduce((a, s)=>{
+            if(!s.hasOwnProperty(attr)){
+                console.error(s);
                 throw 'Parse Error: required attribute is missing:' + attr;
             }
-            if(a[d[attr]]===undefined) a[d[attr]] = 0;
-            a[d[attr]]= a[d[attr]]+1;
+            if(a[s[attr]]===undefined) a[s[attr]] = [];
+            a[s[attr]].push(s);
             return a;
         }, {});
     };
@@ -168,7 +168,7 @@ function _buildMatrix(datasetId, samples, tissues){
         {
             label: 'RNA-Seq',
             id: 'RNA-Seq',
-            data: __buildHash('RNA-Seq')
+            data: __buildHash('RNA-Seq') // lists of RNA-Seq samples indexed by tissueSiteDetailId
         },
         {
             label: 'RNA-Seq With WGS',
@@ -205,7 +205,7 @@ function _buildMatrix(datasetId, samples, tissues){
         datasetId: datasetId,
         X: rows,
         Y: columns,
-        data: samples
+        data: samples // not sure if this is needed.
     };
 }
 
@@ -259,12 +259,16 @@ function _renderCounts(tbody, mat){
             return d.label
         });
 
+    // rendering sample counts
     mat.Y.forEach((y, j)=>{
         theRows.append('td')
             .attr('class', (d, i)=>{
                 return d[y.id]===undefined?'':`x${i} y${j}`;
             })
-            .text((d)=>d[y.id]||'');
+            .text((d)=>{
+                let counts = d[y.id]?d[y.id].length : '';
+                return counts;
+            });
     });
 
 }
@@ -328,29 +332,17 @@ function _addClickEvents(tableId){
 function _addToolbar(tableId, mat, googleFuncDict, urls){
     // TODO: get rid of hard-coded dom IDs
     const theCells = select(`#${tableId}`).select('tbody').selectAll('td');
+
+    // create the toolbar and buttons
     select('#matrix-table-toolbar').selectAll('*').remove();
     const toolbar = new Toolbar('matrix-table-toolbar', undefined, true);
     toolbar.createButton('sample-download');
     toolbar.createButton('send-to-firecloud', 'fa-cloud-upload-alt');
-    const __filterSample = (s, x, y)=>{
-        ['tissueSiteDetailId', 'dataType'].forEach((k)=>{
-            if(!s.hasOwnProperty(k)){
-                console.error(s);
-                throw 'Matrix parsing error: required attribute is missing: ' + k;
-            }
-        });
-        /**** WARNING: no WES cram files available ATM ****/
-        if (s.tissueSiteDetailId==x && y!='WES'){
-            if (y == 'RNA-Seq-WGS') {
-                return s._type==y;
-            }
-            else return s.dataType == y;
-        }
-        return false;
-    };
+
     select('#sample-download')
         .style('cursor', 'pointer')
         .on('click', function(){
+            // fetch selected table cells
             let cells = theCells.filter(`.selected`);
             if (cells.empty()) alert('You have not selected any samples to download.');
             else {
@@ -366,11 +358,13 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                         'CRAM Index AWS'
                     ].join("\t") + '\n';
                 cells.each(function(d){
+                    // parse the cell's x and y IDs
                     const marker = select(this).attr('class').split(' ').filter((c)=>{return c!='selected'});
-                    const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
-                    const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
+                    const x = mat.X[parseInt(marker[0].replace('x', ''))];
+                    const y = mat.Y[parseInt(marker[1].replace('y', ''))];
 
-                    const selectedSamples = mat.data.filter((s)=>__filterSample(s, x, y)).map((s)=>{
+                    // const selectedSamples = mat.data.filter((s)=>__filterSample(s, x, y)).map((s)=>{
+                    const selectedSamples = y.data[x.id].map((s)=>{
                             console.log(s);
                             let cram = [
                                 'cram_file',
@@ -423,10 +417,10 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                 const marker = select(this).attr('class').split(' ').filter((c) => {
                     return c != 'selected'
                 });
-                const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
-                const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
+                const x = mat.X[parseInt(marker[0].replace('x', ''))];
+                const y = mat.Y[parseInt(marker[1].replace('y', ''))];
 
-                const selected = mat.data.filter((s)=>__filterSample(s, x, y)).map(d=> {
+                const selected = y.data[x.id].map(d=> {
                     let temp = d.sampleId.split('-');
                     d.donorId = temp[0] + '-' + temp[1];
                     return d;
