@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+    <head>
+         <meta charset="utf-8">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+        <link rel="stylesheet" href="external/fontawesome-free-5.0.7/web-fonts-with-css/css/fontawesome-all.css">
+
+        <link href="https://fonts.googleapis.com/css?family=EB+Garamond|Libre+Franklin|Open+Sans|Roboto|Zilla+Slab" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="external/select2-4.0.4/css/select2.min.css">
+        <link rel="stylesheet" type="text/css" href="src/css/cramFileQuery.css">
+        <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+        }
+        div{
+            font-size: 14px;
+        }
+        a {
+            color: #4eb3d3;
+        }
+
+        </style>
+        <meta name="google-signin-client_id" content="786075537258-q243513l58k43knubcksmt2vvdb4o0il.apps.googleusercontent.com">
+
+    </head>
+    <body class="container" style="margin-top:20px;">
+        <h4>GTEx Raw File Search</h4>
+        TODO:
+        <ul>
+            <li>Requirement: the CRAM file paths for WES samples.</li>
+            <li>How to synchronize the static Sample file with the Mongo collection.</li>
+            <li>API integration: query samples on the fly?</li>
+            <li>More metadata filtering options. Multiple-selection of age brackets. </li>
+            <li>Layout responsive -- need improvements</li>
+            <li>FireCloud submission input error-checking</li>
+        </ul>
+        <div class="row" style="float: right">
+            <div id="my-signin2"></div>
+            <div id="g-signout" onclick="signOut();" style="display:none; cursor: pointer; border: 1px solid #4285f4; border-radius: 0;" class="btn btn-sm" ><i class="fas fa-sign-out-alt"></i></div>
+
+        </div>
+        <div class="row">
+            <div class="col-xs-2">
+                <div id="filter-menu" style="">
+                    <form>
+                        <div class="filter-section-title">Donors</div>
+                        <label>Sex</label>
+                        <input type="radio" name="sex" value="both" checked> both
+                        <br/>
+                        <input type="radio" name="sex" value="male"> male
+                        <input type="radio" name="sex" value="female"> female
+                        <br/><br/>
+                        <label>Age</label>
+                        <input type="radio" name="age" value="all" checked> all
+                        <br/>
+                        <input type="radio" name="age" value="20-29"> 20-29
+                        <input type="radio" name="age" value="30-39"> 30-39
+                        <br/>
+                        <input type="radio" name="age" value="40-49"> 40-49
+                        <input type="radio" name="age" value="50-59"> 50-59
+                        <br/>
+                        <input type="radio" name="age" value="60-69"> 60-69
+                        <input type="radio" name="age" value="70-79"> 70-79
+                        <br/>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-xs-8">
+                <table id="gtex-v7-sample" class="matrix-table">
+                    <thead></thead>
+                    <tr class="table-label"></tr>
+                </table>
+            </div>
+
+            <div class="col-xs-2" style="margin-left: 10px;">
+                <div id="matrix-table-toolbar"></div>
+                <form id="fire-cloud-form" style="display:none;">
+                    <div class="fire-cloud-form-box">
+                        <div class="filter-section-title">Send Samples to FireCloud</div>
+                        Provide your billing project<br/>
+                        <div id="billing-project-list" class="input-group" style="font-size:11px;">
+                            <!--<input type="radio" name="billing-project" value="broad-firecloud-gtex">broad-firecloud-gtex</input>-->
+                        </div>
+                        <!--Provide -->
+                        Name your new workspace:<br/>
+                        <input type="text" name="workspace"><br/>
+                        <div id="cancel-firecloud-btn" class="btn btn-sm btn-gtex-d3" style="margin-top: 5px;cursor: pointer;">Cancel</div>
+
+                        <div id="submit-to-firecloud-btn" class="btn btn-sm btn-gtex-d3" style="margin-top: 5px;cursor: pointer;">Submit</div>
+                    </div>
+                </form>
+                <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
+
+                <div id="fire-cloud-status"></div>
+            </div>
+
+            </div>
+        </div>
+    </body>
+     <script
+          src="https://code.jquery.com/jquery-3.2.1.min.js"
+          integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+          crossorigin="anonymous">
+        </script>
+        <script src="external/select2-4.0.4/js/select2.full.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+        <script src="external/FileSaver/FileSaver.min.js"></script>
+    <script src="build/js/cram-file-query.bundle.dev.js"></script>
+    <script>
+        $(document).ready(function(){
+            CramFileQuery.launch("gtex-v7-sample", "gtex_v7");
+        });
+        function renderSignInButton(){
+            CramFileQuery.renderSignInButton();
+        }
+        function signOut(){
+            CramFileQuery.signOut();
+        }
+
+    </script>
+    <script src="https://apis.google.com/js/platform.js?onload=renderSignInButton" async defer></script>
+
+
+</html>

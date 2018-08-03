@@ -1,4 +1,4 @@
-ageBracket	dataType	datasetId	hardyScale	ischemicTimeGroup	rin	sampleId	sex	subjectId	tissueId	tissueName	tissueSampleId
+ageBracket	dataType	datasetId	hardyScale	ischemicTimeGroup	rin	sampleId	sex	subjectId	tissueSiteDetailId	tissueSiteDetail	tissueSampleId
 60-69	WES	gtex_v7	Slow death	901 - 1200		GTEX-1117F-0003-SM-58Q7G	female	GTEX-1117F	Whole_Blood	Whole Blood	GTEX-1117F-0003
 60-69	OMNI	gtex_v7	Slow death	901 - 1200		GTEX-1117F-0003-SM-5DWSB	female	GTEX-1117F	Whole_Blood	Whole Blood	GTEX-1117F-0003
 60-69	WGS	gtex_v7	Slow death	901 - 1200		GTEX-1117F-0003-SM-6WBT7	female	GTEX-1117F	Whole_Blood	Whole Blood	GTEX-1117F-0003
