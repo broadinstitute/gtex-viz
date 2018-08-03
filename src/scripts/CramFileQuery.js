@@ -65,28 +65,56 @@ export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc()
                         case "WGS": {
                             if (!cram.wgs.hasOwnProperty(s.sampleId)) throw s.sampleId + ' has no cram files';
                             s.cramFile = cram.wgs[s.sampleId];
-                            s._type = "WGS"; // create a private data type for customized UI grouping
                             break;
                         }
                         case "RNASEQ": {
                             if (!cram.rnaseq.hasOwnProperty(s.sampleId)) throw s.sampleId + ' has no cram files';
                             s.cramFile = cram.rnaseq[s.sampleId];
-                            s._type = 'RNA-Seq';
                             s.dataType = 'RNA-Seq'; // replace RNASEQ with RNA-Seq
                             break;
                         }
                         default:
-                            s._type = s.dataType;
                             // so far, we do not have cram files for other data types, so do nothing
                     }
                     return s;
                 });
+            samples = _checkRnaSeqWithGenotype(samples);
             const theMatrix = _buildMatrix(datasetId, samples, tissues);
             _renderMatrixTable(tableId, theMatrix, googleFuncDict, urls);
             _addFilters(tableId, theMatrix, samples, tissues, googleFuncDict, urls);
 
         })
         .catch(function(err){console.error(err)});
+}
+
+/**
+ * Check RNA-Seq samples for subjects with genotype data and assign RNA-Seq-WGS to the custom private sample attribute: _type.
+ * TODO: find a better way than assigning a private attribute to flag customized sample groups.
+ * @param samples: a list of sample objects with required attributes: dataType, subjectId, tissueSiteDetailId
+ * @returns: a new list of samples
+ * @private
+ */
+function _checkRnaSeqWithGenotype(samples){
+    // find subjects that have genotype data
+    const wgsHash = samples.filter((s) => {
+        if(!s.hasOwnProperty('dataType')) {
+            console.error(s);
+            throw 'Parse Error: required attribute is missing: dataType';
+        }
+        return s.dataType == 'WGS';
+    }).reduce((a, d) => {
+        if (!d.hasOwnProperty('subjectId')) throw 'Parse Error: required attribute is missing.';
+        a[d.subjectId] = 1;
+        return a;
+    }, {});
+    const attr = 'tissueSiteDetailId';
+    return samples.map((s)=>{
+        if(!s.hasOwnProperty('dataType') || !s.hasOwnProperty('subjectId')) throw 'Parse Error: required attribute is missing.';
+        if (s.dataType == 'RNA-Seq' && wgsHash.hasOwnProperty(s.subjectId)){
+            s._type = 'RNA-Seq-WGS'; // modified the _type to RNA-Seq-WGS
+        }
+        return s;
+    });
 }
 
 function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
@@ -119,46 +147,13 @@ function _buildMatrix(datasetId, samples, tissues){
     const __buildHash = function(dataType){
         const attr = 'tissueSiteDetailId';
         return samples.filter((s)=>{
-            if(!s.hasOwnProperty('_type')) {
+            if(!s.hasOwnProperty('dataType')) {
                 console.error(s);
-                throw 'Parse Error: required attribute is missing: _type';
+                throw 'Parse Error: required attribute is missing: _type or dataType';
             }
-            return s._type==dataType;
+            if (dataType == 'RNA-Seq-WGS') return s._type == dataType;
+            else return s.dataType==dataType;
         }).reduce((a, d)=>{
-            if(!d.hasOwnProperty(attr)){
-                console.error(d);
-                throw 'Parse Error: required attribute is missing:' + attr;
-            }
-            if(a[d[attr]]===undefined) a[d[attr]] = 0;
-            a[d[attr]]= a[d[attr]]+1;
-            return a;
-        }, {});
-    };
-
-    // the following function is to find RNA-Seq samples that have WGS data available.
-    const __buildRnaSeqWithWgsHash = function(){
-        const wgsHash = samples.filter((s) => {
-            if(!s.hasOwnProperty('_type')) {
-                console.error(s);
-                throw 'Parse Error: required attribute is missing: _type';
-            }
-            return s._type == 'WGS';
-        }).reduce((a, d) => {
-            if (!d.hasOwnProperty('subjectId')) throw 'Parse Error: required attribute is missing.';
-            a[d.subjectId] = 1;
-            return a;
-        }, {});
-        const attr = 'tissueSiteDetailId';
-        const RNAseqWithWgs = samples.filter((s)=>{
-            if(!s.hasOwnProperty('_type') || !s.hasOwnProperty('subjectId')) throw 'Parse Error: required attribute is missing.';
-            if (s._type == 'RNA-Seq' && wgsHash.hasOwnProperty(s.subjectId)){
-                s._type = 'RNA-Seq-WGS'; // modified the _type to RNA-Seq-WGS
-                return true;
-            } else {
-                return false;
-            }
-        });
-        return RNAseqWithWgs.reduce((a, d)=>{
             if(!d.hasOwnProperty(attr)){
                 console.error(d);
                 throw 'Parse Error: required attribute is missing:' + attr;
@@ -178,7 +173,7 @@ function _buildMatrix(datasetId, samples, tissues){
         {
             label: 'RNA-Seq With WGS',
             id: 'RNA-Seq-WGS',
-            data: __buildRnaSeqWithWgsHash()
+            data: __buildHash('RNA-Seq-WGS')
         },
         {
             label: 'WES',
@@ -338,7 +333,7 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
     toolbar.createButton('sample-download');
     toolbar.createButton('send-to-firecloud', 'fa-cloud-upload-alt');
     const __filterSample = (s, x, y)=>{
-        ['_type', 'tissueSiteDetailId'].forEach((k)=>{
+        ['tissueSiteDetailId', 'dataType'].forEach((k)=>{
             if(!s.hasOwnProperty(k)){
                 console.error(s);
                 throw 'Matrix parsing error: required attribute is missing: ' + k;
@@ -346,8 +341,10 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
         });
         /**** WARNING: no WES cram files available ATM ****/
         if (s.tissueSiteDetailId==x && y!='WES'){
-            if (y == 'RNA-Seq') return s._type.startsWith(y);
-            else return s._type == y;
+            if (y == 'RNA-Seq-WGS') {
+                return s._type==y;
+            }
+            else return s.dataType == y;
         }
         return false;
     };
