@@ -369,7 +369,6 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                     const marker = select(this).attr('class').split(' ').filter((c)=>{return c!='selected'});
                     const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
                     const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
-                    console.log('Download ' + x + ' : '+ y);
 
                     const selectedSamples = mat.data.filter((s)=>__filterSample(s, x, y)).map((s)=>{
                             console.log(s);
@@ -387,7 +386,6 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                             let columns = [s.cramFile.sample_id, s.tissueSiteDetail, s.dataType].concat(cram);
                             return columns.join("\t");
                         });
-                    console.log(selectedSamples);
                     downloadContent += selectedSamples.join("\n");
                 });
                 let file = new Blob([downloadContent], {type: 'text/plain;charset=utf-8'});
@@ -427,7 +425,6 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                 });
                 const x = mat.X[parseInt(marker[0].replace('x', ''))].id;
                 const y = mat.Y[parseInt(marker[1].replace('y', ''))].id;
-                console.log('Download ' + x + ' : ' + y);
 
                 const selected = mat.data.filter((s)=>__filterSample(s, x, y)).map(d=> {
                     let temp = d.sampleId.split('-');
@@ -453,14 +450,9 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
 // dependencies: jQuery
 function _reportBillingProjects(googleUser, domId="billing-project-list") {
 
-    // let profile = googleUser.getBasicProfile();
-    // console.log('ID: ' + profile.getId());
-    // console.log('Name: ' + profile.getName());
-    // console.log('Email: ' + profile.getEmail());
     // get the user's access token
 
     let token = googleUser.getAuthResponse(true).access_token;
-    console.log(token);
     $.ajax({
         url: 'https://api.firecloud.org/api/profile/billing',
         type: 'GET',
@@ -481,8 +473,6 @@ function _reportBillingProjects(googleUser, domId="billing-project-list") {
                    '</label><br/>'
                 ).appendTo($(`#${domId}`));
             });
-
-            console.log(response[0]);
         }
     });
 }
@@ -524,8 +514,6 @@ function _submitToFireCloud(googleFuncDict, samples, urls){
         throw('workspace name is not provided');
         return;
     }
-    console.log(workspace);
-    console.log(samples);
     $('#spinner').show();
     // create the workspace
     $.ajax({
@@ -581,7 +569,6 @@ function _submitToFireCloud(googleFuncDict, samples, urls){
                     }));
                     const sampleEntityString = `entities=${sampleEntity.join('\n')}\n`;
                     const sampleEntityUrlEncode = encodeURI(sampleEntityString);
-                    console.log(sampleEntityString);
 
                     $.ajax({
                         url: `${urls.fcWorkSpace}/${namespace}/${workspace}/importEntities`,
