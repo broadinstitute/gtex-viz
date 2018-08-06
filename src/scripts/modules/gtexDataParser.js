@@ -87,8 +87,8 @@ export function parseTissueSites(data, forEqtl=false){
 
     const attr = 'tissueSiteDetail';
     if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
-    let tissues = data[attr]
-    ['tissueSite', 'tissueSiteDetailId', 'tissueSiteDetail'].forEach((d)=>{
+    let tissues = data[attr];
+    ['tissueSite','tissueSiteDetailId','tissueSiteDetail'].forEach((d)=>{
         if (!tissues[0].hasOwnProperty(d)) throw `parseTissueSites attr error. ${d} is not found`;
     });
     tissues = forEqtl==false?tissues:tissues.filter((d)=>{return !invalidTissues.includes(d.tissueSiteDetailId)}); // an array of tissueSiteDetailId objects

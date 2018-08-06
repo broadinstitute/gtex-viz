@@ -118,21 +118,45 @@ function _checkRnaSeqWithGenotype(samples){
 }
 
 function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
+
+
     const __filter = ()=>{
-        const sex = select('input[name="sex"]:checked').node().value;
-        const age = select('input[name="age"]:checked').node().value; // TODO: allow multiple
-        if (sex == 'both' && age == 'all'){
+        let sex = $('input[name="sex"]:checked').val(); // jQuery
+        let ages = [];
+        $('.ageBox').each(function(){
+            if ($(this).is(":checked")) ages.push($(this).val());
+            if(ages.length < 6) $('input[name="allAges"]').prop('checked', false);
+            if(ages.length == 6) $('input[name="allAges"][value="all"]').prop('checked', true);
+        });
+        // const ages = select('input[name="age"]:checked').node().value; // TODO: allow multiple
+        if (sex == 'both' && ages.length == 6){
             _renderMatrixTable(tableId, _buildMatrix(mat.datasetId, samples, tissues), googleFuncDict, urls);
         } else {
             let filteredMat = undefined;
-            if (sex == 'both') filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.ageBracket==age), tissues);
-            else if (age == 'all') filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.sex==sex), tissues);
-            else filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.sex==sex && s.ageBracket==age), tissues);
+            if (sex == 'both') filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>ages.indexOf(s.ageBracket)>=0), tissues);
+            else if (ages.length == 6) filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.sex==sex), tissues);
+            else filteredMat = _buildMatrix(mat.datasetId, samples.filter(s=>s.sex==sex && ages.indexOf(s.ageBracket)>=0), tissues);
             _renderMatrixTable(tableId, filteredMat, googleFuncDict, urls);
         }
     };
     select('#filter-menu').selectAll('input[name="sex"]').on('change', __filter);
-    select('#filter-menu').selectAll('input[name="age"]').on('change', __filter);
+    select('#filter-menu').selectAll('.ageBox').on('change', __filter);
+    $('input[name="allAges"]').change(function(){
+        let val = $(this).val();
+        switch(val){
+            case 'all': {
+                $('.ageBox').prop('checked', true);
+                __filter();
+                break;
+            }
+            case 'reset': {
+                $('.ageBox').prop('checked', false);
+                break;
+            }
+            default:
+                // do nothing
+        }
+    });
 }
 
 /**
@@ -294,7 +318,6 @@ function _addClickEvents(tableId){
                select(this).attr('scope', 'col');
                theCells.filter(`.${theColumn}`).classed('selected', false);
            }
-           // console.log(theColumn);
         });
 
     // row labels
@@ -309,7 +332,6 @@ function _addClickEvents(tableId){
                select(this).attr('scope', 'row');
                theCells.filter(`.${theRow}`).classed('selected', false);
            }
-           // console.log(theRow);
         });
 
 
