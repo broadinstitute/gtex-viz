@@ -601,6 +601,7 @@ function _submitToFireCloud(googleFuncDict, samples, urls){
                         success: function(response){
                             console.log("finished importing samples...");
                             const fcURL = `${urls.fcPortalWorkSpace}/${namespace}/${workspace}/data`;
+                            window.open(fcURL, '_blank');
                             $('#fire-cloud-status').html(`Submitted! <br/> Go to your <br/> <a target="_blank" href="${fcURL}">FireCloud workspace</a>`);
                         },
                         error: function(error){console.error(error)}
