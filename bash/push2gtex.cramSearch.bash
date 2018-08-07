@@ -3,7 +3,7 @@ SOURCE=$HOME/gtex-d3
 DEST=$HOME/gtex-cloud/contexts/external/gtex/media/cramSearch
 
 export NODE_ENV="prod"
-rollup -c rollup/rollup.raw.data.query.config.js
+rollup -c rollup/rollup.cram.file.query.config.js
 
 echo "Copying *.min.js and *.css to $DEST"
-cp $SOURCE/build/js/raw-data-query.bundle.min.js $DEST/build
+cp $SOURCE/build/js/cram-file-query.bundle.min.js $DEST/build
