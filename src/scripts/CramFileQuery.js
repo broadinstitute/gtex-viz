@@ -521,6 +521,12 @@ function _reportBillingProjects(googleUser, domId="billing-project-list") {
     });
 }
 
+/**
+ * Get the user's exisitn workspaces on FireCloud
+ * @param googleUser {Object} Google API current user object
+ * @param callback {Function}
+ * @private
+ */
 function _getWorkspaces(googleUser, callback){
     let token = googleUser.getAuthResponse(true).access_token;
      // list User's workspaces
@@ -544,6 +550,13 @@ function _getWorkspaces(googleUser, callback){
     });
 }
 
+/**
+ *
+ * @param googleFuncDict {Object}
+ * @param samples {List} Sample Objects
+ * @param urls {Object} API URLs
+ * @private
+ */
 function _submitToFireCloud(googleFuncDict, samples, urls){
     const token = googleFuncDict.getUser().getAuthResponse(true).access_token;
     const namespace = $('input[name="billing-project"]').val();
