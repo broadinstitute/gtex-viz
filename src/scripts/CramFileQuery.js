@@ -427,7 +427,6 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
              const scopes = 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me';
             googleFuncDict.grantScopes(scopes);
             _reportBillingProjects(googleFuncDict.getUser());
-            _reportWorkspaces(googleFuncDict.getUser());
 
             let cells = theCells.filter(`.selected`);
             if (cells.empty()) alert('You have not selected any samples to download.');
@@ -435,28 +434,45 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                 select('#fire-cloud-form').style("display", "block");
             }
         });
+    $('input[name="workspace"]').keypress(function(){return;});
 
     select('#submit-to-firecloud-btn')
         .on('click', function(){
-            $('#fire-cloud-status').empty();
-            let cells = theCells.filter(`.selected`);
-            let allSelectedSamples = [];
-            cells.each(function(d) {
-                const marker = select(this).attr('class').split(' ').filter((c) => {
-                    return c != 'selected'
+            // input workspace error-checking
+            const wsInput = $('input[name="workspace"]').val();
+            let inputStatus = 1;
+            _getWorkspaces(googleFuncDict.getUser(), function(ws){
+                ws.forEach((d)=>{
+                    if (d.workspace.name == wsInput) {
+                        console.error("Input Error: Workspace already exists. " + wsInput);
+                         $('#fire-cloud-status').html("Workspace " + wsInput + " already exists. <br/> Please name a new one.");
+                        inputStatus = 0;
+                    }
+                    else {console.log(d.workspace.name)}
                 });
-                const x = mat.X[parseInt(marker[0].replace('x', ''))];
-                const y = mat.Y[parseInt(marker[1].replace('y', ''))];
+                if (inputStatus == 1) {
+                    $('#fire-cloud-status').empty(); // clear any existing FireCloud status messages
+                    let cells = theCells.filter(`.selected`);
+                    let allSelectedSamples = [];
+                    cells.each(function(d) {
+                        const marker = select(this).attr('class').split(' ').filter((c) => {
+                            return c != 'selected'
+                        });
+                        const x = mat.X[parseInt(marker[0].replace('x', ''))];
+                        const y = mat.Y[parseInt(marker[1].replace('y', ''))];
 
-                const selected = y.data[x.id].map(d=> {
-                    let temp = d.sampleId.split('-');
-                    d.donorId = temp[0] + '-' + temp[1];
-                    return d;
-                }); // NOTE: currently we don't have WES CRAM file paths
-                allSelectedSamples = allSelectedSamples.concat(selected)
+                        const selected = y.data[x.id].map(d=> {
+                            let temp = d.sampleId.split('-');
+                            d.donorId = temp[0] + '-' + temp[1];
+                            return d;
+                        }); // NOTE: currently we don't have WES CRAM file paths
+                        allSelectedSamples = allSelectedSamples.concat(selected)
+                    });
+
+                    _submitToFireCloud(googleFuncDict, allSelectedSamples, urls);
+                    select('#fire-cloud-form').style("display", "none");
+                }
             });
-            _submitToFireCloud(googleFuncDict, allSelectedSamples, urls);
-            select('#fire-cloud-form').style("display", "none");
         });
 
     select('#cancel-firecloud-btn')
@@ -506,7 +522,7 @@ function _reportBillingProjects(googleUser, domId="billing-project-list") {
     });
 }
 
-function _reportWorkspaces(googleUser){
+function _getWorkspaces(googleUser, callback){
     let token = googleUser.getAuthResponse(true).access_token;
      // list User's workspaces
     $.ajax({
@@ -522,6 +538,7 @@ function _reportWorkspaces(googleUser){
         success: function(response){
             const workspaces = response.filter((d)=>!d.public);
             console.log(workspaces);
+            callback(workspaces);
         },
         error: function(error){
             console.error(error);
