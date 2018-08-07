@@ -7,16 +7,6 @@ import {getGtexUrls,
 import Toolbar from './modules/Toolbar';
 import {googleFunc} from './modules/googleUser';
 
-/*
-TODO:
-first build a data matrix with the following structure
-{
-    col: tissues
-    row: data types
-    data: [ objects with col and row and value ]
-}
- */
-
 /**
  * Render the google signed in button (if there isn't one provided already)
  * @param callback {Function}
@@ -118,8 +108,6 @@ function _checkRnaSeqWithGenotype(samples){
 }
 
 function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
-
-
     const __filter = ()=>{
         let sex = $('input[name="sex"]:checked').val(); // jQuery
         let ages = [];
