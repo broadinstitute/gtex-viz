@@ -393,7 +393,6 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
 
                     // const selectedSamples = mat.data.filter((s)=>__filterSample(s, x, y)).map((s)=>{
                     const selectedSamples = y.data[x.id].map((s)=>{
-                            console.log(s);
                             let cram = [
                                 'cram_file',
                                 'cram_file_aws',
@@ -434,47 +433,47 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                 select('#fire-cloud-form').style("display", "block");
             }
         });
-    $('input[name="workspace"]').keypress(function(){return;});
 
-    select('#submit-to-firecloud-btn')
-        .on('click', function(){
-            // input workspace error-checking
-            const wsInput = $('input[name="workspace"]').val();
-            let inputStatus = 1;
-            _getWorkspaces(googleFuncDict.getUser(), function(ws){
-                ws.forEach((d)=>{
-                    if (d.workspace.name == wsInput) {
-                        console.error("Input Error: Workspace already exists. " + wsInput);
-                         $('#fire-cloud-status').html("Workspace " + wsInput + " already exists. <br/> Please name a new one.");
-                        inputStatus = 0;
-                    }
-                    else {console.log(d.workspace.name)}
-                });
-                if (inputStatus == 1) {
-                    $('#fire-cloud-status').empty(); // clear any existing FireCloud status messages
-                    let cells = theCells.filter(`.selected`);
-                    let allSelectedSamples = [];
-                    cells.each(function(d) {
-                        const marker = select(this).attr('class').split(' ').filter((c) => {
-                            return c != 'selected'
-                        });
-                        const x = mat.X[parseInt(marker[0].replace('x', ''))];
-                        const y = mat.Y[parseInt(marker[1].replace('y', ''))];
-
-                        const selected = y.data[x.id].map(d=> {
-                            let temp = d.sampleId.split('-');
-                            d.donorId = temp[0] + '-' + temp[1];
-                            return d;
-                        }); // NOTE: currently we don't have WES CRAM file paths
-                        allSelectedSamples = allSelectedSamples.concat(selected)
-                    });
-
-                    _submitToFireCloud(googleFuncDict, allSelectedSamples, urls);
-                    select('#fire-cloud-form').style("display", "none");
+    const __submissionPrep = function(){
+        // input workspace error-checking
+        const wsInput = $('input[name="workspace"]').val();
+        let inputStatus = 1;
+        _getWorkspaces(googleFuncDict.getUser(), function(ws){
+            ws.forEach((d)=>{
+                if (d.workspace.name == wsInput) {
+                    console.error("Input Error: Workspace already exists. " + wsInput);
+                     $('#fire-cloud-status').html("Workspace " + wsInput + " already exists. <br/> Please name a new one.");
+                    inputStatus = 0;
                 }
             });
-        });
+            if (inputStatus == 1) {
+                $('#fire-cloud-status').empty(); // clear any existing FireCloud status messages
+                let cells = theCells.filter(`.selected`);
+                let allSelectedSamples = [];
+                cells.each(function(d) {
+                    const marker = select(this).attr('class').split(' ').filter((c) => {
+                        return c != 'selected'
+                    });
+                    const x = mat.X[parseInt(marker[0].replace('x', ''))];
+                    const y = mat.Y[parseInt(marker[1].replace('y', ''))];
 
+                    const selected = y.data[x.id].map(d=> {
+                        let temp = d.sampleId.split('-');
+                        d.donorId = temp[0] + '-' + temp[1];
+                        return d;
+                    }); // NOTE: currently we don't have WES CRAM file paths
+                    allSelectedSamples = allSelectedSamples.concat(selected)
+                });
+
+                _submitToFireCloud(googleFuncDict, allSelectedSamples, urls);
+                select('#fire-cloud-form').style("display", "none");
+            }
+        });
+        return false;
+    };
+
+    $('input[name="workspace"]').keypress(__submissionPrep);
+    select('#submit-to-firecloud-btn').on('click', __submissionPrep);
     select('#cancel-firecloud-btn')
         .on('click', function(){
             select('#fire-cloud-form').style("display", "none");
@@ -537,7 +536,6 @@ function _getWorkspaces(googleUser, callback){
 
         success: function(response){
             const workspaces = response.filter((d)=>!d.public);
-            console.log(workspaces);
             callback(workspaces);
         },
         error: function(error){
