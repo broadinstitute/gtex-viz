@@ -428,7 +428,7 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
             _reportBillingProjects(googleFuncDict.getUser());
 
             let cells = theCells.filter(`.selected`);
-            if (cells.empty()) alert('You have not selected any samples to download.');
+            if (cells.empty()) alert('You have not selected any samples to submit.');
             else {
                 select('#fire-cloud-form').style("display", "block");
             }
@@ -477,7 +477,9 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
     select('#cancel-firecloud-btn')
         .on('click', function(){
             select('#fire-cloud-form').style("display", "none");
-            alert('Canceled!');
+            alert('Submission Canceled!');
+            $('#fire-cloud-status').empty(); // clear any existing FireCloud status messages
+
         })
 }
 
