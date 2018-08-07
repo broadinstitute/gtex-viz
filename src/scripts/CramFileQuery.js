@@ -8,8 +8,8 @@ import Toolbar from './modules/Toolbar';
 import {googleFunc} from './modules/googleUser';
 
 /**
- * Render the google signed in button (if there isn't one provided already)
- * @param callback {Function}
+ * Render the google sig-in button
+ * @param callback {Function}, the default function is googleFunc().signInButton
  */
 export function renderSignInButton(callback=googleFunc().signInButton){
     callback();
@@ -17,18 +17,18 @@ export function renderSignInButton(callback=googleFunc().signInButton){
 
 /**
  * Define the Google sign out function
- * @param callback {Function}
+ * @param callback {Function}, the default is googleFunc().signOut
  */
 export function signOut(callback=googleFunc().signOut){
     callback();
 }
 
 /**
- * build the data matrix table
- * @param tableId {String}
- * @param datasetId {String}
+ * build the summary table
+ * @param tableId {String}: a DOM table ID
+ * @param datasetId {String}: a dataset ID
  * @param googleFunc {Object} with function attributes: checkSignedIn, getUser
- * @param urls
+ * @param urls {Object}: API URLs
  */
 
 export function launch(tableId, datasetId='gtex_v7', googleFuncDict=googleFunc(), urls=getGtexUrls()){
