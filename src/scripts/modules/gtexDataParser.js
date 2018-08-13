@@ -5,7 +5,7 @@ export function getGtexUrls(){
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
         snp: host + 'reference/variant?format=json&snpId=',
-        variantId: host + 'reference/variant?format=json&variantId=',
+        variantId: host + 'dataset/variant?format=json&variantId=',
 
         // transcript, exon, junction expression specific
         exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
