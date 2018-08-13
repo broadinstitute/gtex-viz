@@ -1,11 +1,12 @@
 "use strict";
 export function getGtexUrls(){
     const host = 'https://gtexportal.org/rest/v1/';
+    // const host = 'local.gtexportal.org/rest/v1/'
     return {
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
         snp: host + 'reference/variant?format=json&snpId=',
-        variantId: host + 'reference/variant?format=json&variantId=',
+        variantId: host + 'dataset/variant?format=json&variantId=',
 
         // transcript, exon, junction expression specific
         exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
@@ -13,8 +14,8 @@ export function getGtexUrls(){
         junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
         transcript: host + 'reference/transcript?datasetId=gtex_v7&gencodeId=',
         exon: host + 'reference/exon?datasetId=gtex_v7&gencodeId=',
-        geneModel: host + 'reference/collapsedGeneModelExon?unfiltered=false&datasetId=gtex_v7&gencodeId=',
-        geneModelUnfiltered: host + 'reference/collapsedGeneModelExon?unfiltered=true&datasetId=gtex_v7&gencodeId=',
+        geneModel: host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
+        geneModelUnfiltered: host + 'dataset/fullCCollapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
 
         // gene expression violin plot specific
         geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
@@ -123,6 +124,7 @@ export function parseTissueSites(data, forEqtl=false){
 /**
  * parse the exons
  * @param data {Json}
+ * @param full {Boolean}
  * @returns {List} of exons
  */
 export function parseModelExons(json){
