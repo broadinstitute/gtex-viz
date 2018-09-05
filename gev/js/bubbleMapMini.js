@@ -1,3 +1,7 @@
+/**
+ * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
+ * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
+ */
 var bubbleMapMini = function(mat, config){
     //bubbleMap.call(this, mat, config, _mat); // bubbleMapMini calls bubbleMap as its prototype
     var self = this;
