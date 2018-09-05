@@ -6,10 +6,15 @@
 ### Installing
 ### Deployment
 ### Built With
-
-## Contibuting
 ## Versioning
+For the versions available, see the [tags on this repository](https://github.com/broadinstitute/gtex-viz/tags).
 ## Authors
+   Katherine Huang  
+   François Aguet  
+   Kane Hadley  
+   Duyen Nguyen  
+   Jared Nedzel  
+   Kristin Ardlie
 ## License
 This project is licensed under the terms of the BSD 3-clause license - see the [LICENSE.md](LICENSE.md) file for details.
 
