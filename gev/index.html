@@ -1,0 +1,295 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/spinner.css">
+        <link rel="stylesheet" href="css/plotviz.css">
+        <link rel="stylesheet" href="css/gtexBubbleMap.css">
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="//code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+
+        <script src="js/external/d3.v3.min.js"></script>
+        <script src="js/external/plotviz.js"></script>
+
+        <script src="js/tooltip.js"></script>
+
+        <script src="js/bubbleMapUtil.js"></script>
+        <script src="js/bubbleMap.js"></script>
+        <script src="js/bubbleMapMini.js"></script>
+        <script src="js/bubbleMapBrush.js"></script>
+
+        <script src="js/gtexBubbleMapDataUtil.js"></script>
+        <script src="js/gtexBubbleMapConfig.js"></script>
+
+        <script src="js/gtexBubbleMap.js"></script>
+        <script src="js/gtexBubbleMapDemo.js"></script>
+    </head>
+    <body>
+        <div id="demo" class="container-flow" style='margin-left:20px;'>
+            <div class="row">
+                <div class="col-sm-12">
+                    <h3>Gene eQTL Visualizer </h3>
+                </div>
+            </div>
+            
+            <div class="row">
+
+                <div class="col-xs-6">
+                    <div class="row">
+                        <div class="col-xs-4 col-md-1">
+                            <span id="geneSymbol" style="font-weight:500;"></span> <!-- where the query gene name appears-->
+                        </div>
+
+                        <div class="col-xs-8 col-md-11">
+                            <div id="bbInfo"></div>
+                            <div> <!-- links-->
+                                <span id="genePageLink"></span> | <span id="browserLink"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-xs-6" >
+                    View a different gene:
+                    <input id="bbGeneInput" type="text" class="searchInput search-query">
+                    e.g. A2MP1, ATG10, tas2r64p, MAN1B1
+                    <br><br>
+                    <div class="row" id="filterInfo" style="border:1px solid #aaa; background-color:#eee; color:#000; padding:2px; display:none;"></div>
+
+
+                </div>
+            </div>  
+        </div>
+        <hr>
+
+        <!-- bbMap tooltip -->
+        <div id="bbTooltip" class="bbMap-tooltip-class"></div>
+        <div id="bbTooltip2"></div>
+
+        <!-- bbMap documentation modal -->
+        <div id="bbMap-doc-modal" class="modal fade" aria-hidden="true" role="dialog">
+            <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">x</span></button>
+                      <h4 class="modal-title">Gene EQTL Visualizer Info</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-xs-4">Gene eQTL Visualizer (GEV) is a web-driven visualization tool that visually summarizes the eQTL results of a single query gene in a heat map.
+                            The columns are SNPs, by default, sorted by chromosome positions, rows are tissues in alphabetical order. Only SNPs and tissues that have eQTLs
+                            associated with the query gene are reported in the heat map, thus each gene's heat map dimensions varies.
+                            When an eQTL is present in a tissue and of a SNP, it appears as a circle on the heat map. Two visual properties of the circle, color and size, are used to represent the effect size and p-value of the eQTL results, respectively.
+
+                        </div>
+                        <div class="col-xs-8"><img src="images/bbmap.png" width="100%"></div>
+                    </div>
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-xs-4">
+                            <h5>The Zoom Lens and Viewport</h5>
+                            GEV attempts to fit the entire heat map into the browser window,
+                            so that one can observe global trends and patterns without scrolling. However, the trade-off is that the heat map can become too small
+                            to allow closer examination.
+                            Therefore, a shaded box that serves as a zoom lens is provided on the heat map and shows a partial region of the map in the zoom viewport.
+                            One can browse the heat map in the zoom viewport by
+                            dragging the zoom lens along the heat map, or click anywhere of interest on the heat map. The area of the zoom lens can be modified by dragging
+                            the vertical edges of the rectangle box,
+                            which essentially changes the width of the zoom viewport.
+                        </div>
+                        <div class="col-xs-8"><img src="images/bbmapMini.png" width="100%"></div>
+                    </div>
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-xs-4">
+                            <h5>Interactive Mouse Events</h5>
+                            Interactive mouse events are implemented in the zoom viewport to allow closer data exploration at a finer resolution on the heat map.<p>
+                            Mousing over a bubble or text label will trigger the info tooltip to appear.  <p>
+                            Clicking on a bubble will show its eQTL box plot in a pop-up window that is draggable and can be re-sized. Multiple eQTL boxplots can be added to the box plot window.
+                            Mousing-over each box plot will show the tooltip with eQTL information and will highlight the corresponding bubble on the eQTL bubble heat map.
+                        </div>
+                        <div class="col-xs-8"><img src="images/bbmapClickEvent.png" width="100%"></div>
+                    </div>
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-xs-4">
+                            <h5>The Info Panel</h5>
+                            In the info panel, the basic information of the query gene is provided. Links to the gene page and eQTL IGV browser are also conveniently provided.
+                            To view the eQTL results of a different gene, use the search box to fetch the gene of interest by gene symbol or ENSEMBL ID.
+                        </div>
+                        <div class="col-xs-8"><img src="images/bbmapInfoPanel.png" width="100%"></div>
+                    </div>
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-xs-4">
+                            <h5>The Control Panel</h5>
+                            In the control panel, the user can find the tissue menu for custom tissue selection, use the data filters to filter eQTL results,
+                            use the SNP locator to search SNPs on the heat map and view the color and bubble size legends.<p>
+                            The color and size scales are global, which means that GEV uses the same scales to render the eQTL results from all genes.
+                            The size scale legend only describes the heat map in the zoomed viewport.
+                        </div>
+                        <div class="col-xs-8"><img src="images/bbmapControlPanel.png" width="100%"></div>
+                    </div>
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-xs-4">
+                        <h5>Data Filtering By P-Value or Effect Size</h5>
+                        The eQTLs can be filtered on the heat map by a user-defined p-value and/or effect size threshold. The eQTLs that are filtered will appear in a light grey color on the heat map.
+                        </div>
+                        <div class="col-xs-8">
+                            <img src="images/bbmapDataFiltered.png" width="100%">
+                        </div>
+                    </div>
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-xs-4">
+                        <h5>The Tissue Selection Menu</h5>
+                        The tissue menu can be summoned by clicking the button located at the upper left corner in the GEV. One can custom-select tissues to view in the heat map.
+                        </div>
+                        <div class="col-xs-8">
+                            <img src="images/bbmapTissueMenu.png" width="100%">
+
+                            <img src="images/bbmapTissueFiltered.png" width="100%">
+
+                        </div>
+                    </div>
+                    <hr>
+
+                     <div class="row">
+                        <div class="col-xs-4">
+                            <h5>Sorting of The Tissue Rows</h5>
+                            Tissue rows are by default displayed in the alphabetical order. Alternatively, they can be sorted by the effect size data (not p-values) of a selected SNP.
+                            To sort based on the effect size data of a SNP, simply click the SNP column label.
+                            After the sorting is completed, a black upside-down triangle will appear, which marks the SNP column that is used to sort the tissue rows.
+                        </div>
+                        <div class="col-xs-8">
+                            <img src="images/bbmapSortedBySnp.png" width="100%">
+                        </div>
+                    </div>
+                    <hr>
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <h5>Additional Visual Components</h5>
+                            GEV is much more than just rendering a gene's eQTL results in a summary heat map. It visually enriches the heat map further with additional meta data of tissues, and genomic and annotation information of the SNPs and gene.<p>
+
+                            The sample size of each tissue is a critical piece of information for the evaluating the significance of eQTL results, therefore the number of samples (with genotype) in a tissue is conveniently provided next to each tissue name. <p>
+
+                            GEV also uses a grey-scale 1D heat map to show the transcriptional start site (TSS) proximity of SNPs. Each SNP is represented as one rectangle box on the heat map. The closer a SNP is to the TSS, the darker the box is. This 1D TSS proximity heat map shares the same SNP columns with the eQTL bubble heat map, therefore, the two heat maps can be stacked and aligned vertically.
+
+                            The TSS is drawn as a flag, it is rendered between two closest upstream and downstream SNP columns. The direction of the TSS flag indicates the transcriptional direction, for a gene on the plus strand, the flag points to the right.
+                            When a SNP falls within an exon region of the gene, its broader on the 1D TSS proximity heat map
+                        </div>
+
+                    </div>
+                    <hr>
+                </div>
+                <div class="modal-footer"></div>
+            </div>
+            </div>
+        </div>
+
+
+        <!-- bbMap tissue modal -->
+        <div id="bbMap-modal" class="modal fade" aria-hidden='true' role='dialog'>
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">x</span></button>
+                          <h4 class="modal-title" id="myModalLabel">GTEx Gene EQTL Visualizer Tissue Selector</h4>
+                    </div>
+                    <div class="modal-body"></div>
+                    <div class="modal-footer"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="gtexBB" class="container-flow" style='margin-left:20px;'>
+
+            <div class="row">
+                <!-- info & tissue menu-->
+                <div class="col-md-12 col-lg-2">
+                    <div class="row">
+                        <div class="col-sm-1"></div>
+                        <div class="col-sm-3 button btn" data-toggle="modal" data-target="#bbMap-doc-modal" style="margin-top:0px; border: 1px solid rgb(85, 85, 85);">Info</div>
+                        <div class="col-sm-5 button btn" data-toggle="modal" data-target="#bbMap-modal" style="margin-top:0px; border: 1px solid rgb(85, 85, 85);">Tissue Menu</div>
+
+                    </div>
+                </div>
+
+                <!-- data filtering UI -->
+                <div id="bbFilters" class="col-md-12 col-lg-5">
+                    <div class="row">
+
+                        <div class="col-xs-2"><input type="checkbox" id="useRsId"> Use rs_IDs</div>
+                        <div class="col-xs-2" style="cursor:default; font-size:12px;">Filtering</div>
+
+
+                        <div class="col-xs-4" style="font-size:12px">
+                            -log<sub>10</sub>(p-value) >=
+                            <input id="pvalueLimit" type="text" size="4" value="0.0"><br/>
+                            <input id="pvalueSlider" type="range" min="0.0" max="20.0" step="0.1" value="0.0" style="margin-top:10px"/>
+
+                        </div>
+
+                        <div class="col-xs-4 col-span-2" style="font-size:12px">
+                            Abs(effect size) >=
+                            <input id="effectSizeLimit" type="text" size="4" value="0.00"><br/>
+                            <input id="effectSizeSlider" type="range" min="0.00" max="2.00" step="0.01" value = "0.00" style="margin-top:10px"/>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- SNP search -->
+                <div class="col-md-12 col-lg-3">
+                    <div class="col-xs-4" style="cursor:default; font-size:12px;">
+                        SNP Locator
+                    </div>
+                    <div class="btn-group col-xs-8">
+                        <input id="bbSnpSearch" type="text" placeholder="SNP ID..." style="width:80%; margin-top:0px;">
+                    </div>
+                </div>
+                 <!-- legends -->
+
+                <div id="bbLegends" class="col-md-12 col-lg-3" ></div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <div id='bbMapCanvas'></div>
+                    <!-- bbMap SVG rendering -->
+                    <div id="bbMap"></div>
+
+                    <div id="ldCanvas"></div>
+                    <!-- text-loader animation, from cssload.net -->
+                    <br><br>
+                    <div id="fountainTextG">
+                        <div id="fountainTextG_1" class="fountainTextG">L</div>
+                        <div id="fountainTextG_2" class="fountainTextG">o</div>
+                        <div id="fountainTextG_3" class="fountainTextG">a</div>
+                        <div id="fountainTextG_4" class="fountainTextG">d</div>
+                        <div id="fountainTextG_5" class="fountainTextG">i</div>
+                        <div id="fountainTextG_6" class="fountainTextG">n</div>
+                        <div id="fountainTextG_7" class="fountainTextG">g</div>
+                        <div id="fountainTextG_8" class="fountainTextG">.</div>
+                        <div id="fountainTextG_9" class="fountainTextG">.</div>
+                        <div id="fountainTextG_10" class="fountainTextG">.</div>
+                    </div>
+
+                </div>
+            </div>    
+        </div>
+
+    </body>
+</html>
