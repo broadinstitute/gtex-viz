@@ -1,11 +1,12 @@
 "use strict";
 export function getGtexUrls(){
     const host = 'https://gtexportal.org/rest/v1/';
+    // const host = 'local.gtexportal.org/rest/v1/'
     return {
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
         snp: host + 'reference/variant?format=json&snpId=',
-        variantId: host + 'reference/variant?format=json&variantId=',
+        variantId: host + 'dataset/variant?format=json&variantId=',
 
         // transcript, exon, junction expression specific
         exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
@@ -13,18 +14,18 @@ export function getGtexUrls(){
         junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
         transcript: host + 'reference/transcript?datasetId=gtex_v7&gencodeId=',
         exon: host + 'reference/exon?datasetId=gtex_v7&gencodeId=',
-        geneModel: host + 'reference/collapsedGeneModelExon?unfiltered=false&datasetId=gtex_v7&gencodeId=',
-        geneModelUnfiltered: host + 'reference/collapsedGeneModelExon?unfiltered=true&datasetId=gtex_v7&gencodeId=',
+        geneModel: host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
+        geneModelUnfiltered: host + 'dataset/fullCCollapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
 
         // gene expression violin plot specific
         geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
 
         // gene expression heat map specific
-        medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&page_size=10000',
+        medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&pageSize=10000',
 
         // top expressed gene expression specific
-        topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sort_by=median&sortDirection=desc&page_size=50&tissueSiteDetailId=',
-        topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v7&sort_by=median&sortDirection=desc&page_size=50&tissueSiteDetailId=',
+        topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
+        topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v7&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
 
         geneId: host + 'reference/gene?format=json&gencodeVersion=v19&genomeBuild=GRCh37%2Fhg19&geneId=',
 
@@ -87,8 +88,8 @@ export function parseTissueSites(data, forEqtl=false){
 
     const attr = 'tissueSiteDetail';
     if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
-    let tissues = data[attr]
-    ['tissueSite', 'tissueSiteDetailId', 'tissueSiteDetail'].forEach((d)=>{
+    let tissues = data[attr];
+    ['tissueSite','tissueSiteDetailId','tissueSiteDetail'].forEach((d)=>{
         if (!tissues[0].hasOwnProperty(d)) throw `parseTissueSites attr error. ${d} is not found`;
     });
     tissues = forEqtl==false?tissues:tissues.filter((d)=>{return !invalidTissues.includes(d.tissueSiteDetailId)}); // an array of tissueSiteDetailId objects
@@ -123,6 +124,7 @@ export function parseTissueSites(data, forEqtl=false){
 /**
  * parse the exons
  * @param data {Json}
+ * @param full {Boolean}
  * @returns {List} of exons
  */
 export function parseModelExons(json){
