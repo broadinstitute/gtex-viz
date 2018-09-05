@@ -1,4 +1,6 @@
-# GTEx D3 Repository
+# GTEx Visualizations Repository
+
+This project is licensed under the terms of the BSD 3-clause license.
 
 ## To run ExpressMap locally
 - You need to have internet access. 
