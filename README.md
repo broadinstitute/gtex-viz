@@ -1,6 +1,20 @@
-# GTEx Visualizations Repository
+# GTEx Visualizations 
 
-This project is licensed under the terms of the BSD 3-clause license.
+## Getting Started
+### Prerequisites
+
+### Installing
+### Deployment
+### Built With
+
+## Contibuting
+## Versioning
+## Authors
+## License
+This project is licensed under the terms of the BSD 3-clause license - see the [LICENSE.md](LICENSE.md) file for details.
+
+## Acknowledgements
+* Funding agencies?
 
 ## To run ExpressMap locally
 - You need to have internet access. 
