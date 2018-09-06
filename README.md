@@ -38,6 +38,6 @@ Katherine Huang, Duyen Nguyen, Kane Hadley, Jared Nedzel.
 This project is licensed under the terms of the BSD 3-clause license - see the [LICENSE.md](LICENSE.md) file for details.
 
 ##### Acknowledgements
-List all our funding agencies....
+We thank our Pfizer collaborators for contributing to visualization discussions and suggestions. The GTEx portal is supported by NIH contract HHSN268201000029C and U41 grant HG009494-01.
 
 
