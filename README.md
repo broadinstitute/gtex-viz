@@ -29,6 +29,9 @@ Once the HTTP server is running, open the demo home page using the following URL
 
 ```localhost:8000 (or the port of your choice)``` 
 
+##### GTEx eQTL Dashboard
+![GTEX eQTL Dashboard Screen Shot](/images/GTEx-eQTL-dashboard.png)
+
 
 
 
