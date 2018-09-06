@@ -1,5 +1,7 @@
 
-![GTEx logo](/images/gtex2.png) # GTEx Visualizations 
+![GTEx logo](/images/gtex2.png) 
+
+# GTEx Visualizations 
 
 ## Versioning
 For the versions available, see the [tags on this repository](https://github.com/broadinstitute/gtex-viz/tags).
