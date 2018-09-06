@@ -2,12 +2,12 @@
 <html>
     <head>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
         <link rel="stylesheet" type="text/css" href="src/css/violin.css">
         <link rel="stylesheet" type="text/css" href="src/css/eqtlDashboard.css">
         <link rel="stylesheet" type="text/css" href="src/css/tissueGroup.css">
-        <link rel="stylesheet" href="external/fontawesome-free-5.0.7/web-fonts-with-css/css/fontawesome-all.css">
-        <script src="external/FileSaver/FileSaver.min.js"></script>
 
+        <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
         <script
           src="https://code.jquery.com/jquery-3.2.1.min.js"
           integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
@@ -16,8 +16,7 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
-
-        <script src="build/js/eqtl-dashboard.bundle.dev.js"></script>
+        <script src="build/js/eqtl-dashboard.bundle.min.js"></script>
         <style>
             h5 {
                 font-size: 16px;
@@ -26,7 +25,19 @@
 
     </head>
     <body class="container-fluid" style="margin-top:20px;">
-        <h3>eQTL Dashboard</h3>
+        <h3>GTEx eQTL Dashboard</h3>
+        <hr>
+         <div class="col-sm-12" style="font-size:12px">
+                <p>
+                    GTEx eQTL Dashboard calculates single-tissue eQTLs for a user-provided list of gene-variant pairs and tissues.
+                All eQTL results, including non-significant ones, are reported in a grid of violin plots grouped horizontally
+                by the gene-variant pairs and aligned vertically by tissues. Each violin plot shows three expression
+                distributions of the genotypes: homozygous reference, heterozygous, and homozygous alternative alleles.
+                When an eQTL is significant (i.e. smaller than or equal to the gene-specific p-value threshold), its p-value
+                is highlighted in red.
+                </p>
+         </div>
+        <hr>
         <!-- input form -->
         <p>
             <button class="btn btn-info btn-sm"
@@ -39,6 +50,7 @@
             </button>
         </p>
         <div class="row collapse show" id="collapseForm">
+
             <div class="col-sm-12">
                 <form id="eqtlDashboardForm" style="background:#f2f7fd; padding: 5px;">
                      <div class="form-group row"> <!-- form-group for optimum spacing between the label and its associated form input element -->
