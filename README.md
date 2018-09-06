@@ -5,6 +5,7 @@
 The GTEx web portal (http://gtexportal.org) develops custom-built visualization tools for exploring tissue-specific gene expression and regulation data. Here, we share the source code of these web-based interactive tools in this public repository, including visualizations for expression data at gene, transcript, and exon levels, as well as viewers for tissue-specific regulatory effects of genetic variations acting on genes.  
 
 [GTEx eQTL Dashboard](#eqtl-dashboard)
+[GTEx Gene-eQTL Visualizer](#gene-eqtl-visualizer)
 
 ---
 
@@ -33,7 +34,7 @@ GTEx eQTL Dashboard reports single-tissue eQTLs for a user-provided list of gene
 
 ---
 
-## GTEx Gene-eQTL Visualizer
+## <a name="gene-eqtl-visualizer"></a>GTEx Gene-eQTL Visualizer
 GTEx Gene-eQTL Visualizer displays the single-tissue eQTLs for a selected gene in a bubble
 heatmap. In the heatmap, the rows are tissues in alphabetical order, and the columns are variants sorted by
 genomic location. Each eQTL is represented as a circle (bubble), and its color and size are
