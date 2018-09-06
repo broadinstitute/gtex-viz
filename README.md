@@ -4,7 +4,7 @@
 # GTEx Visualizations tools
 The GTEx web portal (http://gtexportal.org) develops custom-built visualization tools for exploring tissue-specific gene expression and regulation data. Here, we share the source code of these web-based interactive tools in this public repository, including visualizations for expression data at gene, transcript, and exon levels, as well as viewers for tissue-specific regulatory effects of genetic variations acting on genes.  
 
-### Running the demo locally
+### How to run the visualization demos locally
 #### Prerequisites
 * Access to the internet for obtaining demo data from the GTEx web services.
 * A modern web browser.
