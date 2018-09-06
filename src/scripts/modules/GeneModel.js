@@ -1,4 +1,7 @@
-
+/**
+ * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
+ * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
+ */
 /*
 This class defines a gene model (or isoform), rendering the exons and junctions of a given gene. The model is rendered based on
 genomic positions, regardless of the strand and transcriptional direction.
