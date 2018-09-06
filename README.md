@@ -18,11 +18,11 @@ This project is licensed under the terms of the BSD 3-clause license - see the [
 * Access to the internet for obtaining demo data from the GTEx web services.
 * A modern web browser.
 #### Demo
-- In the repo's root directory, start up the Python HTTP server and specify a port (e.g. 8000):
+In the repo's root directory, start up the simple Python HTTP server included in the repo, and specify a port (e.g. 8000):
 
 ```python python/runServer.py```
 
-Then, in a web browser, provide the following URL: 
+Once the HTTP server is running, go to the following URL in a web browser: 
 
 ```localhost:8000 (or the port of your choice)``` 
 
