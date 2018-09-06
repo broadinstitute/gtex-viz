@@ -1,0 +1,80 @@
+             <div class="row">
+                    <div class="col-xs-4">Gene eQTL Visualizer (GEV) is a web-driven visualization tool that visually summarizes the eQTL results of a single query gene in a heat map.
+                        The columns are SNPs, by default, sorted by chromosome positions, rows are tissues in alphabetical order. Only SNPs and tissues that have eQTLs
+                        associated with the query gene are reported in the heat map, thus each gene's heat map dimensions varies.
+                        When an eQTL is present in a tissue and of a SNP, it appears as a circle on the heat map.
+                    </div>
+                    <div class="col-xs-8"><img src="images/bbmap.png" width="100%"></div>
+                </div>
+                <hr>
+
+                <div class="row">
+                    <div class="col-xs-4">
+                        <h5>The Zoom Lens and Viewport</h5>
+                        GEV attempts to fit the entire heat map into the browser window,
+                        so that one can observe global trends and patterns without scrolling. However, the trade-off is that the heat map can become too small
+                        to allow closer examination.
+                        Therefore, a shaded box that serves as a zoom lens is provided on the heat map and shows a partial region of the map in the zoom viewport.
+                        One can browse the heat map in the zoom viewport by
+                        dragging the zoom lens along the heat map, or click anywhere of interest on the heat map. The area of the zoom lens can be modified by dragging
+                        the vertical edges of the rectangle box,
+                        which essentially changes the width of the zoom viewport.
+                    </div>
+                    <div class="col-xs-8"><img src="images/bbmapMini.png" width="100%"></div>
+                </div>
+                <hr>
+
+                <div class="row">
+                    <div class="col-xs-4">
+                        <h5>The Info Panel</h5>
+                        In the info panel, the basic information of the query gene is provided. Links to the gene page and eQTL IGV browser are also conveniently provided.
+                        To view the eQTL results of a different gene, use the search box to fetch the gene of interest by gene symbol or ENSEMBL ID.
+                    </div>
+                    <div class="col-xs-8"><img src="images/bbmapInfoPanel.png" width="100%"></div>
+                </div>
+                <hr>
+
+                <div class="row">
+                    <div class="col-xs-4">
+                        <h5>The Color and Bubble Size Scales</h5>
+                        Two visual properties of the circle, color and size, are used to represent the NES (normalized effect size) and p-value of the eQTL results, respectively.
+                        The color and size scales are global, which means that the Gene eQTL Visualizer uses the same scales to render results from all genes.
+                        The size scale legend refers to the heat map in the zoomed viewport.
+                    </div>
+                    <div class="col-xs-8"><img src="images/bbmapScales.png"></div>
+                </div>
+                <hr>
+
+                <div class="row">
+                    <div class="col-xs-4">
+                    <h5>Filtering By P-Value or Effect Size</h5>
+                    The tissue menu can be summoned by clicking the button located at the upper left corner in the GEV. One can custom-select tissues to view in the heat map.
+                    </div>
+                    <div class="col-xs-8">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <img src="images/bbmapTissueMenu.png" width="100%"></div>
+                            </div>
+                            <div class="col-xs-12">
+                                <img src="images/bbmapTissueFiltered.png" width="100%"></div>
+                            </div>
+                        </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-xs-4">
+                    <h5>The Tissue Selection Menu</h5>
+                    The tissue menu can be summoned by clicking the button located at the upper left corner in the GEV. One can custom-select tissues to view in the heat map.
+                    </div>
+                    <div class="col-xs-8">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <img src="images/bbmapTissueMenu.png" width="100%"></div>
+                            </div>
+                            <div class="col-xs-12">
+                                <img src="images/bbmapTissueFiltered.png" width="100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>

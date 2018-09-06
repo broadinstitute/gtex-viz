@@ -1,4 +1,8 @@
 /**
+ * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
+ * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
+ */
+/**
  * Created by lucyxu on 6/9/17.
  * Modified by Kat on 5/17/2018.
  * This code is for generating a one-time static anatomogram with all the tissues highlighted
