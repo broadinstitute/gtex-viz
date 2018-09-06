@@ -15,8 +15,10 @@ Once the HTTP server is running, open the demo home page using the following URL
 
 ```localhost:8000 (or the port of your choice)``` 
 
-### GTEx eQTL Dashboard
+## GTEx eQTL Dashboard
 ![GTEX eQTL Dashboard Screen Shot](/images/GTEx-eQTL-dashboard.png)
+
+---
 
 ##### Versioning
 For the versions available, see the [tags on this repository](https://github.com/broadinstitute/gtex-viz/tags).
