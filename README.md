@@ -26,12 +26,6 @@ Then, in a web browser, provide the following URL:
 
 ```localhost:8000 (or the port of your choice)``` 
 
-## rollup
-- For production mode: set NODE_ENV to prod:
-```export NODE_ENV="prod"```
-
-- Batch Gene Heatmap:
-```rollup -c rollup/rollup.batch.gene.expression.config.js```
 
 
 
