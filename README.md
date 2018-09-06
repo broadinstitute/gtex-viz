@@ -1,4 +1,5 @@
-# GTEx Visualizations 
+
+![GTEx logo](https://gtexportal.org/home/images/gtex2.png) # GTEx Visualizations 
 
 ## Versioning
 For the versions available, see the [tags on this repository](https://github.com/broadinstitute/gtex-viz/tags).
