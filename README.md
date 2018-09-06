@@ -18,6 +18,7 @@ Once the HTTP server is running, open the demo home page using the following URL
 ```localhost:8000 (or the port of your choice)``` 
 
 ## GTEx eQTL Dashboard
+GTEx eQTL Dashboard calculates single-tissue eQTLs for a user-provided list of gene-variant pairs and tissues. All eQTL results, including non-significant ones, are reported in a grid of violin plots grouped horizontally by the gene-variant pairs and aligned vertically by tissues.
 ![GTEX eQTL Dashboard Screen Shot](/images/GTEx-eQTL-dashboard.png)
 
 ---
