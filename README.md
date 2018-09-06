@@ -42,6 +42,8 @@ columns.
 
 [Portal Link](https://gtexportal.org/home/bubbleHeatmapPage/ACTN3)
 
+![GTEx Gene-eQTL Visualizer Screen Shot](/images/GTEx-gene-eqtl-visualizer.png)
+
 ##### Versioning
 For the versions available, see the [tags on this repository](https://github.com/broadinstitute/gtex-viz/tags).
 
