@@ -1,4 +1,4 @@
-Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
+Copyright (c) 2015 - 2018, The Broad Institute, Inc. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -15,10 +15,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 Dependencies:
 GTEx Visualizations is distributed, in part, under and subject to the provisions of licenses for:
 
-D3.js (https://d3js.org/), Copyright © 2017 Mike Bostock. All rights reserved.
+D3.js (https://d3js.org/), Copyright (c) 2017 Mike Bostock. All rights reserved.
 Licensed under the BSD 3-clause license (https://opensource.org/licenses/BSD-3-Clause); and
 
-jQuery (https://jquery.com/), Copyright © 2018 The jQuery Foundation. All rights reserved.
+jQuery (https://jquery.com/), Copyright (c) 2018 The jQuery Foundation. All rights reserved.
 Licensed under the MIT license (https://jquery.org/license/).
 
 ***
