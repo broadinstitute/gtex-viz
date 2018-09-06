@@ -22,7 +22,7 @@ In the repo's root directory, start up the simple Python HTTP server included in
 
 ```python python/runServer.py```
 
-Once the HTTP server is running, go to the following URL in a web browser: 
+Once the HTTP server is running, open the demo home page using the following URL in a web browser: 
 
 ```localhost:8000 (or the port of your choice)``` 
 
