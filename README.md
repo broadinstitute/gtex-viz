@@ -6,7 +6,7 @@ The GTEx web portal (http://gtexportal.org) develops custom-built visualization 
 
 ---
 
-### How to run the visualization demos locally
+### How to run the repo demos locally on your computer
 #### Prerequisites
 * Access to the internet, for real-time data retrieval from the GTEx web service and external library dependencies.
 * A modern web browser.
