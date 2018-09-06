@@ -4,7 +4,7 @@
 For the versions available, see the [tags on this repository](https://github.com/broadinstitute/gtex-viz/tags).
 
 ## Authors
-   Katherine Huang, François Aguet, Kane Hadley, Duyen Nguyen, Jared Nedzel, Kristin Ardlie
+GTEx portal team.
 
 ## License
 This project is licensed under the terms of the BSD 3-clause license - see the [LICENSE.md](LICENSE.md) file for details.
@@ -12,17 +12,19 @@ This project is licensed under the terms of the BSD 3-clause license - see the [
 ## Acknowledgements
 * Funding agencies?
 
-## GTEx eQTL Dashboard
-
-## To run ExpressMap locally
-- You need to have internet access. 
-- In the repo's root directory, start the Python HTTP server and specify a port:
+## Visualization tools
+### Running the demo locally
+#### Prerequisites
+* Access to the internet for obtaining demo data from the GTEx web services.
+* A modern web browser.
+#### Demo
+- In the repo's root directory, start up the Python HTTP server and specify a port (e.g. 8000):
 
 ```python python/runServer.py```
 
-Then, you will be able to see the demo in a web browser at: 
+Then, in a web browser, provide the following URL: 
 
-```localhost:<the port>```
+```localhost:8000 (or the port of your choice)``` 
 
 ## rollup
 - For production mode: set NODE_ENV to prod:
