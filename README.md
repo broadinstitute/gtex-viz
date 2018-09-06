@@ -10,7 +10,7 @@ The GTEx web portal (http://gtexportal.org) develops custom-built visualization 
 #### Prerequisites
 * Access to the internet for obtaining demo data from the GTEx web services.
 * A modern web browser.
-#### Demo
+#### Launching the demo
 In the repo's root directory, start up the simple Python HTTP server included in the repo, and specify a port (e.g. 8000):
 
 ```python python/runServer.py```
@@ -23,6 +23,8 @@ Once the HTTP server is running, open the demo home page using the following URL
 
 ## GTEx eQTL Dashboard
 GTEx eQTL Dashboard reports single-tissue eQTLs for a user-provided list of gene-variant pairs and tissues. All eQTL results, including non-significant ones, are visualized in a grid of violin plots grouped horizontally by the gene-variant pairs and aligned vertically by tissues. Each violin plot shows three expression distributions of the genotypes: homozygous reference, heterozygous, and homozygous alternative alleles. When an eQTL is significant (i.e. smaller than or equal to the gene-specific p-value threshold), its p-value is highlighted in red.
+
+[Portal Link](https://gtexportal.org/home/eqtlDashboardPage)
 
 ![GTEX eQTL Dashboard Screen Shot](/images/GTEx-eQTL-dashboard.png)
 
