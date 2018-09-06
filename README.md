@@ -6,12 +6,13 @@ The GTEx web portal (http://gtexportal.org) develops custom-built visualization 
 
 ---
 
-### How to run the repo demos locally on your computer
+### Running the demos locally on your computer
 #### Prerequisites
+* A local copy of this repo.
 * Access to the internet, for real-time data retrieval from the GTEx web service and external library dependencies.
 * A modern web browser.
 #### Launching the demo
-In the repo's root directory, start up the simple Python HTTP server included in the repo, and specify a port (e.g. 8000):
+In the repo's root directory on your computer, start up the provided simple Python HTTP server, and specify a port (e.g. 8000):
 
 ```python python/runServer.py```
 
