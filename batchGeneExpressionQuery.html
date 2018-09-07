@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+              integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+              crossorigin="anonymous">
+        <link href="https://fonts.googleapis.com/css?family=EB+Garamond|Libre+Franklin|Open+Sans|Roboto|Zilla+Slab" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css">
+        <link rel="stylesheet" type="text/css" href="src/css/tissueGroup.css">
+        <link rel="stylesheet" type="text/css" href="src/css/dendrogram.css">
+        <link rel="stylesheet" type="text/css" href="src/css/expressMap.css">
+        <link rel="stylesheet" type="text/css" href="src/css/violin.css">
+        <style>
+            body {
+                font-family: 'Open Sans', sans-serif;
+            }
+            div{
+                font-size: 12px;
+            }
+            .btn-default {
+                border-color: #4eb3d3;
+            }
+            a {
+                color: #4eb3d3;
+            }
+            .link:hover {
+                text-decoration: underline;
+                cursor: pointer;
+            }
+
+        </style>
+
+    </head>
+
+    <body class="container-fluid" style="margin-top:20px;">
+
+        <div>
+            <h3>GTEx Expression Heatmap for a query gene list</h3>
+            <hr>
+            <div class="col-sm-12" style="font-size:12px">
+                <p>
+                    This page demonstrates using GTEx Expression Heatmap to display and summarize expression data of
+                    user-specified genes and tissues.
+                </p>
+                <p>
+                    The rows of
+                    the heatmap are genes, columns are tissues (color-coded by the tissue types), and colors are scaled by
+                    the median expression values.
+                    By default, the gene rows and tissue columns are hierarchically
+                    clustered using the Euclidean distance and average linkage method.
+                </p>
+            </div>
+            <hr>
+        </div>
+        <!-- input form -->
+        <p>
+            <button class="btn btn-info btn-sm"
+                type="button"
+                data-toggle="collapse"
+                data-target="#collapseForm"
+                aria-expanded="false"
+                aria-controls="collapseForm">
+                <i class="fa fa-bars"></i>
+            </button>
+        </p>
+
+        <div class="row collapse show" id="collapseForm">
+            <div class="col-sm-12">
+                <form id="geneExpressionForm" style="background:#f2f7fd; padding: 5px;">
+                    <div class="form-group row"> <!-- form-group for optimum spacing between the label and its associated form input element -->
+                        <div class="col-sm-12 col-md-2">
+                            <label for="genes" class="align-top">Enter Gencode IDs or Gene Names</label>
+                            <ul style="font-size:12px; list-style-type:square; padding-left: 15px;">
+                                <li>Limited to 50 entries.</li>
+                                <li><a href="#" id="searchExample">A search example</a></li>
+                            </ul>
+                            <textarea id="genes" rows="20" class="form-control" style="font-size:12px; text-transform:uppercase;"></textarea>
+                            <br/>
+
+                            <div id="batchSubmit" class="btn btn-info btn-sm" style="margin-bottom:1em;">Search</div>
+
+                            </div>
+                            <div class="col-xs-12 col-md-10">
+                            <label>Select Tissue(s)</label>
+                                <div id="tissueMenu" class="form-group row"><!-- tissue menu check boxes --></div>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+        <hr/>
+        <div class="row">
+            <div class="col-xs-12">
+                <i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i>
+            </div>
+        </div>
+        <div class="row">
+            <div id="searchResult" class="col-xs-12 col-md-12">
+                <div class="row" style="margin-left: 10px;">
+                    <div id="heatmapRoot" class="col-xs-12 col-md-12"></div> <!-- the heatmap Div -->
+                    <div id="violinRoot" class="col-xs-12 col-md-12"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </body>
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+    <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
+    <script src="build/js/batch-gene-expression.bundle.min.js"></script>
+    <script>
+        $(document).ready(batchGeneQuery);
+        function batchGeneQuery(){
+            const heatmapRootId = "heatmapRoot";
+            const violinRootId = "violinRoot";
+            const submitId = 'batchSubmit';
+            const menuId = "tissueMenu";
+            const formId = "collapseForm";
+
+            $('#searchExample').click(function(){
+                const examples = "FOO,ACTN3, SLK, ENSG00000121879.3, NDRG4, ENSG00000141510.11, ENSG00000039068.14, ENSG00000107485.11, ENSG00000095015.5, ENSG00000141027.16, ENSG00000065526.6, TP53";
+                $('#genes').val(examples);
+                return false; // this prevents a # sign being added to the URL...
+            });
+            BatchGeneExpression.launch(formId, menuId, submitId, heatmapRootId, violinRootId);
+        }
+
+    </script>
+
+</html>
