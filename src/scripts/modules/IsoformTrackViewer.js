@@ -98,7 +98,7 @@ export default class IsoformTrackViewer {
             .attr("x", 10)
             .attr("y", -20)
 
-            .text(`Isoform Expression in ${dataLabel}`)
+            .text(`Transcript Expression in ${dataLabel}`)
             .style("text-anchor", "start")
             .style("font-size", "12px");
 
