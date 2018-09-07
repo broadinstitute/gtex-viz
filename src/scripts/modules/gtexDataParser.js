@@ -19,7 +19,7 @@ export function getGtexUrls(){
         transcript: host + 'reference/transcript?datasetId=gtex_v7&gencodeId=',
         exon: host + 'reference/exon?datasetId=gtex_v7&gencodeId=',
         geneModel: host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
-        geneModelUnfiltered: host + 'dataset/fullCCollapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
+        geneModelUnfiltered: host + 'dataset/fullCollapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
 
         // gene expression violin plot specific
         geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
