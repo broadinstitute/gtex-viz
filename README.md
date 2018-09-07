@@ -1,7 +1,6 @@
 
-![GTEx logo](/images/gtex2.png) 
+# ![GTEx logo](/images/gtex2.png) 
 
-# GTEx Visualizations tools
 The GTEx web portal (http://gtexportal.org) develops specialized web-based visualization tools for exploring tissue-specific gene expression and regulation. Here, in this public repository, we provide the source code of the following tools:
 
 - [GTEx Expression Map](#expression-map)
