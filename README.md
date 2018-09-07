@@ -27,7 +27,7 @@ Once the HTTP server is running, open the demo home page using the following URL
 ---
 
 ## <a name="expression-map"></a>GTEx Expression Map
-GTEx Expression Map is an interactive heatmap specifically designed for rendering expression data. The GTEx portal uses this tool to report and summarize multi-gene, multi-tissue expression data. 
+The GTEx Expression Map is an interactive heatmap specifically designed for rendering expression data. The GTEx portal uses this tool to report and summarize multi-gene, multi-tissue expression data. 
 
 [Portal Link](https://gtexportal.org/home/multiGeneQueryPage)
 
@@ -36,7 +36,7 @@ GTEx Expression Map is an interactive heatmap specifically designed for renderin
 ---
 
 ## <a name="transcript-browser"></a>GTEx Transcript Browser
-GTEx Transcript Browser is for exploring expression of individual transcripts of a gene.
+The GTEx Transcript Browser is for exploring expression of individual transcripts of a gene.
 
 [Portal Link](https://gtexportal.org/home/isoformPage)
 
@@ -45,7 +45,7 @@ GTEx Transcript Browser is for exploring expression of individual transcripts of
 ---
 
 ## <a name="eqtl-dashboard"></a>GTEx eQTL Dashboard
-GTEx eQTL Dashboard reports single-tissue eQTLs for a user-provided list of gene-variant pairs and tissues. All eQTL results, including non-significant ones, are visualized in a grid of violin plots grouped horizontally by the gene-variant pairs and aligned vertically by tissues. Each violin plot shows three expression distributions of the genotypes: homozygous reference, heterozygous, and homozygous alternative alleles. 
+The GTEx eQTL Dashboard reports single-tissue eQTLs for a user-provided list of gene-variant pairs and tissues. All eQTL results, including non-significant ones, are visualized in a grid of violin plots grouped horizontally by the gene-variant pairs and aligned vertically by tissues. Each violin plot shows three expression distributions of the genotypes: homozygous reference, heterozygous, and homozygous alternative alleles. 
 
 [Portal Link](https://gtexportal.org/home/eqtlDashboardPage)
 
@@ -54,7 +54,7 @@ GTEx eQTL Dashboard reports single-tissue eQTLs for a user-provided list of gene
 ---
 
 ## <a name="gene-eqtl-visualizer"></a>GTEx Gene-eQTL Visualizer
-GTEx Gene-eQTL Visualizer displays single-tissue eQTLs of a gene in a bubble
+The GTEx Gene-eQTL Visualizer displays single-tissue eQTLs of a gene in a bubble
 heatmap--the rows are tissues in alphabetical order, and columns are variants sorted by
 genomic location. The color and size of the bubbles are scaled by the normalized effect size (NES) and p-value of the eQTLs. Only tissues with significant eQTLs associated with the query gene are reported and rendered. The pairwise linkage
 disequilibrium (LD) values of the variants are also displayed and aligned below the bubble heatmap
