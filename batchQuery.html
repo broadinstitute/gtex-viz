@@ -36,7 +36,24 @@
 
     <body class="container-fluid" style="margin-top:20px;">
 
-        <h4>Batch Gene Expression Query</h4>
+        <div>
+            <h3>GTEx Expression Heatmap for a query gene list</h3>
+            <hr>
+            <div class="col-sm-12" style="font-size:12px">
+                <p>
+                    This page demonstrates the use of GTEx Expression Heatmap to summarize expression data of
+                    user-specified genes and tissues.
+                </p>
+                <p>
+                    The rows of
+                    the heatmap are genes, columns are tissues (color-coded by the tissue types), and colors are
+                    the median TPM (Transcripts Per Million) values.
+                    By default, the gene rows and tissue columns are hierarchically
+                    clustered using the Euclidean distance and average linkage method.
+                </p>
+            </div>
+            <hr>
+        </div>
         <!-- input form -->
         <p>
             <button class="btn btn-info btn-sm"
