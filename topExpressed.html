@@ -2,14 +2,17 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
-        <link rel="stylesheet" href="external/fontawesome-free-5.0.7/web-fonts-with-css/css/fontawesome-all.css">
-
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css"
+              integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M"
+              crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+              integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+              crossorigin="anonymous">
+        <link href="https://fonts.googleapis.com/css?family=EB+Garamond|Libre+Franklin|Open+Sans|Roboto|Zilla+Slab" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css">
         <link rel="stylesheet" type="text/css" href="src/css/dendrogram.css">
         <link rel="stylesheet" type="text/css" href="src/css/expressMap.css">
         <link rel="stylesheet" type="text/css" href="src/css/violin.css">
-        <link href="https://fonts.googleapis.com/css?family=EB+Garamond|Libre+Franklin|Open+Sans|Roboto|Zilla+Slab" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="external/select2-4.0.4/css/select2.min.css">
         <style>
             body {
                 font-family: 'Open Sans', sans-serif;
@@ -36,7 +39,23 @@
         <div id="tooltip" class="exp-map-tooltip"></div> <!--a hidden div for the mouseover tooltip-->
 
         <div>
-            <h4>Top Expressed Genes</h4>
+            <h3>GTEx Expression Heatmap for top expressed genes</h3>
+            <hr>
+            <div class="col-sm-12" style="font-size:12px">
+                <p>
+                    This page demonstrates using GTEx Expression Heatmap to display and summarize top expressed genes.
+                </p>
+                <p>
+                    Select a tissue to view its top
+                    50 expressed genes and all of their available expression data across all GTEx tissues. By default,
+                    mitochondrial genes are excluded from the top expressed gene list. The rows of
+                    the heatmap are genes, columns are tissues (color-coded by the tissue types), and colors are scaled
+                    by median expression values.
+                    By default, the gene rows and tissue columns are hierarchically
+                    clustered using the Euclidean distance and average linkage method.
+                </p>
+            </div>
+            <hr>
         </div>
         <!-- the tissue menu -->
         <div class="row">
@@ -65,11 +84,15 @@
       integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
       crossorigin="anonymous">
     </script>
-    <script src="external/select2-4.0.4/js/select2.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
-    <script src="external/FileSaver/FileSaver.min.js"></script>
-    <script src="build/js/batch-gene-expression.bundle.dev.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"
+            integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js"
+            integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1"
+            crossorigin="anonymous"></script>
+    <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
+    <script src="build/js/batch-gene-expression.bundle.min.js"></script>
     <script>
         $(document).ready(function(){
             BatchGeneExpression.createDatasetMenu("datasetSelector");
