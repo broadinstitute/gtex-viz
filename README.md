@@ -33,13 +33,18 @@ Once the HTTP server is running, open the demo home page using the following URL
 ## <a name="expression-map"></a>GTEx Expression Map
 GTEx Expression Map is an interactive heatmap specifically designed for rendering expression data. The GTEx portal uses this tool to report and summarize multi-gene, multi-tissue expression data. 
 
-[Portal link](https://gtexportal.org/home/multiGeneQueryPage)
+[Portal Link](https://gtexportal.org/home/multiGeneQueryPage)
 
 ![GTEx Expression Map Screen Shot](/images/GTEx-expression-map.png)
 
 ---
 
 ## <a name="transcript-browser"></a>GTEx Transcript Browser
+GTEx Transcript Browser is for exploring expression of individual transcripts of a gene.
+
+[Portal Link](https://gtexportal.org/home/isoformPage)
+
+![GTEx Transcript Browser](/images/GTEx-transcript-browser.png)
 
 ---
 
