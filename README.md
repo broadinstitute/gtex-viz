@@ -70,7 +70,7 @@ columns.
 For the versions available, see the [tags on this repository](https://github.com/broadinstitute/gtex-viz/tags).
 
 ##### GTEx Portal Team
-- Katherine Huang @kataviz
+- [Katherine Huang](@kataviz)
 - Kane Hadley
 - Duyen Nguyen
 - Jared Nedzel
