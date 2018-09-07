@@ -16,13 +16,13 @@ The GTEx web portal (http://gtexportal.org) develops specialized web-based visua
 * Access to the internet, for real-time data retrieval from the GTEx web service and external library dependencies.
 * A modern web browser.
 #### Launching the demo
-In the repo's root directory on your computer, start up the provided simple Python HTTP server, and specify a port (e.g. 8000):
+In the repo's root directory on your computer, start up a simple Python HTTP server, and specify a port (e.g. 9090):
 
-```python python/runServer.py```
+```python -m SimpleHTTPServer 9090```
 
 Once the HTTP server is running, open the demo home page using the following URL in a web browser: 
 
-```localhost:8000 (or the port of your choice)``` 
+```localhost:9090 (or the port of your choice)``` 
 
 ---
 
