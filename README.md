@@ -36,9 +36,9 @@ GTEx eQTL Dashboard reports single-tissue eQTLs for a user-provided list of gene
 ---
 
 ## <a name="gene-eqtl-visualizer"></a>GTEx Gene-eQTL Visualizer
-GTEx Gene-eQTL Visualizer displays the single-tissue eQTLs for a selected gene in a bubble
-heatmap. In the heatmap, the rows are tissues in alphabetical order, and the columns are variants sorted by
-genomic location. Each eQTL is represented as a circle (bubble), and its color and size are
+GTEx Gene-eQTL Visualizer displays the single-tissue eQTLs for a query gene in a bubble
+heatmap--the rows are tissues in alphabetical order, columns are variants sorted by
+genomic location, bubbles represent the eQTLs with color and size
 scaled by the normalized effect size (NES) and p-value, respectively. Only tissues with
 significant eQTLs associated with the query gene are reported and rendered. The pairwise linkage
 disequilibrium (LD) values of the variants are aligned and displayed below the bubble heatmap
