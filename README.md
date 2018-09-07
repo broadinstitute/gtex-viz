@@ -10,7 +10,7 @@ The GTEx web portal (http://gtexportal.org) develops specialized web-based visua
 
 ---
 
-### Running the demos locally on your computer
+### Running demos locally on your computer
 #### Prerequisites
 * A local copy of this repo.
 * Access to the internet, for real-time data retrieval from the GTEx web service and external library dependencies.
