@@ -66,10 +66,10 @@ columns.
 
 ---
 
-##### Versioning
+### Versioning
 For the versions available, see the [tags on this repository](https://github.com/broadinstitute/gtex-viz/tags).
 
-##### GTEx Portal Team
+### GTEx Portal Team
 - Katherine Huang
 - Kane Hadley
 - Duyen Nguyen
@@ -77,10 +77,10 @@ For the versions available, see the [tags on this repository](https://github.com
 - François Aguet
 - Kristin Ardlie
 
-##### License
+### License
 This project is licensed under the terms of the BSD 3-clause license - see the [LICENSE.md](LICENSE.md) file for details.
 
-##### Acknowledgements
+### Acknowledgements
 The GTEx portal is supported by NIH contract HHSN268201000029C and U41 grant HG009494-01. We also thank our Pfizer collaborators for contributing to visualization discussions and suggestions. 
 
 
