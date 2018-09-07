@@ -111,7 +111,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.full.min.js"></script>
 
     <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
-    <script src="build/js/isoform-expression.bundle.min.js"></script>
+    <script src="build/js/transcript-browser.bundle.min.js"></script>
     <script>
         $(document).ready(function(){
             $('#gene').keypress(function(e){
@@ -135,7 +135,7 @@
             reset();
             $('#spinner').show();
             $('#isoformNav').show();
-            IsoformExpression.render(type, geneId, "vizRoot");
+            TranscriptBrowser.render(type, geneId, "vizRoot");
         }
         function reset(){
             $("#vizRoot").empty();

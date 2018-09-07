@@ -8,11 +8,11 @@ in a terminal window (bash)
 export NODE_ENV="development"
 echo $NODE_ENV
  */
-const name = 'IsoformExpression';
+const name = 'TranscriptBrowser';
 export default {
     input: 'src/scripts/' + name + '.js',
     output: {
-        file: process.env.NODE_ENV=='prod'?'build/js/isoform-expression.bundle.min.js':'build/js/isoform-expression.bundle.dev.js',
+        file: process.env.NODE_ENV=='prod'?'build/js/transcript-browser.bundle.min.js':'build/js/transcript-browser.bundle.dev.js',
         format: 'iife'
     },
     sourcemap: 'inline',
