@@ -27,7 +27,7 @@ Once the HTTP server is running, open the demo home page using the following URL
 ---
 
 ### Using Rollup to bundle the applications
-Most of our tools are written in ES6, with the exception of GTEx Gene-eQTL Visualizer, and we recommend using a module bundler such as Rollup to recompile code if needed.
+Most of our tools are written in ES6, with the exception of the GTEx Gene-eQTL Visualizer, and we recommend using a module bundler such as Rollup to recompile code if needed.
 
 #### Rollup installation
 To install Rollup and required libraries, you may run ```npm install``` in the repo's root directory on your computer. This will install the libraries under a subdirectory: node_modules.
@@ -43,6 +43,9 @@ To minify the bundled code, first set the environment variable NODE_ENV to "prod
 ```export NODE_ENV="prod"```
 
 Then run rollup to recompile the code. All the demos are using the minified code of the tools.
+
+#### GTEx Gene-eQTL Visualizer
+The GTEx Gene-eQTL Visualizer is written in ES5. We are in the process of updating it to ES6. 
 
 ---
 
