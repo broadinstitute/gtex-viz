@@ -10,7 +10,7 @@ echo $NODE_ENV
  */
 const name = 'EqtlDashboard';
 export default {
-    input:'src/scripts/' + name + '.js',
+    input:'src/' + name + '.js',
     output: {
         file: process.env.NODE_ENV=='prod'?'build/js/eqtl-dashboard.bundle.min.js':'build/js/eqtl-dashboard.bundle.dev.js',
         format: 'iife'
