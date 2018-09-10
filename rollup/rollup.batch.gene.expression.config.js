@@ -10,7 +10,7 @@ echo $NODE_ENV
  */
 const name= 'BatchGeneExpression';
 export default {
-    input: 'src/scripts/' + name + '.js',
+    input: 'src/' + name + '.js',
     output: {
         file: process.env.NODE_ENV=='prod'?'build/js/batch-gene-expression.bundle.min.js':'build/js/batch-gene-expression.bundle.dev.js',
         format: 'iife'

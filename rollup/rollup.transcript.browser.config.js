@@ -10,7 +10,7 @@ echo $NODE_ENV
  */
 const name = 'TranscriptBrowser';
 export default {
-    input: 'src/scripts/' + name + '.js',
+    input: 'src/' + name + '.js',
     output: {
         file: process.env.NODE_ENV=='prod'?'build/js/transcript-browser.bundle.min.js':'build/js/transcript-browser.bundle.dev.js',
         format: 'iife'
