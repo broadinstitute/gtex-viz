@@ -37,12 +37,12 @@ The rollup configuration files for each tool is located in the directory [rollup
 
 ```rollup -c rollup/rollup.expression-map.config.js```
 
-This will recompile and generate a new bundled tool code in the directly build/js/.
+This will recompile and generate a new bundled tool code in the directory `build/js/`.
 
 To minify the bundled code, first set the environment variable NODE_ENV to "prod", for example in a Bash terminal, the command would be:
 ```export NODE_ENV="prod"```
 
-Then run rollup to recompile the code. All the demos are using the minified code of the tools. I
+Then run rollup to recompile the code. All the demos are using the minified code of the tools.
 
 ---
 
