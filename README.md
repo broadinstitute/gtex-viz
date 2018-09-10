@@ -44,9 +44,6 @@ To minify the bundled code, first set the environment variable NODE_ENV to "prod
 
 Then run rollup to recompile the code. All the demos are using the minified code of the tools.
 
-#### GTEx Gene-eQTL Visualizer
-The GTEx Gene-eQTL Visualizer is written in ES5. We are in the process of updating it to ES6. 
-
 ---
 
 ## <a name="expression-map"></a>GTEx Expression Map
@@ -82,6 +79,8 @@ heatmap--the rows are tissues in alphabetical order, and columns are variants so
 genomic location. The color and size of the bubbles are scaled by the normalized effect size (NES) and p-value of the eQTLs. Only tissues with significant eQTLs associated with the query gene are reported and rendered. The pairwise linkage
 disequilibrium (LD) values of the variants are also displayed and aligned below the bubble heatmap
 columns.
+
+Note: The GTEx Gene-eQTL Visualizer is currently in ES5. We will update the code to ES6 in the near future. 
 
 [Portal Link](https://gtexportal.org/home/bubbleHeatmapPage/ACTN3)
 
