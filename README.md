@@ -35,7 +35,7 @@ To install Rollup and required libraries, you may run ```npm install``` in the r
 #### Rollup configuration
 The rollup configuration files for each tool is located in the directory [rollup](/rollup). To recompile a tool (e.g. GTEx Expression Map): run the following command in your local repo's root directory:
 
-```rollup -c rollup/rollup.batch.gene.expression.config.js```
+```rollup -c rollup/rollup.expression-map.config.js```
 
 ---
 
