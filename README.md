@@ -80,6 +80,20 @@ For the versions available, see the [tags on this repository](https://github.com
 ### License
 This project is licensed under the terms of the BSD 3-clause license - see the [LICENSE.md](LICENSE.md) file for details.
 
+***
+
+Dependencies:
+GTEx Visualizations is distributed, in part, under and subject to the provisions of licenses for:
+
+D3.js (https://d3js.org/), Copyright (c) 2017 Mike Bostock. All rights reserved.
+Licensed under the BSD 3-clause license (https://opensource.org/licenses/BSD-3-Clause); and
+
+jQuery (https://jquery.com/), Copyright (c) 2018 The jQuery Foundation. All rights reserved.
+Licensed under the MIT license (https://jquery.org/license/).
+
+***
+
+
 ### Acknowledgements
 The GTEx portal is supported by NIH contract HHSN268201000029C and U41 grant HG009494-01. We also thank our Pfizer collaborators for contributing to visualization discussions and suggestions. 
 
