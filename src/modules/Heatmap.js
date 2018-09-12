@@ -93,7 +93,7 @@ export default class Heatmap {
      * @param useNullColor {Boolean} whether to render null values with the pre-defined null color
      */
 
-    draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=true){
+    draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=true, columnLabelPosAdjust=null){
         if (this.xList === undefined) this._setXList(dimensions.w);
         if (this.yList === undefined) this._setYList(dimensions.h);
         if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value), this.colorScheme);
@@ -104,7 +104,7 @@ export default class Heatmap {
             .data(this.xList);
 
         // update old elements
-        const Y = this.yScale.range()[1] + (this.yScale.bandwidth() * 2);
+        const Y = columnLabelPosAdjust==null?this.yScale.range()[1] + (this.yScale.bandwidth() * 2):this.yScale.range()[1]+columnLabelPosAdjust;
         const adjust = 5;
         xLabels.attr("transform", (d) => {
                 let x = this.xScale(d) + adjust;
