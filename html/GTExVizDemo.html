@@ -13,11 +13,49 @@
             <div>
                 <h5>GTEx Expression Heatmap</h5>
                 <div id="gtexVizHeatmap"></div>
+                <div id="userHeatmap"></div>
             </div>
         </div>
     </body>
     <script src="/build/js/gtex-viz.bundle.dev.js"></script>
     <script>
-        GTExViz.heatmap()
+        let data = generateRandomMatrix({x:50, y:6, scaleFactor:50});
+        GTExViz.heatmap();
+        GTExViz.heatmap({
+            id: 'userHeatmap',
+            data: data,
+            width: 1200,
+            height: 300,
+            marginLeft: 20,
+            marginRight: 40,
+            marginTop: 20,
+            marginBottom: 20,
+            colorScheme: "Reds",
+            cornerRadius: 5,
+            columnLabelHeight: 20,
+            columnLabelAngle: 60,
+            columnLabelPosAdjust: 10,
+            rowLabelWidth: 100,
+        });
+        function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
+            let range = n => Array.from(Array(n).keys());
+            let X = range(par.x); // generates a 1-based list.
+            let Y = range(par.y);
+            let data = [];
+            X.forEach((x)=>{
+                x = 'x' + x.toString();
+                Y.forEach((y)=>{
+                    y = 'y' + y.toString();
+                    let v = Math.random()*par.scaleFactor;
+                    data.push({
+                        x: x,
+                        y: y,
+                        value: v,
+                        originalValue: v
+                    });
+                })
+            });
+            return data;
+        }
     </script>
 </html>
