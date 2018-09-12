@@ -10,12 +10,10 @@ import Heatmap from "./modules/Heatmap";
 /*
 Heatmap TODO:
 1. Rewrite how log transformation is done in the viz code.
-2. Change originalValue to displayValue.
-3. Rewrite Heatmap constructor param format.
 4. Error-checking the DIV ID DOM element.
-5. Add tooltip?
-6. Color legend?
-7. Download button
+5. Add tooltip
+6. Add color legend
+7. Add download button
  */
 const demoData = {
     heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:100})
