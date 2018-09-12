@@ -16,8 +16,8 @@ import {select} from "d3-selection";
 /**
  *
  * @param id {String} the parent dom ID
- * @param width {Numeric}
- * @param height {Numeric}
+ * @param width {Numeric}: the outer width
+ * @param height {Numeric}: the outer height
  * @param margin {Object} with attr: left, top
  * @param svgId {String}
  * @returns {*}

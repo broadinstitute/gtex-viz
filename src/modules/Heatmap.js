@@ -12,18 +12,14 @@ import Toolbar from "./Toolbar";
 import Tooltip from "./Tooltip";
 
 export default class Heatmap {
-    /* data is a json with the following attributes:
-        x: the x label
-        y: the y label
-        value: the rendered numerical value (transformed)
-        originalValue: the original numerical value
-     */
-
     /**
      * constructor
-     * @param data {Object}, see above
+     * @param data {List}, a list of objects with the following attributes: x: the x label, y: the y label
+        value: the rendered numerical value (transformed)
+        originalValue: the original numerical value
      * @param useLog {Boolean} performs log transformation
      * @param colorScheme {String}: recognized terms in Colors:getColorInterpolator
+     * @param r {Integer}: cell corner radius
      */
     constructor(data, colorScheme="YlGnBu", useLog=true, base=10, r=2){
         this.data = data;
