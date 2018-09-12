@@ -16,7 +16,7 @@ export default class Heatmap {
      * constructor
      * @param data {List}, a list of objects with the following attributes: x: the x label, y: the y label
         value: the rendered numerical value (transformed)
-        originalValue: the original numerical value
+        displayValue: display numerical value
      * @param useLog {Boolean} performs log transformation
      * @param colorScheme {String}: recognized terms in Colors:getColorInterpolator
      * @param r {Integer}: cell corner radius
@@ -193,7 +193,7 @@ export default class Heatmap {
             .merge(cells)
             // .transition()
             // .duration(2000)
-            .style("fill", (d) => useNullColor&&d.originalValue==0?nullColor:this.colorScale(d.value)); // TODO: what if null value isn't 0?
+            .style("fill", (d) => useNullColor&&d.displayValue==0?nullColor:this.colorScale(d.value)); // TODO: what if null value isn't 0?
 
         // exit and remove
         cells.exit().remove();

@@ -434,7 +434,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
             const selected = select(this); // 'this' refers to the d3 DOM object
             dmap.objects.heatmap.cellMouseover(selected);
             const tissue = tissueDict[d.x] === undefined?d.x:tissueDict[d.x].tissueSiteDetail; // get tissue name or ID
-            const value = parseFloat(d.originalValue.toExponential()).toPrecision(3);
+            const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
             tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.id}<br/> ${d.unit}: ${value==0?'NA':value}`)
         })
         .on("mouseout", function(d){
@@ -483,7 +483,7 @@ function _customizeExonMap(tissues, geneModel, dmap){
             const selected = select(this); // 'this' refers to the d3 DOM object
             dmap.objects.heatmap.cellMouseover(selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
-            const value = parseFloat(d.originalValue.toExponential()).toPrecision(3);
+            const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
             tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd)-Number(d.chromStart) + 1}bp) <br/>${d.unit}: ${value==0?'NA':value}`)
         })
         .on("mouseout", function(d){
@@ -531,7 +531,7 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
             dmap.objects.heatmap.cellMouseover(selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0]; // get the junction display name
-            const value = parseFloat(d.originalValue.toExponential()).toPrecision(3);
+            const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
             tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName} (${Number(junc.chromEnd) - Number(junc.chromStart)} bp)<br/> ${d.unit}: ${value==0?'NA':value}`)
         })
         .on("mouseout", function(d){

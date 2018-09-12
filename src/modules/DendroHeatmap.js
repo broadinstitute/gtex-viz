@@ -17,7 +17,7 @@ export default class DendroHeatmap {
      * Constructor
      * @param columnTree {String} a newick tree
      * @param rowTree {String} a newick tree
-     * @param heatmapData {List} of objects with attributes: x: String, y:String, value:Float, originalValue:Float
+     * @param heatmapData {List} of objects with attributes: x: String, y:String, value:Float, displayValue:Float
      * @param color {String} a color name that's available in Colors.getColorInterpolator
      * @param r {Integer} the degrees of rounded-corners of the heatmap cells
      * @param config {DendroHeatmapConfig}

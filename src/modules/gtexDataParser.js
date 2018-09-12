@@ -260,7 +260,7 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
         });
         d.l = exon.end - exon.start + 1;
         d.value = Number(d.median)/d.l;
-        d.originalValue = Number(d.median)/d.l;
+        d.displayValue = Number(d.median)/d.l;
         if (useLog) d.value = Math.log2(d.value + 1);
         d.x = d.exonId;
         d.y = d.tissueSiteDetailId;
@@ -312,7 +312,7 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
         d.x = d.junctionId;
         d.y = tissueId;
         d.value = useLog?Math.log10(Number(median + adjust)):Number(median);
-        d.originalValue = Number(median);
+        d.displayValue = Number(median);
     });
 
     // sort by genomic location in ascending order
@@ -342,7 +342,7 @@ export function parseTranscriptExpression(data, useLog=true, adjust=1){
             }
         });
         d.value = useLog?Math.log10(Number(d.median + adjust)):Number(d.median);
-        d.originalValue = Number(d.median);
+        d.displayValue = Number(d.median);
         d.x = d.transcriptId;
         d.y = d.tissueSiteDetailId;
         d.id = d.gencodeId;
@@ -369,7 +369,7 @@ export function parseTranscriptExpressionTranspose(data, useLog=true, adjust=1){
         const median = d.median;
         const tissueId = d.tissueSiteDetailId;
         d.value = useLog?Math.log10(Number(median + adjust)):Number(median);
-        d.originalValue = Number(median);
+        d.displayValue = Number(median);
         d.y = d.transcriptId;
         d.x = tissueId;
         d.id = d.gencodeId;
@@ -403,7 +403,7 @@ export function parseMedianExpression(data, useLog=true){
         d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
         d.x = d.tissueSiteDetailId;
         d.y = d.gencodeId;
-        d.originalValue = Number(d.median);
+        d.displayValue = Number(d.median);
         d.id = d.gencodeId;
     });
 

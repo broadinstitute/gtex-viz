@@ -107,7 +107,7 @@ export function parseCssStyles (dom) {
 
 /**
  * Generate a list of x*y data objects with random values
- * The data object has this structure: {x: xlabel, y: ylabel, value: some value, originalValue: some value}
+ * The data object has this structure: {x: xlabel, y: ylabel, value: some value, displayValue: some value}
  * @param par
  * @returns {Array}
  */
@@ -124,7 +124,7 @@ export function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
                 x: x,
                 y: y,
                 value: v,
-                originalValue: v
+                displayValue: v
             });
         })
     });

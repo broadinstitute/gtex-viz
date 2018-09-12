@@ -24,7 +24,7 @@ export default class IsoformTrackViewer {
     showData(data, colorScale, barScale, dataLabel, sort=true){
 
         if (sort){
-            data.sort((a,b)=>{return -(a.originalValue - b.originalValue)}); // first sort the expression data
+            data.sort((a,b)=>{return -(a.displayValue - b.displayValue)}); // first sort the expression data
             const ids = data.map((d)=>d.transcriptId);
             this.sortTracks(ids);
         }
