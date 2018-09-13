@@ -12,7 +12,6 @@ Heatmap TODO:
 1. Rewrite how log transformation is done in the viz code.
 4. Error-checking the DIV ID DOM element.
 4.5. Error-checking all inputs.
-5. Add tooltip
 6. Add color legend
 7. Add download button
  */
@@ -20,11 +19,7 @@ const demoData = {
     heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:100})
 };
 
-/**
- * Renders a 2D Heatmap
- * @param params
- */
-export function heatmap(par={
+const heatmapDemoConfig = {
     id: 'gtexVizHeatmap',
     data: demoData.heatmap,
     width: 1200,
@@ -39,7 +34,13 @@ export function heatmap(par={
     columnLabelAngle: 60,
     columnLabelPosAdjust: 10,
     rowLabelWidth: 100,
-}){
+};
+
+/**
+ * Renders a 2D Heatmap
+ * @param params
+ */
+export function heatmap(par=heatmapDemoConfig){
     // create an SVG
     let margin = {
         top: par.marginTop,
