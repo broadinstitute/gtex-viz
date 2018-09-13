@@ -34,11 +34,14 @@ export default class Heatmap {
         this.r = r;
         this.colorScheme = colorScheme;
 
-        // peripheral
-        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body')); // create it if not already present on the html document
-        this.tooltipId = tooltipId;
+        // peripheral features
+        /// Tooltip
+        /// create the tooltip DIV
+        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
+        this.tooltip = new Tooltip(tooltipId);
+        select(`#${domId}`).classed('heatmap-tooltip', true);
+
         this.toolbar = undefined;
-        this.tooltip = undefined;
     }
 
     /**
@@ -53,16 +56,6 @@ export default class Heatmap {
         return this.toolbar;
     }
 
-     /**
-     * Create the tooltip object
-     * @param domId {String} the tooltip's dom ID
-     * @returns {Tooltip}
-     */
-    createTooltip(domId){
-        this.tooltip = new Tooltip(domId);
-        select(`#${domId}`).classed('heatmap-tooltip', true);
-        return this.tooltip;
-    }
 
     /**
      * draw color legend for the heat map
@@ -98,7 +91,6 @@ export default class Heatmap {
 
     draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=true, columnLabelPosAdjust=null){
 
-        if (this.tooltip === undefined) this.createTooltip(this.tooltipId);
         if (this.xList === undefined) this._setXList(dimensions.w);
         if (this.yList === undefined) this._setYList(dimensions.h);
         if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value), this.colorScheme);

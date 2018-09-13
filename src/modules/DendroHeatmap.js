@@ -23,7 +23,7 @@ export default class DendroHeatmap {
      * @param config {DendroHeatmapConfig}
      * @param useLog {Boolean}
      */
-    constructor(columnTree, rowTree, heatmapData, color="YlGnBu", r=2, config=new DendroHeatmapConfig(), useLog=true, base=10, title = ''){
+    constructor(columnTree, rowTree, heatmapData, color="YlGnBu", r=2, config=new DendroHeatmapConfig(), tooltipId="dmapTooltip", useLog=true, base=10, title = ''){
         this.config = config.get();
         //input evaluations
         columnTree = columnTree===undefined||columnTree.startsWith("Not enough data")?undefined:columnTree;
@@ -38,7 +38,7 @@ export default class DendroHeatmap {
         this.objects = {
             columnTree: this.data.columnTree===undefined? undefined:new Dendrogram(this.data.columnTree, "v"),
             rowTree: this.data.rowTree===undefined?undefined:new Dendrogram(this.data.rowTree, "h"),
-            heatmap: new Heatmap(this.data.heatmap, color, useLog, base, r)
+            heatmap: new Heatmap(this.data.heatmap, color, useLog, base, r, tooltipId)
         };
         this.visualComponents = {
             svg: undefined,
@@ -47,9 +47,8 @@ export default class DendroHeatmap {
         };
 
         this.title = title;
-
-        this.tooltip = undefined;
         this.toolbar = undefined;
+        this.tooltip = this.objects.heatmap.tooltip;
     }
 
     /**
@@ -62,17 +61,6 @@ export default class DendroHeatmap {
     createToolbar(domId, tooltip){
         this.toolbar = new Toolbar(domId, tooltip);
         return this.toolbar;
-    }
-
-     /**
-     * Create the tooltip object
-     * @param domId {String} the tooltip's dom ID
-     * @returns {Tooltip}
-     */
-    createTooltip(domId){
-        this.tooltip = new Tooltip(domId);
-        select(`#${domId}`).classed('heatmap-tooltip', true);
-        return this.tooltip;
     }
 
     /**

@@ -114,7 +114,6 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     }
                 };
                 // build the dom components
-                if($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($('body'));
                 ["toolbar", "clone"].forEach((key)=>{
                     $('<div/>').attr("id", ids[key]).appendTo($(`#${ids.root}`));
                 });
@@ -135,7 +134,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         let isoformTree = args[6].clusters.transcript;
                         let isoformExpressT = parseTranscriptExpressionTranspose(args[6]);
 
-                        dmap = new DendroHeatmap(tissueTree, isoformTree, isoformExpressT, "Purples", 5, dmapConfig, true, 10, `Isoform Expression of ${svgTitle}`);
+                        dmap = new DendroHeatmap(tissueTree, isoformTree, isoformExpressT, "Purples", 5, dmapConfig, ids.tooltip, true, 10, `Isoform Expression of ${svgTitle}`);
                         dmap.render(ids.root, ids.svg, true, true, top, 5);
                         if (!isoformTree.startsWith("Not enough data")){
                             const orders = dmap.objects.rowTree.yScale.domain(); // the leaf order of the isoform dendrogram
@@ -155,7 +154,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                         }
                         const dmapConfig = new DendroHeatmapConfig(width, 150, 0, {top: 60, right: 350, bottom: 200, left: 50}, 12, 10);
                         let tissueTree = args[4].clusters.tissue;
-                        dmap = new DendroHeatmap(undefined, tissueTree, junctionExpress, "Reds", 5, dmapConfig, true, 10, `Junction Expression of ${svgTitle}`);
+                        dmap = new DendroHeatmap(undefined, tissueTree, junctionExpress, "Reds", 5, dmapConfig, ids.tooltip, true, 10, `Junction Expression of ${svgTitle}`);
                         dmap.render(ids.root, ids.svg, false, true, top, 5);
 
                         break;
@@ -163,7 +162,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     case "exon": {
                         const dmapConfig = new DendroHeatmapConfig(width, 150, 0, {top: 60, right: 350, bottom: 200, left: 50}, 12, 10);
                         let tissueTree = args[5].clusters.tissue;
-                        dmap = new DendroHeatmap(undefined, tissueTree, exonExpress, "Blues", 5, dmapConfig, true, 2, `Exon Expression of ${svgTitle}`);
+                        dmap = new DendroHeatmap(undefined, tissueTree, exonExpress, "Blues", 5, dmapConfig, ids.tooltip, true, 2, `Exon Expression of ${svgTitle}`);
                         dmap.render(ids.root, ids.svg, false, true, top, 5);
 
                         break;
@@ -175,8 +174,6 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                 $('#spinner').hide();
 
                 // TODO: code review
-                // tooltip
-                dmap.createTooltip(ids.tooltip);
 
                 // define the gene model and isoform tracks layout dimensions
                 const yAdjust = type.startsWith('isoform')?60:80; // vertical space between the heatmap and gene model/isoform tracks
