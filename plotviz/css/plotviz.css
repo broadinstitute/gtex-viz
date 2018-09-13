@@ -1,0 +1,295 @@
+div.filter-context-menu {
+    float: left;
+    margin: 10px;
+    display: none;
+    background-color: #f2f2f2;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    min-width: 350px;
+    border: 1px solid #d4d4d4;
+}
+
+div.filter-context-menu li {
+    display: block;
+    float: left;
+    width: 15%;
+}
+
+div.button-lower {
+    float: right;
+    clear: both;
+    padding-top: 10px;
+    padding-left: 20px;
+}
+
+.checkbox-grid li {
+    display: block;
+    float: left;
+    width: 12.5%;
+}
+
+div.filter-error-menu {
+    margin: 0px;
+    border: 1px solid;
+    padding: 15px 10px 15px 50px;
+    color: #D8000C;
+    background-color: #FFBABA;
+    border-radius: 4px;
+}
+
+.buttons-collect {
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+div.button-box {
+    float:left;
+    border: solid 1px #ccc;
+    border-right:none;
+    padding: 7px 10px 7px 10px;
+    background-color:#eee;
+    /*
+    max-width:20%;
+    width:19.85%;
+    height: 40px;
+    text-align: center;
+    float:left;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+    */
+}
+
+.button-box-first {
+    border-top-left-radius:5px;
+    border-bottom-left-radius:5px;
+}
+
+.button-box-last {
+    border-right:solid 1px #ccc !important;
+    border-top-right-radius:5px;
+    border-bottom-right-radius:5px;
+    margin-right:10px;
+}
+
+.on {
+    background-color: green;
+}
+
+.off {
+    background-color: blue;
+}
+
+.button {
+    float:left;
+    font-size:12px;
+    border: solid 1px #ccc  !important;
+    padding: 5px 10px 5px 10px;
+    background-color:#fff;
+    color: #555;
+    line-height: 1;
+}
+
+.button:hover {
+    background-color:#eFc;
+    border: solid 1px #aaa;
+    color: #000;
+}
+
+.button:active {
+    background-color: #e6e7e8;
+    border: solid 1px #390;
+    color: black;
+}
+
+
+
+.button-box-title {
+    width: 100%;
+    text-align:center;
+    font-size: 13px;
+    padding-bottom: 5px;
+}
+
+.btn-left {
+    border-top-left-radius:5px;
+    border-bottom-left-radius:5px;
+}
+
+.btn-right {
+
+    border-top-right-radius:5px;
+    border-bottom-right-radius:5px;
+}
+
+.btn-active, .btn-active:hover {
+    background-color: #e6e7e8;
+    border: solid 1px #390;
+    color: black;
+}
+
+.button-options {
+
+}
+
+.btn-link {
+     background:none!important;
+     border:none!important;
+     padding:0!important;
+     font: inherit;
+     /*border is optional*/
+     border-bottom: none!important;
+     margin-right: 5px;
+     cursor: pointer;
+     font-size: 12px;
+     margin-right: 15px;
+}
+
+.btn-form {
+     padding: 10px;
+}
+
+.plotviz-rootClass-horizontal {
+        position: relative;
+        top 0px;
+        left: 0px;
+        right: 0px;
+        height: 700px;
+}
+
+.plotviz-rootClass-vertical {
+        position: relative;
+        top 0px;
+        left: 0px;
+        right: 0px;
+        height: 1200px;
+}
+
+.plotviz-mainClass-horizontal {
+        position: absolute;
+        top: 150px;
+        left: 100px;
+        right: 250px;
+        height: 400px;
+}
+
+.plotviz-mainClass-vertical {
+        position: absolute;
+        top: 150px;
+        left: 300px;
+        right: 250px;
+        height: 1000px;
+}
+
+.plotviz-controlClass {
+        position: absolute;
+        left: 100px;
+}
+
+.plotviz-bottomClass-horizontal {
+        position: absolute;
+        top: 550px;
+        left: 100px;
+        right: 0px;
+        height: 200px;
+}
+
+.plotviz-bottomClass-vertical {
+        position: absolute;
+        top: 1150px;
+        left: 300px;
+        right: 100px;
+        height: 100px;
+}
+
+.plotviz-leftClass-horizontal {
+        position: absolute;
+        top: 150px;
+        left: 0px;
+        height: 400px;
+        width: 100px;
+}
+
+.plotviz-rightClass-horizontal {
+        position: absolute;
+        top: 150px;
+        right: 0px;
+        height: 400px;
+        width: 250px;
+}
+
+.plotviz-leftClass-vertical {
+        position: absolute;
+        top: 150px;
+        left: 0px;
+        height: 1000px;
+        width: 300px;
+}
+
+.plotviz-rootClass-isoform {
+        position: relative;
+        top 0px;
+        left: 0px;
+        right: 0px;
+        height: 700px;
+}
+
+.plotviz-mainClass-isoform {
+        position: absolute;
+        top: 150px;
+        left: 100px;
+        right: 250px;
+        height: 400px;
+}
+
+.plotviz-bottomClass-isoform {
+        position: absolute;
+        top: 550px;
+        left: 100px;
+        right: 150px;
+        height: 200px;
+}
+
+.plotviz-leftClass-isoform {
+        position: absolute;
+        top: 150px;
+        left: 0px;
+        height: 400px;
+        width: 100px;
+}
+
+.plotviz-rightClass-isoform {
+        position:absolute;
+        top: 150px;
+        right: 0px;
+        height: 400px;
+        width: 250px;
+}
+
+#plotviz-topDiv {
+        position: absolute;
+        font-size: 40px;
+        text-align: center;
+        top: 100px;
+        left: 100px;
+        right: 250px;
+}
+
+
+#expTitleDiv {
+    position: absolute;
+    font-size: 40px;
+    text-align: center;
+    top: 100px;
+    left: 100px;
+    right: 250px;
+}
+
+#expControlDiv {
+    position: absolute;
+    left: 100px;
+}
+
+#expRootDiv {
+    clear:both;
+}
