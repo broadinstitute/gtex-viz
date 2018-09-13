@@ -3815,7 +3815,8 @@ var plotviz = (function (plotviz) {
         }
 
         var minimumSize = 1150;
-        var _width = Math.max(parseInt(window.getComputedStyle(div).width), minimumSize);
+        //var _width = Math.max(parseInt(window.getComputedStyle(div).width), minimumSize);
+        var _width = 1150;
 
         _root = d3.select(div).append('div')
             .attr({
@@ -3835,7 +3836,8 @@ var plotviz = (function (plotviz) {
 
         window.addEventListener('resize', function () {
             if (_gene) {
-                _width = Math.max(parseInt(window.getComputedStyle(div).width), minimumSize);
+                //_width = Math.max(parseInt(window.getComputedStyle(div).width), minimumSize);
+                _width = 1150;
                 console.log(_width);
                 var newData;
 
