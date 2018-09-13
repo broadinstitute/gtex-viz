@@ -28,20 +28,18 @@
     <script src="/build/js/gtex-viz.bundle.dev.js"></script>
     <script>
         let data = generateRandomMatrix({x:50, y:6, scaleFactor:50});
-
         GTExViz.heatmap();
-
         GTExViz.heatmap({
             id: 'userHeatmap',
             data: data,
-            width: 1200,
-            height: 300,
+            width: 800,
+            height: 200,
             marginLeft: 20,
             marginRight: 40,
             marginTop: 20,
             marginBottom: 20,
             colorScheme: "Reds",
-            cornerRadius: 5,
+            cornerRadius: 2,
             columnLabelHeight: 20,
             columnLabelAngle: 60,
             columnLabelPosAdjust: 10,
