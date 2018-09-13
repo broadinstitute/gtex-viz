@@ -3768,7 +3768,8 @@ var plotviz = (function (plotviz) {
 
         var _server = url;
         var _server2 = url2;
-        var _colorURL = 'http://gtexportal.org/api/v1/samples';
+        //var _colorURL = 'http://gtexportal.org/api/v1/samples';
+        var _colorURL = 'https://gtexportal.org/api/v1/samples';
 
         var _emphasizedIsoform = null;
         var _emphasizedIsoformWidth = 12;
