@@ -21,7 +21,7 @@ export default class Heatmap {
      * @param colorScheme {String}: recognized terms in Colors:getColorInterpolator
      * @param r {Integer}: cell corner radius
      */
-    constructor(data, colorScheme="YlGnBu", useLog=true, base=10, r=2){
+    constructor(data, colorScheme="YlGnBu", useLog=true, base=10, r=2, tooltipId="heatmapTooltip"){
         this.data = data;
         this.useLog = useLog;
         this.base = base;
@@ -34,6 +34,9 @@ export default class Heatmap {
         this.r = r;
         this.colorScheme = colorScheme;
 
+        // peripheral
+        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body')); // create it if not already present on the html document
+        this.tooltipId = tooltipId;
         this.toolbar = undefined;
         this.tooltip = undefined;
     }
@@ -94,6 +97,8 @@ export default class Heatmap {
      */
 
     draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=true, columnLabelPosAdjust=null){
+
+        if (this.tooltip === undefined) this.createTooltip(this.tooltipId);
         if (this.xList === undefined) this._setXList(dimensions.w);
         if (this.yList === undefined) this._setYList(dimensions.h);
         if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value), this.colorScheme);
@@ -184,7 +189,7 @@ export default class Heatmap {
             .style("fill", (d) => "#eeeeee")
             .on("mouseover", function(d){
                 const selected = select(this); // Note: "this" here refers to the dom element not the object
-                self.cellMouseover(selected)
+                self.cellMouseover(selected, d)
             })
             .on("mouseout", function(d){
                 const selected = select(this); // Note: "this" here refers to the dom element not the object
@@ -199,11 +204,13 @@ export default class Heatmap {
         cells.exit().remove();
     }
 
+
     cellMouseout(d){
         selectAll("*").classed('highlighted', false);
+        this.tooltip.hide();
     }
 
-    cellMouseover (selected) {
+    cellMouseover (selected, d) {
         const rowClass = selected.attr("row");
         const colClass = selected.attr("col");
         selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
@@ -211,6 +218,7 @@ export default class Heatmap {
         selectAll(".exp-map-ylabel").filter(`.${colClass}`)
             .classed('highlighted', true);
         selected.classed('highlighted', true);
+        this.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${parseFloat(d.displayValue.toExponential()).toPrecision(4)}`)
     }
 
     _setXList(width, newList) {

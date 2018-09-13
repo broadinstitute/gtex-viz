@@ -11,6 +11,7 @@ import Heatmap from "./modules/Heatmap";
 Heatmap TODO:
 1. Rewrite how log transformation is done in the viz code.
 4. Error-checking the DIV ID DOM element.
+4.5. Error-checking all inputs.
 5. Add tooltip
 6. Add color legend
 7. Add download button
@@ -49,7 +50,11 @@ export function heatmap(par={
     let inWidth = par.width - (par.marginLeft + par.marginRight + par.rowLabelWidth);
     let inHeight = par.height - (par.marginTop + par.marginBottom + par.columnLabelHeight);
     let svg = createSvg(par.id, par.width, par.height, margin);
-    let h = new Heatmap(par.data, par.colorScheme, false, null, par.cornerRadius);
+
+    // render the heatmap
+    let tooltipId = `${par.id}Tooltip`;
+    let h = new Heatmap(par.data, par.colorScheme, false, null, par.cornerRadius, tooltipId);
     h.draw(svg, {w:inWidth, h:inHeight}, par.columnLabelAngle, false, par.columnLabelPosAdjust);
+
 }
 
