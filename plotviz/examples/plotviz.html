@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>plotviz</title>
+
+    <link type="text/css" rel="stylesheet" href="//www.gtexportal.org/igv/css/plotviz.css"/>
+
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.5.0/lodash.min.js'></script>
+    <script type="text/javascript" src="//www.gtexportal.org/igv/plotviz.min.js"></script>
+    <script type="text/javascript" src="plotviz.example.js"></script>
+
+    <style>
+        {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+<div id="expRootDiv" style="position:relative; width:100%; height:800px;
+                            -webkit-box-sizing: border-box;
+                            -moz-box-sizing: border-box;
+                            box-sizing: border-box;
+                            -webkit-tap-highlight-color: rgba(0,0,0,0);
+                            -webkit-touch-callout: none;
+                            -moz-user-select: -moz-none;
+                            -khtml-user-select: none;
+                            -webkit-user-select: none;
+                            -o-user-select:none;
+                            user-select:none;">
+</div>
+<div id='expRootDiv2' style='position:relative;'>
+</div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var input = plotvizExample.input;
+
+        plotviz.loadData(input);
+
+        var div = document.getElementById('expRootDiv');
+        plotviz.setRightPanelMouseClick(function (x, y, d) {
+            console.log(d.key + " " + d.value + " Right Panel Click");
+        });
+        plotviz.setBottomPanelMouseClick(function (x, y, d) {
+            console.log(JSON.stringify(d) + " Bottom Panel Click");
+        });
+        plotviz.setMajorSort(function (a, b) {
+            var tumorVal = a.value.filter(function (x) { return 'tumor' === x.key; })[0].value.median;
+            var tumorVal2 = b.value.filter(function (x) { return 'tumor' === x.key; })[0].value.median;
+            return tumorVal < tumorVal2;
+        });
+
+        var a = new plotviz.Plot(div);
+        a.data(input);
+        a.create(input);
+        a.tooltip(function (x, y, d) {
+                // Tooltip function coming soon
+                if(d.key === 'tooltip') { // Should always be true
+                        if (d.value.type === 'box') {
+                                if ((typeof d.value.data !== 'undefined') &&
+                                     (typeof d.value.data.value !== 'undefined') &&
+                                     (typeof d.value.data.value.extra !== 'undefined') &&
+                                      (typeof d.value.data.value.extra.toolTip) !== 'undefined') {
+                                        return d.value.data.value.extra.toolTip;
+                                }
+                                //return d.value.data.key + '<\/br>' + 'n: ' + d.value.data.value.extra.n;
+                        }
+                        if (d.value.type === 'outlier') {
+                                return 'Value: ' + d.value.data.value.outlier + '</br>' + d.value.data.value.extra;
+                        }
+                }
+        });
+        a.render(input);
+
+        var div2 = d3.select('#expRootDiv2').node();
+        var b = new plotviz.Plot(div2);
+        b.data(input);
+        b.create(input);
+        b.tooltip(function (x, y, d) {
+                // Tooltip function coming soon
+        });
+        b.render(input);
+    });
+</script>
+
+</body>
+</html>

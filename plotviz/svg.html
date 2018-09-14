@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>plotviz</title>
+
+    <link type="text/css" rel="stylesheet" href="css/plotviz.css"/>
+<!--    <link type="text/css" rel="stylesheet" href="https://iwww.broadinstitute.org/igvdata/igv-js/igv/css/opentip.css"/>-->
+
+    <!--<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>-->
+    <!--<script type="text/javascript" src="plotviz.min.js"></script>-->
+    <!--<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.5.0/lodash.min.js'></script>-->
+
+    <script src="vendor/d3.v3.min.js" charset="utf-8"></script>
+    <script src="vendor/lodash.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="js/plotviz-axisPanel.js"></script>
+    <script type="text/javascript" src="js/plotviz-crosshair.js"></script>
+    <script type="text/javascript" src="js/plotviz-toolbox.js"></script>
+    <script type="text/javascript" src="js/plotviz-legend.js"></script>
+    <script type="text/javascript" src="js/plotviz-boxWhiskerViewer.js"></script>
+    <script type="text/javascript" src="js/plotviz-lineViewer.js"></script>
+    <script type="text/javascript" src="js/plotviz-testData.js"></script>
+    <script type="text/javascript" src="js/plotviz-data.js"></script>
+    <script type="text/javascript" src="js/plotviz-render.js"></script>
+    <script type="text/javascript" src="js/plotviz-interface.js"></script>
+    <script type="text/javascript" src="js/plotviz-Plot.js"></script>
+    <script type="text/javascript" src="js/plotviz.js"></script>
+    <script type="text/javascript" src="examples/plotviz.example.js"></script>
+    <script type="text/javascript" src="examples/lineviz.subset.example.js"></script>
+
+    <style>
+        {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+<div id="expRootDiv" style="position:relative; width:100%; height:800px;
+                            -webkit-box-sizing: border-box;
+                            -moz-box-sizing: border-box;
+                            box-sizing: border-box;
+                            -webkit-tap-highlight-color: rgba(0,0,0,0);
+                            -webkit-touch-callout: none;
+                            -moz-user-select: -moz-none;
+                            -khtml-user-select: none;
+                            -webkit-user-select: none;
+                            -o-user-select:none;
+                            user-select:none;">
+</div>
+<div id='expRootDiv2' style='position:relative;'>
+</div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var input = plotvizExample.input;
+
+        plotviz.setRightPanelMouseClick(function (x, y, d) {
+            console.log(d.key + " " + d.value + " Right Panel Click");
+        });
+        plotviz.setBottomPanelMouseMove(function (x, y, d) {
+            console.log('Mousing over bottom panel ' + x + ', ' + JSON.stringify(d) + ', ' + y);
+        });
+        plotviz.setBottomPanelMouseClick(function (x, y, d) {
+            console.log(JSON.stringify(d) + " Bottom Panel Click");
+        });
+        plotviz.setMajorSort(function (a, b) {
+            var tumorVal = a.value.filter(function (x) { return 'tumor' === x.key; })[0].value.median;
+            var tumorVal2 = b.value.filter(function (x) { return 'tumor' === x.key; })[0].value.median;
+            return tumorVal < tumorVal2;
+        });
+
+        var div = document.getElementById('expRootDiv');
+        var a = new plotviz.Plot(div);
+
+
+        input = convertLineInput(linevizSubsetExample.lineTestInput);
+
+
+        a.data(input);
+        a.create(input, 'one');
+        a.tooltip(function (x, y, d) {
+            // Tooltip function coming soon
+            if(d.key === 'tooltip') { // Should always be true
+                if (d.value.type === 'box') {
+                    console.log('Mousing over main panel ' + x + ', ' + JSON.stringify(d) + ', ' + y);
+                    if ((typeof d.value.data !== 'undefined') && (typeof d.value.data.value !== 'undefined') && (typeof d.value.data.value.extra !== 'undefined') && (typeof d.value.data.value.extra.toolTip !== 'undefined')) {
+                        return d.value.data.value.extra.toolTip;
+                    } else {
+                        return '';
+                    }
+                }
+                if (d.value.type === 'outlier') {
+                    console.log('Mousing over outlier ' + x + ', ' + JSON.stringify(d) + ', ' + y);
+                    return 'Value: ' + d.value.data.value.outlier + '</br>' + d.value.data.value.extra;
+                }
+                if (d.value.type === 'legend') {
+                    console.log('Mousing over right panel ' + x + ', ' + JSON.stringify(d) + ', ' + y);
+                }
+                if (d.value.type === 'tick' && d.value.id === 'svg-plotviz-bottomPanel') {
+                    console.log('Mousing over bottom panel ' + x + ', ' + JSON.stringify(d) + ', ' + y);
+                }
+                if (d.value.type === 'ylabel') {
+                    return 'Informational tooltip about RSEM!!!';
+                }
+                if (d.value.type === 'xlabel') {
+                    return 'This is the X Label!';
+                }
+            }
+        });
+        a.render(input);
+
+        input.metadata.title = 'BAD Differential Plot Example 2';
+        var div2 = d3.select('#expRootDiv2').node();
+        var b = new plotviz.Plot(div2);
+        b.data(input);
+        b.create(input, 'two');
+        b.tooltip(function (x, y, d) {
+                // Tooltip function coming soon
+        });
+        b.render(input);
+
+        function convertLineInput (data) {
+
+            var data = data.isoformrpkm;
+            var newData = [];
+
+            for (d in data) {
+                var entry = {
+                    key: d,
+                    value: {
+                        color: 'red',
+                        points: []
+                    }
+                };
+
+                for (point in data[d]) {
+                    var val = data[d][point];
+                    entry.value.points.push({
+                        key: point,
+                        value: {
+                            median: val.median,
+                            extra: {
+                                high_whisker: val.high_whisker,
+                                q3: val.q3,
+                                q1: val.q1,
+                                low_whisker: val.low_whisker,
+                            }
+                        }
+                    });
+                }
+
+                newData.push(entry);
+            }
+
+            var output = {
+                metadata: {
+                    type: 'line',
+                    title: 'EGFR Subset Plot',
+                    xlabel: 'RPKM',
+                    ylabel: 'Tissues',
+                    controls: [],
+                    width: 1400,
+                    height: 800,
+                    options: [],
+                    position: {
+                        legend: { left: 6/7, top: 1/8, right: 6/7 },
+                    }
+                },
+                data: newData,
+                legend: [
+                    {
+                        key: 'one',
+                        value: {
+                            label: 'one',
+                            color: 'red'
+                        }
+                    },
+                    {
+                        key: 'two',
+                        value: {
+                            label: 'two',
+                            color: 'blue'
+                        }
+                    }
+                ]
+            };
+            return output;
+        }
+
+    });
+</script>
+
+</body>
+</html>
