@@ -176,7 +176,6 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
                            }
                        };
                         /***** build dom components *****/
-                        if($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($('body'));
                         ["toolbar", "clone"].forEach((key)=>{
                             $('<div/>').attr("id", ids[key]).appendTo($(`#${ids.root}`));
                         });
@@ -192,7 +191,7 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
                         let rootW = tlist===undefined?cellW * tissues.length + leftPanelW + dmapMargin.right + dmapMargin.left:cellW * tlist.length + leftPanelW + dmapMargin.right + dmapMargin.left;
 
                         const config = new DendroHeatmapConfig(rootW, leftPanelW, 100, dmapMargin, 12, 10);
-                        const dmap = new DendroHeatmap(eData.clusters.tissue, eData.clusters.gene, expression, "YlGnBu", 2, config);
+                        const dmap = new DendroHeatmap(eData.clusters.tissue, eData.clusters.gene, expression, "YlGnBu", 2, config, ids.tooltip);
 
                         if (genes.length < 3){
                             // too few genes to cluster
@@ -214,8 +213,6 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
                         }, {});
 
                         /***** customization for GTEx expression heatmap *****/
-                        // tooltip
-                        dmap.createTooltip(ids.tooltip);
 
                         // change row and column labels
                         // Change row labels to tissue names //
@@ -343,7 +340,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict, urls=getGtexUrls()) {
         let tissue = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueSiteDetail;
         let gene = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
-        tooltip.show(`Tissue: ${tissue}<br/> Gene: ${gene}<br/> Median TPM: ${parseFloat(d.originalValue.toExponential()).toPrecision(4)}`)
+        tooltip.show(`Tissue: ${tissue}<br/> Gene: ${gene}<br/> Median TPM: ${parseFloat(d.displayValue.toExponential()).toPrecision(4)}`)
 
     };
 
