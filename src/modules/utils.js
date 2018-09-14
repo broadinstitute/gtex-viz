@@ -12,12 +12,13 @@
  */
 
 import {select} from "d3-selection";
+import {range} from "d3-array";
 
 /**
  *
  * @param id {String} the parent dom ID
- * @param width {Numeric}
- * @param height {Numeric}
+ * @param width {Numeric}: the outer width
+ * @param height {Numeric}: the outer height
  * @param margin {Object} with attr: left, top
  * @param svgId {String}
  * @returns {*}
@@ -102,4 +103,30 @@ export function parseCssStyles (dom) {
     s.innerHTML = "<![CDATA[\n" + used + "\n]]>";
 
     return s;
+}
+
+/**
+ * Generate a list of x*y data objects with random values
+ * The data object has this structure: {x: xlabel, y: ylabel, value: some value, displayValue: some value}
+ * @param par
+ * @returns {Array}
+ */
+export function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
+    let X = range(1, par.x+1); // generates a 1-based list.
+    let Y = range(1, par.y+1);
+    let data = [];
+    X.forEach((x)=>{
+        x = 'x' + x.toString();
+        Y.forEach((y)=>{
+            y = 'y' + y.toString();
+            let v = Math.random()*par.scaleFactor;
+            data.push({
+                x: x,
+                y: y,
+                value: v,
+                displayValue: v
+            });
+        })
+    });
+    return data;
 }

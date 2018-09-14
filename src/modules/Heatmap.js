@@ -12,20 +12,16 @@ import Toolbar from "./Toolbar";
 import Tooltip from "./Tooltip";
 
 export default class Heatmap {
-    /* data is a json with the following attributes:
-        x: the x label
-        y: the y label
-        value: the rendered numerical value (transformed)
-        originalValue: the original numerical value
-     */
-
     /**
      * constructor
-     * @param data {Object}, see above
+     * @param data {List}, a list of objects with the following attributes: x: the x label, y: the y label
+        value: the rendered numerical value (transformed)
+        displayValue: display numerical value
      * @param useLog {Boolean} performs log transformation
      * @param colorScheme {String}: recognized terms in Colors:getColorInterpolator
+     * @param r {Integer}: cell corner radius
      */
-    constructor(data, colorScheme="YlGnBu", useLog=true, base=10, r=2){
+    constructor(data, colorScheme="YlGnBu", useLog=true, base=10, r=2, tooltipId="heatmapTooltip"){
         this.data = data;
         this.useLog = useLog;
         this.base = base;
@@ -38,8 +34,14 @@ export default class Heatmap {
         this.r = r;
         this.colorScheme = colorScheme;
 
+        // peripheral features
+        /// Tooltip
+        /// create the tooltip DIV
+        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
+        this.tooltip = new Tooltip(tooltipId);
+        select(`#${tooltipId}`).classed('heatmap-tooltip', true);
+
         this.toolbar = undefined;
-        this.tooltip = undefined;
     }
 
     /**
@@ -54,16 +56,6 @@ export default class Heatmap {
         return this.toolbar;
     }
 
-     /**
-     * Create the tooltip object
-     * @param domId {String} the tooltip's dom ID
-     * @returns {Tooltip}
-     */
-    createTooltip(domId){
-        this.tooltip = new Tooltip(domId);
-        select(`#${domId}`).classed('heatmap-tooltip', true);
-        return this.tooltip;
-    }
 
     /**
      * draw color legend for the heat map
@@ -97,7 +89,8 @@ export default class Heatmap {
      * @param useNullColor {Boolean} whether to render null values with the pre-defined null color
      */
 
-    draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=true){
+    draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=true, columnLabelPosAdjust=null){
+
         if (this.xList === undefined) this._setXList(dimensions.w);
         if (this.yList === undefined) this._setYList(dimensions.h);
         if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value), this.colorScheme);
@@ -108,7 +101,7 @@ export default class Heatmap {
             .data(this.xList);
 
         // update old elements
-        const Y = this.yScale.range()[1] + (this.yScale.bandwidth() * 2);
+        const Y = columnLabelPosAdjust==null?this.yScale.range()[1] + (this.yScale.bandwidth() * 2):this.yScale.range()[1]+columnLabelPosAdjust;
         const adjust = 5;
         xLabels.attr("transform", (d) => {
                 let x = this.xScale(d) + adjust;
@@ -188,7 +181,7 @@ export default class Heatmap {
             .style("fill", (d) => "#eeeeee")
             .on("mouseover", function(d){
                 const selected = select(this); // Note: "this" here refers to the dom element not the object
-                self.cellMouseover(selected)
+                self.cellMouseover(d, dom, selected);
             })
             .on("mouseout", function(d){
                 const selected = select(this); // Note: "this" here refers to the dom element not the object
@@ -197,24 +190,27 @@ export default class Heatmap {
             .merge(cells)
             // .transition()
             // .duration(2000)
-            .style("fill", (d) => useNullColor&&d.originalValue==0?nullColor:this.colorScale(d.value)); // TODO: what if null value isn't 0?
+            .style("fill", (d) => useNullColor&&d.displayValue==0?nullColor:this.colorScale(d.value)); // TODO: what if null value isn't 0?
 
         // exit and remove
         cells.exit().remove();
     }
 
+
     cellMouseout(d){
         selectAll("*").classed('highlighted', false);
+        this.tooltip.hide();
     }
 
-    cellMouseover (selected) {
+    cellMouseover (d, dom, selected) {
         const rowClass = selected.attr("row");
         const colClass = selected.attr("col");
-        selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
+        dom.selectAll(".exp-map-xlabel").filter(`.${rowClass}`)
             .classed('highlighted', true);
-        selectAll(".exp-map-ylabel").filter(`.${colClass}`)
+        dom.selectAll(".exp-map-ylabel").filter(`.${colClass}`)
             .classed('highlighted', true);
         selected.classed('highlighted', true);
+        this.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${parseFloat(d.displayValue.toExponential()).toPrecision(4)}`)
     }
 
     _setXList(width, newList) {
