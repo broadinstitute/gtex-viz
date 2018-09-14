@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>plotviz</title>
+
+    <link type="text/css" rel="stylesheet" href="../plotviz.css"/>
+    <link rel="stylesheet" href="../vendor/bootstrap-3.3.5-dist/css/bootstrap.css"/>
+
+    <script src="../vendor/d3.v3.min.js" charset="utf-8"></script>
+
+    <script type="text/javascript" src="../plotviz.js"></script>
+    <script src="../vendor/jquery-1.11.3.js"></script>
+    <script src="../vendor/bootstrap-3.3.5-dist/js/bootstrap.js"></script>
+
+    <style>
+        {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="rootDiv" style="position:relative;"></div>
+
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var url = "http://gtexportal.org/api/v6p/expression/";
+        var url2 = "http://gtexportal.org/api/v6p/expression/";
+        var url3 = "http://gtexportal.org/api/v6p/tissues";
+        var div = document.getElementById('rootDiv');
+
+        var gtex = new plotviz.GtexPlot(div, url, url2, url3);
+
+        gtex.setGene('FGFR1OP');
+
+    });
+</script>
+
+</body>
+</html>

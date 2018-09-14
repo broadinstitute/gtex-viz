@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <link type='text/css' rel='stylesheet' href='../css/box.css'/>
+
+    <script src='../vendor/d3.v3.min.js' charset='utf-8'></script>
+    <script type='text/javascript' src='../js/lineViewer.js'></script>
+</head>
+<body>
+    <div id='root'></div>
+
+    <script type='text/javascript'>
+        var panel = d3.select('#root').append('svg').attr({
+                'width': 1000,
+                'height': 1000
+            }).append('g');
+
+        var url = 'FGFR1OP.json';
+        var colorUrl = 'colors.json';
+
+        var oReq = new XMLHttpRequest();
+
+        oReq.open('GET', url);
+
+        oReq.onload = function (event) {
+            var status = oReq.status;
+            var response = oReq.responseText;
+
+            var parse = JSON.parse(response).isoformrpkm;
+
+            // TODO: Inseart local test version of tissue coloring using AJAX
+
+
+            var oReqColor = new XMLHttpRequest();
+
+            oReqColor.open('GET', colorUrl);
+
+            oReqColor.onload = function (event) {
+                var statusColor = oReqColor.status;
+                var responseColor = oReqColor.responseText;
+
+                var parseColor = JSON.parse(responseColor);
+
+                var isoforms = Object.keys(parse);
+                var lines = isoforms.map(function (isoform) {
+                        var tissues = Object.keys(parse[isoform]);
+                        return tissues.map(function (tissue) {
+                            return {
+                                label: isoform,
+                                key: tissue,
+                                value: parse[isoform][tissue].median
+                            };
+                        });
+                    }).reduce(function (pointsA, pointsB) {
+                        return pointsA.concat(pointsB);
+                    });
+
+                var config = {
+                        width: 600,
+                        height: 400,
+                        boxGroupSpacing: 0.1,
+                        boxClass: 'testBox',
+                        outliers: 'on',
+                        outlierRadius: 2
+                    };
+                var lineplot = new plotviz.LineViewer(panel, 'line', config);
+                lineplot.render(lines, config);
+            };
+
+            oReqColor.onerror = function (event) {
+
+            };
+
+            oReqColor.send();
+        };
+
+        oReq.onerror = function (event) {
+        };
+
+        oReq.send();
+    </script>
+
+</body>
+</html>

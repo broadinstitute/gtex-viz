@@ -1,0 +1,29 @@
+.plotviz-box .rects {
+    stroke: #aaa;
+    stroke-width: 1;
+    opacity: 1
+}
+
+.plotviz-box .under-lines {
+    stroke: #aaa;
+    stroke-width: 1;
+    opacity: 1;
+}
+
+.plotviz-box .whisker-lines {
+    stroke: #aaa;
+    stroke-width: 1;
+    opacity: 1;
+}
+
+.plotviz-box .median-lines {
+    stroke: black;
+    stroke-width: 2;
+    opacity: 1;
+}
+
+.plotviz-box .outliers {
+    fill: none;
+    stroke: #aaa;
+    opacity: 1;
+}

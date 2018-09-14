@@ -1,0 +1,46 @@
+.plotviz-left-axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.plotviz-left-axis g.tick line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.plotviz-left-axis g.tick text {
+    shape-rendering: crispEdges;
+    font-size: 14px;
+    fill: #000;
+    font-family: sans-serif;
+}
+
+.plotviz-bottom-axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.plotviz-bottom-axis g.tick line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.plotviz-bottom-axis g.tick text {
+    shape-rendering: crispEdges;
+    font-size: 14px;
+    fill: #000;
+    font-family: sans-serif;
+}
+
+text.plotviz-label {
+    text-anchor: middle;
+    stroke: black;
+    shape-rendering: crispEdges;
+    font-size: 14px;
+    fill: black;
+}
+

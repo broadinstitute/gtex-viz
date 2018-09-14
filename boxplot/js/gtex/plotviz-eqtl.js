@@ -188,7 +188,6 @@ var plotviz = (function (plotviz) {
         }
 
         function parseResponse (response) {
-
             var parsed = JSON.parse(response);
             var HET = 1;
             var HOMO_REF = 0;
@@ -198,38 +197,78 @@ var plotviz = (function (plotviz) {
             var het_circles = mappingValues.filter(function (expressionValue, index) {return HET === mappingKey[index];});
             var homo_ref_circles = mappingValues.filter(function (expressionValue, index) {return HOMO_REF === mappingKey[index];});
             var homo_alt_circles = mappingValues.filter(function (expressionValue, index) {return HOMO_ALT === mappingKey[index];});
-            return [
-                inputToBox(parsed.boxplot.homo_ref, 'Homo Ref', homo_ref_circles),
-                inputToBox(parsed.boxplot.het, 'Het', het_circles),
-                inputToBox(parsed.boxplot.homo_alt, 'Homo Alt', homo_alt_circles)
-            ];
-
-            function inputToBox (input, keyString, circles) {
-                return {
-                    key: keyString + '<br/> N = ' + input.num_samples,
-                    value: [{
-                        key: keyString,
-                        value: {
-                            high_whisker: input.high_whisker,
-                            q3: input.q3,
-                            median: input.median,
-                            q1: input.q1,
-                            low_whisker: input.low_whisker,
-                            color: 'rgb(142, 149, 222)',
-                            outliers: input.outliers.concat(circles).map(
-                                function (outlier, index) {
-                                    return {
-                                        key: index,
-                                        value: {
-                                            outlier: outlier
-                                        }
-                                    };
-                                }),
-                            extra: (input.high_whisker === 0 && input.q3 === 0 && input.median === 0 && input.q1 === 0 && input.low_whisker === 0) ? {opacity: 0, whiskerOpacity: 0, medianOpacity: 0, outlierOpacity: 0} : {opacity: 1, whiskerOpacity: 1, medianOpacity: 1, outlierOpacity: 1}
-                        }
-                    }]
-                };
-            }
+            return [{
+                key: 'Homo Ref' + '<br/>' + ' N = ' + parsed.boxplot.homo_ref.num_samples,
+                value: [{
+                    key: 'Homo Ref',
+                    value: {
+                        high_whisker: parsed.boxplot.homo_ref.high_whisker,
+                        q3: parsed.boxplot.homo_ref.q3,
+                        median: parsed.boxplot.homo_ref.median,
+                        q1: parsed.boxplot.homo_ref.q1,
+                        low_whisker: parsed.boxplot.homo_ref.low_whisker,
+                        color: 'rgb(142, 149, 222)',
+                        outliers: parsed.boxplot.homo_ref.outliers.concat(homo_ref_circles).map(
+                            function (outlier, index) {
+                                return {
+                                    key: index,
+                                    value: {
+                                        outlier: outlier
+                                    }
+                                };
+                            }),
+                        extra: {opacity: 1}
+                    }
+                }]
+            },
+            {
+                key: 'Het' + '<br/>' +  ' N = ' + parsed.boxplot.het.num_samples,
+                value: [{
+                    key: 'Het',
+                    value: {
+                        high_whisker: parsed.boxplot.het.high_whisker,
+                        q3: parsed.boxplot.het.q3,
+                        median: parsed.boxplot.het.median,
+                        q1: parsed.boxplot.het.q1,
+                        low_whisker: parsed.boxplot.het.low_whisker,
+                        color: 'rgb(142, 149, 222)',
+                        outliers: parsed.boxplot.het.outliers.concat(het_circles).map(
+                            function (outlier, index) {
+                                return {
+                                    key: index,
+                                    value: {
+                                        outlier: outlier
+                                    }
+                                };
+                            }),
+                        extra: {opacity: 1}
+                    }
+                }],
+            },
+            {
+                key: 'Homo Alt' + '<br/>' + ' N = ' + parsed.boxplot.homo_alt.num_samples,
+                value: [{
+                    key: 'Homo Alt',
+                    value: {
+                        high_whisker: parsed.boxplot.homo_alt.high_whisker,
+                        q3: parsed.boxplot.homo_alt.q3,
+                        median: parsed.boxplot.homo_alt.median,
+                        q1: parsed.boxplot.homo_alt.q1,
+                        low_whisker: parsed.boxplot.homo_alt.low_whisker,
+                        color: 'rgb(142, 149, 222)',
+                        outliers: parsed.boxplot.homo_alt.outliers.concat(homo_alt_circles).map(
+                            function (outlier, index) {
+                                return {
+                                    key: index,
+                                    value: {
+                                        outlier: outlier
+                                    }
+                                };
+                            }),
+                        extra: {opacity: 1}
+                    }
+                }]
+            }];
         }
 
         this.query = query;

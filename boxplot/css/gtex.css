@@ -1,0 +1,128 @@
+.outliers-on {
+    display: '';
+}
+
+.outliers-off {
+    display: none;
+}
+
+.whiskers-on {
+    display: '';
+}
+
+.whiskers-off {
+    display: none;
+}
+
+.rects-on {
+    display: '';
+}
+
+.rects-off {
+    display: none;
+}
+
+.emphasis {
+    stroke-width: 4px;
+}
+
+#gtex-plot-modal .modal-dialog {
+    width: 1000px;
+}
+
+#gtex-plot-modal .modal-body {
+    overflow-y: scroll;
+}
+
+div.button-box {
+    float: left;
+    border: solid 1px #ccc;
+    border-right: none;
+    padding: 7px 10px 7px 10px;
+    background-color: #eee;
+}
+
+.button {
+    float: left;
+    font-size: 12px;
+    border: solid 1px #ccc;
+    padding: 5px 10px 5px 10px;
+    color: #555;
+    line-height: 1;
+    cursor: pointer;
+    background-color: #fff;
+}
+
+.gtex-outer-div .button {
+    border: solid 1px #ccc;
+}
+
+.button-box-first {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+div.button-box-last {
+    border-right: solid 1px #ccc;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    margin-right: 10px;
+}
+
+.gtex-outer-div .button-box-last {
+    border-right: solid 1px #ccc;
+}
+
+.button-box-title {
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+    padding-bottom: 5px;
+}
+
+.btn-left {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.btn-right {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.gtex-title {
+    text-anchor: middle;
+}
+
+text.plotviz-label {
+    stroke: none;
+}
+
+.gtex-outer-div {
+    width: 1150px;
+    height: 800px;
+}
+
+.gtex-control {
+    display: inline-block;
+    margin-left: 125px;
+    margin-right: 125px;
+    min-width: 950px;
+}
+
+.mouseover {
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.btn-active {
+    background-color: #eee;
+}
+
+.control-class {
+    width: 50%;
+    margin-top: 0;
+    margin-right: 20%;
+    margin-bottom: 0;
+    margin-left: 30%;
+}

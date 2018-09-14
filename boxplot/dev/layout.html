@@ -1,0 +1,300 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <link type='text/css' rel='stylesheet' href='../css/plotviz.css'/>
+    <link type='text/css' rel='stylesheet' href='../css/box.css'/>
+
+    <script src='../vendor/d3.v3.min.js' charset='utf-8'></script>
+    <script type='text/javascript' src='../js/layoutManager.js'></script>
+    <script type='text/javascript' src='../js/boxWhiskerViewer.js'></script>
+</head>
+<body>
+    <div id='root'></div>
+
+    <script type='text/javascript'>
+        var panel = d3.select('#root').append('svg').attr({
+                'width': 1000,
+                'height': 1000
+            }).append('g');
+
+        var url = 'FGFR1OP.json';
+        var colorUrl = 'colors.json';
+
+        var oReq = new XMLHttpRequest();
+
+        oReq.open('GET', url);
+
+        oReq.onload = function (event) {
+
+            var oReqColor = new XMLHttpRequest();
+
+            oReqColor.open('GET', colorUrl);
+
+            oReqColor.onload = function (event) {
+
+            var status = oReq.status;
+            var response = oReq.responseText;
+
+            var parse = JSON.parse(response).generpkm;
+            
+            var statusColor = oReqColor.status;
+            var responseColor = oReqColor.responseText;
+
+            var parseColor = JSON.parse(responseColor);
+
+            var boxData = Object.keys(parse).map(function (tissue) {
+                    return {
+                        'highWhisker': parse[tissue].high_whisker,
+                        'q3': parse[tissue].q3,
+                        'median': parse[tissue].median,
+                        'q1': parse[tissue].q1,
+                        'lowWhisker': parse[tissue].low_whisker,
+                        'outliers': parse[tissue].outliers,
+                        'color': 'rgb(' + parseColor[tissue].tissue_color_rgb + ')',
+                        'extra': {
+                            'groupName': tissue
+                        }
+                    };
+                });
+
+            var boxConfig = {
+                    width: 600,
+                    height: 600,
+                    boxGroupSpacing: 0.1,
+                    outliers: 'on'
+                };
+
+        var data = {
+            type: 'root',
+            width: 1000,
+            height: 500,
+            data: [{
+                    key: 'box',
+                    values: {
+                            data: boxData
+                        }
+                }],
+            config: [{
+                    key: 'box',
+                    values: {
+                            config: boxConfig
+                        }
+                }],
+            panelTypes: [
+                {
+                    key: 'border',
+                    values: {
+                            blueprint: function (container) {
+                                var _panel = container;
+                                _panel.append('rect').attr('class', 'border');
+                                this.render = function (data, config) {
+                                    _panel.select('.border').attr({
+                                            'width': config.width,
+                                            'height': config.height
+                                        }).style({
+                                            'fill': 'none',
+                                            'stroke': 'black'
+                                        });
+                                };
+
+                                this.rawToData = function (raw) {
+                                    return raw;
+                                }
+                            }
+                        }
+                },
+                {
+                    key: 'box',
+                    values: {
+                            blueprint: plotviz.BoxWhiskerViewer
+                        }
+                }
+            ],
+            rootPanel: {
+                    type: 'horizontal',
+                    width: 1,
+                    height: 1,
+                    panels: [
+                        {
+                            type: 'vertical',
+                            width: 0.25,
+                            height: 1,
+                            panels: [{
+                                    referenceData: null,
+                                    referenceType: 'border',
+                                    type: 'leaf',
+                                    width: 1,
+                                    height: 0.33
+                                },
+                                {
+                                    referenceData: 'box',
+                                    referenceType: 'box',
+                                    referenceConfig: 'box',
+                                    type: 'leaf',
+                                    width: 1,
+                                    height: 0.33
+                                },
+                                {
+                                    referenceType: 'border',
+                                    type: 'leaf',
+                                    width: 1,
+                                    height: 0.33
+                                }]
+                        },
+                        {
+                            type: 'vertical',
+                            width: 0.75,
+                            height: 1,
+                            panels: [{
+                                    type: 'horizontal',
+                                    width: 1,
+                                    height: 0.5,
+                                    panels: [{
+                                            referenceData: 'box',
+                                            referenceType: 'box',
+                                            referenceConfig: 'box',
+                                            type: 'leaf',
+                                            width: 0.5,
+                                            height: 1
+                                        },
+                                        {
+                                            referenceType: 'border',
+                                            type: 'leaf',
+                                            width: 0.5,
+                                            height: 1
+                                        }]
+                                },
+                                {
+                                    type: 'horizontal',
+                                    width: 1,
+                                    height: 0.5,
+                                    panels: [{
+                                            referenceType: 'border',
+                                            type: 'leaf',
+                                            width: 0.5,
+                                            height: 1
+                                        },
+                                        {
+                                            referenceData: 'box',
+                                            referenceType: 'box',
+                                            referenceConfig: 'box',
+                                            type: 'leaf',
+                                            width: 0.5,
+                                            height: 1
+                                        }]
+                                }]
+                        }
+                    ]
+                }
+        };
+        var data = {
+                type: 'horizontal',
+                width: 1,
+                height: 1,
+                panels: [
+                    {
+                        type: 'vertical',
+                        width: 0.25,
+                        height: 1,
+                        panels: [{
+                                type: 'horizontal',
+                                width: 1,
+                                height: 0.33
+                            },
+                            {
+                                name: 'one',
+                                type: 'horizontal',
+                                width: 1,
+                                height: 0.33
+                            },
+                            {
+                                referenceType: 'border',
+                                type: 'horizontal',
+                                width: 1,
+                                height: 0.33
+                            }]
+                    },
+                    {
+                        type: 'vertical',
+                        width: 0.75,
+                        height: 1,
+                        panels: [{
+                                type: 'horizontal',
+                                width: 1,
+                                height: 0.5,
+                                panels: [{
+                                        name: 'two',
+                                        type: 'vertical',
+                                        width: 0.5,
+                                        height: 1
+                                    },
+                                    {
+                                        type: 'vertical',
+                                        width: 0.5,
+                                        height: 1
+                                    }]
+                            },
+                            {
+                                type: 'horizontal',
+                                width: 1,
+                                height: 0.5,
+                                panels: [{
+                                        type: 'vertical',
+                                        width: 0.5,
+                                        height: 1
+                                    },
+                                    {
+                                        name: 'three',
+                                        type: 'vertical',
+                                        width: 0.5,
+                                        height: 1
+                                    }]
+                            }]
+                    }
+                ]
+            };
+        var config = {
+            width: 1000,
+            height: 500
+        };
+
+
+
+        var layout = new plotviz.LayoutManager(panel);
+        layout.render(data, config);
+
+            var namedPanel = layout.getPanel('one');
+            var boxConfig = {
+                    width: layout.getPanelDimensions('one').width,
+                    height: layout.getPanelDimensions('one').height,
+                    boxGroupSpacing: 0.1,
+                    outliers: 'on'
+                };
+
+            var one = new plotviz.BoxWhiskerViewer(namedPanel);
+            one.render(boxData, boxConfig);
+            namedPanel = layout.getPanel('two');
+            var two = new plotviz.BoxWhiskerViewer(namedPanel);
+            boxConfig.width = layout.getPanelDimensions('two').width;
+            boxConfig.height = layout.getPanelDimensions('two').height;
+            two.render(boxData, boxConfig);
+            namedPanel = layout.getPanel('three');
+            var three = new plotviz.BoxWhiskerViewer(namedPanel);
+            boxConfig.width = layout.getPanelDimensions('three').width;
+            boxConfig.height = layout.getPanelDimensions('three').height;
+            three.render(boxData, boxConfig);
+            };
+
+            oReqColor.send();
+
+        };
+
+        oReq.onerror = function (event) {
+
+        };
+
+        oReq.send();
+    </script>
+
+</body>
+</html>

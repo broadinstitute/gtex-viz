@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>plotviz</title>
+
+    <link type="text/css" rel="stylesheet" href="../css/axis.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/box.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/tooltip.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/gtex.css"/>
+    <link rel="stylesheet" href="../vendor/bootstrap-3.3.5-dist/css/bootstrap.css"/>
+
+    <script src="../vendor/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../js/gtex/gtex.js"></script>
+    <script type="text/javascript" src="../js/gtex/boxplot.js"></script>
+    <script type="text/javascript" src="../js/tooltip.js"></script>
+    <script type="text/javascript" src="../js/filter.js"></script>
+    <script type="text/javascript" src="../js/textPanel.js"></script>
+    <script type="text/javascript" src="../js/axisPanel.js"></script>
+    <script type="text/javascript" src="../js/crosshair.js"></script>
+    <script type="text/javascript" src="../js/toolbox.js"></script>
+    <script type="text/javascript" src="../js/legend.js"></script>
+    <script type="text/javascript" src="../js/boxWhiskerViewer.js"></script>
+    <script type="text/javascript" src="../js/lineViewer.js"></script>
+    <script type="text/javascript" src="../js/testData.js"></script>
+    <script type="text/javascript" src="../js/data.js"></script>
+    <script type="text/javascript" src="../js/render.js"></script>
+    <script type="text/javascript" src="../js/plot.js"></script>
+    <script type="text/javascript" src="../js/layoutManager.js"></script>
+    <script src="../vendor/jquery-1.11.3.js"></script>
+    <script src="../vendor/bootstrap-3.3.5-dist/js/bootstrap.js"></script>
+
+    <style>
+        {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="rootDiv" style="position:relative;"></div>
+
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var div = document.getElementById('rootDiv');
+
+        var snpId = 'rs9630083';
+        var geneId = 'ENSG00000138152.7';
+        var tissue = 'Lung';
+
+        //var eqtl = new plotviz.EqtlPlot(div, 'http://vgtxportaltest:9000/v3/dyneqtl');
+
+        var config = {
+          width: 850,
+          height: 800,
+          margin: {
+              top: 20,
+              right: 0,
+              bottom: 20,
+              left: 20
+            },
+          viewerLeftSpacing: 0.7,
+          viewerBottomSpacing: 0.085,
+          titleContent: tissue + ' eQTL ' + snpId + ' ' + geneId + ' example',
+          leftAxisLabel: 'Left Axis',
+          bottomAxisLabel: 'Bottom Axis',
+          buttons: false,
+          outlierJitter: 0.25,
+          tickAlign: 'middle',
+          tickTranslation: 0,
+          tickRotation: 0,
+          tickAlign: 'middle',
+          leftLabelX: 0.7,
+          leftLabelY: 0.2
+        };
+
+        var data = [
+          {
+            'highWhisker': 10,
+            'q3': 9,
+            'median': 8,
+            'q1': 7,
+            'lowWhisker': 6,
+            'outliers': [11, 5, 5.5, 11.3],
+            'color': 'red',
+            'extra': {
+              'groupName': 'group1'
+            }
+          },
+          {
+            'highWhisker': 10,
+            'q3': 9,
+            'median': 8,
+            'q1': 7,
+            'lowWhisker': 6,
+            'outliers': [11, 5, 5.5, 11.3],
+            'color': 'blue',
+            'extra': {
+              'groupName': 'group2'
+            }
+          },
+          {
+            'highWhisker': 10,
+            'q3': 9,
+            'median': 8,
+            'q1': 7,
+            'lowWhisker': 6,
+            'outliers': [11, 5, 5.5, 11.3],
+            'color': 'green',
+            'extra': {
+              'groupName': 'group3'
+            }
+          }
+        ];
+
+        var labels = [
+          {
+            'text': 'X Axis'
+          },
+          {
+            'text': 'Y Axis'
+          },
+          {
+            'text': 'Title'
+          }
+        ];
+
+        config = {
+          'container': div,
+          'data': data,
+          'labels': labels
+        };
+
+        var plot = plotviz.Boxplot(config);
+
+        plot();
+
+        //eqtl.query(snpId, geneId, tissue, 'Symbol', config);
+
+    });
+</script>
+
+</body>
+</html>

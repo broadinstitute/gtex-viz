@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>plotviz</title>
+
+    <link type="text/css" rel="stylesheet" href="../css/plotviz.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/axis.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/box.css"/>
+
+    <script src="../vendor/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../js/gtex/gtexMixplot.js"></script>
+    <script type="text/javascript" src="../js/gtex/gtex.js"></script>
+    <script type="text/javascript" src="../js/axisPanel.js"></script>
+    <script type="text/javascript" src="../js/crosshair.js"></script>
+    <script type="text/javascript" src="../js/toolbox.js"></script>
+    <script type="text/javascript" src="../js/legend.js"></script>
+    <script type="text/javascript" src="../js/boxWhiskerViewer.js"></script>
+    <script type="text/javascript" src="../js/lineViewer.js"></script>
+    <script type="text/javascript" src="../js/testData.js"></script>
+    <script type="text/javascript" src="../js/data.js"></script>
+    <script type="text/javascript" src="../js/render.js"></script>
+    <script type="text/javascript" src="../js/plot.js"></script>
+    <script type="text/javascript" src="../js/layoutManager.js"></script>
+    <script type="text/javascript" src="../examples/plotviz.example.js"></script>
+    <script type="text/javascript" src="../examples/lineviz.subset.example.js"></script>
+
+    <style>
+        {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id='lineplot'>
+</div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var div = document.getElementById('lineplot');
+        var oReq = new XMLHttpRequest();
+
+        oReq.open('GET', 'FGFR1OP.json');
+
+        oReq.onload = function (event) {
+            var status = oReq.status;
+            var response = oReq.responseText;
+
+            var parsed = JSON.parse(response).isoformrpkm;
+
+            var generpkm = JSON.parse(response).generpkm;
+
+            var oReqColor = new XMLHttpRequest();
+
+            oReqColor.open('GET', 'colors.json');
+
+            oReqColor.onload = function (event) {
+                var colorStatus = oReqColor.status;
+                var parsedColor = JSON.parse(oReqColor.responseText);
+
+                var boxData = Object.keys(generpkm).map(function (tissue) {
+                        return {
+                                'highWhisker': generpkm[tissue].high_whisker,
+                                'q3': generpkm[tissue].q3,
+                                'median': generpkm[tissue].median,
+                                'q1': generpkm[tissue].q1,
+                                'lowWhisker': generpkm[tissue].low_whisker,
+                                'outliers': generpkm[tissue].outliers,
+                                'color': 'rgb(' + parsedColor[tissue].tissue_color_rgb + ')',
+                                'extra': {
+                                        'groupName': tissue
+                                    }
+                            };
+                    });
+
+                var lineData = Object.keys(parsed).map(function (isoform) {
+                        return Object.keys(parsed[isoform]).map(function (tissue) {
+                                return {
+                                        label: isoform,
+                                        key: tissue,
+                                        value: parsed[isoform][tissue].median
+                                    };
+                            });
+                    }).reduce(function (pointsA, pointsB) {
+                            return pointsA.concat(pointsB);
+                        });
+
+                var mixplot = new plotviz.GtexMixplot(div);
+                mixplot.render({boxes: boxData, lines: lineData}, {boxes:{}, lines:{}});
+            };
+
+            oReqColor.onerror = function (event) {};
+
+            oReqColor.send();
+        };
+
+        oReq.onerror = function (event) {
+
+        };
+
+        oReq.send();
+        //gtex.devGene('FGFR1OP.json');
+
+    });
+</script>
+
+</body>
+</html>

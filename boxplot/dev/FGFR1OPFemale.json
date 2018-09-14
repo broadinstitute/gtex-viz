@@ -1,0 +1,524 @@
+{
+  "generpkm": {
+    "Adipose - Subcutaneous": {
+      "high_whisker": 4.593, 
+      "low_whisker": 1.73, 
+      "median": 2.743, 
+      "num_samples": 45, 
+      "outliers": [
+        4.928, 
+        4.9, 
+        5.628
+      ], 
+      "q1": 2.335, 
+      "q3": 3.35
+    }, 
+    "Adipose - Visceral (Omentum)": {
+      "high_whisker": 4.93, 
+      "low_whisker": 2.197, 
+      "median": 2.671, 
+      "num_samples": 9, 
+      "outliers": [], 
+      "q1": 2.381, 
+      "q3": 3.432
+    }, 
+    "Adrenal Gland": {
+      "high_whisker": 7.997, 
+      "low_whisker": 3.884, 
+      "median": 5.357, 
+      "num_samples": 21, 
+      "outliers": [], 
+      "q1": 4.716, 
+      "q3": 6.165
+    }, 
+    "Artery - Aorta": {
+      "high_whisker": 3.37, 
+      "low_whisker": 1.614, 
+      "median": 2.721, 
+      "num_samples": 27, 
+      "outliers": [
+        3.914, 
+        4.335
+      ], 
+      "q1": 2.327, 
+      "q3": 2.918
+    }, 
+    "Artery - Coronary": {
+      "high_whisker": 4.143, 
+      "low_whisker": 1.881, 
+      "median": 2.849, 
+      "num_samples": 19, 
+      "outliers": [
+        4.89, 
+        4.737, 
+        5.833
+      ], 
+      "q1": 2.649, 
+      "q3": 3.401
+    }, 
+    "Artery - Tibial": {
+      "high_whisker": 4.131, 
+      "low_whisker": 1.094, 
+      "median": 2.587, 
+      "num_samples": 51, 
+      "outliers": [], 
+      "q1": 2.184, 
+      "q3": 3.164
+    }, 
+    "Bladder": {
+      "high_whisker": 4.584, 
+      "low_whisker": 2.52, 
+      "median": 2.671, 
+      "num_samples": 5, 
+      "outliers": [], 
+      "q1": 2.642, 
+      "q3": 4.043
+    }, 
+    "Brain - Amygdala": {
+      "high_whisker": 4.404, 
+      "low_whisker": 1.775, 
+      "median": 2.941, 
+      "num_samples": 9, 
+      "outliers": [], 
+      "q1": 2.648, 
+      "q3": 3.382
+    }, 
+    "Brain - Anterior cingulate cortex (BA24)": {
+      "high_whisker": 7.515, 
+      "low_whisker": 1.843, 
+      "median": 5.051, 
+      "num_samples": 7, 
+      "outliers": [], 
+      "q1": 3.384, 
+      "q3": 5.642
+    }, 
+    "Brain - Caudate (basal ganglia)": {
+      "high_whisker": 5.042, 
+      "low_whisker": 2.059, 
+      "median": 3.886, 
+      "num_samples": 11, 
+      "outliers": [
+        6.618
+      ], 
+      "q1": 3.157, 
+      "q3": 4.332
+    }, 
+    "Brain - Cerebellar Hemisphere": {
+      "high_whisker": 12.745, 
+      "low_whisker": 5.075, 
+      "median": 7.597, 
+      "num_samples": 8, 
+      "outliers": [], 
+      "q1": 6.622, 
+      "q3": 9.741
+    }, 
+    "Brain - Cerebellum": {
+      "high_whisker": 9.7, 
+      "low_whisker": 5.038, 
+      "median": 5.96, 
+      "num_samples": 12, 
+      "outliers": [], 
+      "q1": 5.369, 
+      "q3": 8.26
+    }, 
+    "Brain - Cortex": {
+      "high_whisker": 5.63, 
+      "low_whisker": 2.355, 
+      "median": 4.533, 
+      "num_samples": 10, 
+      "outliers": [], 
+      "q1": 3.374, 
+      "q3": 4.69
+    }, 
+    "Brain - Frontal Cortex (BA9)": {
+      "high_whisker": 8.318, 
+      "low_whisker": 2.845, 
+      "median": 5.51, 
+      "num_samples": 9, 
+      "outliers": [], 
+      "q1": 4.758, 
+      "q3": 6.809
+    }, 
+    "Brain - Hippocampus": {
+      "high_whisker": 4.456, 
+      "low_whisker": 1.922, 
+      "median": 3.552, 
+      "num_samples": 9, 
+      "outliers": [
+        8.541
+      ], 
+      "q1": 2.321, 
+      "q3": 4.025
+    }, 
+    "Brain - Hypothalamus": {
+      "high_whisker": 7.238, 
+      "low_whisker": 2.778, 
+      "median": 4.242, 
+      "num_samples": 10, 
+      "outliers": [], 
+      "q1": 3.578, 
+      "q3": 6.529
+    }, 
+    "Brain - Nucleus accumbens (basal ganglia)": {
+      "high_whisker": 4.993, 
+      "low_whisker": 3.152, 
+      "median": 4.275, 
+      "num_samples": 11, 
+      "outliers": [
+        7.424
+      ], 
+      "q1": 3.663, 
+      "q3": 4.55
+    }, 
+    "Brain - Putamen (basal ganglia)": {
+      "high_whisker": 4.817, 
+      "low_whisker": 2.057, 
+      "median": 3.11, 
+      "num_samples": 8, 
+      "outliers": [
+        7.319
+      ], 
+      "q1": 2.18, 
+      "q3": 3.766
+    }, 
+    "Brain - Spinal cord (cervical c-1)": {
+      "high_whisker": 3.42, 
+      "low_whisker": 1.021, 
+      "median": 1.615, 
+      "num_samples": 9, 
+      "outliers": [], 
+      "q1": 1.559, 
+      "q3": 2.634
+    }, 
+    "Brain - Substantia nigra": {
+      "high_whisker": 3.7, 
+      "low_whisker": 0.955, 
+      "median": 2.187, 
+      "num_samples": 11, 
+      "outliers": [
+        5.435
+      ], 
+      "q1": 1.857, 
+      "q3": 3.252
+    }, 
+    "Breast - Mammary Tissue": {
+      "high_whisker": 9.257, 
+      "low_whisker": 2.692, 
+      "median": 5.205, 
+      "num_samples": 34, 
+      "outliers": [], 
+      "q1": 4.12, 
+      "q3": 6.221
+    }, 
+    "Cells - EBV-transformed lymphocytes": {
+      "high_whisker": 11.627, 
+      "low_whisker": 7.146, 
+      "median": 8.93, 
+      "num_samples": 14, 
+      "outliers": [
+        14.149
+      ], 
+      "q1": 8.658, 
+      "q3": 10.517
+    }, 
+    "Cells - Transformed fibroblasts": {
+      "high_whisker": 6.211, 
+      "low_whisker": 2.231, 
+      "median": 4.149, 
+      "num_samples": 56, 
+      "outliers": [], 
+      "q1": 3.266, 
+      "q3": 4.67
+    }, 
+    "Cervix - Ectocervix": {
+      "high_whisker": 5.983, 
+      "low_whisker": 2.739, 
+      "median": 4.236, 
+      "num_samples": 6, 
+      "outliers": [], 
+      "q1": 3.541, 
+      "q3": 4.782
+    }, 
+    "Cervix - Endocervix": {
+      "high_whisker": 8.701, 
+      "low_whisker": 4.914, 
+      "median": 7.358, 
+      "num_samples": 3, 
+      "outliers": [], 
+      "q1": 6.136, 
+      "q3": 8.03
+    }, 
+    "Colon - Sigmoid": {
+      "high_whisker": 5.302, 
+      "low_whisker": 3.961, 
+      "median": 4.26, 
+      "num_samples": 5, 
+      "outliers": [], 
+      "q1": 4.14, 
+      "q3": 5.029
+    }, 
+    "Colon - Transverse": {
+      "high_whisker": 7.245, 
+      "low_whisker": 4.535, 
+      "median": 5.952, 
+      "num_samples": 28, 
+      "outliers": [
+        8.494
+      ], 
+      "q1": 5.601, 
+      "q3": 6.496
+    }, 
+    "Esophagus - Gastroesophageal Junction": {
+      "high_whisker": 2.771, 
+      "low_whisker": 1.982, 
+      "median": 2.604, 
+      "num_samples": 7, 
+      "outliers": [
+        3.489
+      ], 
+      "q1": 2.4, 
+      "q3": 2.724
+    }, 
+    "Esophagus - Mucosa": {
+      "high_whisker": 5.418, 
+      "low_whisker": 1.794, 
+      "median": 3.159, 
+      "num_samples": 41, 
+      "outliers": [
+        6.139, 
+        5.85
+      ], 
+      "q1": 2.544, 
+      "q3": 3.851
+    }, 
+    "Esophagus - Muscularis": {
+      "high_whisker": 4.715, 
+      "low_whisker": 1.376, 
+      "median": 2.759, 
+      "num_samples": 39, 
+      "outliers": [
+        5.529
+      ], 
+      "q1": 2.45, 
+      "q3": 3.593
+    }, 
+    "Fallopian Tube": {
+      "high_whisker": 6.727, 
+      "low_whisker": 3.597, 
+      "median": 5.405, 
+      "num_samples": 6, 
+      "outliers": [
+        20.628
+      ], 
+      "q1": 5.12, 
+      "q3": 6.456
+    }, 
+    "Heart - Atrial Appendage": {
+      "high_whisker": 2.513, 
+      "low_whisker": 1.275, 
+      "median": 1.82, 
+      "num_samples": 10, 
+      "outliers": [], 
+      "q1": 1.642, 
+      "q3": 2.369
+    }, 
+    "Heart - Left Ventricle": {
+      "high_whisker": 3.63, 
+      "low_whisker": 0.577, 
+      "median": 2.165, 
+      "num_samples": 30, 
+      "outliers": [], 
+      "q1": 1.759, 
+      "q3": 2.683
+    }, 
+    "Kidney - Cortex": {
+      "high_whisker": 5.189, 
+      "low_whisker": 5.189, 
+      "median": 5.189, 
+      "num_samples": 1, 
+      "outliers": [], 
+      "q1": 5.189, 
+      "q3": 5.189
+    }, 
+    "Liver": {
+      "high_whisker": 6.385, 
+      "low_whisker": 3.61, 
+      "median": 6.046, 
+      "num_samples": 12, 
+      "outliers": [
+        9.731, 
+        10.109
+      ], 
+      "q1": 5.06, 
+      "q3": 6.321
+    }, 
+    "Lung": {
+      "high_whisker": 6.995, 
+      "low_whisker": 1.952, 
+      "median": 3.794, 
+      "num_samples": 46, 
+      "outliers": [], 
+      "q1": 3.072, 
+      "q3": 4.792
+    }, 
+    "Minor Salivary Gland": {
+      "high_whisker": 3.95, 
+      "low_whisker": 3.95, 
+      "median": 3.95, 
+      "num_samples": 1, 
+      "outliers": [], 
+      "q1": 3.95, 
+      "q3": 3.95
+    }, 
+    "Muscle - Skeletal": {
+      "high_whisker": 2.66, 
+      "low_whisker": 0.561, 
+      "median": 1.55, 
+      "num_samples": 58, 
+      "outliers": [], 
+      "q1": 1.162, 
+      "q3": 1.788
+    }, 
+    "Nerve - Tibial": {
+      "high_whisker": 9.319, 
+      "low_whisker": 2.616, 
+      "median": 5.203, 
+      "num_samples": 41, 
+      "outliers": [
+        9.828
+      ], 
+      "q1": 4.319, 
+      "q3": 6.426
+    }, 
+    "Ovary": {
+      "high_whisker": 8.905, 
+      "low_whisker": 4.161, 
+      "median": 6.098, 
+      "num_samples": 35, 
+      "outliers": [], 
+      "q1": 5.13, 
+      "q3": 7.115
+    }, 
+    "Pancreas": {
+      "high_whisker": 4.092, 
+      "low_whisker": 2.097, 
+      "median": 2.999, 
+      "num_samples": 20, 
+      "outliers": [
+        5.074, 
+        4.832
+      ], 
+      "q1": 2.608, 
+      "q3": 3.303
+    }, 
+    "Pituitary": {
+      "high_whisker": 12.034, 
+      "low_whisker": 5.815, 
+      "median": 8.941, 
+      "num_samples": 8, 
+      "outliers": [], 
+      "q1": 6.684, 
+      "q3": 11.172
+    }, 
+    "Prostate": {
+      "median": 0.0, 
+      "num_samples": 0, 
+      "q1": 0.0, 
+      "q3": 0.0
+    }, 
+    "Skin - Not Sun Exposed (Suprapubic)": {
+      "high_whisker": 5.224, 
+      "low_whisker": 1.355, 
+      "median": 3.015, 
+      "num_samples": 15, 
+      "outliers": [], 
+      "q1": 2.464, 
+      "q3": 3.707
+    }, 
+    "Skin - Sun Exposed (Lower leg)": {
+      "high_whisker": 5.267, 
+      "low_whisker": 1.354, 
+      "median": 2.708, 
+      "num_samples": 48, 
+      "outliers": [
+        6.266
+      ], 
+      "q1": 2.248, 
+      "q3": 3.575
+    }, 
+    "Small Intestine - Terminal Ileum": {
+      "high_whisker": 5.866, 
+      "low_whisker": 3.721, 
+      "median": 4.793, 
+      "num_samples": 2, 
+      "outliers": [], 
+      "q1": 4.257, 
+      "q3": 5.33
+    }, 
+    "Spleen": {
+      "high_whisker": 6.25, 
+      "low_whisker": 4.217, 
+      "median": 5.115, 
+      "num_samples": 11, 
+      "outliers": [], 
+      "q1": 4.562, 
+      "q3": 5.489
+    }, 
+    "Stomach": {
+      "high_whisker": 5.678, 
+      "low_whisker": 1.622, 
+      "median": 3.757, 
+      "num_samples": 32, 
+      "outliers": [], 
+      "q1": 3.203, 
+      "q3": 4.394
+    }, 
+    "Testis": {
+      "median": 0.0, 
+      "num_samples": 0, 
+      "q1": 0.0, 
+      "q3": 0.0
+    }, 
+    "Thyroid": {
+      "high_whisker": 12.987, 
+      "low_whisker": 4.676, 
+      "median": 8.114, 
+      "num_samples": 45, 
+      "outliers": [], 
+      "q1": 7.042, 
+      "q3": 9.435
+    }, 
+    "Uterus": {
+      "high_whisker": 9.818, 
+      "low_whisker": 2.259, 
+      "median": 4.803, 
+      "num_samples": 36, 
+      "outliers": [], 
+      "q1": 3.426, 
+      "q3": 6.924
+    }, 
+    "Vagina": {
+      "high_whisker": 6.244, 
+      "low_whisker": 2.388, 
+      "median": 3.83, 
+      "num_samples": 34, 
+      "outliers": [], 
+      "q1": 3.343, 
+      "q3": 4.914
+    }, 
+    "Whole Blood": {
+      "high_whisker": 2.664, 
+      "low_whisker": 0.362, 
+      "median": 1.442, 
+      "num_samples": 67, 
+      "outliers": [
+        3.925, 
+        3.334, 
+        3.816, 
+        3.903
+      ], 
+      "q1": 1.034, 
+      "q3": 1.934
+    }
+  }
+}
