@@ -38,7 +38,7 @@ export default class DendroHeatmap {
         this.objects = {
             columnTree: this.data.columnTree===undefined? undefined:new Dendrogram(this.data.columnTree, "v"),
             rowTree: this.data.rowTree===undefined?undefined:new Dendrogram(this.data.rowTree, "h"),
-            heatmap: new Heatmap(this.data.heatmap, color, useLog, base, r, tooltipId)
+            heatmap: new Heatmap(this.data.heatmap, useLog, base, color, r, tooltipId)
         };
         this.visualComponents = {
             svg: undefined,
