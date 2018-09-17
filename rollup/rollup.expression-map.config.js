@@ -12,7 +12,7 @@ const name= 'BatchGeneExpression';
 export default {
     input: 'src/' + name + '.js',
     output: {
-        file: process.env.NODE_ENV=='prod'?'build/js/batch-gene-expression.bundle.min.js':'build/js/batch-gene-expression.bundle.dev.js',
+        file: process.env.NODE_ENV=='prod'?'build/js/expression-map.bundle.min.js':'build/js/expression-map.bundle.dev.js',
         format: 'iife'
     },
     sourcemap: 'inline',

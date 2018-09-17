@@ -93,13 +93,13 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     if (junctions.length >= 0){
                         // scenario1: not a single-exon gene
                         if (junctionExpress !== undefined){
-                            junctionColorScale = setColorScale(junctionExpress.map(d=>d.value), "Reds");
+                            junctionColorScale = setColorScale(junctionExpress.map(d=>Math.log10(d.value+1)), "Reds");
                         }
                     }
 
                     // define all the color scales
-                    exonColorScale = setColorScale(exonExpress.map(d=>d.value), "Blues");
-                    isoformColorScale = setColorScale(isoformExpress.map(d=>d.value), "Purples");
+                    exonColorScale = setColorScale(exonExpress.map(d=>Math.log2(d.value+1)), "Blues");
+                    isoformColorScale = setColorScale(isoformExpress.map(d=>Math.log10(d.value+1)), "Purples");
 
                 // heat map
                 let dmap = undefined;
@@ -429,7 +429,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
     mapSvg.selectAll(".exp-map-cell")
         .on("mouseover", function(d){
             const selected = select(this); // 'this' refers to the d3 DOM object
-            dmap.objects.heatmap.cellMouseover(selected);
+            dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.x] === undefined?d.x:tissueDict[d.x].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
             tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.id}<br/> ${d.unit}: ${value==0?'NA':value}`)
@@ -478,7 +478,7 @@ function _customizeExonMap(tissues, geneModel, dmap){
     mapSvg.selectAll(".exp-map-cell")
         .on("mouseover", function(d){
             const selected = select(this); // 'this' refers to the d3 DOM object
-            dmap.objects.heatmap.cellMouseover(selected);
+            dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
             tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd)-Number(d.chromStart) + 1}bp) <br/>${d.unit}: ${value==0?'NA':value}`)
@@ -525,7 +525,7 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
     mapSvg.selectAll(".exp-map-cell")
         .on("mouseover", function(d){
             const selected = select(this);
-            dmap.objects.heatmap.cellMouseover(selected);
+            dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0]; // get the junction display name
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);

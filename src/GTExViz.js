@@ -9,12 +9,8 @@ import Heatmap from "./modules/Heatmap";
 
 /*
 Heatmap TODO:
-1. Rewrite how log transformation is done in the viz code.
 4. Error-checking the DIV ID DOM element.*
 4.5. Error-checking all inputs.*
-6. Add color legend***
-7. Add download button**
-8. Allow customization of text label positions.
  */
 const demoData = {
     heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:100})
@@ -56,7 +52,7 @@ export function heatmap(par=heatmapDemoConfig){
 
     // render the heatmap
     let tooltipId = `${par.id}Tooltip`;
-    let h = new Heatmap(par.data, par.colorScheme, false, null, par.cornerRadius, tooltipId);
+    let h = new Heatmap(par.data, false, null, par.colorScheme, par.cornerRadius, tooltipId);
     h.draw(svg, {w:inWidth, h:inHeight}, par.columnLabelAngle, false, par.columnLabelPosAdjust);
     h.drawColorLegend(svg, {x:20, y: -20}, 10);
 

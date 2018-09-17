@@ -237,11 +237,9 @@ export function parseTranscripts(json){
  * expression is normalized to reads per kb
  * @param data {JSON} of exon expression web service
  * @param exons {List} of exons with positions
- * @param useLog {boolean} use log2 transformation
- * @param adjust {Number} default 0.01
  * @returns {List} of exon objects
  */
-export function parseExonExpression(data, exons, useLog=true, adjust=1){
+export function parseExonExpression(data, exons){
     const exonDict = exons.reduce((a, d)=>{a[d.exonId] = d; return a;}, {});
     const attr = 'medianExonExpression';
     if(!data.hasOwnProperty(attr)) throw('parseExonExpression input error');
@@ -261,7 +259,6 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
         d.l = exon.end - exon.start + 1;
         d.value = Number(d.median)/d.l;
         d.displayValue = Number(d.median)/d.l;
-        if (useLog) d.value = Math.log2(d.value + 1);
         d.x = d.exonId;
         d.y = d.tissueSiteDetailId;
         d.id = d.gencodeId;
@@ -280,11 +277,9 @@ export function parseExonExpression(data, exons, useLog=true, adjust=1){
 /**
  * Parse junction median read count data
  * @param data {JSON} of the junction expression web service
- * @param useLog {Boolean} perform log transformation
- * @param adjust {Number} for handling 0's when useLog is true
  * @returns {List} of junction objects
  */
-export function parseJunctionExpression(data, useLog=true, adjust=1){
+export function parseJunctionExpression(data){
     const attr = 'medianJunctionExpression';
     if(!data.hasOwnProperty(attr)) throw('parseJunctionExpression input error');
 
@@ -311,7 +306,7 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
         d.id = d.gencodeId;
         d.x = d.junctionId;
         d.y = tissueId;
-        d.value = useLog?Math.log10(Number(median + adjust)):Number(median);
+        d.value = Number(median);
         d.displayValue = Number(median);
     });
 
@@ -326,11 +321,9 @@ export function parseJunctionExpression(data, useLog=true, adjust=1){
 /**
  * parse transcript expression
  * @param data
- * @param useLog
- * @param adjust
  * @returns {*}
  */
-export function parseTranscriptExpression(data, useLog=true, adjust=1){
+export function parseTranscriptExpression(data){
     const attr = 'medianTranscriptExpression';
     if(!data.hasOwnProperty(attr)) throw('Parse Error: parseTranscriptExpression input error');
     // parse GTEx isoform median TPM
@@ -341,7 +334,7 @@ export function parseTranscriptExpression(data, useLog=true, adjust=1){
                 throw('Parse Error: required transcipt attribute is missing: ' + k);
             }
         });
-        d.value = useLog?Math.log10(Number(d.median + adjust)):Number(d.median);
+        d.value = Number(d.median);
         d.displayValue = Number(d.median);
         d.x = d.transcriptId;
         d.y = d.tissueSiteDetailId;
@@ -352,7 +345,12 @@ export function parseTranscriptExpression(data, useLog=true, adjust=1){
     return data[attr];
 }
 
-export function parseTranscriptExpressionTranspose(data, useLog=true, adjust=1){
+/**
+ * parse transcript expression, and transpose the matrix
+ * @param data
+ * @returns {*}
+ */
+export function parseTranscriptExpressionTranspose(data){
     const attr = 'medianTranscriptExpression';
     if(!data.hasOwnProperty(attr)) {
         console.error(data);
@@ -368,7 +366,7 @@ export function parseTranscriptExpressionTranspose(data, useLog=true, adjust=1){
         });
         const median = d.median;
         const tissueId = d.tissueSiteDetailId;
-        d.value = useLog?Math.log10(Number(median + adjust)):Number(median);
+        d.value = Number(median);
         d.displayValue = Number(median);
         d.y = d.transcriptId;
         d.x = tissueId;
@@ -382,10 +380,9 @@ export function parseTranscriptExpressionTranspose(data, useLog=true, adjust=1){
 /**
  * parse median gene expression
  * @param data {Json} with attr medianGeneExpression
- * @param useLog {Boolean} performs log10 transformation
  * @returns {*}
  */
-export function parseMedianExpression(data, useLog=true){
+export function parseMedianExpression(data){
     const attr = 'medianGeneExpression';
     if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
     const adjust = 1;
@@ -400,7 +397,7 @@ export function parseMedianExpression(data, useLog=true){
     });
     let results = data[attr];
     results.forEach(function(d){
-        d.value = useLog?Math.log10(Number(d.median) + adjust):Number(d.median);
+        d.value = Number(d.median);
         d.x = d.tissueSiteDetailId;
         d.y = d.gencodeId;
         d.displayValue = Number(d.median);
