@@ -9,7 +9,6 @@ import Heatmap from "./modules/Heatmap";
 
 /*
 Heatmap TODO:
-4. Error-checking the DIV ID DOM element.*
 4.5. Error-checking all inputs.*
  */
 const demoData = {
@@ -48,6 +47,13 @@ export function heatmap(par=heatmapDemoConfig){
     };
     let inWidth = par.width - (par.marginLeft + par.marginRight + par.rowLabelWidth);
     let inHeight = par.height - (par.marginTop + par.marginBottom + par.columnLabelHeight);
+
+    // test input params
+    if ($(`#${par.id}`).length == 0) {
+        let error = `Input Error: DOM ID ${par.id} is not found.`;
+        alert(error);
+        throw error;
+    }
     let svg = createSvg(par.id, par.width, par.height, margin);
 
     // render the heatmap
