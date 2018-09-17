@@ -121,12 +121,11 @@ export function getColorInterpolator(name){
         Grays: d3Chromatic.interpolateGreys
     };
     if (!interpolators.hasOwnProperty(name)) {
-        const err = "Color Interpolator Error " + name;
-        console.error(err);
+        const err = "Unrecognized color: " + name;
+        alert(err);
         throw(err);
     }
     return interpolators[name];
-
 }
 
 /**

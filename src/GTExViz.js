@@ -7,10 +7,6 @@
 import {createSvg, generateRandomMatrix} from "./modules/utils";
 import Heatmap from "./modules/Heatmap";
 
-/*
-Heatmap TODO:
-4.5. Error-checking all inputs.*
- */
 const demoData = {
     heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:100})
 };
@@ -24,7 +20,7 @@ const heatmapDemoConfig = {
     marginRight: 40,
     marginTop: 50,
     marginBottom: 50,
-    colorScheme: "YlGnBu",
+    colorScheme: "YlGnB",
     cornerRadius: 2,
     columnLabelHeight: 20,
     columnLabelAngle: 60,
