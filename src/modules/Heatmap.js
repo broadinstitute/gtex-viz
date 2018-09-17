@@ -21,10 +21,10 @@ export default class Heatmap {
      * @param colorScheme {String}: recognized terms in Colors:getColorInterpolator
      * @param r {Integer}: cell corner radius
      */
-    constructor(data, colorScheme="YlGnBu", useLog=true, base=10, r=2, tooltipId="heatmapTooltip"){
+    constructor(data, useLog=true, logBase=10, colorScheme="YlGnBu", r=2, tooltipId="heatmapTooltip"){
         this.data = data;
         this.useLog = useLog;
-        this.base = base;
+        this.logBase = logBase;
         this.nullColor = "#e6e6e6";
         this.colorScale = undefined;
         this.xList = undefined;
@@ -64,7 +64,7 @@ export default class Heatmap {
      */
 
     drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5){
-        drawColorLegend(this.data[0].unit||"Value", dom, this.colorScale, legendConfig, this.useLog, ticks, this.base);
+        drawColorLegend(this.data[0].unit||"Value", dom, this.colorScale, legendConfig, this.useLog, ticks, this.logBase);
     }
 
      /**
@@ -81,6 +81,11 @@ export default class Heatmap {
         this.draw(dom, dimensions, angle);
     }
 
+    log(v){
+        const adjust = 1;
+        return this.logBase == 2? Math.log2(Number(v+adjust)):Math.log10(Number(v+adjust))
+    }
+
     /**
      * draws the heatmap
      * @param dom {Selection}
@@ -93,7 +98,11 @@ export default class Heatmap {
 
         if (this.xList === undefined) this._setXList(dimensions.w);
         if (this.yList === undefined) this._setYList(dimensions.h);
-        if (this.colorScale === undefined) this.colorScale = setColorScale(this.data.map((d)=>d.value), this.colorScheme);
+        if (this.colorScale === undefined) {
+            let useLog = this.useLog;
+            let data = this.data.map((d)=>useLog?this.log(d.value):d.value);
+            this.colorScale = setColorScale(data, this.colorScheme);
+        }
 
         // text labels
         // data join
@@ -190,7 +199,7 @@ export default class Heatmap {
             .merge(cells)
             // .transition()
             // .duration(2000)
-            .style("fill", (d) => useNullColor&&d.displayValue==0?nullColor:this.colorScale(d.value)); // TODO: what if null value isn't 0?
+            .style("fill", (d) => useNullColor&&d.displayValue==0?nullColor:this.useLog?this.colorScale(this.log(d.value)):this.colorScale(d.value)); // TODO: what if null value isn't 0?
 
         // exit and remove
         cells.exit().remove();

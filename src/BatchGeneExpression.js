@@ -336,7 +336,7 @@ function _customizeMouseEvents(dmap, tissueDict, geneDict, urls=getGtexUrls()) {
     dmap.data.external = [];
     const cellMouseover = function(d) {
         const selected = select(this);
-        dmap.objects.heatmap.cellMouseover(selected); // call the default heatmap mouse over event first
+        dmap.objects.heatmap.cellMouseover(d, svg, selected); // call the default heatmap mouse over event first
         let tissue = tissueDict[d.x]===undefined?d.x:tissueDict[d.x].tissueSiteDetail;
         let gene = geneDict[d.y]===undefined?d.y:geneDict[d.y].geneSymbol;
 
