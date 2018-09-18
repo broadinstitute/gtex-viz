@@ -50,6 +50,7 @@ Then run rollup to recompile the code. All the demos are using the minified code
 The GTEx Expression Map is an interactive heatmap specifically designed for rendering expression data. The GTEx portal uses this tool to report and summarize multi-gene, multi-tissue expression data. 
 
 [Portal Link](https://gtexportal.org/home/multiGeneQueryPage)
+
 [Try it at jsFiddle](https://jsfiddle.net/kathuang/s6gto27r/99/)
 
 ![GTEx Expression Map Screen Shot](/images/GTEx-expression-map.png)
