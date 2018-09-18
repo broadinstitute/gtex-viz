@@ -12,7 +12,7 @@
             <h3>GTExViz Demos</h3>
             <div>
                 <h5>GTEx Grouped Violin Plot</h5>
-                <div id="gtexGroupedViolinPlot"></div>
+                <div id="userGroupedViolinPlot"></div>
             </div>
         </div>
     </body>
@@ -25,6 +25,26 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
     <script src="/build/js/gtex-viz.bundle.dev.js"></script>
     <script>
-        GTExViz.groupedViolinPlot();
+        let data = GTExViz.demoData.groupedViolinPlot;
+        let violinDemoConfig = {
+            id: 'userGroupedViolinPlot',
+            data: data,
+            width: 500,
+            height: 300,
+            marginLeft: 100,
+            marginRight: 20,
+            marginTop: 50,
+            marginBottom: 100,
+            showDivider: true,
+            xPadding: 0.3,
+            yLabel: "Random Value",
+            showGroupX: true,
+            showX: true,
+            xAngle: 0,
+            showWhisker: false,
+            showLegend: false,
+            showSampleSize: true
+        };
+        GTExViz.groupedViolinPlot(violinDemoConfig);
     </script>
 </html>

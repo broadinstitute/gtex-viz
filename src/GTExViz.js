@@ -15,7 +15,7 @@ import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GroupedViolin from "./modules/GroupedViolin";
 
-const demoData = {
+export const demoData = {
     heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:1000}),
     dendroHeatmap: {
         rowTree: "(((TP53:0.17,SLK:0.17):1.18,NDRG4:1.34):1.33,ACTN3:2.67);",
@@ -276,10 +276,10 @@ const violinDemoConfig = {
     id: 'gtexGroupedViolinPlot',
     data: demoData.groupedViolinPlot,
     width: 500,
-    height: 330,
+    height: 300,
     marginLeft: 100,
     marginRight: 20,
-    marginTop: 100,
+    marginTop: 50,
     marginBottom: 100,
     showDivider: true,
     xPadding: 0.3,
@@ -288,7 +288,7 @@ const violinDemoConfig = {
     showX: true,
     xAngle: 0,
     showWhisker: false,
-    showLegend: true,
+    showLegend: false,
     showSampleSize: true
 };
 export function groupedViolinPlot(par=violinDemoConfig){
