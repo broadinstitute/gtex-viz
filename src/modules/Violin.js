@@ -130,8 +130,6 @@ export default class Violin {
              .attr('text-anchor', 'end')
              .text(yLabel);
 
-
-
         // add the brush
         let theBrush = brush();
         theBrush.on("end", () => {this.zoom(dom, theBrush)});

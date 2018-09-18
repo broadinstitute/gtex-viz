@@ -558,7 +558,6 @@ function _changeViolinXLabel(dom, tissueDict){
     /***** Change row labels to tissue names *****/
     dom.select(".violin-x-axis").selectAll("text")
         .text((d) => tissueDict[d]===undefined?d:tissueDict[d].tissueSiteDetail);
-
 }
 
 /**

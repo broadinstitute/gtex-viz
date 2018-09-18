@@ -7,12 +7,15 @@
 1. Color legend for log scale is not spaced correctly.
  */
 'use strict';
-import {createSvg, generateRandomMatrix} from "./modules/utils";
+import {createSvg, generateRandomMatrix, generateRandomList} from "./modules/utils";
+import {range} from "d3-array";
+import {randomNormal} from "d3-random";
 import Heatmap from "./modules/Heatmap";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
+import GroupedViolin from "./modules/GroupedViolin";
 
-const demoData = {
+export const demoData = {
     heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:1000}),
     dendroHeatmap: {
         rowTree: "(((TP53:0.17,SLK:0.17):1.18,NDRG4:1.34):1.33,ACTN3:2.67);",
@@ -115,7 +118,54 @@ const demoData = {
       "unit": "TPM"
     }
   ]
-    }
+    },
+    groupedViolinPlot: [
+        {
+           group: "Group 1",
+           label: "Gene 1",
+           values: range(0, 2000).map(randomNormal(2, 1))
+        },
+        {
+            group: "Group 1",
+            label: "Gene 2",
+            values: range(0, 2000).map(randomNormal(5, 1))
+        },
+        {
+            group: "Group 1",
+            label: "Gene 3",
+            values: range(0, 2000).map(randomNormal(10, 1))
+        },
+        {
+           group: "Group 2",
+           label: "Gene 1",
+           values: range(0, 2000).map(randomNormal(5, 1))
+        },
+        {
+            group: "Group 2",
+            label: "Gene 2",
+            values: range(0, 2000).map(randomNormal(3, 1))
+        },
+        {
+            group: "Group 2",
+            label: "Gene 3",
+            values: range(0, 2000).map(randomNormal(1, 1))
+        },
+        {
+           group: "Group 3",
+           label: "Gene 1",
+           values: range(0, 2000).map(randomNormal(2, 1))
+        },
+        {
+            group: "Group 3",
+            label: "Gene 2",
+            values: range(0, 2000).map(randomNormal(3, 1))
+        },
+        {
+            group: "Group 3",
+            label: "Gene 3",
+            values: range(0, 2000).map(randomNormal(5, 1))
+        }
+    ]
 };
 
 const heatmapDemoConfig = {
@@ -139,7 +189,7 @@ const heatmapDemoConfig = {
 };
 
 /**
- * Renders a 2D Heatmap
+ * Render a 2D Heatmap
  * @param params
  */
 export function heatmap(par=heatmapDemoConfig){
@@ -190,6 +240,11 @@ const dendroHeatmapDemoConfig = {
     rowLabelWidth: 200,
     legendSpace: 50
 };
+
+/**
+ * Render a DendroHeatmap
+ * @param par
+ */
 export function dendroHeatmap(par=dendroHeatmapDemoConfig){
     let margin = {
         top: par.marginTop,
@@ -215,5 +270,55 @@ export function dendroHeatmap(par=dendroHeatmapDemoConfig){
     let showColTree = par.data.colTree !== undefined;
     let showRowTree = par.data.rowTree !== undefined;
     dmap.render(par.id, svgId, showColTree, showRowTree, "top", 8);
+}
+
+const violinDemoConfig = {
+    id: 'gtexGroupedViolinPlot',
+    data: demoData.groupedViolinPlot,
+    width: 500,
+    height: 300,
+    marginLeft: 100,
+    marginRight: 20,
+    marginTop: 50,
+    marginBottom: 100,
+    showDivider: true,
+    xPadding: 0.3,
+    yLabel: "Random Value",
+    showGroupX: true,
+    showX: true,
+    xAngle: 0,
+    showWhisker: false,
+    showLegend: false,
+    showSampleSize: true
+};
+export function groupedViolinPlot(par=violinDemoConfig){
+    console.log(par.data);
+    let margin = {
+        top: par.marginTop,
+        right: par.marginRight,
+        bottom: par.marginBottom,
+        left: par.marginLeft
+    };
+    // test input params
+    if ($(`#${par.id}`).length == 0) {
+        let error = `Input Error: DOM ID ${par.id} is not found.`;
+        alert(error);
+        throw error;
+    }
+
+    let inWidth = par.width - (par.marginLeft + par.marginRight);
+    let inHeight = par.height - (par.marginTop + par.marginBottom);
+
+    let svgId = `${par.id}Svg`;
+    let tooltipId = `${par.id}Tooltip`;
+
+    // create the SVG
+    let svg = createSvg(par.id, par.width, par.height, margin);
+
+    const gViolin = new GroupedViolin(par.data);
+    gViolin.render(svg, inWidth, inHeight, par.xPadding, undefined, [], par.yLabel, par.showGroupX, par.ShowX, par.xAngle, par.showWhisker, par.showDivider, par.showLegend);
+    const tooltip = gViolin.createTooltip(tooltipId);
+
+
 }
 
