@@ -252,6 +252,7 @@ export default class GroupedViolin {
      * @returns {Tooltip}
      */
     createTooltip(domId){
+        if ($(`#${domId}`).length == 0) $('<div/>').attr('id', domId).appendTo($('body'));
         this.tooltip = new Tooltip(domId);
         select(`#${domId}`).classed('violin-tooltip', true);
         return this.tooltip;
