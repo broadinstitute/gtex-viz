@@ -51,7 +51,9 @@ The GTEx Expression Map is an interactive heatmap specifically designed for rend
 
 [Portal Link](https://gtexportal.org/home/multiGeneQueryPage)
 
-[Try it at jsFiddle](https://jsfiddle.net/kathuang/s6gto27r/99/)
+[jsFiddle Demo1](https://jsfiddle.net/kathuang/s6gto27r/99/)
+
+[jsFiddle Demo2](https://jsfiddle.net/kathuang/zscvjo8n/)
 
 ![GTEx Expression Map Screen Shot](/images/GTEx-expression-map.png)
 
