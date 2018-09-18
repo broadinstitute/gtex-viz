@@ -221,7 +221,7 @@ export default class Heatmap {
         dom.selectAll(".exp-map-ylabel").filter(`.${colClass}`)
             .classed('highlighted', true);
         selected.classed('highlighted', true);
-        const displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):parseFloat(d.displayValue.toExponential()).toPrecision(4);
+        const displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
         this.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}`);
     }
 
