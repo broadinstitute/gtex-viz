@@ -9476,7 +9476,7 @@ function _renderViolinHelper(data, dmap, tissueDict){
     const rootId = `#${id.root}`;
     const tooltipId = `#${id.tooltip}`;
     if ($(rootId).length == 0) throw 'Violin Plot Error: rootId does not exist.';
-    if ($(tooltipId).length == 0) $('<div/>').attr('id', id.tooltip).appendTo($('body')); // create it if not already present on the html document
+    if ($(tooltipId).length == 0) $('<div/>').attr('id', id.tooltip).appendTo($('body')); // create it if not already present on the demo document
 
     // clear previously rendered plot
     select(rootId).selectAll("*").remove();
