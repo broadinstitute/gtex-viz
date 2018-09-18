@@ -130,3 +130,15 @@ export function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
     });
     return data;
 }
+
+/**
+ * Generate a list of random values
+ * @param par
+ * @returns {Array}
+ */
+export function generateRandomList(par={n:100, scaleFactor:1}) {
+    let X = range(0, par.n); // generates a 1-based list.
+    let data = [];
+    return X.map((x) => Math.random() * par.scaleFactor);
+
+}
