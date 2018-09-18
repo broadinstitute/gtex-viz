@@ -27,11 +27,15 @@
 
     <script src="/build/js/gtex-viz.bundle.dev.js"></script>
     <script>
-        let data = generateRandomMatrix({x:50, y:6, scaleFactor:50});
+        let data = generateRandomMatrix({x:50, y:6, scaleFactor:100});
+        console.log(JSON.stringify(data));
+
         GTExViz.heatmap();
         GTExViz.heatmap({
             id: 'userHeatmap',
             data: data,
+            useLog: false,
+            logBase: null,
             width: 800,
             height: 200,
             marginLeft: 20,
@@ -44,6 +48,7 @@
             columnLabelAngle: 60,
             columnLabelPosAdjust: 10,
             rowLabelWidth: 100,
+
         });
         function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
             let range = n => Array.from(Array(n).keys());
@@ -51,16 +56,17 @@
             let Y = range(par.y);
             let data = [];
             X.forEach((x)=>{
-                x = 'x' + x.toString();
+                x = 'col ' + x.toString();
                 Y.forEach((y)=>{
-                    y = 'y' + y.toString();
+                    y = 'row ' + y.toString();
                     let v = Math.random()*par.scaleFactor;
-                    data.push({
+                    let dataPoint = {
                         x: x,
                         y: y,
                         value: v,
-                        displayValue: v
-                    });
+                        displayValue: v.toPrecision(3)
+                    };
+                    data.push(dataPoint);
                 })
             });
             return data;

@@ -3,6 +3,9 @@
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
 
+/*
+1. Color legend for log scale is not spaced correctly.
+ */
 'use strict';
 import {createSvg, generateRandomMatrix} from "./modules/utils";
 import Heatmap from "./modules/Heatmap";
@@ -10,7 +13,7 @@ import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 
 const demoData = {
-    heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:100}),
+    heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:1000}),
     dendroHeatmap: {
         rowTree: "(((TP53:0.17,SLK:0.17):1.18,NDRG4:1.34):1.33,ACTN3:2.67);",
         colTree: "(((Adipose Visceral Omentum:0.06,Adipose Subcutaneous:0.06):0.00,Bladder:0.06):0.16,Adrenal Gland:0.22);",
@@ -130,7 +133,9 @@ const heatmapDemoConfig = {
     columnLabelAngle: 60,
     columnLabelPosAdjust: 10,
     rowLabelWidth: 100,
-    legendSpace: 50
+    legendSpace: 50,
+    useLog: true,
+    logBase: 10
 };
 
 /**
@@ -159,7 +164,7 @@ export function heatmap(par=heatmapDemoConfig){
 
     // render the heatmap
     let tooltipId = `${par.id}Tooltip`;
-    let h = new Heatmap(par.data, false, null, par.colorScheme, par.cornerRadius, tooltipId);
+    let h = new Heatmap(par.data, par.useLog, par.logBase, par.colorScheme, par.cornerRadius, tooltipId);
     h.draw(svg, {w:inWidth, h:inHeight}, par.columnLabelAngle, false, par.columnLabelPosAdjust);
     h.drawColorLegend(svg, {x:20, y: -20}, 10);
 }
@@ -167,6 +172,8 @@ export function heatmap(par=heatmapDemoConfig){
 const dendroHeatmapDemoConfig = {
     id: 'gtexVizDendroHeatmap',
     data: demoData.dendroHeatmap,
+    useLog: true,
+    logBase: 10,
     width: 600, // outer width
     height: 300, // outer height
     marginLeft: 20,
@@ -204,9 +211,9 @@ export function dendroHeatmap(par=dendroHeatmapDemoConfig){
     let svgId = `${par.id}Svg`;
     let tooltipId = `${par.id}Tooltip`;
     let dmapConfig = new DendroHeatmapConfig(par.width, par.rowTreePanelWidth, par.colTreePanelHeight, margin);
-    let dmap = new DendroHeatmap(par.data.colTree, par.data.rowTree, par.data.heatmap, par.colorScheme, par.cornerRadius, dmapConfig, tooltipId)
+    let dmap = new DendroHeatmap(par.data.colTree, par.data.rowTree, par.data.heatmap, par.colorScheme, par.cornerRadius, dmapConfig, tooltipId, par.useLog, par.logBase)
     let showColTree = par.data.colTree !== undefined;
     let showRowTree = par.data.rowTree !== undefined;
-    dmap.render(par.id, svgId, showColTree, showRowTree, "top", 5);
+    dmap.render(par.id, svgId, showColTree, showRowTree, "top", 8);
 }
 

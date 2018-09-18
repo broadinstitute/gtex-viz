@@ -154,10 +154,10 @@ export function setColorScale(data, colors="YlGnBu", dmin = 0) {
  * @param orientation {enum} h or v, i.e. horizontal or vertical
  * @param cell
  */
-export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:50}, orientation="h"){
-
-    const data = [0].concat(scale.ticks(ticks).slice(1)); // why doesn't this provide consistent number of ticks??
-
+export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:40}, orientation="h"){
+    let range = [...Array(ticks+1).keys()];
+    let interval = scale.domain()[1]/ticks;
+    const data = range.map((d)=>d*interval);
 
     // legend groups
     const legends = dom.append("g").attr("transform", `translate(${config.x}, ${config.y})`)
@@ -185,7 +185,7 @@ export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, bas
 
         g.append("text")
             .attr("class", "color-legend")
-            .text((d) => useLog?(Math.pow(base, d)-1).toPrecision(2):d.toPrecision(2))
+            .text((d) => useLog?(Math.pow(base, d)).toPrecision(2):d.toPrecision(2))
             .attr("x", (d, i) => cell.w * i)
             .attr("y", 0);
     } else {
