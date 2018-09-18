@@ -12,7 +12,7 @@
             <h3>GTExViz Demos</h3>
             <div>
                 <h5>GTEx DendroHeatmap</h5>
-                <div id="gtexVizDendroHeatmap"></div>
+                <div id="userDendroHeatmap"></div>
             </div>
         </div>
     </body>
@@ -25,6 +25,127 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
     <script src="/build/js/gtex-viz.bundle.dev.js"></script>
     <script>
-        GTExViz.dendroHeatmap();
+        const data = {
+            rowTree: "(((TP53:0.17,SLK:0.17):1.18,NDRG4:1.34):1.33,ACTN3:2.67);",
+            colTree: "(((Adipose Visceral Omentum:0.06,Adipose Subcutaneous:0.06):0.00,Bladder:0.06):0.16,Adrenal Gland:0.22);",
+            heatmap: [
+                {
+                  "y": "SLK",
+                  "value": 35.505,
+                  "x": "Adipose Subcutaneous",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "SLK",
+                  "value": 29.28,
+                  "x": "Adipose Visceral Omentum",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "SLK",
+                  "value": 17.405,
+                  "x": "Adrenal Gland",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "SLK",
+                  "value": 53.29,
+                  "x": "Bladder",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "NDRG4",
+                  "value": 12.035,
+                  "x": "Adipose Subcutaneous",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "NDRG4",
+                  "value": 6.531000000000001,
+                  "x": "Adipose Visceral Omentum",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "NDRG4",
+                  "value": 134.8,
+                  "x": "Adrenal Gland",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "NDRG4",
+                  "value": 7.1160000000000005,
+                  "x": "Bladder",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "TP53",
+                  "value": 29.935,
+                  "x": "Adipose Subcutaneous",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "TP53",
+                  "value": 23.55,
+                  "x": "Adipose Visceral Omentum",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "TP53",
+                  "value": 18.515,
+                  "x": "Adrenal Gland",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "TP53",
+                  "value": 40.51,
+                  "x": "Bladder",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "ACTN3",
+                  "value": 0.33145,
+                  "x": "Adipose Subcutaneous",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "ACTN3",
+                  "value": 0.3317,
+                  "x": "Adipose Visceral Omentum",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "ACTN3",
+                  "value": 0.100005,
+                  "x": "Adrenal Gland",
+                  "unit": "TPM"
+                },
+                {
+                  "y": "ACTN3",
+                  "value": 0.48100000000000004,
+                  "x": "Bladder",
+                  "unit": "TPM"
+                }
+              ]
+        };
+        const config = {
+            id: 'userDendroHeatmap',
+            data: data,
+            width: 600, // outer width
+            height: 300, // outer height
+            marginLeft: 20,
+            marginRight: 40,
+            marginTop: 50,
+            marginBottom: 50,
+            rowTreePanelWidth: 100,
+            colTreePanelHeight: 100,
+            colorScheme: "Blues",
+            cornerRadius: 2,
+            columnLabelHeight: 200,
+            columnLabelAngle: 60,
+            columnLabelPosAdjust: 10,
+            rowLabelWidth: 200,
+            legendSpace: 50
+};
+        GTExViz.dendroHeatmap(config);
     </script>
 </html>
