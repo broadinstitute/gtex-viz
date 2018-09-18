@@ -8,7 +8,7 @@
  */
 export default class DendroHeatmapConfig {
     /**
-     * @param mainPanelW {Number}, set this to determine the cellW
+     * @param rootW {Number}, this width includes margin left and right, rowTreePanel width and heatmap width.
      * @param leftPanelW {Integer}, set to 0 if there's no left panel
      * @param topPanelH {Integer}, set to 0 if there's no top panel
      * @param margin {Object} with attr: top, right, bottom, left, smaller values than the default are not recommended for the heatmap, top margin should be at least 50

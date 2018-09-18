@@ -124,7 +124,7 @@ export function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
                 x: x,
                 y: y,
                 value: v,
-                displayValue: v
+                displayValue: parseFloat(v.toExponential()).toPrecision(3)
             });
         })
     });

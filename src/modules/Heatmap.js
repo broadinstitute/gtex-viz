@@ -199,7 +199,9 @@ export default class Heatmap {
             .merge(cells)
             // .transition()
             // .duration(2000)
-            .style("fill", (d) => useNullColor&&d.displayValue==0?nullColor:this.useLog?this.colorScale(this.log(d.value)):this.colorScale(d.value)); // TODO: what if null value isn't 0?
+            .style("fill", (d) => {
+                return useNullColor&&d.value==0?nullColor:this.useLog?this.colorScale(this.log(d.value)):this.colorScale(d.value)
+            }); // TODO: what if null value isn't 0?
 
         // exit and remove
         cells.exit().remove();
@@ -219,7 +221,8 @@ export default class Heatmap {
         dom.selectAll(".exp-map-ylabel").filter(`.${colClass}`)
             .classed('highlighted', true);
         selected.classed('highlighted', true);
-        this.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${parseFloat(d.displayValue.toExponential()).toPrecision(4)}`)
+        const displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
+        this.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}`);
     }
 
     _setXList(width, newList) {
