@@ -3,10 +3,6 @@
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
 
-/*
-TODO:
-1. make displayValue optional.
- */
 'use strict';
 import {createSvg, generateRandomMatrix} from "./modules/utils";
 import Heatmap from "./modules/Heatmap";
@@ -20,128 +16,96 @@ const demoData = {
         colTree: "(((Adipose Visceral Omentum:0.06,Adipose Subcutaneous:0.06):0.00,Bladder:0.06):0.16,Adrenal Gland:0.22);",
         heatmap: [
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000065613.9",
       "y": "SLK",
       "value": 35.505,
       "x": "Adipose Subcutaneous",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000065613.9",
       "y": "SLK",
       "value": 29.28,
       "x": "Adipose Visceral Omentum",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000065613.9",
       "y": "SLK",
       "value": 17.405,
       "x": "Adrenal Gland",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000065613.9",
       "y": "SLK",
       "value": 53.29,
       "x": "Bladder",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000103034.10",
       "y": "NDRG4",
       "value": 12.035,
       "x": "Adipose Subcutaneous",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000103034.10",
       "y": "NDRG4",
       "value": 6.531000000000001,
       "x": "Adipose Visceral Omentum",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000103034.10",
       "y": "NDRG4",
       "value": 134.8,
       "x": "Adrenal Gland",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000103034.10",
       "y": "NDRG4",
       "value": 7.1160000000000005,
       "x": "Bladder",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000141510.11",
       "y": "TP53",
       "value": 29.935,
       "x": "Adipose Subcutaneous",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000141510.11",
       "y": "TP53",
       "value": 23.55,
       "x": "Adipose Visceral Omentum",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000141510.11",
       "y": "TP53",
       "value": 18.515,
       "x": "Adrenal Gland",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000141510.11",
       "y": "TP53",
       "value": 40.51,
       "x": "Bladder",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000248746.1",
       "y": "ACTN3",
       "value": 0.33145,
       "x": "Adipose Subcutaneous",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000248746.1",
       "y": "ACTN3",
       "value": 0.3317,
       "x": "Adipose Visceral Omentum",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000248746.1",
       "y": "ACTN3",
       "value": 0.100005,
       "x": "Adrenal Gland",
       "unit": "TPM"
     },
     {
-      "datasetId": "gtex v7",
-      "gencodeId": "ENSG00000248746.1",
       "y": "ACTN3",
       "value": 0.48100000000000004,
       "x": "Bladder",
@@ -160,7 +124,7 @@ const heatmapDemoConfig = {
     marginRight: 40,
     marginTop: 50,
     marginBottom: 50,
-    colorScheme: "YlGnB",
+    colorScheme: "YlGnBu",
     cornerRadius: 2,
     columnLabelHeight: 20,
     columnLabelAngle: 60,
