@@ -1,0 +1,50 @@
+div.depth1 {
+    padding-left: 20px;
+}
+
+div.depth2 {
+    padding-left: 40px;
+}
+
+div.pvz-all {
+    float: left;
+    margin-left: 15px;
+    margin-bottom: 5px;
+}
+
+button.pvz-clear {
+    float: right;
+    margin-right: 15px;
+    margin-bottom: 5px;
+}
+
+.pvz-container {
+    clear: both;
+}
+
+.pvz-control {
+
+}
+
+.pvz-text {
+    padding-left: 7px;
+}
+
+div.pvz-btn {
+    display: block;
+    text-align: left;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+div.pvz-btn-on {
+
+}
+
+div.pvz-btn-off {
+    color: rgb(150, 150, 150);
+}
+
+.pvz-badge {
+    margin-left: 5px;
+}

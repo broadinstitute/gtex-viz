@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <link type='text/css' rel='stylesheet' href='../css/filter.css'>
+    <link type='text/css' rel='stylesheet' href='../vendor/bootstrap-3.3.5-dist/css/bootstrap.css'>
+
+    <script src='../vendor/d3.v3.min.js' charset='utf-8'></script>
+    <script type='text/javascript' src='../js/filter.js'></script>
+    <script src='../vendor/jquery-1.11.3.js'></script>
+    <script src='../vendor/bootstrap-3.3.5-dist/js/bootstrap.js'></script>
+</head>
+<body>
+    <div id='root'></div>
+
+    <script type='text/javascript'>
+
+        var data = [
+            [['a', true], ['b', true], ['c', false], ['d', true]],
+            ['e', false],
+            ['f', true],
+            [['g', true], ['h', true], ['i', false]],
+            ['j', true],
+            ['k', true]
+        ];
+
+        var data2 = [
+            [['a', false], ['b', false], ['c', false], ['d', false]],
+            ['e', false],
+            ['f', false],
+            [['g', false], ['h', false], ['i', false]],
+            ['j', false],
+            ['k', false]
+        ];
+
+        var data3 = [
+            [['a', true], ['b', true], ['c', true], ['d', true]],
+            ['e', true],
+            ['f', true],
+            [['g', true], ['h', true], ['i', true]],
+            ['j', true],
+            ['k', true]
+        ];
+
+        var mapping = {
+            a: 'Aye',
+            b: 'Bee',
+            c: 'Cee',
+            d: 'Dee',
+            e: 'Eeeee',
+            f: 'Ef',
+            g: 'Gee',
+            h: 'Ach',
+            i: 'Eye',
+            j: 'Jay'
+        };
+
+        var filter = new plotviz.Filter(d3.select('#root').node());
+        filter.generate({data:data3, mapping:mapping}, 'Title');
+
+        var div = d3.select('#root');
+
+    </script>
+
+</body>
+</html>

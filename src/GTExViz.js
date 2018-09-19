@@ -4,7 +4,8 @@
  */
 
 /*
-1. Color legend for log scale is not spaced correctly.
+TODO
+1. refactoring
  */
 'use strict';
 import {createSvg, generateRandomMatrix, generateRandomList} from "./modules/utils";
@@ -14,6 +15,7 @@ import Heatmap from "./modules/Heatmap";
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GroupedViolin from "./modules/GroupedViolin";
+import IsoformTrackViewer from "./modules/IsoformTrackViewer";
 
 export const demoData = {
     heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:1000}),
@@ -165,8 +167,246 @@ export const demoData = {
             label: "Gene 3",
             values: range(0, 2000).map(randomNormal(5, 1))
         }
-    ]
+    ],
+    transcriptTracks: {
+        "exons": {
+            "ENST00000578419.1": [
+                {
+                    "chrom": "17",
+                    "chromStart": 77071021,
+                    "chromEnd": 77071172,
+                    "strand": "+",
+                    "exonNumber": "1",
+                    "exonId": "ENSE00003502032.1"
+
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77073579,
+                    "exonId": "ENSE00003672628.1",
+                    "exonNumber": "2",
+                    "chromStart": 77073512,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77073946,
+                    "exonId": "ENSE00003475281.1",
+                    "exonNumber": "3",
+                    "chromStart": 77073745,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77076446,
+                    "exonId": "ENSE00003679852.1",
+                    "exonNumber": "4",
+                    "chromStart": 77076289,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77077155,
+                    "exonId": "ENSE00003583515.1",
+                    "exonNumber": "5",
+                    "chromStart": 77077007,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77078631,
+                    "exonId": "ENSE00003589230.1",
+                    "exonNumber": "6",
+                    "chromStart": 77077980,
+                    "strand": "+"
+                }
+            ],
+            "ENST00000539857.2": [
+                {
+                    "chrom": "17",
+                    "chromEnd": 77071172,
+                    "exonId": "ENSE00003512401.1",
+                    "exonNumber": "1",
+                    "chromStart": 77071021,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77073579,
+                    "exonId": "ENSE00003623828.1",
+                    "exonNumber": "2",
+                    "chromStart": 77073512,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77073946,
+                    "exonId": "ENSE00003638693.1",
+                    "exonNumber": "3",
+                    "chromStart": 77073745,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77076446,
+                    "exonId": "ENSE00003651250.1",
+                    "exonNumber": "4",
+                    "chromStart": 77076289,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77077155,
+                    "exonId": "ENSE00003607773.1",
+                    "exonNumber": "5",
+                    "chromStart": 77077007,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77078631,
+                    "exonId": "ENSE00003488117.1",
+                    "exonNumber": "6",
+                    "chromStart": 77077980,
+                    "strand": "+"
+                }],
+            "ENST00000311595.9": [
+                {
+                    "chrom": "17",
+                    "chromEnd": 77071172,
+                    "exonId": "ENSE00002713933.1",
+                    "exonNumber": "1",
+                    "chromStart": 77071151,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77073579,
+                    "exonId": "ENSE00003672628.1",
+                    "exonNumber": "2",
+                    "chromStart": 77073512,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77073946,
+                    "exonId": "ENSE00003475281.1",
+                    "exonNumber": "3",
+                    "chromStart": 77073745,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77075719,
+                    "exonId": "ENSE00001111713.1",
+                    "exonNumber": "4",
+                    "chromStart": 77075571,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77076446,
+                    "exonId": "ENSE00003651250.1",
+                    "exonNumber": "5",
+                    "chromStart": 77076289,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77077155,
+                    "exonId": "ENSE00003607773.1",
+                    "exonNumber": "6",
+                    "chromStart": 77077007,
+                    "strand": "+"
+                },
+                {
+                    "chrom": "17",
+                    "chromEnd": 77078612,
+                    "exonId": "ENSE00002720924.1",
+                    "exonNumber": "7",
+                    "chromStart": 77077980,
+                    "strand": "+"
+                }
+            ]
+        },
+        "transcripts": [
+            {
+
+                "chromosome": "17",
+                "end": 77078631,
+                "gencodeId": "ENSG00000167280.12",
+                "geneSymbol": "ENGASE",
+                "start": 77071021,
+                "strand": "+",
+                "transcriptId": "ENST00000578419.1"
+            },
+            {
+                "chromosome": "17",
+                "end": 77078631,
+                "gencodeId": "ENSG00000167280.12",
+                "geneSymbol": "ENGASE",
+                "start": 77071021,
+                "strand": "+",
+                "transcriptId": "ENST00000539857.2"
+            },
+            {
+                "chromosome": "17",
+                "end": 77078612,
+                "gencodeId": "ENSG00000167280.12",
+                "geneSymbol": "ENGASE",
+                "start": 77071151,
+                "strand": "+",
+                "transcriptId": "ENST00000311595.9"
+            }
+        ]
+    }
 };
+
+const transcriptTracksConfig = {
+    id: 'gtexTranscriptTracks',
+    data: demoData.transcriptTracks,
+    width: 1200,
+    height: 80,
+    marginLeft: 100,
+    marginRight: 20,
+    marginTop: 0,
+    marginBottom: 20,
+    labelPos: 'left'
+};
+
+export function transcriptTracks(par=transcriptTracksConfig){
+    let margin = {
+        top: par.marginTop,
+        right: par.marginRight,
+        bottom: par.marginBottom,
+        left: par.marginLeft
+    };
+    let inWidth = par.width - (par.marginLeft + par.marginRight);
+    let inHeight = par.height - (par.marginTop + par.marginBottom);
+
+    // test input params
+    if ($(`#${par.id}`).length == 0) {
+        let error = `Input Error: DOM ID ${par.id} is not found.`;
+        alert(error);
+        throw error;
+    }
+
+    // create the SVG
+        let svg = createSvg(par.id, par.width, par.height, margin);
+
+    // render the transcripts
+    let tooltipId = `${par.id}Tooltip`;
+    let config = {
+        x: 0,
+        y: 0,
+        w: inWidth,
+        h: inHeight,
+        labelOn: par.labelPos
+    };
+    let viewer = new IsoformTrackViewer(par.data.transcripts, par.data.exons, par.data.exons["ENST00000578419.1"], config);
+    viewer.render(false, svg, par.labelPos);
+
+}
 
 const heatmapDemoConfig = {
     id: 'gtexVizHeatmap',

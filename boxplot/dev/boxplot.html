@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>plotviz</title>
+
+    <link type="text/css" rel="stylesheet" href="../css/plotviz.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/axis.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/box.css"/>
+
+    <script src="../vendor/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../js/gtex/gtexBoxplot.js"></script>
+    <script type="text/javascript" src="../js/gtex/gtex.js"></script>
+    <script type="text/javascript" src="../js/axisPanel.js"></script>
+    <script type="text/javascript" src="../js/crosshair.js"></script>
+    <script type="text/javascript" src="../js/toolbox.js"></script>
+    <script type="text/javascript" src="../js/legend.js"></script>
+    <script type="text/javascript" src="../js/boxWhiskerViewer.js"></script>
+    <script type="text/javascript" src="../js/lineViewer.js"></script>
+    <script type="text/javascript" src="../js/testData.js"></script>
+    <script type="text/javascript" src="../js/data.js"></script>
+    <script type="text/javascript" src="../js/render.js"></script>
+    <script type="text/javascript" src="../js/plot.js"></script>
+    <script type="text/javascript" src="../js/layoutManager.js"></script>
+    <script type="text/javascript" src="../examples/plotviz.example.js"></script>
+    <script type="text/javascript" src="../examples/lineviz.subset.example.js"></script>
+
+    <style>
+        {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id='boxplot'>
+</div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+
+        var div = document.getElementById('boxplot');
+        var oReq = new XMLHttpRequest();
+
+        oReq.open('GET', 'FGFR1OP.json');
+
+        oReq.onload = function (event) {
+            var status = oReq.status;
+            var response = oReq.responseText;
+
+            var parsed = JSON.parse(response);
+
+            var oReqColor = new XMLHttpRequest();
+
+            oReqColor.open('GET', 'colors.json');
+
+            oReqColor.onload = function (event) {
+                var colorStatus = oReqColor.status;
+                var parsedColor = JSON.parse(oReqColor.responseText);
+
+                var data = Object.keys(parsed.generpkm).map(function (tissue) {
+                    return {
+                        highWhisker: parsed.generpkm[tissue].high_whisker,
+                        q3: parsed.generpkm[tissue].q3,
+                        median: parsed.generpkm[tissue].median,
+                        q1: parsed.generpkm[tissue].q1,
+                        lowWhisker: parsed.generpkm[tissue].low_whisker,
+                        outliers: parsed.generpkm[tissue].outliers,
+                        color: 'rgb(' + parsedColor[tissue].tissue_color_rgb + ')',
+                        extra: {
+                            groupName: tissue
+                        }
+                    };
+                });
+
+                var boxplot = new plotviz.GtexBoxplot(div);
+                boxplot.render({boxes: data}, {boxes:{}});
+            };
+
+            oReqColor.onerror = function (event) {};
+
+            oReqColor.send();
+        };
+
+        oReq.onerror = function (event) {
+
+        };
+
+        oReq.send();
+        //gtex.devGene('FGFR1OP.json');
+
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+.plotviz-tooltip {
+    color: white;
+    font-weight: bold;
+    background: rgba(0,0,0,0.75);
+    padding: 12px;
+    border-radius: 2px;
+    line-height: 1;
+    opacity: 1;
+}
