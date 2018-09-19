@@ -8,6 +8,8 @@ The GTEx web portal (http://gtexportal.org) develops specialized web-based visua
 - [GTEx eQTL Dashboard](#eqtl-dashboard)
 - [GTEx Gene-eQTL Visualizer](#gene-eqtl-visualizer)
 
+Also, try some of the tools at [jsFiddle](https://jsfiddle.net/user/kathuang/fiddles/).
+
 ---
 
 ### Running demos locally on your computer
@@ -50,12 +52,6 @@ Then run rollup to recompile the code. All the demos are using the minified code
 The GTEx Expression Map is an interactive heatmap specifically designed for rendering expression data. The GTEx portal uses this tool to report and summarize multi-gene, multi-tissue expression data. 
 
 [Portal Link](https://gtexportal.org/home/multiGeneQueryPage)
-
-[jsFiddle Demo of Heatmap](https://jsfiddle.net/kathuang/s6gto27r/99/)
-
-[jsFiddle Demo of DendroHeatmap](https://jsfiddle.net/kathuang/zscvjo8n/)
-
-[jsFiddle Demo of Grouped violin plot](https://jsfiddle.net/kathuang/hs5aebwt/)
 
 ![GTEx Expression Map Screen Shot](/images/GTEx-expression-map.png)
 
