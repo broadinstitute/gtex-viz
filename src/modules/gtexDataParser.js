@@ -502,6 +502,10 @@ export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined
     return data[attr];
 }
 
+/**
+ * parse the expression data of a gene for boxplot
+ * @param data {JSON} from GTEx gene expression web service
+ */
 export function parseGeneExpressionForBoxplot(data) {
     const attr = 'geneExpression';
 
