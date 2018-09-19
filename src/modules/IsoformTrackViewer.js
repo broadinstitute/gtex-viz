@@ -12,6 +12,13 @@ import {scaleBand} from "d3-scale";
 import {axisTop, axisRight} from "d3-axis";
 
 export default class IsoformTrackViewer {
+    /**
+     *
+     * @param isoforms {List} of isoform objects with attr: transcriptId, start, end
+     * @param isoformExons {Dictionary} of lists of isoform exons indexed by isoform ID (transcriptId)
+     * @param modelExons {List} of reference exons...
+     * @param config
+     */
     constructor(isoforms, isoformExons, modelExons, config){
         this.isoforms = isoforms;
         this.isoformExons = isoformExons;
@@ -22,7 +29,6 @@ export default class IsoformTrackViewer {
     }
 
     showData(data, colorScale, barScale, dataLabel, sort=true){
-
         if (sort){
             data.sort((a,b)=>{return -(a.displayValue - b.displayValue)}); // first sort the expression data
             const ids = data.map((d)=>d.transcriptId);
@@ -149,7 +155,6 @@ export default class IsoformTrackViewer {
             const isoformG = select(`#${isoform.transcriptId.replace(".", "_")}`);
             model.render(isoformG, {w:w, h: this.yScale.bandwidth(), labelOn: labelOn});
         });
-
     }
 
     setYscale(h, ylist=undefined){
