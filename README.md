@@ -51,9 +51,11 @@ The GTEx Expression Map is an interactive heatmap specifically designed for rend
 
 [Portal Link](https://gtexportal.org/home/multiGeneQueryPage)
 
-[jsFiddle Demo1](https://jsfiddle.net/kathuang/s6gto27r/99/)
+[jsFiddle Demo of Heatmap](https://jsfiddle.net/kathuang/s6gto27r/99/)
 
-[jsFiddle Demo2](https://jsfiddle.net/kathuang/zscvjo8n/)
+[jsFiddle Demo of DendroHeatmap](https://jsfiddle.net/kathuang/zscvjo8n/)
+
+[jsFiddle Demo of Grouped violin plot](https://jsfiddle.net/kathuang/hs5aebwt/)
 
 ![GTEx Expression Map Screen Shot](/images/GTEx-expression-map.png)
 
