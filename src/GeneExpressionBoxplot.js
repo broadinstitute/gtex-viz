@@ -7,9 +7,14 @@
 import {json} from 'd3-fetch';
 import {getGtexUrls, parseGeneExpressionForBoxplot} from './modules/gtexDataParser';
 
+import Boxplot from './modules/Boxplot';
+
 export function launch(rootId, gencodeId, urls=getGtexUrls()) {
-    json(urls.geneExpBoxplot + gencodeId)
+    json(urls.geneExp + gencodeId)
         .then(function(data) {
-            console.log(parseGeneExpressionForBoxplot(data));
+            const boxplotData = parseGeneExpressionForBoxplot(data);
+            let boxplot = new Boxplot(boxplotData);
+            boxplot.render(rootId);
+
         });
 }
