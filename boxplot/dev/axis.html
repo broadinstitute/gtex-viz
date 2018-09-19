@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <link type='text/css' rel='stylesheet' href='../css/plotviz.css'/>
+    <link type='text/css' rel='stylesheet' href='../css/axis.css'/>
+
+    <script src='../vendor/d3.v3.min.js' charset='utf-8'></script>
+    <script type='text/javascript' src='../js/axisPanel.js'></script>
+</head>
+<body>
+    <div id='root'></div>
+
+    <script type='text/javascript'>
+        var root = d3.select('#root').append('svg').attr({
+                'width': 1000,
+                'height': 1000
+            });
+
+        var leftPanel = root.append('g');
+        var bottomPanel = root.append('g');
+
+        var url = 'FGFR1OP.json';
+        var colorUrl = 'colors.json';
+
+        var oReq = new XMLHttpRequest();
+
+        oReq.open('GET', url);
+
+        oReq.onload = function (event) {
+            var status = oReq.status;
+            var response = oReq.responseText;
+
+            var parse = JSON.parse(response).generpkm;
+
+            // TODO: Inseart local test version of tissue coloring using AJAX
+
+
+            var oReqColor = new XMLHttpRequest();
+
+            oReqColor.open('GET', colorUrl);
+
+            oReqColor.onload = function (event) {
+                var statusColor = oReqColor.status;
+                var responseColor = oReqColor.responseText;
+
+                var parseColor = JSON.parse(responseColor);
+
+                var data = Object.keys(parse).map(function (tissue) {
+                        return {
+                            'highWhisker': parse[tissue].high_whisker,
+                            'q3': parse[tissue].q3,
+                            'median': parse[tissue].median,
+                            'q1': parse[tissue].q1,
+                            'lowWhisker': parse[tissue].low_whisker,
+                            'outliers': parse[tissue].outliers,
+                            'color': 'rgb(' + parseColor[tissue].tissue_color_rgb + ')',
+                            'extra': {
+                                'groupName': tissue
+                            }
+                        };
+                    });
+
+                var leftConfig = {
+                        axisX: 1,
+                        axisY: 0,
+                        labelX: 0.7,
+                        labelY: 0.5,
+                        labelRotation: 90,
+                        'axisClass': 'leftAxis',
+                        'labelClass': 'leftLabel'
+                    };
+
+                var leftAxisData = {
+                        width: 600,
+                        height: 400,
+                        label: '<a xlink:href="https://google.com">Left!</a>',
+                        orientation: 'left',
+                        values: [0, 100],
+                    };
+
+                var leftAxis = new plotviz.AxisPanel(leftPanel, 'leftAxis', leftConfig);
+                leftAxis.render(leftAxis.rawToData(leftAxisData), leftConfig);
+
+
+                var bottomConfig = {
+                        axisX: 0,
+                        axisY: 0,
+                        labelX: 0.5,
+                        labelY: 0.7,
+                        labelRotation: 0,
+                        tickTranslate: 10,
+                        tickRotation: -45,
+                        tickAlign: 'end',
+                        'axisClass': 'bottomAxis',
+                        'labelClass': 'bottomLabel'
+                    };
+
+                var bottomAxisData = {
+                        width: 600,
+                        height: 400,
+                        label: '<a xlink:href="https://google.com">Bottom!</a>',
+                        orientation: 'bottom',
+                        values: Object.keys(parse),
+                    };
+
+                var bottomAxis = new plotviz.AxisPanel(bottomPanel, 'bottomAxis', bottomConfig);
+                bottomAxis.render(bottomAxis.rawToData(bottomAxisData), bottomConfig);
+            };
+
+            oReqColor.onerror = function (event) {
+
+            };
+
+            oReqColor.send();
+        };
+
+        oReq.onerror = function (event) {
+        };
+
+        oReq.send();
+    </script>
+
+</body>
+</html>

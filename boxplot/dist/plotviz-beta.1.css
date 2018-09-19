@@ -1,0 +1,262 @@
+.plotviz-left-axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.plotviz-left-axis g.tick line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.plotviz-left-axis g.tick text {
+    shape-rendering: crispEdges;
+    font-size: 14px;
+    fill: #000;
+    font-family: sans-serif;
+}
+
+.plotviz-bottom-axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.plotviz-bottom-axis g.tick line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.plotviz-bottom-axis g.tick text {
+    shape-rendering: crispEdges;
+    font-size: 14px;
+    fill: #000;
+    font-family: sans-serif;
+}
+
+text.plotviz-label {
+    text-anchor: middle;
+    stroke: black;
+    shape-rendering: crispEdges;
+    font-size: 14px;
+    fill: black;
+}
+
+.plotviz-box .rects {
+    stroke: #aaa;
+    stroke-width: 1;
+    opacity: 1
+}
+
+.plotviz-box .under-lines {
+    stroke: #aaa;
+    stroke-width: 1;
+    opacity: 1;
+}
+
+.plotviz-box .whisker-lines {
+    stroke: #aaa;
+    stroke-width: 1;
+    opacity: 1;
+}
+
+.plotviz-box .median-lines {
+    stroke: black;
+    stroke-width: 2;
+    opacity: 1;
+}
+
+.plotviz-box .outliers {
+    fill: none;
+    stroke: #aaa;
+    opacity: 1;
+}
+div.depth1 {
+    padding-left: 20px;
+}
+
+div.depth2 {
+    padding-left: 40px;
+}
+
+div.pvz-all {
+    float: left;
+    margin-left: 15px;
+    margin-bottom: 5px;
+}
+
+button.pvz-clear {
+    float: right;
+    margin-right: 15px;
+    margin-bottom: 5px;
+}
+
+.pvz-container {
+    clear: both;
+}
+
+.pvz-control {
+
+}
+
+.pvz-text {
+    padding-left: 7px;
+}
+
+div.pvz-btn {
+    display: block;
+    text-align: left;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+div.pvz-btn-on {
+
+}
+
+div.pvz-btn-off {
+    color: rgb(150, 150, 150);
+}
+
+.pvz-badge {
+    margin-left: 5px;
+}
+.plotviz-tooltip {
+    color: white;
+    font-weight: bold;
+    background: rgba(0,0,0,0.75);
+    padding: 12px;
+    border-radius: 2px;
+    line-height: 1;
+    opacity: 1;
+}
+.outliers-on {
+    display: '';
+}
+
+.outliers-off {
+    display: none;
+}
+
+.whiskers-on {
+    display: '';
+}
+
+.whiskers-off {
+    display: none;
+}
+
+.rects-on {
+    display: '';
+}
+
+.rects-off {
+    display: none;
+}
+
+.emphasis {
+    stroke-width: 4px;
+}
+
+#gtex-plot-modal .modal-dialog {
+    width: 1000px;
+}
+
+#gtex-plot-modal .modal-body {
+    overflow-y: scroll;
+}
+
+div.button-box {
+    float: left;
+    border: solid 1px #ccc;
+    border-right: none;
+    padding: 7px 10px 7px 10px;
+    background-color: #eee;
+}
+
+.button {
+    float: left;
+    font-size: 12px;
+    border: solid 1px #ccc;
+    padding: 5px 10px 5px 10px;
+    color: #555;
+    line-height: 1;
+    cursor: pointer;
+    background-color: #fff;
+}
+
+.gtex-outer-div .button {
+    border: solid 1px #ccc;
+}
+
+.button-box-first {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+div.button-box-last {
+    border-right: solid 1px #ccc;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    margin-right: 10px;
+}
+
+.gtex-outer-div .button-box-last {
+    border-right: solid 1px #ccc;
+}
+
+.button-box-title {
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+    padding-bottom: 5px;
+}
+
+.btn-left {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+}
+
+.btn-right {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+.gtex-title {
+    text-anchor: middle;
+}
+
+text.plotviz-label {
+    stroke: none;
+}
+
+.gtex-outer-div {
+    width: 1150px;
+    height: 800px;
+}
+
+.gtex-control {
+    display: inline-block;
+    margin-left: 125px;
+    margin-right: 125px;
+    min-width: 950px;
+}
+
+.mouseover {
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.btn-active {
+    background-color: #eee;
+}
+
+.control-class {
+    width: 50%;
+    margin-top: 0;
+    margin-right: 20%;
+    margin-bottom: 0;
+    margin-left: 30%;
+}

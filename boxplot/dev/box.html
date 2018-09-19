@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <link type='text/css' rel='stylesheet' href='../css/box.css'/>
+    <link type='text/css' rel='stylesheet' href='../css/tooltip.css'/>
+
+    <script src='../vendor/d3.v3.min.js' charset='utf-8'></script>
+    <script type='text/javascript' src='../js/boxWhiskerViewer.js'></script>
+    <script type='text/javascript' src='../js/tooltip.js'></script>
+</head>
+<body>
+    <div id='root'></div>
+
+    <script type='text/javascript'>
+        var panel = d3.select('#root').append('svg').attr({
+                'width': 1000,
+                'height': 1000
+            }).append('g');
+
+        var url = 'FGFR1OP.json';
+        var colorUrl = 'colors.json';
+
+        var oReq = new XMLHttpRequest();
+
+        oReq.open('GET', url);
+
+        oReq.onload = function (event) {
+            var status = oReq.status;
+            var response = oReq.responseText;
+
+            var parse = JSON.parse(response).generpkm;
+
+            // TODO: Inseart local test version of tissue coloring using AJAX
+
+
+            var oReqColor = new XMLHttpRequest();
+
+            oReqColor.open('GET', colorUrl);
+
+            oReqColor.onload = function (event) {
+                var statusColor = oReqColor.status;
+                var responseColor = oReqColor.responseText;
+
+                var parseColor = JSON.parse(responseColor);
+
+                var data = Object.keys(parse).map(function (tissue) {
+                        return {
+                            'highWhisker': parse[tissue].high_whisker,
+                            'q3': parse[tissue].q3,
+                            'median': parse[tissue].median,
+                            'q1': parse[tissue].q1,
+                            'lowWhisker': parse[tissue].low_whisker,
+                            'outliers': parse[tissue].outliers,
+                            'color': 'rgb(' + parseColor[tissue].tissue_color_rgb + ')',
+                            'extra': {
+                                'groupName': tissue
+                            }
+                        };
+                    });
+
+                var config = {
+                        width: 600,
+                        height: 400,
+                        boxGroupSpacing: 0.1,
+                        boxClass: 'testBox',
+                        outliers: 'on',
+                        outlierRadius: 2
+                    };
+
+                var div = d3.select('#root').node();
+
+                var tooltip = new plotviz.Tooltip(div);
+
+                var box = new plotviz.BoxWhiskerViewer(panel, 'box', config);
+                box.callback(boxCallback);
+                box.render(data, config);
+
+                function boxCallback (input) {
+                    if ('mousemove' === input.type) {
+                        console.log('Box mousemove!');
+                        tooltip.text(input.data.median);
+                        tooltip.move(input.x + 20, input.y + 20);
+                        tooltip.show();
+                    }
+                    if ('mouseout' === input.type) {
+                        console.log('Box mouseout!');
+                    }
+                }
+
+            };
+
+            oReqColor.onerror = function (event) {
+
+            };
+
+            oReqColor.send();
+        };
+
+        oReq.onerror = function (event) {
+        };
+
+        oReq.send();
+    </script>
+
+</body>
+</html>

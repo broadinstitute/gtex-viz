@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Scatter Plot Demonstration</title>
+  <link type='text/css' rel='stylesheet' href='../css/scatter.css'>
+
+  <script src='../vendor/d3.v3.min.js'></script>
+  <script src='../js/widgets/scatter.js'></script>
+</head>
+
+<body>
+
+  <div id='scatter'></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      window.scatter = scatter({
+        'width': 1000,
+        'height': 1000,
+        'divId': '#scatter',
+        'margin': {
+          'top': 0.1,
+          'right': 0.1,
+          'bottom': 0.1,
+          'left': 0.1
+        },
+        'data': (function () {
+          return d3.range(10).map(function (integer) {
+            return {
+              'x': integer,
+              'y': integer
+            }
+          });
+        })(),
+        'texts': null
+      });
+
+      window.scatter();
+    });
+  </script>
+
+</body>
+</html>

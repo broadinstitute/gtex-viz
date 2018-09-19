@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>plotviz</title>
+
+    <link type="text/css" rel="stylesheet" href="../css/axis.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/box.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/filter.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/tooltip.css"/>
+    <link type="text/css" rel="stylesheet" href="../css/gtex.css"/>
+    <link rel="stylesheet" href="../vendor/bootstrap-3.3.5-dist/css/bootstrap.css"/>
+
+    <script src="../vendor/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../js/gtex/gtex.js"></script>
+    <script type="text/javascript" src="../js/gtex/gtexBoxplot.js"></script>
+    <script type="text/javascript" src="../js/gtex/gtexLineplot.js"></script>
+    <script type="text/javascript" src="../js/gtex/gtexMixplot.js"></script>
+    <script type="text/javascript" src="../js/tooltip.js"></script>
+    <script type="text/javascript" src="../js/filter.js"></script>
+    <script type="text/javascript" src="../js/textPanel.js"></script>
+    <script type="text/javascript" src="../js/axisPanel.js"></script>
+    <script type="text/javascript" src="../js/crosshair.js"></script>
+    <script type="text/javascript" src="../js/toolbox.js"></script>
+    <script type="text/javascript" src="../js/legend.js"></script>
+    <script type="text/javascript" src="../js/boxWhiskerViewer.js"></script>
+    <script type="text/javascript" src="../js/lineViewer.js"></script>
+    <script type="text/javascript" src="../js/testData.js"></script>
+    <script type="text/javascript" src="../js/data.js"></script>
+    <script type="text/javascript" src="../js/render.js"></script>
+    <script type="text/javascript" src="../js/plot.js"></script>
+    <script type="text/javascript" src="../js/layoutManager.js"></script>
+    <script type="text/javascript" src="../examples/plotviz.example.js"></script>
+    <script type="text/javascript" src="../examples/lineviz.subset.example.js"></script>
+    <script type="text/javascript" src="../js/widgets/roderic.js"></script>
+    <script src="../vendor/jquery-1.11.3.js"></script>
+    <script src="../vendor/bootstrap-3.3.5-dist/js/bootstrap.js"></script>
+
+    <style>
+        {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="rootDiv" style="position:relative;"></div>
+
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+
+//        var div = document.getElementById('rootDiv');
+        //var gtex = new plotviz.GtexPlot(div, 'http://gtexportal.org/api/v2/genes/', 'http://gtexportal.org/api/v3/expression/');
+//        var gtex = new plotviz.GtexPlot(div, 'http://gtexportal.org/api/v2/genes/', 'http://gtexportal.org/api/v3/expression/', 'http://gtexportal.org/api/v1/samples');
+
+//        window.gtex = gtex;
+
+//        gtex.setGene('FGFR1OP');
+        //gtex.devGene('FGFR1OP.json', 'colors.json', 'FGFR1OPFemale.json', 'FGFR1OPMale.json');
+
+        var div = document.getElementById('rootDiv');
+        var plot = new roderic.Plot(div, roderic.demoData());
+
+        plot.render(roderic.demoData());
+
+    });
+</script>
+
+</body>
+</html>
