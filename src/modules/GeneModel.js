@@ -6,7 +6,7 @@
 This class defines a gene model (or isoform), rendering the exons and junctions of a given gene. The model is rendered based on
 genomic positions, regardless of the strand and transcriptional direction.
 
-TODO: extract out the simple isoform structure rendering?
+TODO: simplify isoform structure rendering?
  */
 
 import {curveCardinal, line} from "d3-shape";
@@ -125,7 +125,6 @@ export default class GeneModel {
 
         });
 
-        // evaluates whether it's an individual isoform or a collapsed gene model
         if(!this.isIsoform){
             // NOTE: do not alter the rendering order of visual components.
             // if this is a gene model, not an isoform
@@ -136,7 +135,6 @@ export default class GeneModel {
                 d.endExon = this._findExon(d.chromEnd);
                 return d.startExon !== undefined && d.endExon !== undefined
             });
-            console.log(this.junctions);
             this.junctions.sort((a,b)=>{
                 // first sort by chromStart
                 if (+a.chromStart < +b.chromStart) return -1;
