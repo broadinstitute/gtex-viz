@@ -28,7 +28,7 @@ export default class Boxplot {
         };
         const svg = this._createSvg(rootId, width, height);
         const dom = svg.append('g').attr('id', 'gtex-viz-boxplot');
-        let scales = this._setScales(width, height, margins);
+        let scales = this._setScales(width - (margins.left + margins.right), height - (margins.top + margins.bottom));
         let xAxis = axisBottom(scales.x).ticks(10);
         let yAxis = axisLeft(scales.y);
 
@@ -54,14 +54,14 @@ export default class Boxplot {
         return svg;
     }
 
-    _setScales(width, height, margins) {
+    _setScales(innerWidth, innerHeight) {
         let xScale = scaleBand()
             .domain(this.boxplotData.map(d => d.tissueSiteDetailId))
-            .range([0, width - (margins.left + margins.right)]);
+            .range([0, innerWidth]);
 
         let yScale = scaleLinear()
             .domain(extent(this.allVals))
-            .range([height - (margins.top + margins.bottom), 0]);
+            .range([innerHeight, 0]);
 
         return {
             x: xScale,
