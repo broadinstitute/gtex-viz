@@ -5,7 +5,7 @@
 
 import {ascending, quantile, extent} from 'd3-array';
 import {select} from 'd3-selection';
-import {scaleOrdinal, scaleLinear} from 'd3-scale';
+import {scaleBand, scaleLinear} from 'd3-scale';
 import {axisBottom, axisLeft} from 'd3-axis';
 
 export default class Boxplot {
@@ -20,14 +20,30 @@ export default class Boxplot {
         // TODO: make width/height and margins customizable
         let width = 800;
         let height = 600;
-        let marginLR = 40;
-        let marginTB = 25;
+        let margins = {
+            top: 10,
+            bottom: 150,
+            left: 40,
+            right: 70
+        };
         const svg = this._createSvg(rootId, width, height);
         const dom = svg.append('g').attr('id', 'gtex-viz-boxplot');
-        let scales = this._setScales(width, height, marginLR, marginTB);
+        let scales = this._setScales(width, height, margins);
+        let xAxis = axisBottom(scales.x).ticks(10);
+        let yAxis = axisLeft(scales.y);
 
-        dom.append('g').attr('transform', `translate(${marginLR}, ${height - marginTB})`).call(scales.x);
-        dom.append('g').attr('transform', `translate(${marginLR}, ${marginTB})`).call(scales.y);
+        // render x-axis
+        dom.append('g')
+            .attr('transform', `translate(${margins.left}, ${height - margins.bottom})`)
+            .call(xAxis)
+            .attr('text-anchor', 'start')
+            .selectAll('text')
+            .attr('transform', 'rotate(45)');
+
+        // render y-axis
+        dom.append('g')
+            .attr('transform', `translate(${margins.left}, ${margins.top})`)
+            .call(yAxis);
     }
 
     _createSvg(rootId, width=800, height=600) {
@@ -38,20 +54,18 @@ export default class Boxplot {
         return svg;
     }
 
-    _setScales(width, height, marginLR, marginTB) {
-        let xScale = scaleOrdinal()
-            .domain([0, this.boxplotData.length])
-            .range([0, width - (marginLR * 2)]);
-        let xAxis = axisBottom().scale(xScale);
+    _setScales(width, height, margins) {
+        let xScale = scaleBand()
+            .domain(this.boxplotData.map(d => d.tissueSiteDetailId))
+            .range([0, width - (margins.left + margins.right)]);
 
         let yScale = scaleLinear()
             .domain(extent(this.allVals))
-            .range([height - (2 * marginTB), 0]);
-        let yAxis = axisLeft().scale(yScale);
+            .range([height - (margins.top + margins.bottom), 0]);
 
         return {
-            x: xAxis,
-            y: yAxis
+            x: xScale,
+            y: yScale
         };
     }
 }
