@@ -34,7 +34,7 @@ export default class Boxplot {
 
         // render x-axis
         dom.append('g')
-            .attr('transform', `translate(${margins.left}, ${height - margins.bottom})`)
+            .attr('transform', `translate(${margins.left + scales.x.step()/2}, ${height - margins.bottom})`)
             .call(xAxis)
             .attr('text-anchor', 'start')
             .selectAll('text')
