@@ -151,7 +151,8 @@ export default class IsoformTrackViewer {
 
     _renderModels(w, labelOn = 'left'){
         this.isoforms.forEach((isoform) => {
-            const model = new GeneModel(isoform, this.modelExons, this.isoformExons[isoform.transcriptId], [], true);
+            let reference = (this.modelExons === undefined || this.modelExons === null)?this.isoformExons[isoform.transcriptId]:this.modelExons;
+            const model = new GeneModel(isoform, reference, this.isoformExons[isoform.transcriptId], [], true);
             const isoformG = select(`#${isoform.transcriptId.replace(".", "_")}`);
             model.render(isoformG, {w:w, h: this.yScale.bandwidth(), labelOn: labelOn});
         });

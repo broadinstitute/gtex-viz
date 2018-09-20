@@ -170,106 +170,6 @@ export const demoData = {
     ],
     transcriptTracks: {
         "exons": {
-            "ENST00000578419.1": [
-                {
-                    "chrom": "17",
-                    "chromStart": 77071021,
-                    "chromEnd": 77071172,
-                    "strand": "+",
-                    "exonNumber": "1",
-                    "exonId": "ENSE00003502032.1"
-
-                },
-                {
-                    "chrom": "17",
-                    "chromEnd": 77073579,
-                    "exonId": "ENSE00003672628.1",
-                    "exonNumber": "2",
-                    "chromStart": 77073512,
-                    "strand": "+"
-                },
-                {
-                    "chrom": "17",
-                    "chromEnd": 77073946,
-                    "exonId": "ENSE00003475281.1",
-                    "exonNumber": "3",
-                    "chromStart": 77073745,
-                    "strand": "+"
-                },
-                {
-                    "chrom": "17",
-                    "chromEnd": 77076446,
-                    "exonId": "ENSE00003679852.1",
-                    "exonNumber": "4",
-                    "chromStart": 77076289,
-                    "strand": "+"
-                },
-                {
-                    "chrom": "17",
-                    "chromEnd": 77077155,
-                    "exonId": "ENSE00003583515.1",
-                    "exonNumber": "5",
-                    "chromStart": 77077007,
-                    "strand": "+"
-                },
-                {
-                    "chrom": "17",
-                    "chromEnd": 77078631,
-                    "exonId": "ENSE00003589230.1",
-                    "exonNumber": "6",
-                    "chromStart": 77077980,
-                    "strand": "+"
-                }
-            ],
-            "ENST00000539857.2": [
-                {
-                    "chrom": "17",
-                    "chromEnd": 77071172,
-                    "exonId": "ENSE00003512401.1",
-                    "exonNumber": "1",
-                    "chromStart": 77071021,
-                    "strand": "+"
-                },
-                {
-                    "chrom": "17",
-                    "chromEnd": 77073579,
-                    "exonId": "ENSE00003623828.1",
-                    "exonNumber": "2",
-                    "chromStart": 77073512,
-                    "strand": "+"
-                },
-                {
-                    "chrom": "17",
-                    "chromEnd": 77073946,
-                    "exonId": "ENSE00003638693.1",
-                    "exonNumber": "3",
-                    "chromStart": 77073745,
-                    "strand": "+"
-                },
-                {
-                    "chrom": "17",
-                    "chromEnd": 77076446,
-                    "exonId": "ENSE00003651250.1",
-                    "exonNumber": "4",
-                    "chromStart": 77076289,
-                    "strand": "+"
-                },
-                {
-                    "chrom": "17",
-                    "chromEnd": 77077155,
-                    "exonId": "ENSE00003607773.1",
-                    "exonNumber": "5",
-                    "chromStart": 77077007,
-                    "strand": "+"
-                },
-                {
-                    "chrom": "17",
-                    "chromEnd": 77078631,
-                    "exonId": "ENSE00003488117.1",
-                    "exonNumber": "6",
-                    "chromStart": 77077980,
-                    "strand": "+"
-                }],
             "ENST00000311595.9": [
                 {
                     "chrom": "17",
@@ -331,25 +231,6 @@ export const demoData = {
         },
         "transcripts": [
             {
-
-                "chromosome": "17",
-                "end": 77078631,
-                "gencodeId": "ENSG00000167280.12",
-                "geneSymbol": "ENGASE",
-                "start": 77071021,
-                "strand": "+",
-                "transcriptId": "ENST00000578419.1"
-            },
-            {
-                "chromosome": "17",
-                "end": 77078631,
-                "gencodeId": "ENSG00000167280.12",
-                "geneSymbol": "ENGASE",
-                "start": 77071021,
-                "strand": "+",
-                "transcriptId": "ENST00000539857.2"
-            },
-            {
                 "chromosome": "17",
                 "end": 77078612,
                 "gencodeId": "ENSG00000167280.12",
@@ -403,7 +284,7 @@ export function transcriptTracks(par=transcriptTracksConfig){
         h: inHeight,
         labelOn: par.labelPos
     };
-    let viewer = new IsoformTrackViewer(par.data.transcripts, par.data.exons, par.data.exons["ENST00000578419.1"], config);
+    let viewer = new IsoformTrackViewer(par.data.transcripts, par.data.exons, undefined, config);
     viewer.render(false, svg, par.labelPos);
 
 }
