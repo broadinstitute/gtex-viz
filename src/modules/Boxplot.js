@@ -3,16 +3,16 @@
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
 
-import {ascending, quantile, extent} from 'd3-array';
+import {median, quantile, extent} from 'd3-array';
 import {select} from 'd3-selection';
-import {scaleBand, scaleLinear} from 'd3-scale';
+import {scaleBand, scaleLinear, scaleLog} from 'd3-scale';
 import {axisBottom, axisLeft} from 'd3-axis';
 
 export default class Boxplot {
     constructor(boxplotData){
         this.boxplotData = boxplotData;
         this.allVals = [];
-        boxplotData.forEach(d => this.allVals = this.allVals.concat(d.data));
+        boxplotData.forEach(d => {d.data.sort(); this.allVals = this.allVals.concat(d.data)});
         this.allVals.sort();
     }
 
@@ -44,6 +44,17 @@ export default class Boxplot {
         dom.append('g')
             .attr('transform', `translate(${margins.left}, ${margins.top})`)
             .call(yAxis);
+
+        // render median
+        dom.append('g')
+            .selectAll('circle')
+            .data(this.boxplotData)
+            .enter()
+            .append('circle')
+            .attr('cx', (d) => scales.x(d.tissueSiteDetailId))
+            .attr('cy', (d) => scales.y(median(d.data) + 0.05))
+            .attr('r', 5)
+            .attr('transform', `translate(${margins.left + scales.x.step()/2}, ${margins.top})`);
     }
 
     _createSvg(rootId, width=800, height=600) {
@@ -59,8 +70,12 @@ export default class Boxplot {
             .domain(this.boxplotData.map(d => d.tissueSiteDetailId))
             .range([0, innerWidth]);
 
-        let yScale = scaleLinear()
-            .domain(extent(this.allVals))
+        // let yScale = scaleLinear()
+        //     .domain(extent(this.allVals))
+        //     .range([innerHeight, 0]);
+
+        let yScale = scaleLog()
+            .domain(extent(this.allVals).map(d => d+0.05)) // +.-5 for 0's
             .range([innerHeight, 0]);
 
         return {
