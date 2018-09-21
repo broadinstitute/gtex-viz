@@ -57,7 +57,7 @@ export function getGtexUrls(){
  * @param data {Json}
  * @returns {List} of genes
  */
-export function parseGenes(data, single=False, geneId=null){
+export function parseGenes(data, single=false, geneId=null){
     const attr = 'gene';
     if(!data.hasOwnProperty(attr)) throw "Parsing Error: attribute gene doesn't exist.";
     if (data.gene.length==0){
