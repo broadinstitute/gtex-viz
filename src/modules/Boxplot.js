@@ -3,7 +3,7 @@
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
 
-import {median, quantile, extent} from 'd3-array';
+import {ascending, median, quantile, extent} from 'd3-array';
 import {select} from 'd3-selection';
 import {scaleBand, scaleLinear, scaleLog} from 'd3-scale';
 import {axisBottom, axisLeft} from 'd3-axis';
@@ -12,8 +12,8 @@ export default class Boxplot {
     constructor(boxplotData){
         this.boxplotData = boxplotData;
         this.allVals = [];
-        boxplotData.forEach(d => {d.data.sort(); this.allVals = this.allVals.concat(d.data)});
-        this.allVals.sort();
+        this.boxplotData.forEach(d => {d.data.sort(ascending); this.allVals = this.allVals.concat(d.data)});
+        this.allVals.sort(ascending);
     }
 
     render(rootId) {
@@ -45,16 +45,32 @@ export default class Boxplot {
             .attr('transform', `translate(${margins.left}, ${margins.top})`)
             .call(yAxis);
 
-        // render median
+
+        // render IQR box
         dom.append('g')
-            .selectAll('circle')
+            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .selectAll('rect')
             .data(this.boxplotData)
             .enter()
-            .append('circle')
-            .attr('cx', (d) => scales.x(d.tissueSiteDetailId))
-            .attr('cy', (d) => scales.y(median(d.data) + 0.05))
-            .attr('r', 5)
-            .attr('transform', `translate(${margins.left + scales.x.step()/2}, ${margins.top})`);
+            .append('rect')
+            .attr('x', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/2)
+            .attr('y', (d) => scales.y(quantile(d.data, .75) + 0.05))
+            .attr('width', (d) => scales.x.step())
+            .attr('height', (d) => scales.y(quantile(d.data, .25) + 0.05) - scales.y(quantile(d.data, .75) + 0.05))
+            .attr('fill', 'steelblue');
+
+        // render median
+        dom.append('g')
+            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .selectAll('line')
+            .data(this.boxplotData)
+            .enter()
+            .append('line')
+            .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/2)
+            .attr('y1', (d) => scales.y(median(d.data) + 0.05))
+            .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/2)
+            .attr('y2', (d) => scales.y(median(d.data) + 0.05))
+            .attr('stroke', 'black');
     }
 
     _createSvg(rootId, width=800, height=600) {
@@ -74,9 +90,13 @@ export default class Boxplot {
         //     .domain(extent(this.allVals))
         //     .range([innerHeight, 0]);
 
+
         let yScale = scaleLog()
             .domain(extent(this.allVals).map(d => d+0.05)) // +.-5 for 0's
             .range([innerHeight, 0]);
+        // let yScale = scaleLinear()
+        //     .domain(extent(this.allVals).map(d => Math.log10(d+0.05))) // +.-5 for 0's
+        //     .range([innerHeight, 0]);
 
         return {
             x: xScale,
