@@ -7,6 +7,8 @@ export function getGtexUrls(){
     const host = 'https://gtexportal.org/rest/v1/';
     // const host = 'local.gtexportal.org/rest/v1/'
     return {
+        // gene-eqtl visualizer specific
+        singleTissueEqtl: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v7&gencodeId=',
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
         snp: host + 'reference/variant?format=json&snpId=',
@@ -55,10 +57,34 @@ export function getGtexUrls(){
  * @param data {Json}
  * @returns {List} of genes
  */
-export function parseGenes(data){
+export function parseGenes(data, single=False, geneId=null){
     const attr = 'gene';
-    if(!data.hasOwnProperty(attr)) throw 'Gene web service parsing error';
-    return data[attr];
+    if(!data.hasOwnProperty(attr)) throw "Parsing Error: attribute gene doesn't exist.";
+    if (data.gene.length==0){
+         alert("No gene is found");
+         throw "Fatal Error: gene(s) not found";
+     }
+    if (single){
+        if (geneId === null) throw "Please provide a gene ID for search results validation";
+        if (data.gene.length>1) { // when a single gene ID has multiple matches
+             let filtered = data.gene.filter((g)=>{
+                 return g.geneSymbolUpper==geneId.toUpperCase() || g.gencodeId == geneId.toUpperCase()
+             });
+             if (filtered.length > 1) {
+                 alert("Fatal Error: input gene ID is not unique.");
+                 throw "Fatal Error: input gene ID is not unique.";
+                 return
+             } else if (filtered.length == 0){
+                 alert("No gene is found with " + geneId);
+                 throw "Fatal Error: gene not found";
+             }
+             else{
+                 data.gene = filtered
+             }
+         }
+         return data.gene[0]
+    }
+    else return data[attr];
 }
 
 /**

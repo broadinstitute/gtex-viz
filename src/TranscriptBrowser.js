@@ -9,21 +9,21 @@ import {json} from "d3-fetch";
 import {scaleLinear} from "d3-scale";
 import {min, max} from "d3-array";
 
-import {getGtexUrls,
-        parseTissues,
-        parseModelExons,
-        parseJunctions,
-        parseTranscripts,
-        parseTranscriptExpressionTranspose,
-        parseExons,
-        parseJunctionExpression,
-        parseExonExpression,
-        parseTranscriptExpression
+import {
+    getGtexUrls,
+    parseGenes,
+    parseTissues,
+    parseModelExons,
+    parseJunctions,
+    parseTranscripts,
+    parseTranscriptExpressionTranspose,
+    parseExons,
+    parseJunctionExpression,
+    parseExonExpression,
+    parseTranscriptExpression
 } from "./modules/gtexDataParser";
 
 import {setColorScale, drawColorLegend} from "./modules/colors";
-// import {downloadSvg} from "./modules/utils";
-
 import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GeneModel from "./modules/GeneModel";
@@ -40,28 +40,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
     json(urls.geneId + geneId) // query the gene by geneId--gene name or gencode ID with or without versioning
         .then(function(data){
              // get the gene object and its gencode Id
-             if (!data.hasOwnProperty("gene")) throw "Parsing Error: attribute gene doesn't exist.";
-             if (data.gene.length==0){
-                 alert("No gene is found with " + geneId);
-                 throw "Fatal Error: gene is not found";
-             }
-             if (data.gene.length>1) {
-                 let filtered = data.gene.filter((g)=>{
-                     return g.geneSymbolUpper==geneId.toUpperCase() || g.gencodeId == geneId.toUpperCase()
-                 });
-                 if (filtered.length > 1) {
-                     alert("Fatal Error: input gene ID is not unique.");
-                     throw "Fatal Error: input gene ID is not unique.";
-                 }
-                 else{
-                     data.gene = filtered;
-                 }
-             }
-             const gene = data.gene[0];
-             if (gene === undefined) {
-                 alert("No gene is found with " + geneId);
-                 throw "Fatal Error: gene is not found";
-             }
+             const gene = parseGenes(data, true, geneId);
              const gencodeId = gene.gencodeId;
 
              // build the promises
