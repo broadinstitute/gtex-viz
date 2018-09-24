@@ -101,7 +101,7 @@ export default class Heatmap {
         const xLabels = dom.selectAll(".exp-map-xlabel")
             .data(this.xList);
 
-        // update old elements
+        // update and transform
         const Y = columnLabelPosAdjust==null?this.yScale.range()[1] + (this.yScale.bandwidth() * 2):this.yScale.range()[1]+columnLabelPosAdjust;
         const adjust = 5;
         xLabels.attr("transform", (d) => {
