@@ -8,7 +8,7 @@
               crossorigin="anonymous">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Franklin:300,400" >
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css">
-
+        <link rel="stylesheet" type="text/css" href="/css/bubbleMap.css">
     </head>
 
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
@@ -51,16 +51,19 @@
     <script src="/build/js/gev.bundle.dev.js"></script>
     <script>
         $(document).ready(function(){
-            $('#gene').keypress(function(e){
-                if(e.keyCode == 13){
-                    // bind the enter key
-                    e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
-                    const geneId = $('#gene').val();
-                    reset();
-                    $('#spinner').show();
-                    GeneEqtlVisualizer.render(geneId, "vizRoot");
-                }
-            });
+            let geneId = "ACTN1";
+            GeneEqtlVisualizer.render(geneId, "vizRoot", "spinner");
+
+            // $('#gene').keypress(function(e){
+            //     if(e.keyCode == 13){
+            //         // bind the enter key
+            //         e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
+            //         const geneId = $('#gene').val();
+            //         reset();
+            //         $('#spinner').show();
+            //         GeneEqtlVisualizer.render(geneId, "vizRoot", "spinner");
+            //     }
+            // });
         });
         function reset(){
             $("#vizRoot").empty();
