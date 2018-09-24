@@ -109,8 +109,6 @@ export default class Heatmap {
                 let y = Y;
                 return `translate(${x}, ${y}) rotate(${angle})`;
             });
-            // .attr("class", (d, i) => `exp-map-xlabel x${i}`);
-
 
         // enters new elements
         xLabels.enter().append("text")
