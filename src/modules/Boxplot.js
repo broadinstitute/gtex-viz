@@ -12,7 +12,16 @@ export default class Boxplot {
     constructor(boxplotData){
         this.boxplotData = boxplotData;
         this.allVals = [];
-        this.boxplotData.forEach(d => {d.data.sort(ascending); this.allVals = this.allVals.concat(d.data)});
+        this.boxplotData.forEach(d => {
+            d.data.sort(ascending);
+            this.allVals = this.allVals.concat(d.data);
+            d.q1 = quantile(d.data, 0.25);
+            d.median = median(d.data);
+            d.q3 = quantile(d.data, 0.75);
+            d.iqr = d.q3 - d.q1;
+
+
+        });
         this.allVals.sort(ascending);
     }
 
@@ -54,9 +63,9 @@ export default class Boxplot {
             .enter()
             .append('rect')
             .attr('x', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/2)
-            .attr('y', (d) => scales.y(quantile(d.data, .75) + 0.05))
+            .attr('y', (d) => scales.y(d.q3 + 0.05))
             .attr('width', (d) => scales.x.step())
-            .attr('height', (d) => scales.y(quantile(d.data, .25) + 0.05) - scales.y(quantile(d.data, .75) + 0.05))
+            .attr('height', (d) => scales.y(d.q1 + 0.05) - scales.y(d.q3 + 0.05))
             .attr('fill', 'steelblue');
 
         // render median
@@ -67,10 +76,23 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/2)
-            .attr('y1', (d) => scales.y(median(d.data) + 0.05))
+            .attr('y1', (d) => scales.y(d.median + 0.05))
             .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/2)
-            .attr('y2', (d) => scales.y(median(d.data) + 0.05))
+            .attr('y2', (d) => scales.y(d.median + 0.05))
             .attr('stroke', 'black');
+
+        // render high whisker
+        // dom.append('g')
+        //     .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+        //     .selectAll('line')
+        //     .data(this.boxplotData)
+        //     .enter()
+        //     .append('line')
+        //     .attr('x1', (d) => scales.x(d.tissueSiteDetailId))
+        //     .attr('y1', (d) => scales.y(quantile(d.data, 0.75) + 0.05))
+        //     .attr('x2', (d) => scales.x(d.tissueSiteDetailId))
+        //     .attr('y2', (d) => scales.y(quantile(d.data, 0.75) + (1.5 * (quantile(d.data, 0.75) - quantile(d.data, 0.25))) + 0.05))
+        //     .attr('stroke', 'black');
     }
 
     _createSvg(rootId, width=800, height=600) {
