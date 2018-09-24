@@ -2,7 +2,7 @@
  * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
-import {max} from "d3-array";
+import {max, min} from "d3-array";
 import {scaleSequential} from "d3-scale";
 import * as d3Chromatic from "d3-scale-chromatic";
 "use strict";
@@ -141,12 +141,17 @@ export function getColorInterpolator(name){
  * scaleSequential maps the continuous domain to a continuous color scale
  * @param data {List} of numerical data
  * @param colors {String} a color name that is available in getColorInterpolator()
+ * @param dmin {Number} minimum domain value
+ * @param dmax {Number} maximum domain value
+ * @param reverse {Boolean} reverse the color scheme
  */
-export function setColorScale(data, colors="YlGnBu", dmin = 0) {
+export function setColorScale(data, colors="YlGnBu", dmin=undefined, dmax=undefined, reverse=false) {
     // let dmax = Math.round(max(data));
-    let dmax = max(data);
+    dmax = dmax === undefined?max(data):dmax;
+    dmin = dmin === undefined?min(data):dmin;
     const scale = scaleSequential(getColorInterpolator(colors));
-    scale.domain([dmin, dmax]);
+    if(reverse) scale.domain([dmax, dmin]);
+    else scale.domain([dmin, dmax]);
     return scale;
 }
 

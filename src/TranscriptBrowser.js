@@ -72,13 +72,13 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     if (junctions.length >= 0){
                         // scenario1: not a single-exon gene
                         if (junctionExpress !== undefined){
-                            junctionColorScale = setColorScale(junctionExpress.map(d=>Math.log10(d.value+1)), "Reds");
+                            junctionColorScale = setColorScale(junctionExpress.map(d=>Math.log10(d.value+1)), "Reds", 0);
                         }
                     }
 
                     // define all the color scales
-                    exonColorScale = setColorScale(exonExpress.map(d=>Math.log2(d.value+1)), "Blues");
-                    isoformColorScale = setColorScale(isoformExpress.map(d=>Math.log10(d.value+1)), "Purples");
+                    exonColorScale = setColorScale(exonExpress.map(d=>Math.log2(d.value+1)), "Blues", 0);
+                    isoformColorScale = setColorScale(isoformExpress.map(d=>Math.log10(d.value+1)), "Purples", 0);
 
                 // heat map
                 let dmap = undefined;
