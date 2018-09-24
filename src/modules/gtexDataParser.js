@@ -67,7 +67,9 @@ export function parseSingleTissueEqtls(data){
         d.x = d.variantId;
         d.y = d.tissueSiteDetailId;
         d.value = d.nes;
-        d.r = d.pValue;
+        d.displayValue = d.nes.toPrecision(3);
+        d.r = -Math.log10(d.pValue); // set r to be the -log10(p-value)
+        d.rDisplayValue = parseFloat(d.pValue.toExponential()).toPrecision(3);
         return d;
     })
 }
