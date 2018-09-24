@@ -3,7 +3,7 @@
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
 
-import {ascending, median, quantile, extent} from 'd3-array';
+import {ascending, median, quantile, extent, min, max} from 'd3-array';
 import {select} from 'd3-selection';
 import {scaleBand, scaleLinear, scaleLog} from 'd3-scale';
 import {axisBottom, axisLeft} from 'd3-axis';
@@ -82,17 +82,52 @@ export default class Boxplot {
             .attr('stroke', 'black');
 
         // render high whisker
-        // dom.append('g')
-        //     .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
-        //     .selectAll('line')
-        //     .data(this.boxplotData)
-        //     .enter()
-        //     .append('line')
-        //     .attr('x1', (d) => scales.x(d.tissueSiteDetailId))
-        //     .attr('y1', (d) => scales.y(quantile(d.data, 0.75) + 0.05))
-        //     .attr('x2', (d) => scales.x(d.tissueSiteDetailId))
-        //     .attr('y2', (d) => scales.y(quantile(d.data, 0.75) + (1.5 * (quantile(d.data, 0.75) - quantile(d.data, 0.25))) + 0.05))
-        //     .attr('stroke', 'black');
+        dom.append('g')
+            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .selectAll('line')
+            .data(this.boxplotData)
+            .enter()
+            .append('line')
+            .attr('x1', (d) => scales.x(d.tissueSiteDetailId))
+            .attr('y1', (d) => scales.y(d.q3 + 0.05))
+            .attr('x2', (d) => scales.x(d.tissueSiteDetailId))
+            .attr('y2', (d) => scales.y(max(d.data.filter(x => x <= d.q3 + (1.5 * d.iqr))) + 0.05))
+            .attr('stroke', 'black');
+        dom.append('g')
+            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .selectAll('line')
+            .data(this.boxplotData)
+            .enter()
+            .append('line')
+            .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/4)
+            .attr('y1', (d) => scales.y(max(d.data.filter(x => x <= d.q3 + (1.5 * d.iqr))) + 0.05))
+            .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/4)
+            .attr('y2', (d) => scales.y(max(d.data.filter(x => x <= d.q3 + (1.5 * d.iqr))) + 0.05))
+            .attr('stroke', 'black');
+
+        // render low whisker
+        dom.append('g')
+            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .selectAll('line')
+            .data(this.boxplotData)
+            .enter()
+            .append('line')
+            .attr('x1', (d) => scales.x(d.tissueSiteDetailId))
+            .attr('y1', (d) => scales.y(d.q1 + 0.05))
+            .attr('x2', (d) => scales.x(d.tissueSiteDetailId))
+            .attr('y2', (d) => scales.y(min(d.data.filter(x => x >= d.q1 - (1.5 * d.iqr))) + 0.05))
+            .attr('stroke', 'black');
+        dom.append('g')
+            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .selectAll('line')
+            .data(this.boxplotData)
+            .enter()
+            .append('line')
+            .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/4)
+            .attr('y1', (d) => scales.y(min(d.data.filter(x => x >= d.q1 - (1.5 * d.iqr))) + 0.05))
+            .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/4)
+            .attr('y2', (d) => scales.y(min(d.data.filter(x => x >= d.q1 - (1.5 * d.iqr))) + 0.05))
+            .attr('stroke', 'black');
     }
 
     _createSvg(rootId, width=800, height=600) {
@@ -114,7 +149,7 @@ export default class Boxplot {
 
 
         let yScale = scaleLog()
-            .domain(extent(this.allVals).map(d => d+0.05)) // +.-5 for 0's
+            .domain(extent(this.allVals).map(d => d+0.05)) // +.05 for 0's
             .range([innerHeight, 0]);
         // let yScale = scaleLinear()
         //     .domain(extent(this.allVals).map(d => Math.log10(d+0.05))) // +.-5 for 0's
