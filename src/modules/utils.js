@@ -14,6 +14,18 @@
 import {select} from "d3-selection";
 import {range} from "d3-array";
 
+
+export function checkDomId(id){
+    // test input params
+    if ($(`#${id}`).length == 0) {
+        let error = `Input Error: DOM ID ${par.id} is not found.`;
+        alert(error);
+        throw error;
+    }
+    console.log('passed!');
+}
+
+
 /**
  *
  * @param id {String} the parent dom ID
@@ -24,6 +36,7 @@ import {range} from "d3-array";
  * @returns {*}
  */
 export function createSvg(id, width, height, margin, svgId=undefined){
+    checkDomId(id);
     if (svgId===undefined) svgId=`${id}-svg`;
     return select("#"+id).append("svg")
         .attr("width", width)

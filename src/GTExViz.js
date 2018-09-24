@@ -8,7 +8,7 @@ TODO
 1. refactoring
  */
 'use strict';
-import {createSvg, generateRandomMatrix, generateRandomList} from "./modules/utils";
+import {createSvg, generateRandomMatrix, checkDomId} from "./modules/utils";
 import {range} from "d3-array";
 import {randomNormal} from "d3-random";
 import Heatmap from "./modules/Heatmap";
@@ -266,11 +266,7 @@ export function transcriptTracks(par=transcriptTracksConfig){
     let inHeight = par.height - (par.marginTop + par.marginBottom);
 
     // test input params
-    if ($(`#${par.id}`).length == 0) {
-        let error = `Input Error: DOM ID ${par.id} is not found.`;
-        alert(error);
-        throw error;
-    }
+    checkDomId(par.id);
 
     // create the SVG
         let svg = createSvg(par.id, par.width, par.height, margin);
@@ -324,11 +320,7 @@ export function heatmap(par=heatmapDemoConfig){
     let inHeight = par.height - (par.marginTop + par.marginBottom + par.columnLabelHeight);
 
     // test input params
-    if ($(`#${par.id}`).length == 0) {
-        let error = `Input Error: DOM ID ${par.id} is not found.`;
-        alert(error);
-        throw error;
-    }
+    checkDomId(par.id);
 
     // create the SVG
     let svg = createSvg(par.id, par.width, par.height, margin);
@@ -375,11 +367,7 @@ export function dendroHeatmap(par=dendroHeatmapDemoConfig){
     };
 
     // test input params
-    if ($(`#${par.id}`).length == 0) {
-        let error = `Input Error: DOM ID ${par.id} is not found.`;
-        alert(error);
-        throw error;
-    }
+    checkDomId(par.id);
 
     let inWidth = par.width - (par.marginLeft + par.marginRight + par.rowLabelWidth);
     let inHeight = par.height - (par.marginTop + par.marginBottom + par.columnLabelHeight);
@@ -421,11 +409,7 @@ export function groupedViolinPlot(par=violinDemoConfig){
         left: par.marginLeft
     };
     // test input params
-    if ($(`#${par.id}`).length == 0) {
-        let error = `Input Error: DOM ID ${par.id} is not found.`;
-        alert(error);
-        throw error;
-    }
+    checkDomId(par.id);
 
     let inWidth = par.width - (par.marginLeft + par.marginRight);
     let inHeight = par.height - (par.marginTop + par.marginBottom);
