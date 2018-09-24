@@ -252,7 +252,7 @@ export default class Heatmap {
     _setColorScale(){
         let useLog = this.useLog;
         let data = this.data.map((d)=>useLog?this._log(d.value):d.value);
-        setColorScale(data, this.colorScheme);
+        this.colorScale = setColorScale(data, this.colorScheme);
     }
 
     _log(v){
