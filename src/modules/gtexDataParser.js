@@ -53,6 +53,26 @@ export function getGtexUrls(){
 }
 
 /**
+ * Parse the single tissue eqtls from GTEx web service
+ * @param data {Json}
+ * @returns {List} of eqtls with attributes required for GEV rendering
+ */
+export function parseSingleTissueEqtls(data){
+    const attr = 'singleTissueEqtl';
+    if(!data.hasOwnProperty(attr)) throw "Parsing Error: required attribute is not found: " + attr;
+    ['variantId', 'tissueSiteDetailId', 'nes', 'pValue'].forEach((k)=>{
+        if (!data[attr][0].hasOwnProperty(k)) throw 'Parsing Error: required attribute is missing: ' + attr;
+    });
+    return data[attr].map((d)=>{
+        d.x = d.variantId;
+        d.y = d.tissueSiteDetailId;
+        d.value = d.nes;
+        d.r = d.pValue;
+        return d;
+    })
+}
+
+/**
  * Parse the genes from GTEx web service
  * @param data {Json}
  * @returns {List} of genes
