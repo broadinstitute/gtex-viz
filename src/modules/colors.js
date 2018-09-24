@@ -101,12 +101,13 @@ function shuffleColors(array) {
 }
 
 /**
- * get a color interpolator
+ * get a color scheme by name
  * @param name {enum}: BuGn, OrRd....
- * @returns {*}
+ * @returns {*}: a continuous interpolator (used with d3.scaleSequential)
  */
 export function getColorInterpolator(name){
     // reference: https://github.com/d3/d3-scale-chromatic/blob/master/README.md#sequential-multi-hue
+
     const interpolators = {
         BuGn: d3Chromatic.interpolateBuGn,
         OrRd: d3Chromatic.interpolateOrRd,
@@ -118,7 +119,13 @@ export function getColorInterpolator(name){
         Purples: d3Chromatic.interpolatePurples,
         Reds: d3Chromatic.interpolateReds,
         Greys: d3Chromatic.interpolateGreys,
-        Grays: d3Chromatic.interpolateGreys
+        Grays: d3Chromatic.interpolateGreys,
+
+        // diverging color schemes
+        RdBu: d3Chromatic.interpolateRdBu,
+        RdGy: d3Chromatic.interpolateRdGy,
+        PiYG: d3Chromatic.interpolatePiYG
+
     };
     if (!interpolators.hasOwnProperty(name)) {
         const err = "Unrecognized color: " + name;

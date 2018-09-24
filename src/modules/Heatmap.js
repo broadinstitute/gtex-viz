@@ -25,7 +25,7 @@ export default class Heatmap {
         this.data = data;
         this.useLog = useLog;
         this.logBase = logBase;
-        this.nullColor = "#e6e6e6";
+        this.nullColor = "#e6e6e6"; // TODO: remove hard-coded value. make it a param.
         this.colorScale = undefined;
         this.xList = undefined;
         this.yList = undefined;
@@ -76,15 +76,11 @@ export default class Heatmap {
      * @param angle {Integer} for the y text labels
      */
     redraw(dom, xList, yList, dimensions={w:1000, h:1000}, angle=30){
-        this._setXList(dimensions.w, xList);
-        this._setYList(dimensions.h, yList);
+        this._setXScale(dimensions.w, xList);
+        this._setYScale(dimensions.h, yList);
         this.draw(dom, dimensions, angle);
     }
 
-    log(v){
-        const adjust = 1;
-        return this.logBase == 2? Math.log2(Number(v+adjust)):Math.log10(Number(v+adjust))
-    }
 
     /**
      * draws the heatmap
@@ -94,15 +90,11 @@ export default class Heatmap {
      * @param useNullColor {Boolean} whether to render null values with the pre-defined null color
      */
 
-    draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=true, columnLabelPosAdjust=null){
+    draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=true, yLabelPosAdjust=null){
 
-        if (this.xList === undefined) this._setXList(dimensions.w);
-        if (this.yList === undefined) this._setYList(dimensions.h);
-        if (this.colorScale === undefined) {
-            let useLog = this.useLog;
-            let data = this.data.map((d)=>useLog?this.log(d.value):d.value);
-            this.colorScale = setColorScale(data, this.colorScheme);
-        }
+        if (this.xList === undefined) this._setXScale(dimensions.w);
+        if (this.yList === undefined) this._setYScale(dimensions.h);
+        if (this.colorScale === undefined) this._setColorScale();
 
         // text labels
         // data join
@@ -110,7 +102,7 @@ export default class Heatmap {
             .data(this.xList);
 
         // update old elements
-        const Y = columnLabelPosAdjust==null?this.yScale.range()[1] + (this.yScale.bandwidth() * 2):this.yScale.range()[1]+columnLabelPosAdjust;
+        const Y = yLabelPosAdjust==null?this.yScale.range()[1] + (this.yScale.bandwidth() * 2):this.yScale.range()[1]+columnLabelPosAdjust;
         const adjust = 5;
         xLabels.attr("transform", (d) => {
                 let x = this.xScale(d) + adjust;
@@ -200,7 +192,7 @@ export default class Heatmap {
             // .transition()
             // .duration(2000)
             .style("fill", (d) => {
-                return useNullColor&&d.value==0?nullColor:this.useLog?this.colorScale(this.log(d.value)):this.colorScale(d.value)
+                return useNullColor&&d.value==0?nullColor:this.useLog?this.colorScale(this._log(d.value)):this.colorScale(d.value)
             }); // TODO: what if null value isn't 0?
 
         // exit and remove
@@ -225,7 +217,7 @@ export default class Heatmap {
         this.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}`);
     }
 
-    _setXList(width, newList) {
+    _setXScale(width, newList = undefined) {
         if(newList !== undefined){
             this.xList = newList
         }
@@ -241,7 +233,7 @@ export default class Heatmap {
             .padding(.05); // TODO: eliminate hard-coded value
     }
 
-    _setYList(height, newList) {
+    _setYScale(height, newList) {
         if(newList !== undefined){
             this.yList = newList
         }
@@ -256,6 +248,18 @@ export default class Heatmap {
                 .range([0, height])
                 .padding(.05); // TODO: eliminate hard-coded value
     }
+
+    _setColorScale(){
+        let useLog = this.useLog;
+        let data = this.data.map((d)=>useLog?this._log(d.value):d.value);
+        setColorScale(data, this.colorScheme);
+    }
+
+    _log(v){
+        const adjust = 1;
+        return Math.log(Number(v+adjust))/Math.log(this.logBase);
+    }
+
 
 
 }
