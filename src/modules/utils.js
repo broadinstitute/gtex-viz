@@ -37,7 +37,8 @@ export function checkDomId(id){
 export function createCanvas(id, width, height, margin, canvasId=undefined){
     checkDomId(id);
     if(canvasId===undefined) canvasId=`${id}-canvas`;
-    return select(`#${id}`).append("canvas")
+    return select(`#${id}`)
+        .append("canvas")
         .attr('id', canvasId)
         .attr("width", width)
         .attr("height", height)

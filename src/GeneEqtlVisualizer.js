@@ -24,8 +24,8 @@ export function render(geneId, rootDivId, spinnerId, urls = getGtexUrls()){
                         id: rootDivId,
                         data: eqtls,
                         width: 2000, //window.innerWidth*0.9,
-                        height: 300, // TODO: use a dynamic width based on the matrix size
-                        marginTop: 50,
+                        height: 330, // TODO: use a dynamic width based on the matrix size
+                        marginTop: 100,
                         marginRight: 100,
                         marginBottom: 30,
                         marginLeft: 30,
@@ -56,14 +56,26 @@ export function renderBubbleMap(par){
     let inWidth = par.width - (par.rowLabelWidth + par.marginLeft + par.marginRight);
     let inHeight = par.height - (par.columnLabelHeight + par.marginTop + par.marginBottom);
 
-    let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
     if(par.useCanvas) {
-        let canvas = createCanvas(par.id, par.width, par.height, margin);
-        bmap.drawCanvas(canvas, {w:inWidth, h:inHeight, top: margin.top, left: margin.left}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust)
+        let svgId = par.id + '-svgDiv';
+        let canvasId = par.id + '-canvasDiv';
+        if ($(`#${svgId}`).length == 0) $('<div/>').attr('id', svgId).appendTo($(`#${par.id}`));
+        if ($(`#${canvasId}`).length == 0) $('<div/>').attr('id', canvasId).appendTo($(`#${par.id}`));
+
+        let bmapSvg = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, svgId+"-tooltip");
+        let svg = createSvg(svgId, par.width, par.height, margin);
+        bmapSvg.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
+
+        let bmapCanvas = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, canvasId+"-tooltip");
+        let canvas = createCanvas(canvasId, par.width, par.height, margin);
+        bmapCanvas.drawCanvas(canvas, {w:inWidth, h:inHeight, top: margin.top, left: margin.left}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust)
+        return bmapCanvas;
     }
     else {
+        let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
         let svg = createSvg(par.id, par.width, par.height, margin);
         bmap.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
+        return bmap;
+
     }
-    return bmap;
 }
