@@ -40,35 +40,45 @@ export default class BubbleMap {
         if (this.xScale === undefined) this._setXScale(dimensions.w);
         if (this.yScale === undefined) this._setYScale(dimensions.h);
         if (this.colorScale === undefined) this._setColorScale(colorDomain);
-        if (this.bubbleScale === undefined) this._setBubbleScale();
+        if (this.bubbleScale === undefined) this._setBubbleScale({max:this.xScale.bandwidth(), min: 1});
 
         // text labels
-        if(showLabels){
+        if(showLabels) {
             // column labels
             let xLabels = dom.selectAll().data(this.xScale.domain())
                 .enter().append("text")
-                .attr("class", (d, i)=>`bubble-map-xlabel x${i}`)
+                .attr("class", (d, i) => `bubble-map-xlabel x${i}`)
                 .attr("x", 0)
                 .attr("y", 0)
                 .style("text-anchor", "start")
                 .style("cursor", "default")
                 .attr("transform", (d) => {
                     let x = this.xScale(d) + 5; // TODO: remove hard-coded value
-                    let y = columnLabelPosAdjust===undefined?this.yScale.range()[1]:this.yScale.range()[1]+columnLabelPosAdjust;
+                    let y = columnLabelPosAdjust === undefined ? this.yScale.range()[1] : this.yScale.range()[1] + columnLabelPosAdjust;
                     return `translate(${x}, ${y}) rotate(${columnLabelAngle})`;
                 })
-                .text((d)=>d);
+                .text((d) => d);
 
             // row labels
             let yLabels = dom.selectAll().data(this.yScale.domain())
                 .enter().append("text")
                 .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
-                .attr("x", this.xScale.range()[0] + 5)
-                .attr("y", (d) => this.yScale(d) + 10)
+                .attr("x", this.xScale.range()[0])
+                .attr("y", (d) => this.yScale(d) + 2)
                 .style("text-anchor", "end")
                 .style("cursor", "default")
-                .text((d)=>d);
+                .text((d) => d);
         }
+        // bubbles
+        let bubbles = dom.selectAll(".bubble-map-cell")
+            .data(this.data, (d)=>d.value)
+            .enter()
+            .append("circle")
+            .attr("cx", (d)=>this.xScale(d.x) + this.xScale.bandwidth()/2)
+            .attr("cy", (d)=>this.yScale(d.y))
+            .attr("r", (d)=>this.bubbleScale(d.r))
+            .style("fill", (d)=>this.colorScale(d.value))
+
     }
 
     // private methods
@@ -108,7 +118,7 @@ export default class BubbleMap {
         this.colorScale = setColorScale(data, this.colorScheme, undefined, undefined, true);
     }
 
-    _setBubbleScale(range={max:30, min:1}){
+    _setBubbleScale(range={max:10, min:2}){
         this.bubbleScale = scaleLinear()
             .domain(extent(this.data.map((d)=>d.r)))
             .range([range.min, range.max]);
