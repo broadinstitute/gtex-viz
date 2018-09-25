@@ -36,11 +36,29 @@ export default class BubbleMap {
         this.toolbar = undefined;
     }
 
-    draw(dom, dimensions={w:1000, h:600}, columnLabelAngle=30, columnLabelPosAdjust=undefined, colorDomain=undefined, showLabels=true){
-        if (this.xScale === undefined) this._setXScale(dimensions.w);
-        if (this.yScale === undefined) this._setYScale(dimensions.h);
-        if (this.colorScale === undefined) this._setColorScale(colorDomain);
-        if (this.bubbleScale === undefined) this._setBubbleScale({max:this.xScale.bandwidth(), min: 1});
+    drawCanvas(canvas, dimensions={w:1000, h:600, top:20, left:20}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=undefined){
+        this._setScales(dimensions, colorScaleDomain);
+
+        let context = canvas.node().getContext('2d');
+
+        //background
+        context.fillStyle = '#ffffff';
+        context.rect(0,0,canvas.attr('width'), canvas.attr('height'));
+        context.fill();
+
+        // bubbles
+        this.data.forEach((d)=>{
+            context.beginPath();
+            context.fillStyle = this.colorScale(d.value);
+            context.arc(this.xScale(d.x), this.yScale(d.y), this.bubbleScale(d.r), 0, 2*Math.PI);
+            context.fill();
+            context.closePath();
+        });
+    }
+
+
+    drawSvg(dom, dimensions={w:1000, h:600, top:20, left:20}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=undefined){
+        this._setScales(dimensions, colorScaleDomain);
 
         // text labels
         if(showLabels) {
@@ -82,7 +100,14 @@ export default class BubbleMap {
     }
 
     // private methods
-    _setXScale(width){
+    _setScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
+        if (this.xScale === undefined) this._setXScale(dimensions);
+        if (this.yScale === undefined) this._setYScale(dimensions);
+        if (this.colorScale === undefined) this._setColorScale(cDomain);
+        if (this.bubbleScale === undefined) this._setBubbleScale({max:this.xScale.bandwidth(), min: 1});
+    }
+
+    _setXScale(dim={w:1000, left:20}){
         // use d3 nest data structure to find the unique list of x labels
         // reference: https://github.com/d3/d3-collection#nests
         let xList = nest()
@@ -93,11 +118,11 @@ export default class BubbleMap {
         console.log(xList);
         this.xScale = scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
             .domain(xList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
-            .range([0, width])
+            .range([dim.left, dim.left+dim.w])
             .padding(.05); // temporarily hard-coded value
     }
 
-    _setYScale(height){
+    _setYScale(dim={h:600, top:20}){
         // use d3 nest data structure to find the unique list of y labels
         // reference: https://github.com/d3/d3-collection#nests
         let yList = nest()
@@ -108,7 +133,7 @@ export default class BubbleMap {
         console.log(yList);
         this.yScale = scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
             .domain(yList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
-            .range([0, height])
+            .range([dim.top, dim.top+dim.h])
             .padding(.05); // temporarily hard-coded value
     }
 

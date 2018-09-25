@@ -4,7 +4,7 @@
  */
 "use strict";
 import {json} from "d3-fetch";
-import {checkDomId, createSvg} from "./modules/utils";
+import {createSvg, createCanvas} from "./modules/utils";
 import {
     getGtexUrls,
     parseGenes,
@@ -23,21 +23,22 @@ export function render(geneId, rootDivId, spinnerId, urls = getGtexUrls()){
                     let gevConfig = {
                         id: rootDivId,
                         data: eqtls,
-                        width: 1200, //window.innerWidth*0.9,
+                        width: 2000, //window.innerWidth*0.9,
                         height: 300, // TODO: use a dynamic width based on the matrix size
                         marginTop: 50,
                         marginRight: 100,
                         marginBottom: 30,
                         marginLeft: 30,
-                        rowLabelWidth: 100,
+                        showLabels: true,
+                        rowLabelWidth: 150,
                         columnLabelHeight: 100,
-                        showLabels: false,
                         columnLabelAngle: 90,
                         columnLabelPosAdjust: 10,
                         useLog: false,
                         logBase: 10,
                         colorScheme: "RdBu", // a diverging color scheme
-                        colorDomain: [-1, 1]
+                        colorScaleDomain: [-1, 1],
+                        useCanvas: true
                     };
                     renderBubbleMap(gevConfig);
                     $('#' + spinnerId).hide();
@@ -54,9 +55,15 @@ export function renderBubbleMap(par){
     };
     let inWidth = par.width - (par.rowLabelWidth + par.marginLeft + par.marginRight);
     let inHeight = par.height - (par.columnLabelHeight + par.marginTop + par.marginBottom);
-    let svg = createSvg(par.id, par.width, par.height, margin);
-    console.log(par.data);
+
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
-    bmap.draw(svg, {w:inWidth, h:inHeight}, par.columnLabelAngle, par.columnLabelPosAdjust, par.colorDomain, par.showLabels);
+    if(par.useCanvas) {
+        let canvas = createCanvas(par.id, par.width, par.height, margin);
+        bmap.drawCanvas(canvas, {w:inWidth, h:inHeight, top: margin.top, left: margin.left}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust)
+    }
+    else {
+        let svg = createSvg(par.id, par.width, par.height, margin);
+        bmap.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
+    }
     return bmap;
 }

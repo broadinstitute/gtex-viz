@@ -25,9 +25,27 @@ export function checkDomId(id){
     console.log('passed!');
 }
 
+/**
+ * Create a Canvas D3 object
+ * @param id {String} the parent dom ID
+ * @param width {Numeric}: the outer width
+ * @param height {Numeric}: the outer height
+ * @param margin {Object} with attr: left, top
+ * @param canvasId {String}
+ * @returns {*}
+ */
+export function createCanvas(id, width, height, margin, canvasId=undefined){
+    checkDomId(id);
+    if(canvasId===undefined) canvasId=`${id}-canvas`;
+    return select(`#${id}`).append("canvas")
+        .attr('id', canvasId)
+        .attr("width", width)
+        .attr("height", height)
+        .style("position", "relative")
+}
 
 /**
- *
+ * Create an SVG D3 object
  * @param id {String} the parent dom ID
  * @param width {Numeric}: the outer width
  * @param height {Numeric}: the outer height
