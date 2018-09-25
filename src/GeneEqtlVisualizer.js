@@ -37,7 +37,7 @@ export function render(geneId, rootDivId, spinnerId, urls = getGtexUrls()){
                         useLog: false,
                         logBase: 10,
                         colorScheme: "RdBu", // a diverging color scheme
-                        colorScaleDomain: [-1, 1],
+                        colorScaleDomain: [-0.5, 0.5],
                         useCanvas: true
                     };
                     renderBubbleMap(gevConfig);
