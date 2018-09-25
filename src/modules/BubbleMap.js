@@ -9,7 +9,7 @@ import {extent} from "d3-array";
 import {select, selectAll} from "d3-selection";
 import {scaleBand, scaleLinear} from "d3-scale";
 import Tooltip from "./Tooltip";
-import {setColorScale} from "./colors";
+import {setColorScale, drawColorLegend} from "./colors";
 
 export default class BubbleMap {
     constructor(data, useLog=true, logBase=10, colorScheme="Reds", tooltipId = "tooltip"){
@@ -34,6 +34,10 @@ export default class BubbleMap {
 
         // Toolbar
         this.toolbar = undefined;
+    }
+
+    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){
+        drawColorLegend(unit, dom, this.colorScale, legendConfig, this.useLog, ticks, this.logBase, {h:10, w:40}, "h", true);
     }
 
     drawCanvas(canvas, dimensions={w:1000, h:600, top:20, left:20}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
@@ -141,7 +145,6 @@ export default class BubbleMap {
             .entries(this.data)
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
-        console.log(xList);
         this.xScale = scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
             .domain(xList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
             .range([dim.left, dim.left+dim.w])
@@ -156,7 +159,6 @@ export default class BubbleMap {
             .entries(this.data)
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
-        console.log(yList);
         this.yScale = scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
             .domain(yList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
             .range([dim.top, dim.top+dim.h])

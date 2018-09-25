@@ -166,10 +166,20 @@ export function setColorScale(data, colors="YlGnBu", dmin=undefined, dmax=undefi
  * @param orientation {enum} h or v, i.e. horizontal or vertical
  * @param cell
  */
-export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:40}, orientation="h"){
-    let range = [...Array(ticks+1).keys()];
-    let interval = scale.domain()[1]/ticks;
-    const data = range.map((d)=>d*interval);
+export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:40}, orientation="h", diverging=false){
+    let data = [];
+
+    if(diverging){
+        let range = [...Array(ticks+1).keys()];
+        let interval = scale.domain()[1]/ticks;
+        data = range.map((d)=>d*interval);
+        data = data.concat(range.filter((d)=>d!=0).map((d)=>0-d*interval)).sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
+    }
+    else{
+        let range = [...Array(ticks+1).keys()];
+        let interval = scale.domain()[1]/ticks;
+        data = range.map((d)=>d*interval);
+    }
 
     // legend groups
     const legends = dom.append("g").attr("transform", `translate(${config.x}, ${config.y})`)
