@@ -21,9 +21,7 @@ export default class Boxplot {
             d.iqr = d.q3 - d.q1;
             d.upperBound = max(d.data.filter(x => x <= d.q3 + (1.5 * d.iqr)));
             d.lowerBound = min(d.data.filter(x => x >= d.q1 - (1.5 * d.iqr)));
-            // d.outliers = d.data.filter(x => (1.5*d.iqr))
-
-
+            d.outliers = d.data.filter(x => x < d.lowerBound || x > d.upperBound);
         });
         this.allVals.sort(ascending);
     }
@@ -135,7 +133,17 @@ export default class Boxplot {
         // render outliers
         dom.append('g')
             .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
-            .selectAll('circle')
+            .selectAll('g')
+            .data(this.boxplotData)
+            .enter()
+            .append('g')
+                .selectAll('circle')
+                .data((d) => d.outliers.map((x) => ({'tissueSiteDetailId': d.tissueSiteDetailId, 'val': x})))
+                .enter()
+                .append('circle')
+                .attr('cx', (d) => scales.x(d.tissueSiteDetailId))
+                .attr('cy', (d) => scales.y(d.val + 0.05))
+                .attr('r', '2');
     }
 
     _createSvg(rootId, width=800, height=600) {
