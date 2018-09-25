@@ -163,7 +163,11 @@ export function setColorScale(data, colors="YlGnBu", dmin=undefined, dmax=undefi
  * @param scale {Object} D3 scale of the color
  * @param config {Object} with attr: x, y
  * @param useLog {Boolean}
+ * @param ticks {Integer} number of ticks (one-sided)
+ * @param base {Integer} log base
+ * @param cell {Object} with attributes: h, w
  * @param orientation {enum} h or v, i.e. horizontal or vertical
+ * @param diverging {Boolean} whether the color scheme is diverging
  * @param cell
  */
 export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:40}, orientation="h", diverging=false){
