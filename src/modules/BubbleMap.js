@@ -36,7 +36,7 @@ export default class BubbleMap {
         this.toolbar = undefined;
     }
 
-    drawCanvas(canvas, dimensions={w:1000, h:600, top:20, left:20}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=undefined){
+    drawCanvas(canvas, dimensions={w:1000, h:600, top:20, left:20}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
         this._setScales(dimensions, colorScaleDomain);
 
         let context = canvas.node().getContext('2d');
@@ -50,15 +50,49 @@ export default class BubbleMap {
         this.data.forEach((d)=>{
             context.beginPath();
             context.fillStyle = this.colorScale(d.value);
-            context.arc(this.xScale(d.x), this.yScale(d.y), this.bubbleScale(d.r), 0, 2*Math.PI);
+            context.arc(this.xScale(d.x) + this.xScale.bandwidth()/2, this.yScale(d.y), this.bubbleScale(d.r), 0, 2*Math.PI);
             context.fill();
             context.closePath();
         });
+
+        // text labels
+        if(showLabels){
+            context.save();
+            context.textAlign = 'right';
+            context.fillStyle = 'black';
+            context.font = '10px Open Sans';
+            this.yScale.domain().forEach((d)=>{
+                context.fillText(d, this.xScale.range()[0]-12, this.yScale(d)+2);
+            });
+            context.restore();
+
+            this.xScale.domain().forEach((d)=>{
+                context.save();
+                context.fillStyle = 'black';
+                context.font = '10px Open Sans';
+                context.textAlign = 'left';
+                context.translate(this.xScale(d)+this.xScale.bandwidth()/2 - 3, this.yScale.range()[1] + columnLabelPosAdjust);
+                context.rotate(Math.PI/2);
+                context.fillText(d, 0, 0);
+                context.restore();
+
+            });
+        }
     }
 
 
-    drawSvg(dom, dimensions={w:1000, h:600, top:20, left:20}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=undefined){
+    drawSvg(dom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
         this._setScales(dimensions, colorScaleDomain);
+
+        // bubbles
+        let bubbles = dom.selectAll(".bubble-map-cell")
+            .data(this.data, (d)=>d.value)
+            .enter()
+            .append("circle")
+            .attr("cx", (d)=>this.xScale(d.x) + this.xScale.bandwidth()/2)
+            .attr("cy", (d)=>this.yScale(d.y))
+            .attr("r", (d)=>this.bubbleScale(d.r))
+            .style("fill", (d)=>this.colorScale(d.value));
 
         // text labels
         if(showLabels) {
@@ -72,7 +106,7 @@ export default class BubbleMap {
                 .style("cursor", "default")
                 .attr("transform", (d) => {
                     let x = this.xScale(d) + 5; // TODO: remove hard-coded value
-                    let y = columnLabelPosAdjust === undefined ? this.yScale.range()[1] : this.yScale.range()[1] + columnLabelPosAdjust;
+                    let y = this.yScale.range()[1] + columnLabelPosAdjust;
                     return `translate(${x}, ${y}) rotate(${columnLabelAngle})`;
                 })
                 .text((d) => d);
@@ -81,21 +115,13 @@ export default class BubbleMap {
             let yLabels = dom.selectAll().data(this.yScale.domain())
                 .enter().append("text")
                 .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
-                .attr("x", this.xScale.range()[0])
+                .attr("x", this.xScale.range()[0] - 10)
                 .attr("y", (d) => this.yScale(d) + 2)
                 .style("text-anchor", "end")
                 .style("cursor", "default")
                 .text((d) => d);
         }
-        // bubbles
-        let bubbles = dom.selectAll(".bubble-map-cell")
-            .data(this.data, (d)=>d.value)
-            .enter()
-            .append("circle")
-            .attr("cx", (d)=>this.xScale(d.x) + this.xScale.bandwidth()/2)
-            .attr("cy", (d)=>this.yScale(d.y))
-            .attr("r", (d)=>this.bubbleScale(d.r))
-            .style("fill", (d)=>this.colorScale(d.value))
+
 
     }
 
