@@ -19,6 +19,9 @@ export default class Boxplot {
             d.median = median(d.data);
             d.q3 = quantile(d.data, 0.75);
             d.iqr = d.q3 - d.q1;
+            d.upperBound = max(d.data.filter(x => x <= d.q3 + (1.5 * d.iqr)));
+            d.lowerBound = min(d.data.filter(x => x >= d.q1 - (1.5 * d.iqr)));
+            // d.outliers = d.data.filter(x => (1.5*d.iqr))
 
 
         });
@@ -91,7 +94,7 @@ export default class Boxplot {
             .attr('x1', (d) => scales.x(d.tissueSiteDetailId))
             .attr('y1', (d) => scales.y(d.q3 + 0.05))
             .attr('x2', (d) => scales.x(d.tissueSiteDetailId))
-            .attr('y2', (d) => scales.y(max(d.data.filter(x => x <= d.q3 + (1.5 * d.iqr))) + 0.05))
+            .attr('y2', (d) => scales.y(d.upperBound + 0.05))
             .attr('stroke', 'black');
         dom.append('g')
             .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
@@ -100,9 +103,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/4)
-            .attr('y1', (d) => scales.y(max(d.data.filter(x => x <= d.q3 + (1.5 * d.iqr))) + 0.05))
+            .attr('y1', (d) => scales.y(d.upperBound + 0.05))
             .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/4)
-            .attr('y2', (d) => scales.y(max(d.data.filter(x => x <= d.q3 + (1.5 * d.iqr))) + 0.05))
+            .attr('y2', (d) => scales.y(d.upperBound + 0.05))
             .attr('stroke', 'black');
 
         // render low whisker
@@ -115,7 +118,7 @@ export default class Boxplot {
             .attr('x1', (d) => scales.x(d.tissueSiteDetailId))
             .attr('y1', (d) => scales.y(d.q1 + 0.05))
             .attr('x2', (d) => scales.x(d.tissueSiteDetailId))
-            .attr('y2', (d) => scales.y(min(d.data.filter(x => x >= d.q1 - (1.5 * d.iqr))) + 0.05))
+            .attr('y2', (d) => scales.y(d.lowerBound + 0.05))
             .attr('stroke', 'black');
         dom.append('g')
             .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
@@ -124,10 +127,15 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/4)
-            .attr('y1', (d) => scales.y(min(d.data.filter(x => x >= d.q1 - (1.5 * d.iqr))) + 0.05))
+            .attr('y1', (d) => scales.y(d.lowerBound + 0.05))
             .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/4)
-            .attr('y2', (d) => scales.y(min(d.data.filter(x => x >= d.q1 - (1.5 * d.iqr))) + 0.05))
+            .attr('y2', (d) => scales.y(d.lowerBound + 0.05))
             .attr('stroke', 'black');
+
+        // render outliers
+        dom.append('g')
+            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .selectAll('circle')
     }
 
     _createSvg(rootId, width=800, height=600) {
