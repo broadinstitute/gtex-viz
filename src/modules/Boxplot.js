@@ -27,6 +27,7 @@ export default class Boxplot {
     }
 
     render(rootId, plotOptions={}) {
+        // plot configs
         let width = plotOptions.width || 1200;
         let height = plotOptions.height || 800;
         let margins = {
@@ -35,6 +36,8 @@ export default class Boxplot {
             bottom: plotOptions.marginBottom || 150,
             left: plotOptions.marginLeft || 40
         };
+        let padding = plotOptions.padding || 2;
+
         const svg = this._createSvg(rootId, width, height);
         const dom = svg.append('g').attr('id', 'gtex-viz-boxplot');
         let scales = this._setScales(width - (margins.left + margins.right), height - (margins.top + margins.bottom));
@@ -62,9 +65,9 @@ export default class Boxplot {
             .data(this.boxplotData)
             .enter()
             .append('rect')
-            .attr('x', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/2)
+            .attr('x', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/2 + padding/2)
             .attr('y', (d) => scales.y(d.q3 + 0.05))
-            .attr('width', (d) => scales.x.step())
+            .attr('width', (d) => scales.x.step() - padding)
             .attr('height', (d) => scales.y(d.q1 + 0.05) - scales.y(d.q3 + 0.05))
             .attr('fill', 'steelblue');
 
@@ -75,9 +78,9 @@ export default class Boxplot {
             .data(this.boxplotData)
             .enter()
             .append('line')
-            .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/2)
+            .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/2 + padding/2)
             .attr('y1', (d) => scales.y(d.median + 0.05))
-            .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/2)
+            .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/2 - padding/2)
             .attr('y2', (d) => scales.y(d.median + 0.05))
             .attr('stroke', 'black');
 
