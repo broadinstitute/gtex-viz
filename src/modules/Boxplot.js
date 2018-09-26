@@ -26,15 +26,14 @@ export default class Boxplot {
         this.allVals.sort(ascending);
     }
 
-    render(rootId) {
-        // TODO: make width/height and margins customizable
-        let width = 800;
-        let height = 600;
+    render(rootId, plotOptions={}) {
+        let width = plotOptions.width || 1200;
+        let height = plotOptions.height || 800;
         let margins = {
-            top: 10,
-            bottom: 150,
-            left: 40,
-            right: 70
+            top: plotOptions.marginTop || 10,
+            right: plotOptions.marginRight || 70,
+            bottom: plotOptions.marginBottom || 150,
+            left: plotOptions.marginLeft || 40
         };
         const svg = this._createSvg(rootId, width, height);
         const dom = svg.append('g').attr('id', 'gtex-viz-boxplot');
@@ -146,8 +145,7 @@ export default class Boxplot {
                 .attr('r', '2');
     }
 
-    _createSvg(rootId, width=800, height=600) {
-        // TODO: make width/height customizable
+    _createSvg(rootId, width, height) {
         let svg = select(`#${rootId}`).append('svg')
             .attr('width', width)
             .attr('height', height);

@@ -14,7 +14,13 @@ export function launch(rootId, gencodeId, urls=getGtexUrls()) {
         .then(function(data) {
             const boxplotData = parseGeneExpressionForBoxplot(data);
             let boxplot = new Boxplot(boxplotData);
-            boxplot.render(rootId);
+            let plotOptions = {
+                width: 800,
+                height: 600,
+                marginRight: 100
+            };
+            boxplot.render(rootId, plotOptions);
+
 
         });
 }
