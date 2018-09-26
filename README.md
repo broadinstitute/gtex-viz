@@ -8,6 +8,8 @@ The GTEx web portal (http://gtexportal.org) develops specialized web-based visua
 - [GTEx eQTL Dashboard](#eqtl-dashboard)
 - [GTEx Gene-eQTL Visualizer](#gene-eqtl-visualizer)
 
+Also, try the tools at [jsFiddle](https://jsfiddle.net/user/kathuang/fiddles/).
+
 ---
 
 ### Running demos locally on your computer

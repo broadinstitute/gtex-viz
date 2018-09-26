@@ -7,6 +7,8 @@ export function getGtexUrls(){
     const host = 'https://gtexportal.org/rest/v1/';
     // const host = 'local.gtexportal.org/rest/v1/'
     return {
+        // gene-eqtl visualizer specific
+        singleTissueEqtl: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v7&gencodeId=',
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
         snp: host + 'reference/variant?format=json&snpId=',
@@ -51,14 +53,81 @@ export function getGtexUrls(){
 }
 
 /**
+ * Parse the single tissue eqtls from GTEx web service
+ * @param data {Json}
+ * @returns {List} of eqtls with attributes required for GEV rendering
+ */
+export function parseSingleTissueEqtls(data){
+    const attr = 'singleTissueEqtl';
+    if(!data.hasOwnProperty(attr)) throw "Parsing Error: required attribute is not found: " + attr;
+    ['variantId', 'tissueSiteDetailId', 'nes', 'pValue'].forEach((k)=>{
+        if (!data[attr][0].hasOwnProperty(k)) throw 'Parsing Error: required attribute is missing: ' + attr;
+    });
+    const generateShortVariantId = function(id){
+        var temp = id.split("_");
+        if(temp[2].length == 1 && temp[3].length == 1) return id;
+        if(temp[2].length > temp[3].length) {
+            temp[2] = "del";
+            temp.splice(3, 1); // delete the alt
+        }
+        else if(temp[3].length > temp[2].length) {
+            temp[3] = "ins";
+            temp.splice(2, 1); // delete the ref
+        }
+        else { // temp[3].length == temp[2].length and temp[3].length > 1
+            temp[3] = "sub";
+            temp.splice(2, 1); // delete the ref
+        }
+        return temp.join("_");
+    };
+
+    return data[attr].map((d)=>{
+        d.x = d.variantId;
+        d.displayX = generateShortVariantId(d.variantId);
+        d.y = d.tissueSiteDetailId;
+        d.value = d.nes;
+        d.displayValue = d.nes.toPrecision(3);
+        d.r = -Math.log10(d.pValue); // set r to be the -log10(p-value)
+        d.rDisplayValue = parseFloat(d.pValue.toExponential()).toPrecision(3);
+        return d;
+    })
+}
+
+
+
+/**
  * Parse the genes from GTEx web service
  * @param data {Json}
  * @returns {List} of genes
  */
-export function parseGenes(data){
+export function parseGenes(data, single=false, geneId=null){
     const attr = 'gene';
-    if(!data.hasOwnProperty(attr)) throw 'Gene web service parsing error';
-    return data[attr];
+    if(!data.hasOwnProperty(attr)) throw "Parsing Error: attribute gene doesn't exist.";
+    if (data.gene.length==0){
+         alert("No gene is found");
+         throw "Fatal Error: gene(s) not found";
+     }
+    if (single){
+        if (geneId === null) throw "Please provide a gene ID for search results validation";
+        if (data.gene.length>1) { // when a single gene ID has multiple matches
+             let filtered = data.gene.filter((g)=>{
+                 return g.geneSymbolUpper==geneId.toUpperCase() || g.gencodeId == geneId.toUpperCase()
+             });
+             if (filtered.length > 1) {
+                 alert("Fatal Error: input gene ID is not unique.");
+                 throw "Fatal Error: input gene ID is not unique.";
+                 return
+             } else if (filtered.length == 0){
+                 alert("No gene is found with " + geneId);
+                 throw "Fatal Error: gene not found";
+             }
+             else{
+                 data.gene = filtered
+             }
+         }
+         return data.gene[0]
+    }
+    else return data[attr];
 }
 
 /**
