@@ -32,7 +32,11 @@ export default class BubbleMap {
         this.tooltip = new Tooltip(tooltipId);
         select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
 
-        // Toolbar
+        // Tooltip
+        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
+        this.tooltip = new Tooltip(tooltipId);
+        select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
+
         this.toolbar = undefined;
     }
 
@@ -82,16 +86,34 @@ export default class BubbleMap {
 
     drawSvg(dom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
         this._setScales(dimensions, colorScaleDomain);
-
+        let tooltip = this.tooltip;
         // bubbles
         let bubbles = dom.selectAll(".bubble-map-cell")
             .data(this.data, (d)=>d.value)
             .enter()
             .append("circle")
-            .attr("cx", (d)=>this.xScale(d.x) + this.xScale.bandwidth()/2)
+            .attr("row", (d)=> `x${this.xScale.domain().indexOf(d.displayX?d.displayX:d.x)}`)
+            .attr("col", (d)=> `y${this.yScale.domain().indexOf(d.y)}`)
+            .attr("cx", (d)=>this.xScale(d.displayX?d.displayX:d.x) + this.xScale.bandwidth()/2)
             .attr("cy", (d)=>this.yScale(d.y))
             .attr("r", (d)=>this.bubbleScale(d.r))
-            .style("fill", (d)=>this.colorScale(d.value));
+            .style("fill", (d)=>this.colorScale(d.value))
+            .on("mouseover", function(d){
+                let selected = select(this);
+                let rowClass = selected.attr("row");
+                let colClass = selected.attr("col");
+                dom.selectAll(".bubble-map-xlabel").filter(`.${rowClass}`)
+                    .classed('highlighted', true);
+                dom.selectAll(".bubble-map-ylabel").filter(`.${colClass}`)
+                    .classed('highlighted', true);
+                selected.classed('highlighted', true);
+                let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
+                tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}`);
+            })
+            .on("mouseout", function(){
+                dom.selectAll("*").classed('highlighted', false);
+                tooltip.hide();
+            });
 
         // text labels
         if(showLabels) {
@@ -174,7 +196,7 @@ export default class BubbleMap {
         if (this.colorScale === undefined) this._setColorScale(cDomain);
         if (this.bubbleScale === undefined) {
             let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2
-            this._setBubbleScale({max:bubbleMax, min: 1});
+            this._setBubbleScale({max:bubbleMax, min: 2});
         }
     }
 
@@ -182,7 +204,7 @@ export default class BubbleMap {
         // use d3 nest data structure to find the unique list of x labels
         // reference: https://github.com/d3/d3-collection#nests
         let xList = nest()
-            .key((d) => d.x) // group this.data by d.x
+            .key((d) => d.displayX!==undefined?d.displayX:d.x) // group this.data by d.x
             .entries(this.data)
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
@@ -214,7 +236,7 @@ export default class BubbleMap {
 
     _setBubbleScale(range={max:10, min:0}){
         this.bubbleScale = scaleSqrt()
-            .domain([0.01, max(this.data.map((d)=>d.r))])
+            .domain([2, max(this.data.map((d)=>d.r))])
             .range([range.min, range.max]);
     }
 
