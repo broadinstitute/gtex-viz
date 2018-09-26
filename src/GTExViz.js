@@ -8,7 +8,7 @@ TODO
 1. refactoring
  */
 'use strict';
-import {createSvg, generateRandomMatrix, checkDomId} from "./modules/utils";
+import {createSvg, generateRandomMatrix, checkDomId, createCanvas} from "./modules/utils";
 import {range} from "d3-array";
 import {randomNormal} from "d3-random";
 import Heatmap from "./modules/Heatmap";
@@ -16,6 +16,7 @@ import DendroHeatmapConfig from "./modules/DendroHeatmapConfig";
 import DendroHeatmap from "./modules/DendroHeatmap";
 import GroupedViolin from "./modules/GroupedViolin";
 import IsoformTrackViewer from "./modules/IsoformTrackViewer";
+import BubbleMap from "./modules/BubbleMap";
 
 export const demoData = {
     heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:1000}),
@@ -240,7 +241,8 @@ export const demoData = {
                 "transcriptId": "ENST00000311595.9"
             }
         ]
-    }
+    },
+    bubbleMap:generateRandomMatrix({x:50, y:10, scaleFactor: 1, diverging: true, bubble: true})
 };
 
 const transcriptTracksConfig = {
@@ -283,6 +285,53 @@ export function transcriptTracks(par=transcriptTracksConfig){
     let viewer = new IsoformTrackViewer(par.data.transcripts, par.data.exons, undefined, config);
     viewer.render(false, svg, par.labelPos);
 
+}
+
+const bubblemapDemoConfig = {
+    id: 'gtexVizBubblemap',
+    data: demoData.bubbleMap,
+    width: 1200, //window.innerWidth*0.9,
+    height: 400, // TODO: use a dynamic width based on the matrix size
+    marginTop: 100,
+    marginRight: 100,
+    marginBottom: 30,
+    marginLeft: 30,
+    showLabels: true,
+    rowLabelWidth: 150,
+    columnLabelHeight: 100,
+    columnLabelAngle: 90,
+    columnLabelPosAdjust: 10,
+    useLog: false,
+    logBase: 10,
+    colorScheme: "RdBu", // a diverging color scheme
+    colorScaleDomain: [-0.75, 0.75],
+    useCanvas: false
+};
+
+export function bubblemap(par=bubblemapDemoConfig){
+    let margin = {
+        left: par.showLabels?par.marginLeft + par.rowLabelWidth: par.marginLeft,
+        top: par.marginTop,
+        right: par.marginRight,
+        bottom: par.showLabels?par.marginBottom + par.columnLabelHeight:par.marginBottom
+    };
+    let inWidth = par.width - (par.rowLabelWidth + par.marginLeft + par.marginRight);
+    let inHeight = par.height - (par.columnLabelHeight + par.marginTop + par.marginBottom);
+    if(par.useCanvas) {
+        let bmapCanvas = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, canvasId+"-tooltip");
+        let canvas = createCanvas(par.id, par.width, par.height, margin);
+        bmapCanvas.drawCanvas(canvas, {w:inWidth, h:inHeight, top: margin.top, left: margin.left}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust)
+        return bmapCanvas;
+    }
+    else {
+        let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
+        let svg = createSvg(par.id, par.width, par.height, margin);
+        bmap.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
+        bmap.drawColorLegend(svg, {x: 0, y: -40}, 3, "NES");
+        bmap.drawBubbleLegend(svg, {x: 500, y:-40, title: "-log10(p-value)"}, 5, "-log10(p-value)");
+        return bmap;
+
+    }
 }
 
 const heatmapDemoConfig = {

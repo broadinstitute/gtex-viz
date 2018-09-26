@@ -143,7 +143,7 @@ export function parseCssStyles (dom) {
  * @param par
  * @returns {Array}
  */
-export function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
+export function generateRandomMatrix(par={x:20, y:20, scaleFactor:1, diverging:false, bubble:false}){
     let X = range(1, par.x+1); // generates a 1-based list.
     let Y = range(1, par.y+1);
     let data = [];
@@ -152,11 +152,13 @@ export function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
         Y.forEach((y)=>{
             y = 'y' + y.toString();
             let v = Math.random()*par.scaleFactor;
+            v = par.diverging&&Math.random() < 0.5 ? -v : v; // randomly assigning negative and positive values
             data.push({
                 x: x,
                 y: y,
                 value: v,
-                displayValue: parseFloat(v.toExponential()).toPrecision(3)
+                displayValue: parseFloat(v.toExponential()).toPrecision(3),
+                r: par.bubble?Math.random()*30:undefined // only relevant to bubble map
             });
         })
     });
