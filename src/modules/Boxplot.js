@@ -48,7 +48,7 @@ export default class Boxplot {
             .call(xAxis)
             .attr('text-anchor', 'start')
             .selectAll('text')
-            .attr('transform', 'rotate(45)');
+            .attr('transform', 'translate(5,1) rotate(45)');
 
         // render y-axis
         dom.append('g')
