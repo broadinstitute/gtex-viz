@@ -5,9 +5,9 @@
 
 "use strict";
 import {nest} from "d3-collection";
-import {extent} from "d3-array";
+import {extent, max, min} from "d3-array";
 import {select, selectAll} from "d3-selection";
-import {scaleBand, scaleLinear} from "d3-scale";
+import {scaleBand, scaleLinear, scaleSqrt} from "d3-scale";
 import Tooltip from "./Tooltip";
 import {setColorScale, drawColorLegend} from "./colors";
 
@@ -34,10 +34,6 @@ export default class BubbleMap {
 
         // Toolbar
         this.toolbar = undefined;
-    }
-
-    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){
-        drawColorLegend(unit, dom, this.colorScale, legendConfig, this.useLog, ticks, this.logBase, {h:10, w:40}, "h", true);
     }
 
     drawCanvas(canvas, dimensions={w:1000, h:600, top:20, left:20}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
@@ -84,7 +80,6 @@ export default class BubbleMap {
         }
     }
 
-
     drawSvg(dom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
         this._setScales(dimensions, colorScaleDomain);
 
@@ -129,12 +124,58 @@ export default class BubbleMap {
 
     }
 
+    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){
+        drawColorLegend(unit, dom, this.colorScale, legendConfig, this.useLog, ticks, this.logBase, {h:10, w:40}, "h", true);
+    }
+
+    drawBubbleLegend(dom, legendConfig={x:0, y:0, title:"Bubble legend"}, ticks=5, unit=""){
+        console.log(this.bubbleScale.domain());
+        console.log(this.bubbleScale.range());
+        let range = [...Array(ticks+1).keys()];
+        let interval = (this.bubbleScale.domain()[1]-this.bubbleScale.domain()[0])/ticks;
+        let data = range.map((d)=>this.bubbleScale.domain()[0]+d*interval); // assuming d is positive
+        console.log(data);
+
+        // legend groups
+        let legends = dom.append("g")
+                .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`)
+                .selectAll(".legend").data(data);
+        let g = legends.enter().append("g").classed("legend", true);
+
+        // legend title
+        dom.append("text")
+            .attr("class", "color-legend")
+            .text(legendConfig.title)
+            .attr("x", -10)
+            .attr("text-anchor", "end")
+            .attr("y", 10)
+            .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
+
+        // the bubbles
+        let cellW = this.xScale.bandwidth()*2;
+        console.log(cellW);
+        g.append("circle")
+            .attr("cx", (d, i) => cellW*i)
+            .attr("cy", 10)
+            .attr("r", (d)=>this.bubbleScale(d))
+            .style("fill", "black");
+
+        g.append("text")
+            .attr("class", "color-legend")
+            .text((d) => this.useLog?(Math.pow(base, d)).toPrecision(2):d.toPrecision(2))
+            .attr("x", (d, i) => cellW * i -5)
+            .attr("y", 0);
+    }
+
     // private methods
     _setScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
         if (this.xScale === undefined) this._setXScale(dimensions);
         if (this.yScale === undefined) this._setYScale(dimensions);
         if (this.colorScale === undefined) this._setColorScale(cDomain);
-        if (this.bubbleScale === undefined) this._setBubbleScale({max:this.xScale.bandwidth(), min: 1});
+        if (this.bubbleScale === undefined) {
+            let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2
+            this._setBubbleScale({max:bubbleMax, min: 1});
+        }
     }
 
     _setXScale(dim={w:1000, left:20}){
@@ -171,11 +212,10 @@ export default class BubbleMap {
         this.colorScale = setColorScale(data, this.colorScheme, undefined, undefined, true);
     }
 
-    _setBubbleScale(range={max:10, min:2}){
-        this.bubbleScale = scaleLinear()
-            .domain(extent(this.data.map((d)=>d.r)))
+    _setBubbleScale(range={max:10, min:0}){
+        this.bubbleScale = scaleSqrt()
+            .domain([0.01, max(this.data.map((d)=>d.r))])
             .range([range.min, range.max]);
-
     }
 
     _log(v){

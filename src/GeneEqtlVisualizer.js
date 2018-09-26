@@ -75,7 +75,8 @@ export function renderBubbleMap(par){
         let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
         let svg = createSvg(par.id, par.width, par.height, margin);
         bmap.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
-        bmap.drawColorLegend(svg, {x: 0, y: -30}, 3);
+        bmap.drawColorLegend(svg, {x: 0, y: -30}, 3, "NES");
+        bmap.drawBubbleLegend(svg, {x: 500, y:-30, title: "-log10(p-value)"}, 5, "-log10(p-value)");
         return bmap;
 
     }
