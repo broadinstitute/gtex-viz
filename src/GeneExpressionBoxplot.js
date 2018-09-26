@@ -16,7 +16,7 @@ export function launch(rootId, gencodeId, urls=getGtexUrls()) {
             let boxplot = new Boxplot(boxplotData);
             let plotOptions = {
                 width: 800,
-                height: 600,
+                height: 400,
                 marginRight: 100
             };
             boxplot.render(rootId, plotOptions);
