@@ -505,8 +505,10 @@ export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined
 /**
  * parse the expression data of a gene for boxplot
  * @param data {JSON} from GTEx gene expression web service
+ * @param tissues {Object} mapping of tissue ids to labels (tissue name)
+ * @param colors {Object} mapping of tissue ids to boxplot colors
  */
-export function parseGeneExpressionForBoxplot(data) {
+export function parseGeneExpressionForBoxplot(data, tissues=undefined, colors=undefined) {
     const attr = 'geneExpression';
 
     if(!data.hasOwnProperty(attr)) throw(`Parsing error: required JSON attribute ${attr} missing.`);
@@ -518,7 +520,8 @@ export function parseGeneExpressionForBoxplot(data) {
                 throw `Parsing error: required JSON attribute ${k} is missing from a record.`;
             }
         });
-        d.label = d.tissueSiteDetailId;
+        d.label = tissues===undefined?d.tissueSiteDetailId:tissues[d.tissueSiteDetailId];
+        d.color = colors===undefined?'#4682b4':colors[d.tissueSiteDetailId];
     });
 
     return data[attr];

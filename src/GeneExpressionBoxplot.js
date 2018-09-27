@@ -5,14 +5,26 @@
 'use strict';
 
 import {json} from 'd3-fetch';
-import {getGtexUrls, parseGeneExpressionForBoxplot} from './modules/gtexDataParser';
+import {getGtexUrls, parseGeneExpressionForBoxplot, parseTissues} from './modules/gtexDataParser';
 
 import Boxplot from './modules/Boxplot';
 
 export function launch(rootId, gencodeId, urls=getGtexUrls()) {
-    json(urls.geneExp + gencodeId)
-        .then(function(data) {
-            const boxplotData = parseGeneExpressionForBoxplot(data);
+    const promises = [
+        json(urls.tissue),
+        json(urls.geneExp + gencodeId)
+    ];
+
+    Promise.all(promises)
+        .then(function(args) {
+            const tissues = parseTissues(args[0]);
+            const tissueIdNameMap = {};
+            const tissueIdColorMap = {};
+            tissues.forEach(x => {
+                tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
+                tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
+            });
+            const boxplotData = parseGeneExpressionForBoxplot(args[1], tissueIdNameMap, tissueIdColorMap);
             let boxplot = new Boxplot(boxplotData);
             let plotOptions = {
                 width: 800,
@@ -20,7 +32,5 @@ export function launch(rootId, gencodeId, urls=getGtexUrls()) {
                 marginRight: 100
             };
             boxplot.render(rootId, plotOptions);
-
-
         });
 }
