@@ -69,7 +69,8 @@ export default class Boxplot {
             .attr('y', (d) => scales.y(d.q3 + 0.05))
             .attr('width', (d) => scales.x.step() - padding)
             .attr('height', (d) => scales.y(d.q1 + 0.05) - scales.y(d.q3 + 0.05))
-            .attr('fill', 'steelblue');
+            .attr('fill', (d) => `#${d.color}`)
+            .attr('stroke', '#aaa');
 
         // render median
         dom.append('g')
@@ -95,7 +96,7 @@ export default class Boxplot {
             .attr('y1', (d) => scales.y(d.q3 + 0.05))
             .attr('x2', (d) => scales.x(d.label))
             .attr('y2', (d) => scales.y(d.upperBound + 0.05))
-            .attr('stroke', 'black');
+            .attr('stroke', '#aaa');
         dom.append('g')
             .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
             .selectAll('line')
@@ -106,7 +107,7 @@ export default class Boxplot {
             .attr('y1', (d) => scales.y(d.upperBound + 0.05))
             .attr('x2', (d) => scales.x(d.label) + scales.x.step()/4)
             .attr('y2', (d) => scales.y(d.upperBound + 0.05))
-            .attr('stroke', 'black');
+            .attr('stroke', '#aaa');
 
         // render low whisker
         dom.append('g')
@@ -119,7 +120,7 @@ export default class Boxplot {
             .attr('y1', (d) => scales.y(d.q1 + 0.05))
             .attr('x2', (d) => scales.x(d.label))
             .attr('y2', (d) => scales.y(d.lowerBound + 0.05))
-            .attr('stroke', 'black');
+            .attr('stroke', '#aaa');
         dom.append('g')
             .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
             .selectAll('line')
@@ -130,7 +131,7 @@ export default class Boxplot {
             .attr('y1', (d) => scales.y(d.lowerBound + 0.05))
             .attr('x2', (d) => scales.x(d.label) + scales.x.step()/4)
             .attr('y2', (d) => scales.y(d.lowerBound + 0.05))
-            .attr('stroke', 'black');
+            .attr('stroke', '#aaa');
 
         // render outliers
         dom.append('g')
@@ -145,7 +146,9 @@ export default class Boxplot {
                 .append('circle')
                 .attr('cx', (d) => scales.x(d.label))
                 .attr('cy', (d) => scales.y(d.val + 0.05))
-                .attr('r', '2');
+                .attr('r', '2')
+                .attr('stroke', '#aaa')
+                .attr('fill', 'none');
     }
 
     _createSvg(rootId, width, height) {
