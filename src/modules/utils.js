@@ -14,8 +14,39 @@
 import {select} from "d3-selection";
 import {range} from "d3-array";
 
+
+export function checkDomId(id){
+    // test input params
+    if ($(`#${id}`).length == 0) {
+        let error = `Input Error: DOM ID ${par.id} is not found.`;
+        alert(error);
+        throw error;
+    }
+    console.log('passed!');
+}
+
 /**
- *
+ * Create a Canvas D3 object
+ * @param id {String} the parent dom ID
+ * @param width {Numeric}: the outer width
+ * @param height {Numeric}: the outer height
+ * @param margin {Object} with attr: left, top
+ * @param canvasId {String}
+ * @returns {*}
+ */
+export function createCanvas(id, width, height, margin, canvasId=undefined){
+    checkDomId(id);
+    if(canvasId===undefined) canvasId=`${id}-canvas`;
+    return select(`#${id}`)
+        .append("canvas")
+        .attr('id', canvasId)
+        .attr("width", width)
+        .attr("height", height)
+        .style("position", "relative")
+}
+
+/**
+ * Create an SVG D3 object
  * @param id {String} the parent dom ID
  * @param width {Numeric}: the outer width
  * @param height {Numeric}: the outer height
@@ -24,6 +55,7 @@ import {range} from "d3-array";
  * @returns {*}
  */
 export function createSvg(id, width, height, margin, svgId=undefined){
+    checkDomId(id);
     if (svgId===undefined) svgId=`${id}-svg`;
     return select("#"+id).append("svg")
         .attr("width", width)
@@ -111,7 +143,7 @@ export function parseCssStyles (dom) {
  * @param par
  * @returns {Array}
  */
-export function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
+export function generateRandomMatrix(par={x:20, y:20, scaleFactor:1, diverging:false, bubble:false}){
     let X = range(1, par.x+1); // generates a 1-based list.
     let Y = range(1, par.y+1);
     let data = [];
@@ -120,11 +152,13 @@ export function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
         Y.forEach((y)=>{
             y = 'y' + y.toString();
             let v = Math.random()*par.scaleFactor;
+            v = par.diverging&&Math.random() < 0.5 ? -v : v; // randomly assigning negative and positive values
             data.push({
                 x: x,
                 y: y,
                 value: v,
-                displayValue: parseFloat(v.toExponential()).toPrecision(3)
+                displayValue: parseFloat(v.toExponential()).toPrecision(3),
+                r: par.bubble?Math.random()*30:undefined // only relevant to bubble map
             });
         })
     });

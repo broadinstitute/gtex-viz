@@ -3,6 +3,8 @@
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
 import {select, event} from "d3-selection";
+import {transition} from "d3-transition";
+
 
 export default class Tooltip {
     constructor(id, verbose=false, offsetX=30, offsetY=-40, duration=100){
@@ -22,7 +24,6 @@ export default class Tooltip {
             .transition()
             .duration(this.duration)
             .style("opacity", 1.0)
-
     }
 
     hide() {

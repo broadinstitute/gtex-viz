@@ -2,7 +2,7 @@
  * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
-import {max} from "d3-array";
+import {max, min} from "d3-array";
 import {scaleSequential} from "d3-scale";
 import * as d3Chromatic from "d3-scale-chromatic";
 "use strict";
@@ -101,12 +101,13 @@ function shuffleColors(array) {
 }
 
 /**
- * get a color interpolator
+ * get a color scheme by name
  * @param name {enum}: BuGn, OrRd....
- * @returns {*}
+ * @returns {*}: a continuous interpolator (used with d3.scaleSequential)
  */
 export function getColorInterpolator(name){
     // reference: https://github.com/d3/d3-scale-chromatic/blob/master/README.md#sequential-multi-hue
+
     const interpolators = {
         BuGn: d3Chromatic.interpolateBuGn,
         OrRd: d3Chromatic.interpolateOrRd,
@@ -118,7 +119,13 @@ export function getColorInterpolator(name){
         Purples: d3Chromatic.interpolatePurples,
         Reds: d3Chromatic.interpolateReds,
         Greys: d3Chromatic.interpolateGreys,
-        Grays: d3Chromatic.interpolateGreys
+        Grays: d3Chromatic.interpolateGreys,
+
+        // diverging color schemes
+        RdBu: d3Chromatic.interpolateRdBu,
+        RdGy: d3Chromatic.interpolateRdGy,
+        PiYG: d3Chromatic.interpolatePiYG
+
     };
     if (!interpolators.hasOwnProperty(name)) {
         const err = "Unrecognized color: " + name;
@@ -134,12 +141,17 @@ export function getColorInterpolator(name){
  * scaleSequential maps the continuous domain to a continuous color scale
  * @param data {List} of numerical data
  * @param colors {String} a color name that is available in getColorInterpolator()
+ * @param dmin {Number} minimum domain value
+ * @param dmax {Number} maximum domain value
+ * @param reverse {Boolean} reverse the color scheme
  */
-export function setColorScale(data, colors="YlGnBu", dmin = 0) {
+export function setColorScale(data, colors="YlGnBu", dmin=undefined, dmax=undefined, reverse=false) {
     // let dmax = Math.round(max(data));
-    let dmax = max(data);
+    dmax = dmax === undefined?max(data):dmax;
+    dmin = dmin === undefined?min(data):dmin;
     const scale = scaleSequential(getColorInterpolator(colors));
-    scale.domain([dmin, dmax]);
+    if(reverse) scale.domain([dmax, dmin]);
+    else scale.domain([dmin, dmax]);
     return scale;
 }
 
@@ -151,13 +163,27 @@ export function setColorScale(data, colors="YlGnBu", dmin = 0) {
  * @param scale {Object} D3 scale of the color
  * @param config {Object} with attr: x, y
  * @param useLog {Boolean}
+ * @param ticks {Integer} number of ticks (one-sided)
+ * @param base {Integer} log base
+ * @param cell {Object} with attributes: h, w
  * @param orientation {enum} h or v, i.e. horizontal or vertical
+ * @param diverging {Boolean} whether the color scheme is diverging
  * @param cell
  */
-export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:40}, orientation="h"){
-    let range = [...Array(ticks+1).keys()];
-    let interval = scale.domain()[1]/ticks;
-    const data = range.map((d)=>d*interval);
+export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, base=10, cell={h:10, w:40}, orientation="h", diverging=false){
+    let data = [];
+
+    if(diverging){
+        let range = [...Array(ticks+1).keys()];
+        let interval = scale.domain()[1]/ticks;
+        data = range.map((d)=>d*interval);
+        data = data.concat(range.filter((d)=>d!=0).map((d)=>0-d*interval)).sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
+    }
+    else{
+        let range = [...Array(ticks+1).keys()];
+        let interval = scale.domain()[1]/ticks;
+        data = range.map((d)=>d*interval);
+    }
 
     // legend groups
     const legends = dom.append("g").attr("transform", `translate(${config.x}, ${config.y})`)
