@@ -124,8 +124,9 @@ export function getColorInterpolator(name){
         // diverging color schemes
         RdBu: d3Chromatic.interpolateRdBu,
         RdGy: d3Chromatic.interpolateRdGy,
-        PiYG: d3Chromatic.interpolatePiYG
-
+        PiYG: d3Chromatic.interpolatePiYG,
+        PuOr: d3Chromatic.interpolatePuOr,
+        RdYlBu: d3Chromatic.interpolateRdYlBu
     };
     if (!interpolators.hasOwnProperty(name)) {
         const err = "Unrecognized color: " + name;
