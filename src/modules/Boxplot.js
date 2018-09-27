@@ -83,7 +83,8 @@ export default class Boxplot {
             .attr('y1', (d) => scales.y(d.median + 0.05))
             .attr('x2', (d) => scales.x(d.label) + scales.x.step()/2 - padding/2)
             .attr('y2', (d) => scales.y(d.median + 0.05))
-            .attr('stroke', 'black');
+            .attr('stroke', '#000')
+            .attr('stroke-width', 2);
 
         // render high whisker
         dom.append('g')
