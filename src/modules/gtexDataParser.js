@@ -518,7 +518,7 @@ export function parseGeneExpressionForBoxplot(data) {
                 throw `Parsing error: required JSON attribute ${k} is missing from a record.`;
             }
         });
-        d.x = d.tissueSiteDetailId;
+        d.label = d.tissueSiteDetailId;
     });
 
     return data[attr];
