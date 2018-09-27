@@ -65,7 +65,7 @@ export default class Boxplot {
             .data(this.boxplotData)
             .enter()
             .append('rect')
-            .attr('x', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/2 + padding/2)
+            .attr('x', (d) => scales.x(d.x) - scales.x.step()/2 + padding/2)
             .attr('y', (d) => scales.y(d.q3 + 0.05))
             .attr('width', (d) => scales.x.step() - padding)
             .attr('height', (d) => scales.y(d.q1 + 0.05) - scales.y(d.q3 + 0.05))
@@ -78,9 +78,9 @@ export default class Boxplot {
             .data(this.boxplotData)
             .enter()
             .append('line')
-            .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/2 + padding/2)
+            .attr('x1', (d) => scales.x(d.x) - scales.x.step()/2 + padding/2)
             .attr('y1', (d) => scales.y(d.median + 0.05))
-            .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/2 - padding/2)
+            .attr('x2', (d) => scales.x(d.x) + scales.x.step()/2 - padding/2)
             .attr('y2', (d) => scales.y(d.median + 0.05))
             .attr('stroke', 'black');
 
@@ -91,9 +91,9 @@ export default class Boxplot {
             .data(this.boxplotData)
             .enter()
             .append('line')
-            .attr('x1', (d) => scales.x(d.tissueSiteDetailId))
+            .attr('x1', (d) => scales.x(d.x))
             .attr('y1', (d) => scales.y(d.q3 + 0.05))
-            .attr('x2', (d) => scales.x(d.tissueSiteDetailId))
+            .attr('x2', (d) => scales.x(d.x))
             .attr('y2', (d) => scales.y(d.upperBound + 0.05))
             .attr('stroke', 'black');
         dom.append('g')
@@ -102,9 +102,9 @@ export default class Boxplot {
             .data(this.boxplotData)
             .enter()
             .append('line')
-            .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/4)
+            .attr('x1', (d) => scales.x(d.x) - scales.x.step()/4)
             .attr('y1', (d) => scales.y(d.upperBound + 0.05))
-            .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/4)
+            .attr('x2', (d) => scales.x(d.x) + scales.x.step()/4)
             .attr('y2', (d) => scales.y(d.upperBound + 0.05))
             .attr('stroke', 'black');
 
@@ -115,9 +115,9 @@ export default class Boxplot {
             .data(this.boxplotData)
             .enter()
             .append('line')
-            .attr('x1', (d) => scales.x(d.tissueSiteDetailId))
+            .attr('x1', (d) => scales.x(d.x))
             .attr('y1', (d) => scales.y(d.q1 + 0.05))
-            .attr('x2', (d) => scales.x(d.tissueSiteDetailId))
+            .attr('x2', (d) => scales.x(d.x))
             .attr('y2', (d) => scales.y(d.lowerBound + 0.05))
             .attr('stroke', 'black');
         dom.append('g')
@@ -126,9 +126,9 @@ export default class Boxplot {
             .data(this.boxplotData)
             .enter()
             .append('line')
-            .attr('x1', (d) => scales.x(d.tissueSiteDetailId) - scales.x.step()/4)
+            .attr('x1', (d) => scales.x(d.x) - scales.x.step()/4)
             .attr('y1', (d) => scales.y(d.lowerBound + 0.05))
-            .attr('x2', (d) => scales.x(d.tissueSiteDetailId) + scales.x.step()/4)
+            .attr('x2', (d) => scales.x(d.x) + scales.x.step()/4)
             .attr('y2', (d) => scales.y(d.lowerBound + 0.05))
             .attr('stroke', 'black');
 
@@ -140,10 +140,10 @@ export default class Boxplot {
             .enter()
             .append('g')
                 .selectAll('circle')
-                .data((d) => d.outliers.map((x) => ({'tissueSiteDetailId': d.tissueSiteDetailId, 'val': x})))
+                .data((d) => d.outliers.map((x) => ({'x': d.x, 'val': x})))
                 .enter()
                 .append('circle')
-                .attr('cx', (d) => scales.x(d.tissueSiteDetailId))
+                .attr('cx', (d) => scales.x(d.x))
                 .attr('cy', (d) => scales.y(d.val + 0.05))
                 .attr('r', '2');
     }
@@ -157,7 +157,7 @@ export default class Boxplot {
 
     _setScales(innerWidth, innerHeight) {
         let xScale = scaleBand()
-            .domain(this.boxplotData.map(d => d.tissueSiteDetailId))
+            .domain(this.boxplotData.map(d => d.x))
             .range([0, innerWidth]);
 
         // let yScale = scaleLinear()
