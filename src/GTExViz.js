@@ -321,7 +321,6 @@ export function bubblemap(par=bubblemapDemoConfig){
         let bmapCanvas = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, canvasId+"-tooltip");
         let canvas = createCanvas(par.id, par.width, par.height, margin);
         bmapCanvas.drawCanvas(canvas, {w:inWidth, h:inHeight, top: margin.top, left: margin.left}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust)
-        return bmapCanvas;
     }
     else {
         let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
@@ -329,8 +328,6 @@ export function bubblemap(par=bubblemapDemoConfig){
         bmap.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
         bmap.drawColorLegend(svg, {x: 0, y: -40}, 3, "NES");
         bmap.drawBubbleLegend(svg, {x: 500, y:-40, title: "-log10(p-value)"}, 5, "-log10(p-value)");
-        return bmap;
-
     }
 }
 

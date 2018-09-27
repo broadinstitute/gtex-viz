@@ -18,7 +18,7 @@ import {range} from "d3-array";
 export function checkDomId(id){
     // test input params
     if ($(`#${id}`).length == 0) {
-        let error = `Input Error: DOM ID ${par.id} is not found.`;
+        let error = `Input Error: DOM ID ${id} is not found.`;
         alert(error);
         throw error;
     }
