@@ -38,12 +38,16 @@ export default class Boxplot {
         };
         let padding = plotOptions.padding || 2;
         let xAxisFontSize = plotOptions.xAxisFontSize || 11;
+        let xAxisLabel = plotOptions.xAxisLabel || '';
+        let xAxisLabelFontSize = plotOptions.xAxisLabelFontSize || 11;
         let yAxisFontSize = plotOptions.yAxisFontSize || 10;
+        let yAxisLabel = plotOptions.yAxisLabel || '';
+        let yAxisLabelFontSize = plotOptions.yAxisLabelFontSize || 11;
 
         const svg = this._createSvg(rootId, width, height);
         const dom = svg.append('g').attr('id', 'gtex-viz-boxplot');
         let scales = this._setScales(width - (margins.left + margins.right), height - (margins.top + margins.bottom));
-        let xAxis = axisBottom(scales.x).ticks(10);
+        let xAxis = axisBottom(scales.x);
         let yAxis = axisLeft(scales.y);
 
         // render x-axis
@@ -54,12 +58,24 @@ export default class Boxplot {
             .selectAll('text')
             .attr('transform', 'translate(5,1) rotate(45)')
             .attr('font-size', xAxisFontSize);
+        // x-axis label
+        dom.append('text')
+            .attr('transform', `translate(${margins.left + width/2 + scales.x.step()/2}, ${height - xAxisLabelFontSize/2})`)
+            .style('text-anchor', 'middle')
+            .style('font-size', xAxisLabelFontSize)
+            .text(xAxisLabel);
 
         // render y-axis
         dom.append('g')
             .attr('transform', `translate(${margins.left}, ${margins.top})`)
             .call(yAxis)
             .attr('font-size', yAxisFontSize);
+        // y-axis label
+        dom.append('text')
+            .attr('transform', `translate(${yAxisLabelFontSize}, ${(height - margins.bottom)/2}) rotate(270)`)
+            .style('text-anchor', 'middle')
+            .style('font-size', yAxisLabelFontSize)
+            .text(yAxisLabel);
 
         // render IQR box
         dom.append('g')
