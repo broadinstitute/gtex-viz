@@ -37,6 +37,8 @@ export default class Boxplot {
             left: plotOptions.marginLeft || 40
         };
         let padding = plotOptions.padding || 2;
+        let xAxisFontSize = plotOptions.xAxisFontSize || 11;
+        let yAxisFontSize = plotOptions.yAxisFontSize || 10;
 
         const svg = this._createSvg(rootId, width, height);
         const dom = svg.append('g').attr('id', 'gtex-viz-boxplot');
@@ -50,13 +52,14 @@ export default class Boxplot {
             .call(xAxis)
             .attr('text-anchor', 'start')
             .selectAll('text')
-            .attr('transform', 'translate(5,1) rotate(45)');
+            .attr('transform', 'translate(5,1) rotate(45)')
+            .attr('font-size', xAxisFontSize);
 
         // render y-axis
         dom.append('g')
             .attr('transform', `translate(${margins.left}, ${margins.top})`)
-            .call(yAxis);
-
+            .call(yAxis)
+            .attr('font-size', yAxisFontSize);
 
         // render IQR box
         dom.append('g')
