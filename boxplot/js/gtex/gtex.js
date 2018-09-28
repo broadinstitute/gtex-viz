@@ -1881,11 +1881,11 @@ var plotviz = (function (plotviz) {
                         var isoformResponse = JSON.parse(isoformReq.responseText).transcriptExpression;
                         var sexSubsetResponse = JSON.parse(sexSubsetReq.responseText).geneExpression;
 
-                        _queries.geneData = {};
-                        geneResponse.forEach(function(x) {
-                            var tName = idNameMap[x.tissueSiteDetailId];
-                            _queries.geneData[tName] = getBoxplotData(x);
-                        });
+                        //_queries.geneData = {};
+                        //geneResponse.forEach(function(x) {
+                        //    var tName = idNameMap[x.tissueSiteDetailId];
+                        //    _queries.geneData[tName] = getBoxplotData(x);
+                        //});
 
                         _queries.isoformData = {};
                         isoformResponse.forEach(function(x) {
@@ -1907,18 +1907,18 @@ var plotviz = (function (plotviz) {
                             _queries.sexSubsetData[sGroup][tName] = getBoxplotData(x);
                         });
 
-                        _queries.colors = idColorMap;
+                        //_queries.colors = idColorMap;
 
-                        _geneData = geneDataToData(_queries.geneData, _queries.colors);
+                        //_geneData = geneDataToData(_queries.geneData, _queries.colors);
                         _isoformData = isoformDataToData(_queries.isoformData);
                         _femaleGeneData = sexPatch(geneDataToData(_queries.sexSubsetData.female, _queries.colors), 'female');
                         _maleGeneData = sexPatch(geneDataToData(_queries.sexSubsetData.male, _queries.colors), 'male');
 
-                        _config.titleContent = gene + ' Gene Expression';
-                        _config.width = $(outerDiv).width();
-                        _config.height = 800;
+                        //_config.titleContent = gene + ' Gene Expression';
+                        //_config.width = $(outerDiv).width();
+                        //_config.height = 800;
 
-                        renderBoxplot(dataToKeyBoxes(_geneData), _config);
+                        //renderBoxplot(dataToKeyBoxes(_geneData), _config);
 
                         $('#gtex-plot-modal').on('hidden.bs.modal', function () {
                             if (_filter.selected().length === 0) {
@@ -2099,6 +2099,23 @@ var plotviz = (function (plotviz) {
                     sexSubsetReq.onerror = function(event) {};
                     sexSubsetReq.send();
                 };
+
+                var geneResponse = JSON.parse(geneReq.responseText).geneExpression;
+
+                _queries.geneData = {};
+                geneResponse.forEach(function(x) {
+                    var tName = idNameMap[x.tissueSiteDetailId];
+                    _queries.geneData[tName] = getBoxplotData(x);
+                });
+
+                _queries.colors = idColorMap;
+                _geneData = geneDataToData(_queries.geneData, _queries.colors);
+
+                _config.titleContent = gene + ' Gene Expression';
+                _config.width = $(outerDiv).width();
+                _config.height = 800;
+
+                renderBoxplot(dataToKeyBoxes(_geneData), _config);
 
                 isoformReq.onerror = function (event) {};
                 isoformReq.send();
