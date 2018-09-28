@@ -17,6 +17,7 @@ import DendroHeatmap from "./modules/DendroHeatmap";
 import GroupedViolin from "./modules/GroupedViolin";
 import IsoformTrackViewer from "./modules/IsoformTrackViewer";
 import BubbleMap from "./modules/BubbleMap";
+import HalfMap from "./modules/HalfMap";
 
 export const demoData = {
     heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:1000}),
@@ -242,8 +243,42 @@ export const demoData = {
             }
         ]
     },
-    bubbleMap:generateRandomMatrix({x:50, y:10, scaleFactor: 1, diverging: true, bubble: true})
+    bubbleMap:generateRandomMatrix({x:50, y:10, scaleFactor: 1, diverging: true, bubble: true}),
+    ldPlot: generateRandomMatrix({x:20, y:20, scaleFactor: 1})
 };
+
+const ldPlotDemoConfig = {
+    id: 'gtexVizLdPlot',
+    data: demoData.ldPlot,
+    width: 500, // outer width
+    height: 500, // outer height
+    marginLeft: 40,
+    marginRight: 40,
+    marginTop: 40,
+    marginBottom: 40,
+    colorScheme: "Greys",
+    cornerRadius: 1,
+    columnLabelHeight: 20,
+    columnLabelAngle: 90,
+    columnLabelPosAdjust: 0,
+    rowLabelWidth: 20,
+    legendSpace: 50,
+    useLog: false,
+    logBase: undefined
+};
+export function ldPlot(par=ldPlotDemoConfig){
+    let margin = {
+        left: par.showLabels?par.marginLeft + par.rowLabelWidth: par.marginLeft,
+        top: par.marginTop,
+        right: par.marginRight,
+        bottom: par.showLabels?par.marginBottom + par.columnLabelHeight:par.marginBottom
+    };
+    let inWidth = par.width - (par.rowLabelWidth + par.marginLeft + par.marginRight);
+    let inHeight = par.height - (par.columnLabelHeight + par.marginTop + par.marginBottom);
+    let ldCanvas = new HalfMap(par.data, par.useLog, par.logBase, par.colorScheme, canvasId+"-tooltip");
+    let canvas = createCanvas(par.id, par.width, par.height, margin);
+    ldCanvas.drawCanvas(canvas, {w:inWidth, h:inHeight, top: margin.top, left: margin.left}, par.showLabels)
+}
 
 const transcriptTracksConfig = {
     id: 'gtexTranscriptTracks',
@@ -256,7 +291,6 @@ const transcriptTracksConfig = {
     marginBottom: 20,
     labelPos: 'left'
 };
-
 export function transcriptTracks(par=transcriptTracksConfig){
     let margin = {
         top: par.marginTop,
@@ -307,7 +341,6 @@ const bubblemapDemoConfig = {
     colorScaleDomain: [-0.75, 0.75],
     useCanvas: false
 };
-
 export function bubblemap(par=bubblemapDemoConfig){
     let margin = {
         left: par.showLabels?par.marginLeft + par.rowLabelWidth: par.marginLeft,
@@ -350,7 +383,6 @@ const heatmapDemoConfig = {
     useLog: true,
     logBase: 10
 };
-
 /**
  * Render a 2D Heatmap
  * @param params
@@ -399,7 +431,6 @@ const dendroHeatmapDemoConfig = {
     rowLabelWidth: 200,
     legendSpace: 50
 };
-
 /**
  * Render a DendroHeatmap
  * @param par

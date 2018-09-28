@@ -12,8 +12,7 @@
             <h3>GTExViz Demos</h3>
             <div>
                 <h5>GTEx Heatmap</h5>
-                <div id="gtexVizHeatmap"></div>
-                <div id="userHeatmap"></div>
+                <div id="gtexVizLdPlot"></div>
             </div>
         </div>
     </body>
@@ -27,29 +26,11 @@
 
     <script src="/build/js/gtex-viz.bundle.min.js"></script>
     <script>
-        let data = generateRandomMatrix({x:50, y:6, scaleFactor:100});
+        let data = generateRandomMatrix({x:50, y:6, scaleFactor:1});
         // console.log(JSON.stringify(data));
 
-        GTExViz.heatmap();
-        GTExViz.heatmap({
-            id: 'userHeatmap',
-            data: data,
-            useLog: false,
-            logBase: null,
-            width: 800,
-            height: 200,
-            marginLeft: 20,
-            marginRight: 40,
-            marginTop: 50,
-            marginBottom: 50,
-            colorScheme: "Reds",
-            cornerRadius: 2,
-            columnLabelHeight: 20,
-            columnLabelAngle: 60,
-            columnLabelPosAdjust: 10,
-            rowLabelWidth: 100,
+        GTExViz.ldPlot();
 
-        });
         function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
             let range = n => Array.from(Array(n).keys());
             let X = range(par.x); // generates a 1-based list.

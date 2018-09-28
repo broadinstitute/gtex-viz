@@ -1249,15 +1249,12 @@ var gtexBubbleMap = function(geneId, config, urls, useRsId){
                 });
         };
 
-
-
         var canvas = _createCanvas();
         var pScale = _createPosScale();
         _transformCanvas(canvas, pScale.band()/2, pScale.band());
 
         _drawCanvas(canvas, pScale);
         _drawLines(xlist);
-
 
         var svg = _createSvg();
         _drawLdLegend(svg, config.ldTitle);
