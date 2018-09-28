@@ -9,8 +9,12 @@ import {scaleBand, scaleLinear, scaleLog} from 'd3-scale';
 import {axisBottom, axisLeft} from 'd3-axis';
 
 export default class Boxplot {
-    constructor(boxplotData){
-        this.boxplotData = boxplotData;
+    constructor(boxplotData, useLog=true){
+        this.boxplotData = boxplotData.sort(function(a, b) {
+            if (a.label < b.label) return -1;
+            else if (a.label > b.label) return 1;
+            else return 0;
+        });
         this.allVals = [];
         this.boxplotData.forEach(d => {
             d.data.sort(ascending);
@@ -23,6 +27,7 @@ export default class Boxplot {
             d.lowerBound = min(d.data.filter(x => x >= d.q1 - (1.5 * d.iqr)));
             d.outliers = d.data.filter(x => x < d.lowerBound || x > d.upperBound);
         });
+        this.useLog=useLog;
         this.allVals.sort(ascending);
     }
 
@@ -183,17 +188,17 @@ export default class Boxplot {
             .domain(this.boxplotData.map(d => d.label))
             .range([0, innerWidth]);
 
-        // let yScale = scaleLinear()
-        //     .domain(extent(this.allVals))
-        //     .range([innerHeight, 0]);
+        let yScale;
 
-
-        let yScale = scaleLog()
+        if (this.useLog) {
+            yScale = scaleLog()
             .domain(extent(this.allVals).map(d => d+0.05)) // +.05 for 0's
             .range([innerHeight, 0]);
-        // let yScale = scaleLinear()
-        //     .domain(extent(this.allVals).map(d => Math.log10(d+0.05))) // +.-5 for 0's
-        //     .range([innerHeight, 0]);
+        } else {
+            yScale = scaleLinear()
+            .domain(extent(this.allVals))
+            .range([innerHeight, 0]);
+        }
 
         return {
             x: xScale,
