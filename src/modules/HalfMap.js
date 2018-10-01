@@ -46,7 +46,7 @@ export default class HalfMap{
         context.rotate(Math.PI*(-45/180)); // rotate counterclockwise (negative) 45 degrees
 
         // LD canvas rendering from GEV old code
-
+        console.log(visibleData);
         visibleData.forEach((d)=>{
             let x = this.xScale(d.x);
             let y = this.yScale(d.y);
@@ -78,12 +78,12 @@ export default class HalfMap{
             }
         });
         return data.filter((d)=>{
-            if (d.value < cutoff) return false;
             // check redundant data
             let p = d.x + d.y;
             let p2 = d.y + d.x;
             if (pairs.hasOwnProperty(p) || pairs.hasOwnProperty(p2)) return false;
             pairs[p] = true;
+            if (d.value < cutoff) return false;
             return true;
         });
     }
@@ -125,6 +125,6 @@ export default class HalfMap{
     _setColorScale(domain){
         let useLog = this.useLog;
         let data = domain===undefined?this.data.map((d)=>useLog?this._log(d.value):d.value):domain;
-        this.colorScale = setColorScale(data, this.colorScheme, undefined, undefined, true);
+        this.colorScale = setColorScale(data, this.colorScheme);
     }
 }
