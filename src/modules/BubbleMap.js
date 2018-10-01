@@ -59,11 +59,11 @@ export default class BubbleMap {
 
         // bubbles
         this.data.forEach((d)=>{
-            context.beginPath();
+            // context.beginPath();
             context.fillStyle = this.colorScale(d.value);
             context.arc(this.xScale(d.x) + this.xScale.bandwidth()/2, this.yScale(d.y), this.bubbleScale(d.r), 0, 2*Math.PI);
             context.fill();
-            context.closePath();
+            // context.closePath();
         });
 
         // text labels

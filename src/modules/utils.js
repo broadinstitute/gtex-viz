@@ -42,7 +42,7 @@ export function createCanvas(id, width, height, margin, canvasId=undefined){
         .attr('id', canvasId)
         .attr("width", width)
         .attr("height", height)
-        .style("position", "relative")
+        .style("position", "relative") // TODO: should the position be user-defined? relative vs absolute
 }
 
 /**

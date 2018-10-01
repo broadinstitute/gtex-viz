@@ -244,40 +244,38 @@ export const demoData = {
         ]
     },
     bubbleMap:generateRandomMatrix({x:50, y:10, scaleFactor: 1, diverging: true, bubble: true}),
-    ldPlot: generateRandomMatrix({x:20, y:20, scaleFactor: 1})
+    ldPlot: generateRandomMatrix({x:2, y:2, scaleFactor: 1})
 };
 
 const ldPlotDemoConfig = {
     id: 'gtexVizLdPlot',
     data: demoData.ldPlot,
-    width: 500, // outer width
-    height: 500, // outer height
-    marginLeft: 40,
-    marginRight: 40,
-    marginTop: 40,
-    marginBottom: 40,
+    cutoff: 0.0,
+    width: 1000, // outer width
+    marginLeft: 100,
+    marginRight: 200,
+    marginTop: 20,
+    marginBottom: 100,
     colorScheme: "Greys",
-    cornerRadius: 1,
-    columnLabelHeight: 20,
-    columnLabelAngle: 90,
-    columnLabelPosAdjust: 0,
-    rowLabelWidth: 20,
+    labelHeight: 20,
+    showLabels: true,
     legendSpace: 50,
     useLog: false,
     logBase: undefined
 };
 export function ldPlot(par=ldPlotDemoConfig){
     let margin = {
-        left: par.showLabels?par.marginLeft + par.rowLabelWidth: par.marginLeft,
-        top: par.marginTop,
+        left: par.marginLeft,
+        top: par.showLabels?par.marginTop+par.labelHeight:par.marginTop,
         right: par.marginRight,
-        bottom: par.showLabels?par.marginBottom + par.columnLabelHeight:par.marginBottom
+        bottom: par.marginBottom
     };
-    let inWidth = par.width - (par.rowLabelWidth + par.marginLeft + par.marginRight);
-    let inHeight = par.height - (par.columnLabelHeight + par.marginTop + par.marginBottom);
-    let ldCanvas = new HalfMap(par.data, par.useLog, par.logBase, par.colorScheme, canvasId+"-tooltip");
-    let canvas = createCanvas(par.id, par.width, par.height, margin);
-    ldCanvas.drawCanvas(canvas, {w:inWidth, h:inHeight, top: margin.top, left: margin.left}, par.showLabels)
+    let inWidth = par.width - (par.marginLeft + par.marginRight);
+    let inHeight = par.width - (par.marginTop + par.marginBottom);
+    inWidth = inWidth>inHeight?inHeight:inWidth; // adjust the dimensions based on the minimum required space
+    let ldCanvas = new HalfMap(par.data, par.cutoff, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
+    let canvas = createCanvas(par.id, par.width, par.width, margin);
+    ldCanvas.drawCanvas(canvas, {w:inWidth, top: margin.top, left: margin.left}, [0, 1], par.showLabels)
 }
 
 const transcriptTracksConfig = {
