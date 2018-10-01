@@ -6,7 +6,7 @@
 "use strict";
 import Tooltip from "./Tooltip";
 import {setColorScale} from "./colors";
-import {select} from "d3-selection";
+import {select, selectAll} from "d3-selection";
 import {nest} from "d3-collection";
 import {scaleBand, scaleLinear} from "d3-scale";
 
@@ -23,6 +23,7 @@ export default class HalfMap{
         this.xScale = undefined;
         this.yScale = undefined;
         this.colorScale = undefined;
+        this.labelScale = undefined;
 
         // peripheral features
         //// the tooltip
@@ -31,33 +32,52 @@ export default class HalfMap{
         select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
     }
 
-    drawCanvas(canvas, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], showLabels=true){
+    draw(canvas, svg, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], showLabels=true, labelAngle=90){
+        this._drawCanvas(canvas, dimensions, colorScaleDomain, showLabels);
+        this._drawSvg(svg, dimensions, showLabels, labelAngle);
+    }
+
+    // private methods
+    _drawCanvas(canvas, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1]){
         this._setScales(dimensions, colorScaleDomain);
         let visibleData = this._filter(this.data, this.cutoff);
         let context = canvas.node().getContext('2d');
 
-        //background
-        context.fillStyle = '#ffffff';
-        context.rect(0,0,canvas.attr('width'), canvas.attr('height'));
-        context.fill();
-
         // transform the canvas
+        context.save();
         context.translate(dimensions.left , dimensions.top + (this.xScale.bandwidth()*Math.sqrt(2)/2)); // shift the radius distance...
         context.rotate(Math.PI*(-45/180)); // rotate counterclockwise (negative) 45 degrees
 
         // LD canvas rendering from GEV old code
-        console.log(visibleData);
         visibleData.forEach((d)=>{
             let x = this.xScale(d.x);
             let y = this.yScale(d.y);
             context.fillStyle = this.colorScale(d.value);
             context.fillRect(x, y, this.xScale.bandwidth(), this.yScale.bandwidth());
         });
-
-
+        context.restore();
     }
 
-    // private methods
+    _drawSvg(svg, dimensions, showLabels=true, labelAngle=90){
+        if(showLabels){
+            this._setLabelScale(dimensions);
+            svg.selectAll().data(this.labelScale.domain())
+                .enter()
+                .append("text")
+                .attr("class", (d, i) => `half-map-label l${i}`)
+                .attr("x", 0)
+                .attr("y", 0)
+                .style("text-anchor", "start")
+                .style("cursor", "default")
+                .attr("transform", (d) => {
+                    let x = dimensions.left+this.labelScale(d) + 5; // TODO: remove hard-coded value
+                    let y = -5;
+                    return `translate(${x}, ${y}) rotate(-${labelAngle})`;
+                })
+                .text((d)=>d)
+        }
+    }
+
     /**
      * Filter redundant data in a symmetrical matrix
      * @param data
@@ -94,7 +114,7 @@ export default class HalfMap{
         if (this.colorScale === undefined) this._setColorScale(colorScaleDomain);
     }
 
-    _setXScale(dim={w:600, left:20}){
+    _setXScale(dim={w:600}){
         let xList = nest()
             .key((d) => d.displayX!==undefined?d.displayX:d.x) // group this.data by d.x
             .entries(this.data)
@@ -107,7 +127,7 @@ export default class HalfMap{
             .padding(.05); // temporarily hard-coded value
     }
 
-    _setYScale(dim={w:600, top:20}){
+    _setYScale(dim={w:600}){
         // use d3 nest data structure to find the unique list of y labels
         // reference: https://github.com/d3/d3-collection#nests
         let yList = nest()
@@ -120,6 +140,15 @@ export default class HalfMap{
             // .range([dim.top, dim.top+(dim.w/Math.sqrt(2))])
             .range([0, dim.w/Math.sqrt(2)])
             .padding(.05); // temporarily hard-coded value
+    }
+
+    _setLabelScale(dim={w:600}){
+        if (this.xScale === undefined) this._setXScale();
+        let xList = this.xScale.domain();
+        this.labelScale = scaleBand()
+            .domain(xList)
+            .range([0, dim.w])
+            .padding(.05)
     }
 
     _setColorScale(domain){

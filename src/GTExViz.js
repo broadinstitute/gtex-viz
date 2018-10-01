@@ -259,6 +259,7 @@ const ldPlotDemoConfig = {
     colorScheme: "Greys",
     labelHeight: 20,
     showLabels: true,
+    labelAngle: 30,
     legendSpace: 50,
     useLog: false,
     logBase: undefined
@@ -275,7 +276,8 @@ export function ldPlot(par=ldPlotDemoConfig){
     inWidth = inWidth>inHeight?inHeight:inWidth; // adjust the dimensions based on the minimum required space
     let ldCanvas = new HalfMap(par.data, par.cutoff, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
     let canvas = createCanvas(par.id, par.width, par.width, margin);
-    ldCanvas.drawCanvas(canvas, {w:inWidth, top: margin.top, left: margin.left}, [0, 1], par.showLabels)
+    let svg = createSvg(par.id, par.width, par.width, margin);
+    ldCanvas.draw(canvas, svg, {w:inWidth, top: margin.top, left: margin.left}, [0, 1], par.showLabels, par.labelAngle);
 }
 
 const transcriptTracksConfig = {
