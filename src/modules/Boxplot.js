@@ -90,9 +90,9 @@ export default class Boxplot {
             .enter()
             .append('rect')
             .attr('x', (d) => scales.x(d.label) - scales.x.step()/2 + padding/2)
-            .attr('y', (d) => scales.y(d.q3 + 0.05))
+            .attr('y', (d) => this.useLog?scales.y(d.q3 + 0.05) : scales.y(d.q3))
             .attr('width', (d) => scales.x.step() - padding)
-            .attr('height', (d) => scales.y(d.q1 + 0.05) - scales.y(d.q3 + 0.05))
+            .attr('height', (d) => this.useLog?scales.y(d.q1 + 0.05) - scales.y(d.q3 + 0.05) : scales.y(d.q1) - scales.y(d.q3))
             .attr('fill', (d) => `#${d.color}`)
             .attr('stroke', '#aaa');
 
@@ -104,9 +104,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.label) - scales.x.step()/2 + padding/2)
-            .attr('y1', (d) => scales.y(d.median + 0.05))
+            .attr('y1', (d) => this.useLog?scales.y(d.median + 0.05) : scales.y(d.median))
             .attr('x2', (d) => scales.x(d.label) + scales.x.step()/2 - padding/2)
-            .attr('y2', (d) => scales.y(d.median + 0.05))
+            .attr('y2', (d) => this.useLog?scales.y(d.median + 0.05) : scales.y(d.median))
             .attr('stroke', '#000')
             .attr('stroke-width', 2);
 
@@ -118,9 +118,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.label))
-            .attr('y1', (d) => scales.y(d.q3 + 0.05))
+            .attr('y1', (d) => this.useLog?scales.y(d.q3 + 0.05) : scales.y(d.q3))
             .attr('x2', (d) => scales.x(d.label))
-            .attr('y2', (d) => scales.y(d.upperBound + 0.05))
+            .attr('y2', (d) => this.useLog?scales.y(d.upperBound + 0.05) : scales.y(d.upperBound))
             .attr('stroke', '#aaa');
         dom.append('g')
             .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
@@ -129,9 +129,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.label) - scales.x.step()/4)
-            .attr('y1', (d) => scales.y(d.upperBound + 0.05))
+            .attr('y1', (d) => this.useLog?scales.y(d.upperBound + 0.05) : scales.y(d.upperBound))
             .attr('x2', (d) => scales.x(d.label) + scales.x.step()/4)
-            .attr('y2', (d) => scales.y(d.upperBound + 0.05))
+            .attr('y2', (d) => this.useLog?scales.y(d.upperBound + 0.05) : scales.y(d.upperBound))
             .attr('stroke', '#aaa');
 
         // render low whisker
@@ -142,9 +142,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.label))
-            .attr('y1', (d) => scales.y(d.q1 + 0.05))
+            .attr('y1', (d) => this.useLog?scales.y(d.q1 + 0.05) : scales.y(d.q1))
             .attr('x2', (d) => scales.x(d.label))
-            .attr('y2', (d) => scales.y(d.lowerBound + 0.05))
+            .attr('y2', (d) => this.useLog?scales.y(d.lowerBound + 0.05) : scales.y(d.lowerBound))
             .attr('stroke', '#aaa');
         dom.append('g')
             .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
@@ -153,9 +153,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.label) - scales.x.step()/4)
-            .attr('y1', (d) => scales.y(d.lowerBound + 0.05))
+            .attr('y1', (d) => this.useLog?scales.y(d.lowerBound + 0.05) : scales.y(d.lowerBound))
             .attr('x2', (d) => scales.x(d.label) + scales.x.step()/4)
-            .attr('y2', (d) => scales.y(d.lowerBound + 0.05))
+            .attr('y2', (d) => this.useLog?scales.y(d.lowerBound + 0.05) : scales.y(d.lowerBound))
             .attr('stroke', '#aaa');
 
         // render outliers
@@ -170,7 +170,7 @@ export default class Boxplot {
                 .enter()
                 .append('circle')
                 .attr('cx', (d) => scales.x(d.label))
-                .attr('cy', (d) => scales.y(d.val + 0.05))
+                .attr('cy', (d) => this.useLog?scales.y(d.val + 0.05) : scales.y(d.val))
                 .attr('r', '2')
                 .attr('stroke', '#aaa')
                 .attr('fill', 'none');
