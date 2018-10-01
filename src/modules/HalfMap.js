@@ -5,7 +5,7 @@
 
 "use strict";
 import Tooltip from "./Tooltip";
-import {setColorScale} from "./colors";
+import {drawColorLegend, setColorScale} from "./colors";
 import {select, selectAll} from "d3-selection";
 import {nest} from "d3-collection";
 import {scaleBand, scaleLinear} from "d3-scale";
@@ -35,6 +35,10 @@ export default class HalfMap{
     draw(canvas, svg, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], showLabels=true, labelAngle=90){
         this._drawCanvas(canvas, dimensions, colorScaleDomain, showLabels);
         this._drawSvg(svg, dimensions, showLabels, labelAngle);
+    }
+
+    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){
+        drawColorLegend(unit, dom, this.colorScale, legendConfig, this.useLog, ticks, this.logBase, {h:20, w:10}, "v");
     }
 
     // private methods
@@ -70,7 +74,7 @@ export default class HalfMap{
                 .style("text-anchor", "start")
                 .style("cursor", "default")
                 .attr("transform", (d) => {
-                    let x = dimensions.left+this.labelScale(d) + 5; // TODO: remove hard-coded value
+                    let x = this.labelScale(d) + 5; // TODO: remove hard-coded value
                     let y = -5;
                     return `translate(${x}, ${y}) rotate(-${labelAngle})`;
                 })

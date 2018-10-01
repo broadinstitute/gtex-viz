@@ -278,6 +278,7 @@ export function ldPlot(par=ldPlotDemoConfig){
     let canvas = createCanvas(par.id, par.width, par.width, margin);
     let svg = createSvg(par.id, par.width, par.width, margin);
     ldCanvas.draw(canvas, svg, {w:inWidth, top: margin.top, left: margin.left}, [0, 1], par.showLabels, par.labelAngle);
+    ldCanvas.drawColorLegend(svg, {x: 0, y: 100}, 10, "Value");
 }
 
 const transcriptTracksConfig = {
