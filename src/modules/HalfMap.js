@@ -105,10 +105,10 @@ export default class HalfMap{
 
                 // find the colliding cell's coordinates (before transformation)
                 let radian = Math.PI*(45/180); // the radian at 45 degree angle
-                let x0 = x*Math.cos(radian) - y*Math.sin(radian);
-                let y0 = x*Math.sin(radian) + y*Math.cos(radian);
+                let x0 = x*Math.cos(radian) - y*Math.sin(radian) + xScale.step()/2;
+                let y0 = x*Math.sin(radian) + y*Math.cos(radian) - yScale.step()/2;
                 let i = Math.floor(x0/xScale.step());
-                let j = Math.floor((y0)/xScale.step());
+                let j = Math.floor((y0)/yScale.step());
                 // console.log([x, y]);
                 console.log([i, j, xScale.domain()[i], yScale.domain()[j]]);
             });
