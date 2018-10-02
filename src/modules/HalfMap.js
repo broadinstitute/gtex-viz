@@ -6,7 +6,7 @@
 "use strict";
 import Tooltip from "./Tooltip";
 import {drawColorLegend, setColorScale} from "./colors";
-import {select, selectAll, mouse} from "d3-selection";
+import {select, selectAll, mouse, event} from "d3-selection";
 import {nest} from "d3-collection";
 import {scaleBand, scaleLinear} from "d3-scale";
 
@@ -72,7 +72,7 @@ export default class HalfMap{
                 .attr("x", 0)
                 .attr("y", 0)
                 .style("text-anchor", "start")
-                .style("cursor", "default")
+                .style("cursor", "none")
                 .attr("transform", (d) => {
                     let x = this.labelScale(d) + 5; // TODO: remove hard-coded value
                     let y = -5;
@@ -81,19 +81,37 @@ export default class HalfMap{
                 .text((d)=>d)
         }
 
-        let cursor = svg.append('rect')
+        let cursor = svg.append('circle')
             .attr('class', 'half-map-cursor')
-            .attr("x", 0)
-            .attr("y", 0)
-            .style("width", this.xScale.bandwidth())
-            .style("height", this.xScale.bandwidth())
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 0.8*this.xScale.bandwidth()/2)
             .style("stroke", "#d2111b")
-            .style("stroke-width", 2);
+            .style("stroke-width", 1)
+            .style("fill", "none")
+            .style("display", 'none');
 
-        select(svg.node().parentNode).on('mousemove', function(){
-            let pos = mouse(this);
-            console.log(pos);
-        })
+        let xScale = this.xScale;
+        let yScale = this.yScale;
+        select(svg.node().parentNode)
+            // .style("cursor", "none")
+            .on('mousemove', function(){
+                let pos = mouse(svg.node()); // retrieve the mouse position relative to the SVG element
+                let x = pos[0];
+                let y = pos[1];
+
+                cursor.attr('transform', `translate(${x},${y})`);
+                cursor.style("display", "block");
+
+                // find the colliding cell's coordinates (before transformation)
+                let radian = Math.PI*(45/180); // the radian at 45 degree angle
+                let x0 = x*Math.cos(radian) - y*Math.sin(radian);
+                let y0 = x*Math.sin(radian) + y*Math.cos(radian);
+                let i = Math.floor(x0/xScale.step());
+                let j = Math.floor((y0)/xScale.step());
+                // console.log([x, y]);
+                console.log([i, j, xScale.domain()[i], yScale.domain()[j]]);
+            });
     }
 
     /**
