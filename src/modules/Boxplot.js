@@ -8,8 +8,10 @@ import {select} from 'd3-selection';
 import {scaleBand, scaleLinear, scaleLog} from 'd3-scale';
 import {axisBottom, axisLeft} from 'd3-axis';
 
+import Tooltip from "./Tooltip";
+
 export default class Boxplot {
-    constructor(boxplotData, useLog=true){
+    constructor(boxplotData, useLog=true, tooltipId='boxplot-tooltip'){
         this.boxplotData = boxplotData.sort(function(a, b) {
             if (a.label < b.label) return -1;
             else if (a.label > b.label) return 1;
@@ -29,6 +31,9 @@ export default class Boxplot {
         });
         this.useLog=useLog;
         this.allVals.sort(ascending);
+
+        this.tooltip = undefined;
+        this.createTooltip(tooltipId);
     }
 
     render(rootId, plotOptions={}) {
@@ -94,7 +99,13 @@ export default class Boxplot {
             .attr('width', (d) => scales.x.step() - padding)
             .attr('height', (d) => this.useLog?scales.y(d.q1 + 0.05) - scales.y(d.q3 + 0.05) : scales.y(d.q1) - scales.y(d.q3))
             .attr('fill', (d) => `#${d.color}`)
-            .attr('stroke', '#aaa');
+            .attr('stroke', '#aaa')
+            .on('mouseover', (d, i) => {
+                console.log(`${d.label}\n${this.useLog?'Log10(Median TPM)' : 'Median TPM'}: ${d.median}\nNumber of Samples: ${d.data.length}`);
+                let selectedDom = select(this);
+                this.boxplotMouseover(d, rootId, selectedDom);
+                return;
+            });
 
         // render median
         dom.append('g')
@@ -174,6 +185,19 @@ export default class Boxplot {
                 .attr('r', '2')
                 .attr('stroke', '#aaa')
                 .attr('fill', 'none');
+    }
+
+    createTooltip(tooltipDomId) {
+        if ($(`#${tooltipDomId}`).length == 0) $('<div/>').attr('id', tooltipDomId).appendTo($('body'));
+        this.tooltip = new Tooltip(tooltipDomId);
+        select(`#${tooltipDomId}`).attr('class', 'boxplot-tooltip');
+    }
+
+    boxplotMouseover(d, dom, selected) {
+        console.log(d);
+        console.log(dom);
+        console.log(selected);
+        this.tooltip.show(`${d.label}\n${this.useLog?'Log10(Median TPM)' : 'Median TPM'}: ${d.median}\nNumber of Samples: ${d.data.length}`);
     }
 
     _createSvg(rootId, width, height) {
