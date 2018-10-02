@@ -53,13 +53,14 @@ export function createCanvas(id, width, height, margin, canvasId=undefined, posi
  * @param svgId {String}
  * @returns {*}
  */
-export function createSvg(id, width, height, margin, svgId=undefined){
+export function createSvg(id, width, height, margin, svgId=undefined, position="relative"){
     checkDomId(id);
     if (svgId===undefined) svgId=`${id}-svg`;
     return select("#"+id).append("svg")
         .attr("width", width)
         .attr("height", height)
         .attr("id", svgId)
+        .style("position", position)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
 }

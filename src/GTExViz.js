@@ -276,7 +276,7 @@ export function ldPlot(par=ldPlotDemoConfig){
     inWidth = inWidth>inHeight?inHeight:inWidth; // adjust the dimensions based on the minimum required space
     let ldCanvas = new HalfMap(par.data, par.cutoff, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
     let canvas = createCanvas(par.id, par.width, par.width, margin);
-    let svg = createSvg(par.id, par.width, par.width, margin);
+    let svg = createSvg(par.id, par.width, par.width, margin, undefined, "absolute");
     ldCanvas.draw(canvas, svg, {w:inWidth, top: margin.top, left: margin.left}, [0, 1], par.showLabels, par.labelAngle);
     ldCanvas.drawColorLegend(svg, {x: 0, y: 100}, 10, "Value");
 }

@@ -6,7 +6,7 @@
 "use strict";
 import Tooltip from "./Tooltip";
 import {drawColorLegend, setColorScale} from "./colors";
-import {select, selectAll} from "d3-selection";
+import {select, selectAll, mouse} from "d3-selection";
 import {nest} from "d3-collection";
 import {scaleBand, scaleLinear} from "d3-scale";
 
@@ -80,6 +80,20 @@ export default class HalfMap{
                 })
                 .text((d)=>d)
         }
+
+        let cursor = svg.append('rect')
+            .attr('class', 'half-map-cursor')
+            .attr("x", 0)
+            .attr("y", 0)
+            .style("width", this.xScale.bandwidth())
+            .style("height", this.xScale.bandwidth())
+            .style("stroke", "#d2111b")
+            .style("stroke-width", 2);
+
+        select(svg.node().parentNode).on('mousemove', function(){
+            let pos = mouse(this);
+            console.log(pos);
+        })
     }
 
     /**
