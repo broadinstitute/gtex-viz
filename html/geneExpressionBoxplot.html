@@ -36,16 +36,16 @@
         </span>
 
         <!-- expression boxplot div -->
-        <div class="row" id="boxplotRoot">
+        <div class="row" id="boxplot-root">
         </div>
     </body>
     <script>
         $(document).ready(function(){
-          GeneExpressionBoxplot.launch('boxplotRoot', 'ENSG00000248746.1');
+          GeneExpressionBoxplot.launch('boxplot-root', 'ENSG00000248746.1');
         });
         $('.test-gene').click(function(e) {
-            $('#boxplotRoot').empty();
-            GeneExpressionBoxplot.launch('boxplotRoot', e.target.id);
+            $('#boxplot-root').empty();
+            GeneExpressionBoxplot.launch('boxplot-root', e.target.id);
         })
 
     </script>
