@@ -29,14 +29,14 @@ export function launch(rootId, gencodeId, urls=getGtexUrls()) {
                 rootId: rootId,
                 tooltipId: 'boxplot-tooltip'
             };
-            let boxplot = new Boxplot(boxplotData, false);
+            let boxplot = new Boxplot(boxplotData, true);
             let plotOptions = {
                 width: 1000,
                 height: 600,
                 marginLeft: 50,
                 marginRight: 100,
                 marginBottom: 160,
-                yAxisLabel: 'TPM'
+                yAxisUnit: 'TPM'
             };
             boxplot.render(ids.rootId, plotOptions);
         });

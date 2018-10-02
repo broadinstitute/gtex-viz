@@ -51,7 +51,7 @@ export default class Boxplot {
         let xAxisLabel = plotOptions.xAxisLabel || '';
         let xAxisLabelFontSize = plotOptions.xAxisLabelFontSize || 11;
         let yAxisFontSize = plotOptions.yAxisFontSize || 10;
-        let yAxisLabel = plotOptions.yAxisLabel || '';
+        let yAxisLabel = (this.useLog?`log10(${plotOptions.yAxisUnit})`: plotOptions.yAxisUnit) || '';
         let yAxisLabelFontSize = plotOptions.yAxisLabelFontSize || 11;
 
         const svg = this._createSvg(rootId, width, height);
