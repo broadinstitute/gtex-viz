@@ -25,7 +25,11 @@ export function launch(rootId, gencodeId, urls=getGtexUrls()) {
                 tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
             });
             const boxplotData = parseGeneExpressionForBoxplot(args[1], tissueIdNameMap, tissueIdColorMap);
-            let boxplot = new Boxplot(boxplotData);
+            let ids = {
+                rootId: rootId,
+                tooltipId: 'boxplot-tooltip'
+            };
+            let boxplot = new Boxplot(boxplotData, false);
             let plotOptions = {
                 width: 1000,
                 height: 600,
@@ -34,6 +38,6 @@ export function launch(rootId, gencodeId, urls=getGtexUrls()) {
                 marginBottom: 160,
                 yAxisLabel: 'TPM'
             };
-            boxplot.render(rootId, plotOptions);
+            boxplot.render(ids.rootId, plotOptions);
         });
 }
