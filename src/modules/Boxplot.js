@@ -101,10 +101,11 @@ export default class Boxplot {
             .attr('fill', (d) => `#${d.color}`)
             .attr('stroke', '#aaa')
             .on('mouseover', (d, i) => {
-                console.log(`${d.label}\n${this.useLog?'Log10(Median TPM)' : 'Median TPM'}: ${d.median}\nNumber of Samples: ${d.data.length}`);
                 let selectedDom = select(this);
                 this.boxplotMouseover(d, rootId, selectedDom);
-                return;
+            })
+            .on('mouseout', (d, i) => {
+                this.boxplotMouseout();
             });
 
         // render median
@@ -194,10 +195,13 @@ export default class Boxplot {
     }
 
     boxplotMouseover(d, dom, selected) {
-        console.log(d);
-        console.log(dom);
-        console.log(selected);
-        this.tooltip.show(`${d.label}\n${this.useLog?'Log10(Median TPM)' : 'Median TPM'}: ${d.median}\nNumber of Samples: ${d.data.length}`);
+        this.tooltip.show(`${d.label}<br/>
+                           ${this.useLog?'Log10(Median TPM)' : 'Median TPM'}: ${d.median.toPrecision(4)}<br/>
+                           Number of Samples: ${d.data.length}`);
+    }
+
+    boxplotMouseout() {
+        if (this.tooltip !== undefined) this.tooltip.hide();
     }
 
     _createSvg(rootId, width, height) {
