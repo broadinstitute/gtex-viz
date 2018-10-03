@@ -29,7 +29,7 @@ export default class HalfMap{
         // peripheral features
         //// the tooltip
         if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
-        this.tooltip = new Tooltip(tooltipId);
+        this.tooltip = new Tooltip(tooltipId, false, 40, 0);
         select(`#${tooltipId}`).classed('half-map-tooltip', true);
     }
 
@@ -61,10 +61,11 @@ export default class HalfMap{
             context.fillStyle = this.colorScale(d.value);
             // console.log(d);
             context.fillRect(x, y, this.xScale.bandwidth(), this.yScale.bandwidth());
-            context.textAlign = 'left';
-            context.fillStyle = 'white';
-            context.font = '10px Open Sans';
-            context.fillText(d.x+' '+d.y, x+10, y+10);
+            // uncomment the following for debugging
+            // context.textAlign = 'left';
+            // context.fillStyle = 'white';
+            // context.font = '10px Open Sans';
+            // context.fillText(d.x+' '+d.y, x+10, y+10);
         });
         this.dataDict = this._generateDataDict(visibleData);
         context.restore();
@@ -82,7 +83,7 @@ export default class HalfMap{
                 .style("text-anchor", "start")
                 .style("cursor", "none")
                 .attr("transform", (d) => {
-                    let x = this.labelScale(d) + this.labelScale.step()/2; // TODO: remove hard-coded value
+                    let x = this.labelScale(d) + this.labelScale.step()/2;
                     let y = -5;
                     return `translate(${x}, ${y}) rotate(-${labelAngle})`;
                 })
@@ -120,13 +121,9 @@ export default class HalfMap{
                 let col = this.xScale.domain()[i];
                 let row = this.yScale.domain()[j];
                 let cell = this.dataDict[col+row];
-                // console.log([i, j, col+row])
-                // console.log(dict[col+row]);
                 if (cell !== undefined) {
-                    // console.log(cell)
                     this.tooltip.show(`${col} <-> ${row}<br/> Value: ${cell.displayValue}`);
                 }
-
             })
             .on('mouseout', () => {
                 cursor.style("display", "none");
