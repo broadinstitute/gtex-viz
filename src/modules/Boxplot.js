@@ -11,7 +11,7 @@ import {axisBottom, axisLeft} from 'd3-axis';
 import Tooltip from "./Tooltip";
 
 export default class Boxplot {
-    constructor(boxplotData, useLog=true, tooltipId='boxplot-tooltip'){
+    constructor(boxplotData, useLog=true, logBase=10, tooltipId='boxplot-tooltip'){
         this.boxplotData = boxplotData.sort(function(a, b) {
             if (a.label < b.label) return -1;
             else if (a.label > b.label) return 1;
@@ -29,7 +29,8 @@ export default class Boxplot {
             d.lowerBound = min(d.data.filter(x => x >= d.q1 - (1.5 * d.iqr)));
             d.outliers = d.data.filter(x => x < d.lowerBound || x > d.upperBound);
         });
-        this.useLog=useLog;
+        this.useLog = useLog;
+        this.logBase = logBase;
         this.allVals.sort(ascending);
 
         this.tooltip = undefined;
@@ -51,8 +52,9 @@ export default class Boxplot {
         let xAxisLabel = plotOptions.xAxisLabel || '';
         let xAxisLabelFontSize = plotOptions.xAxisLabelFontSize || 11;
         let yAxisFontSize = plotOptions.yAxisFontSize || 10;
-        let yAxisLabel = (this.useLog?`log10(${plotOptions.yAxisUnit})`: plotOptions.yAxisUnit) || '';
+        let yAxisLabel = (this.useLog?`log${this.logBase}(${plotOptions.yAxisUnit})`: plotOptions.yAxisUnit) || '';
         let yAxisLabelFontSize = plotOptions.yAxisLabelFontSize || 11;
+        const adjust = this._getLogAdjustment();
 
         const svg = this._createSvg(rootId, width, height);
         const dom = svg.append('g').attr('id', 'gtex-viz-boxplot');
@@ -95,9 +97,9 @@ export default class Boxplot {
             .enter()
             .append('rect')
             .attr('x', (d) => scales.x(d.label) - scales.x.bandwidth()/2)
-            .attr('y', (d) => this.useLog?scales.y(d.q3 + 0.05) : scales.y(d.q3))
+            .attr('y', (d) => this.useLog?scales.y(d.q3 + adjust) : scales.y(d.q3))
             .attr('width', (d) => scales.x.bandwidth())
-            .attr('height', (d) => this.useLog?scales.y(d.q1 + 0.05) - scales.y(d.q3 + 0.05) : scales.y(d.q1) - scales.y(d.q3))
+            .attr('height', (d) => this.useLog?scales.y(d.q1 + adjust) - scales.y(d.q3 + adjust) : scales.y(d.q1) - scales.y(d.q3))
             .attr('fill', (d) => `#${d.color}`)
             .attr('stroke', '#aaa')
             .on('mouseover', (d, i) => {
@@ -116,9 +118,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.label) - scales.x.bandwidth()/2)
-            .attr('y1', (d) => this.useLog?scales.y(d.median + 0.05) : scales.y(d.median))
+            .attr('y1', (d) => this.useLog?scales.y(d.median + adjust) : scales.y(d.median))
             .attr('x2', (d) => scales.x(d.label) + scales.x.bandwidth()/2)
-            .attr('y2', (d) => this.useLog?scales.y(d.median + 0.05) : scales.y(d.median))
+            .attr('y2', (d) => this.useLog?scales.y(d.median + adjust) : scales.y(d.median))
             .attr('stroke', '#000')
             .attr('stroke-width', 2);
 
@@ -130,9 +132,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.label))
-            .attr('y1', (d) => this.useLog?scales.y(d.q3 + 0.05) : scales.y(d.q3))
+            .attr('y1', (d) => this.useLog?scales.y(d.q3 + adjust) : scales.y(d.q3))
             .attr('x2', (d) => scales.x(d.label))
-            .attr('y2', (d) => this.useLog?scales.y(d.upperBound + 0.05) : scales.y(d.upperBound))
+            .attr('y2', (d) => this.useLog?scales.y(d.upperBound + adjust) : scales.y(d.upperBound))
             .attr('stroke', '#aaa');
         dom.append('g')
             .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
@@ -141,9 +143,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.label) - scales.x.bandwidth()/4)
-            .attr('y1', (d) => this.useLog?scales.y(d.upperBound + 0.05) : scales.y(d.upperBound))
+            .attr('y1', (d) => this.useLog?scales.y(d.upperBound + adjust) : scales.y(d.upperBound))
             .attr('x2', (d) => scales.x(d.label) + scales.x.bandwidth()/4)
-            .attr('y2', (d) => this.useLog?scales.y(d.upperBound + 0.05) : scales.y(d.upperBound))
+            .attr('y2', (d) => this.useLog?scales.y(d.upperBound + adjust) : scales.y(d.upperBound))
             .attr('stroke', '#aaa');
 
         // render low whisker
@@ -154,9 +156,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.label))
-            .attr('y1', (d) => this.useLog?scales.y(d.q1 + 0.05) : scales.y(d.q1))
+            .attr('y1', (d) => this.useLog?scales.y(d.q1 + adjust) : scales.y(d.q1))
             .attr('x2', (d) => scales.x(d.label))
-            .attr('y2', (d) => this.useLog?scales.y(d.lowerBound + 0.05) : scales.y(d.lowerBound))
+            .attr('y2', (d) => this.useLog?scales.y(d.lowerBound + adjust) : scales.y(d.lowerBound))
             .attr('stroke', '#aaa');
         dom.append('g')
             .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
@@ -165,9 +167,9 @@ export default class Boxplot {
             .enter()
             .append('line')
             .attr('x1', (d) => scales.x(d.label) - scales.x.bandwidth()/4)
-            .attr('y1', (d) => this.useLog?scales.y(d.lowerBound + 0.05) : scales.y(d.lowerBound))
+            .attr('y1', (d) => this.useLog?scales.y(d.lowerBound + adjust) : scales.y(d.lowerBound))
             .attr('x2', (d) => scales.x(d.label) + scales.x.bandwidth()/4)
-            .attr('y2', (d) => this.useLog?scales.y(d.lowerBound + 0.05) : scales.y(d.lowerBound))
+            .attr('y2', (d) => this.useLog?scales.y(d.lowerBound + adjust) : scales.y(d.lowerBound))
             .attr('stroke', '#aaa');
 
         // render outliers
@@ -182,7 +184,7 @@ export default class Boxplot {
                 .enter()
                 .append('circle')
                 .attr('cx', (d) => scales.x(d.label))
-                .attr('cy', (d) => this.useLog?scales.y(d.val + 0.05) : scales.y(d.val))
+                .attr('cy', (d) => this.useLog?scales.y(d.val + adjust) : scales.y(d.val))
                 .attr('r', '2')
                 .attr('stroke', '#aaa')
                 .attr('fill', 'none');
@@ -220,9 +222,11 @@ export default class Boxplot {
         let yScale;
 
         if (this.useLog) {
+            const adjust = this._getLogAdjustment();
             yScale = scaleLog()
-            .domain(extent(this.allVals).map(d => d+0.05)) // +.05 for 0's
-            .range([innerHeight, 0]);
+            .domain(extent(this.allVals).map(d => d + adjust))
+            .range([innerHeight, 0])
+            .base(this.logBase);
         } else {
             yScale = scaleLinear()
             .domain(extent(this.allVals))
@@ -233,5 +237,9 @@ export default class Boxplot {
             x: xScale,
             y: yScale
         };
+    }
+
+    _getLogAdjustment() {
+        return 1;
     }
 }
