@@ -30,11 +30,6 @@ export default class BubbleMap {
         this.tooltip = new Tooltip(tooltipId);
         select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
 
-        // Tooltip
-        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
-        this.tooltip = new Tooltip(tooltipId);
-        select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
-
         this.toolbar = undefined;
     }
 

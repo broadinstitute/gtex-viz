@@ -14,6 +14,7 @@ import {scaleBand, scaleLinear} from "d3-scale";
 export default class HalfMap{
     constructor(data, cutoff = 0.0, useLog=true, logBase=10, colorScheme="Greys", tooltipId="tooltip"){
         this.data= data;
+        this.dataDict = this._generateDataDict(data);
         this.cutoff = cutoff;
         console.log(this.data);
         this.useLog = useLog;
@@ -29,7 +30,7 @@ export default class HalfMap{
         //// the tooltip
         if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
         this.tooltip = new Tooltip(tooltipId);
-        select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
+        select(`#${tooltipId}`).classed('half-map-tooltip', true);
     }
 
     draw(canvas, svg, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], showLabels=true, labelAngle=90){
@@ -91,11 +92,9 @@ export default class HalfMap{
             .style("fill", "none")
             .style("display", 'none');
 
-        let xScale = this.xScale;
-        let yScale = this.yScale;
         select(svg.node().parentNode)
-            // .style("cursor", "none")
-            .on('mousemove', function(){
+            .style("cursor", "none")
+            .on('mousemove', () => {
                 let pos = mouse(svg.node()); // retrieve the mouse position relative to the SVG element
                 let x = pos[0];
                 let y = pos[1];
@@ -105,13 +104,22 @@ export default class HalfMap{
 
                 // find the colliding cell's coordinates (before transformation)
                 let radian = Math.PI*(45/180); // the radian at 45 degree angle
-                let x0 = x*Math.cos(radian) - y*Math.sin(radian) + xScale.step()/2;
-                let y0 = x*Math.sin(radian) + y*Math.cos(radian) - yScale.step()/2;
-                let i = Math.floor(x0/xScale.step());
-                let j = Math.floor((y0)/yScale.step());
-                // console.log([x, y]);
-                console.log([i, j, xScale.domain()[i], yScale.domain()[j]]);
-            });
+                let x0 = x*Math.cos(radian) - y*Math.sin(radian) + this.xScale.step()/2;
+                let y0 = x*Math.sin(radian) + y*Math.cos(radian) - this.yScale.step()/2;
+                let i = Math.floor(x0/this.xScale.step());
+                let j = Math.floor((y0)/this.yScale.step());
+                // show tooltip
+                let col = this.xScale.domain()[i];
+                let row = this.yScale.domain()[j];
+                // console.log([i, j, col+row])
+                // console.log(dict[col+row]);
+                if (this.dataDict[col+row] !== undefined) this.tooltip.show(`${col} <-> ${row}<br/> Value: ${this.dataDict[col+row].displayValue}`);
+
+            })
+            .on('mouseout', () => {
+                cursor.style("display", "none");
+                this.tooltip.hide();
+            })
     }
 
     /**
@@ -142,6 +150,20 @@ export default class HalfMap{
             if (d.value < cutoff) return false;
             return true;
         });
+    }
+
+    /**
+     * Generate a data dictionary indexed by x and y, for fast data look up
+     * @param data {List}: a list of objects with attributes x and y
+     * @private
+     */
+    _generateDataDict(data){
+        let dict = {};
+        data.forEach((d)=>{
+            dict[d.x+d.y] = d;
+            dict[d.y+d.x] = d;
+        });
+        return dict;
     }
 
     _setScales(dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1]){
