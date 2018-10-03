@@ -46,7 +46,7 @@ export default class Boxplot {
             bottom: plotOptions.marginBottom || 150,
             left: plotOptions.marginLeft || 40
         };
-        let padding = plotOptions.padding || 2;
+        let padding = plotOptions.padding || 0.15;
         let xAxisFontSize = plotOptions.xAxisFontSize || 11;
         let xAxisLabel = plotOptions.xAxisLabel || '';
         let xAxisLabelFontSize = plotOptions.xAxisLabelFontSize || 11;
@@ -56,13 +56,13 @@ export default class Boxplot {
 
         const svg = this._createSvg(rootId, width, height);
         const dom = svg.append('g').attr('id', 'gtex-viz-boxplot');
-        let scales = this._setScales(width - (margins.left + margins.right), height - (margins.top + margins.bottom));
+        let scales = this._setScales(width - (margins.left + margins.right), height - (margins.top + margins.bottom), padding);
         let xAxis = axisBottom(scales.x);
         let yAxis = axisLeft(scales.y);
 
         // render x-axis
         dom.append('g')
-            .attr('transform', `translate(${margins.left + scales.x.step()/2}, ${height - margins.bottom})`)
+            .attr('transform', `translate(${margins.left + scales.x.bandwidth()/2}, ${height - margins.bottom})`)
             .call(xAxis)
             .attr('text-anchor', 'start')
             .selectAll('text')
@@ -70,7 +70,7 @@ export default class Boxplot {
             .attr('font-size', xAxisFontSize);
         // x-axis label
         dom.append('text')
-            .attr('transform', `translate(${margins.left + width/2 + scales.x.step()/2}, ${height - xAxisLabelFontSize/2})`)
+            .attr('transform', `translate(${margins.left + width/2 + scales.x.bandwidth()/2}, ${height - xAxisLabelFontSize/2})`)
             .style('text-anchor', 'middle')
             .style('font-size', xAxisLabelFontSize)
             .text(xAxisLabel);
@@ -89,14 +89,14 @@ export default class Boxplot {
 
         // render IQR box
         dom.append('g')
-            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('rect')
             .data(this.boxplotData)
             .enter()
             .append('rect')
-            .attr('x', (d) => scales.x(d.label) - scales.x.step()/2 + padding/2)
+            .attr('x', (d) => scales.x(d.label) - scales.x.bandwidth()/2)
             .attr('y', (d) => this.useLog?scales.y(d.q3 + 0.05) : scales.y(d.q3))
-            .attr('width', (d) => scales.x.step() - padding)
+            .attr('width', (d) => scales.x.bandwidth())
             .attr('height', (d) => this.useLog?scales.y(d.q1 + 0.05) - scales.y(d.q3 + 0.05) : scales.y(d.q1) - scales.y(d.q3))
             .attr('fill', (d) => `#${d.color}`)
             .attr('stroke', '#aaa')
@@ -110,21 +110,21 @@ export default class Boxplot {
 
         // render median
         dom.append('g')
-            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('line')
             .data(this.boxplotData)
             .enter()
             .append('line')
-            .attr('x1', (d) => scales.x(d.label) - scales.x.step()/2 + padding/2)
+            .attr('x1', (d) => scales.x(d.label) - scales.x.bandwidth()/2)
             .attr('y1', (d) => this.useLog?scales.y(d.median + 0.05) : scales.y(d.median))
-            .attr('x2', (d) => scales.x(d.label) + scales.x.step()/2 - padding/2)
+            .attr('x2', (d) => scales.x(d.label) + scales.x.bandwidth()/2)
             .attr('y2', (d) => this.useLog?scales.y(d.median + 0.05) : scales.y(d.median))
             .attr('stroke', '#000')
             .attr('stroke-width', 2);
 
         // render high whisker
         dom.append('g')
-            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('line')
             .data(this.boxplotData)
             .enter()
@@ -135,20 +135,20 @@ export default class Boxplot {
             .attr('y2', (d) => this.useLog?scales.y(d.upperBound + 0.05) : scales.y(d.upperBound))
             .attr('stroke', '#aaa');
         dom.append('g')
-            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('line')
             .data(this.boxplotData)
             .enter()
             .append('line')
-            .attr('x1', (d) => scales.x(d.label) - scales.x.step()/4)
+            .attr('x1', (d) => scales.x(d.label) - scales.x.bandwidth()/4)
             .attr('y1', (d) => this.useLog?scales.y(d.upperBound + 0.05) : scales.y(d.upperBound))
-            .attr('x2', (d) => scales.x(d.label) + scales.x.step()/4)
+            .attr('x2', (d) => scales.x(d.label) + scales.x.bandwidth()/4)
             .attr('y2', (d) => this.useLog?scales.y(d.upperBound + 0.05) : scales.y(d.upperBound))
             .attr('stroke', '#aaa');
 
         // render low whisker
         dom.append('g')
-            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('line')
             .data(this.boxplotData)
             .enter()
@@ -159,20 +159,20 @@ export default class Boxplot {
             .attr('y2', (d) => this.useLog?scales.y(d.lowerBound + 0.05) : scales.y(d.lowerBound))
             .attr('stroke', '#aaa');
         dom.append('g')
-            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('line')
             .data(this.boxplotData)
             .enter()
             .append('line')
-            .attr('x1', (d) => scales.x(d.label) - scales.x.step()/4)
+            .attr('x1', (d) => scales.x(d.label) - scales.x.bandwidth()/4)
             .attr('y1', (d) => this.useLog?scales.y(d.lowerBound + 0.05) : scales.y(d.lowerBound))
-            .attr('x2', (d) => scales.x(d.label) + scales.x.step()/4)
+            .attr('x2', (d) => scales.x(d.label) + scales.x.bandwidth()/4)
             .attr('y2', (d) => this.useLog?scales.y(d.lowerBound + 0.05) : scales.y(d.lowerBound))
             .attr('stroke', '#aaa');
 
         // render outliers
         dom.append('g')
-            .attr('transform', `translate(${margins.left + scales.x.step()}, ${margins.top})`)
+            .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('g')
             .data(this.boxplotData)
             .enter()
@@ -196,7 +196,7 @@ export default class Boxplot {
 
     boxplotMouseover(d, dom, selected) {
         this.tooltip.show(`${d.label}<br/>
-                           ${this.useLog?'Log10(Median TPM)' : 'Median TPM'}: ${d.median.toPrecision(4)}<br/>
+                           ${this.useLog?'Log10(Median TPM)' : 'Median TPM'}: ${d.median.toPrecision(3)}<br/>
                            Number of Samples: ${d.data.length}`);
     }
 
@@ -211,10 +211,11 @@ export default class Boxplot {
         return svg;
     }
 
-    _setScales(innerWidth, innerHeight) {
+    _setScales(innerWidth, innerHeight, padding=0) {
         let xScale = scaleBand()
             .domain(this.boxplotData.map(d => d.label))
-            .range([0, innerWidth]);
+            .range([0, innerWidth])
+            .paddingInner(padding);
 
         let yScale;
 
