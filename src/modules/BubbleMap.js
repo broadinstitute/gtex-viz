@@ -19,8 +19,6 @@ export default class BubbleMap {
         this.colorScheme = colorScheme;
 
         // initiates additional attributes
-        // this.xList = undefined;
-        // this.yList = undefined;
         this.xScale = undefined;
         this.yScale = undefined;
         this.colorScale = undefined;
@@ -32,14 +30,18 @@ export default class BubbleMap {
         this.tooltip = new Tooltip(tooltipId);
         select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
 
-        // Tooltip
-        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
-        this.tooltip = new Tooltip(tooltipId);
-        select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
-
         this.toolbar = undefined;
     }
 
+    /**
+     * Render the bubble map in canvas
+     * @param canvas {OBJECT}: the canvas DOM D3 select object
+     * @param dimensions {OBJECT}: the plot's dimensions
+     * @param colorScaleDomain {LIST} define the color scale domain()
+     * @param showLabels {Boolean}
+     * @param columnLabelAngle {Integer}
+     * @param columnLabelPosAdjust {Integer}
+     */
     drawCanvas(canvas, dimensions={w:1000, h:600, top:20, left:20}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
         this._setScales(dimensions, colorScaleDomain);
 
@@ -52,11 +54,11 @@ export default class BubbleMap {
 
         // bubbles
         this.data.forEach((d)=>{
-            context.beginPath();
+            // context.beginPath();
             context.fillStyle = this.colorScale(d.value);
             context.arc(this.xScale(d.x) + this.xScale.bandwidth()/2, this.yScale(d.y), this.bubbleScale(d.r), 0, 2*Math.PI);
             context.fill();
-            context.closePath();
+            // context.closePath();
         });
 
         // text labels

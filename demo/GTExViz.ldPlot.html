@@ -5,15 +5,14 @@
               integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M"
               crossorigin="anonymous">
         <link href="https://fonts.googleapis.com/css?family=EB+Garamond|Libre+Franklin|Open+Sans|Roboto|Zilla+Slab" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/css/expressMap.css">
+        <link rel="stylesheet" type="text/css" href="/css/halfMap.css">
     </head>
     <body class="container-fluid" style="margin-top:20px;">
         <div>
             <h3>GTExViz Demos</h3>
             <div>
-                <h5>GTEx Heatmap</h5>
-                <div id="gtexVizHeatmap"></div>
-                <div id="userHeatmap"></div>
+                <h5>GTEx Half Map</h5>
+                <div id="gtexVizLdPlot"></div>
             </div>
         </div>
     </body>
@@ -25,46 +24,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
 
-    <script src="/build/js/gtex-viz.bundle.min.js"></script>
+    <script src="/build/js/gtex-viz.bundle.dev.js"></script>
     <script>
-        let data = generateRandomMatrix({x:50, y:6, scaleFactor:100});
-        // console.log(JSON.stringify(data));
-
-        GTExViz.heatmap();
-        GTExViz.heatmap({
-            id: 'userHeatmap',
+        let data = generateRandomMatrix({x:50, y:50, scaleFactor:1});
+        const ldPlotDemoConfig = {
+            id: 'gtexVizLdPlot',
             data: data,
-            useLog: false,
-            logBase: null,
-            width: 800,
-            height: 200,
-            marginLeft: 20,
-            marginRight: 40,
-            marginTop: 50,
-            marginBottom: 50,
-            colorScheme: "Reds",
-            cornerRadius: 2,
-            columnLabelHeight: 20,
-            columnLabelAngle: 60,
-            columnLabelPosAdjust: 10,
-            rowLabelWidth: 100,
+            cutoff: 0.0,
+            width: 1000, // outer width
+            marginLeft: 0,
+            marginTop: 0,
+            marginRight: 20,
+            marginBottom: 20,
+            labelHeight: 50,
 
-        });
-        function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}){
+            colorScheme: "Greys",
+            legendSpace: 50,
+            useLog: false,
+            logBase: undefined,
+            showLabels: true,
+            labelAngle: 45
+        };
+        GTExViz.ldPlot(ldPlotDemoConfig);
+
+        function generateRandomMatrix(par={x:2, y:2, scaleFactor:1}){
             let range = n => Array.from(Array(n).keys());
             let X = range(par.x); // generates a 1-based list.
             let Y = range(par.y);
             let data = [];
             X.forEach((x)=>{
-                x = 'col ' + x.toString();
+                x = 'var ' + x.toString();
                 Y.forEach((y)=>{
-                    y = 'row ' + y.toString();
+                    y = 'var ' + y.toString();
                     let v = Math.random()*par.scaleFactor;
                     let dataPoint = {
                         x: x,
                         y: y,
-                        value: v,
-                        displayValue: v.toPrecision(3)
+                        value: x==y?1:v,
+                        displayValue: x==y?1:v.toPrecision(3)
                     };
                     data.push(dataPoint);
                 })
