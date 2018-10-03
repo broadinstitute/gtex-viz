@@ -22,7 +22,6 @@ export function checkDomId(id){
         alert(error);
         throw error;
     }
-    console.log('passed!');
 }
 
 /**
@@ -34,7 +33,7 @@ export function checkDomId(id){
  * @param canvasId {String}
  * @returns {*}
  */
-export function createCanvas(id, width, height, margin, canvasId=undefined){
+export function createCanvas(id, width, height, margin, canvasId=undefined, position="absolute"){
     checkDomId(id);
     if(canvasId===undefined) canvasId=`${id}-canvas`;
     return select(`#${id}`)
@@ -42,7 +41,7 @@ export function createCanvas(id, width, height, margin, canvasId=undefined){
         .attr('id', canvasId)
         .attr("width", width)
         .attr("height", height)
-        .style("position", "relative")
+        .style("position", position) // TODO: should the position be user-defined? relative vs absolute
 }
 
 /**
@@ -54,13 +53,14 @@ export function createCanvas(id, width, height, margin, canvasId=undefined){
  * @param svgId {String}
  * @returns {*}
  */
-export function createSvg(id, width, height, margin, svgId=undefined){
+export function createSvg(id, width, height, margin, svgId=undefined, position="relative"){
     checkDomId(id);
     if (svgId===undefined) svgId=`${id}-svg`;
     return select("#"+id).append("svg")
         .attr("width", width)
         .attr("height", height)
         .attr("id", svgId)
+        .style("position", position)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
 }

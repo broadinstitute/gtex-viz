@@ -17,6 +17,7 @@ import DendroHeatmap from "./modules/DendroHeatmap";
 import GroupedViolin from "./modules/GroupedViolin";
 import IsoformTrackViewer from "./modules/IsoformTrackViewer";
 import BubbleMap from "./modules/BubbleMap";
+import HalfMap from "./modules/HalfMap";
 
 export const demoData = {
     heatmap:generateRandomMatrix({x:50, y:10, scaleFactor:1000}),
@@ -242,8 +243,43 @@ export const demoData = {
             }
         ]
     },
-    bubbleMap:generateRandomMatrix({x:50, y:10, scaleFactor: 1, diverging: true, bubble: true})
+    bubbleMap:generateRandomMatrix({x:50, y:10, scaleFactor: 1, diverging: true, bubble: true}),
+    ldPlot: generateRandomMatrix({x:2, y:2, scaleFactor: 1})
 };
+
+const ldPlotDemoConfig = {
+    id: 'gtexVizLdPlot',
+    data: demoData.ldPlot,
+    cutoff: 0.0,
+    width: 1000, // outer width
+    marginLeft: 100,
+    marginRight: 200,
+    marginTop: 20,
+    marginBottom: 100,
+    colorScheme: "Greys",
+    labelHeight: 20,
+    showLabels: true,
+    labelAngle: 30,
+    legendSpace: 50,
+    useLog: false,
+    logBase: undefined
+};
+export function ldPlot(par=ldPlotDemoConfig){
+    let margin = {
+        left: par.marginLeft,
+        top: par.showLabels?par.marginTop+par.labelHeight:par.marginTop,
+        right: par.marginRight,
+        bottom: par.marginBottom
+    };
+    let inWidth = par.width - (par.marginLeft + par.marginRight);
+    let inHeight = par.width - (par.marginTop + par.marginBottom);
+    inWidth = inWidth>inHeight?inHeight:inWidth; // adjust the dimensions based on the minimum required space
+    let ldCanvas = new HalfMap(par.data, par.cutoff, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
+    let canvas = createCanvas(par.id, par.width, par.width, margin);
+    let svg = createSvg(par.id, par.width, par.width, margin, undefined, "absolute");
+    ldCanvas.draw(canvas, svg, {w:inWidth, top: margin.top, left: margin.left}, [0, 1], par.showLabels, par.labelAngle);
+    ldCanvas.drawColorLegend(svg, {x: 0, y: 100}, 10, "Value");
+}
 
 const transcriptTracksConfig = {
     id: 'gtexTranscriptTracks',
@@ -256,7 +292,6 @@ const transcriptTracksConfig = {
     marginBottom: 20,
     labelPos: 'left'
 };
-
 export function transcriptTracks(par=transcriptTracksConfig){
     let margin = {
         top: par.marginTop,
@@ -307,7 +342,6 @@ const bubblemapDemoConfig = {
     colorScaleDomain: [-0.75, 0.75],
     useCanvas: false
 };
-
 export function bubblemap(par=bubblemapDemoConfig){
     let margin = {
         left: par.showLabels?par.marginLeft + par.rowLabelWidth: par.marginLeft,
@@ -350,7 +384,6 @@ const heatmapDemoConfig = {
     useLog: true,
     logBase: 10
 };
-
 /**
  * Render a 2D Heatmap
  * @param params
@@ -399,7 +432,6 @@ const dendroHeatmapDemoConfig = {
     rowLabelWidth: 200,
     legendSpace: 50
 };
-
 /**
  * Render a DendroHeatmap
  * @param par
