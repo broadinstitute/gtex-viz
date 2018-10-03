@@ -16,7 +16,6 @@ export default class HalfMap{
         this.data= data;
         this.dataDict = {};
         this.cutoff = cutoff;
-        console.log(this.data);
         this.useLog = useLog;
         this.logBase = logBase;
         this.colorScheme = colorScheme;
@@ -100,7 +99,11 @@ export default class HalfMap{
             .style("stroke-width", 1)
             .style("fill", "none")
             .style("display", 'none');
-
+        svg.on('mouseout', ()=>{
+            cursor.style("display", "none");
+            this.tooltip.hide();
+            svg.selectAll('.half-map-label').classed('highlighted', false);
+        });
         select(svg.node().parentNode)
             .style("cursor", "none")
             .on('mousemove', () => {
@@ -108,26 +111,39 @@ export default class HalfMap{
                 let x = pos[0];
                 let y = pos[1];
 
-                cursor.attr('transform', `translate(${x},${y}) rotate(-45)`);
-                cursor.style("display", "block");
-
                 // find the colliding cell's coordinates (before transformation)
                 let radian = Math.PI*(45/180); // the radian at 45 degree angle
                 let x2 = x*Math.cos(radian) - y*Math.sin(radian) + this.xScale.step()/2;
                 let y2 = x*Math.sin(radian) + y*Math.cos(radian) - this.yScale.step()/2;
+                if (x < 0 || y<0 || x2 < 0 || y2<0) {
+                    this.tooltip.hide();
+                    cursor.style("display", "none");
+                    return;
+                }
                 let i = Math.floor(x2/this.xScale.step());
                 let j = Math.floor((y2)/this.yScale.step());
                 // show tooltip
                 let col = this.xScale.domain()[i];
                 let row = this.yScale.domain()[j];
                 let cell = this.dataDict[col+row];
+                // console.log([x, y, x2, y2, col, row]) // debugging
                 if (cell !== undefined) {
-                    this.tooltip.show(`${col} <-> ${row}<br/> Value: ${cell.displayValue}`);
+
+                    cursor.attr('transform', `translate(${x},${y}) rotate(-45)`);
+                    cursor.style("display", "block");
+
+                    this.tooltip.show(`${col}<br/> ${row}<br/> Value: ${cell.displayValue}`);
+                    if(showLabels){
+                        svg.selectAll('.half-map-label').classed('highlighted', false); // clear previous highlighted labels
+                        svg.select(`.l${i}`).classed('highlighted', true);
+                        svg.select(`.l${j}`).classed('highlighted', true);
+                    }
                 }
             })
             .on('mouseout', () => {
                 cursor.style("display", "none");
                 this.tooltip.hide();
+                svg.selectAll('.half-map-label').classed('highlighted', false);
             })
     }
 
