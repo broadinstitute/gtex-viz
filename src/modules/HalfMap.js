@@ -14,7 +14,7 @@ import {scaleBand, scaleLinear} from "d3-scale";
 export default class HalfMap{
     constructor(data, cutoff = 0.0, useLog=true, logBase=10, colorScheme="Greys", tooltipId="tooltip"){
         this.data= data;
-        this.dataDict = this._generateDataDict(data);
+        this.dataDict = {};
         this.cutoff = cutoff;
         console.log(this.data);
         this.useLog = useLog;
@@ -57,9 +57,16 @@ export default class HalfMap{
         visibleData.forEach((d)=>{
             let x = this.xScale(d.x);
             let y = this.yScale(d.y);
+            d.color = this.colorScale(d.value);
             context.fillStyle = this.colorScale(d.value);
+            // console.log(d);
             context.fillRect(x, y, this.xScale.bandwidth(), this.yScale.bandwidth());
+            context.textAlign = 'left';
+            context.fillStyle = 'white';
+            context.font = '10px Open Sans';
+            context.fillText(d.x+' '+d.y, x+10, y+10);
         });
+        this.dataDict = this._generateDataDict(visibleData);
         context.restore();
     }
 
@@ -75,18 +82,19 @@ export default class HalfMap{
                 .style("text-anchor", "start")
                 .style("cursor", "none")
                 .attr("transform", (d) => {
-                    let x = this.labelScale(d) + 5; // TODO: remove hard-coded value
+                    let x = this.labelScale(d) + this.labelScale.step()/2; // TODO: remove hard-coded value
                     let y = -5;
                     return `translate(${x}, ${y}) rotate(-${labelAngle})`;
                 })
                 .text((d)=>d)
         }
 
-        let cursor = svg.append('circle')
+        let cursor = svg.append('rect')
             .attr('class', 'half-map-cursor')
-            .attr("cx", 0)
-            .attr("cy", 0)
-            .attr("r", 0.8*this.xScale.bandwidth()/2)
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", this.xScale.bandwidth())
+            .attr("height", this.yScale.bandwidth())
             .style("stroke", "#d2111b")
             .style("stroke-width", 1)
             .style("fill", "none")
@@ -99,21 +107,25 @@ export default class HalfMap{
                 let x = pos[0];
                 let y = pos[1];
 
-                cursor.attr('transform', `translate(${x},${y})`);
+                cursor.attr('transform', `translate(${x},${y}) rotate(-45)`);
                 cursor.style("display", "block");
 
                 // find the colliding cell's coordinates (before transformation)
                 let radian = Math.PI*(45/180); // the radian at 45 degree angle
-                let x0 = x*Math.cos(radian) - y*Math.sin(radian) + this.xScale.step()/2;
-                let y0 = x*Math.sin(radian) + y*Math.cos(radian) - this.yScale.step()/2;
-                let i = Math.floor(x0/this.xScale.step());
-                let j = Math.floor((y0)/this.yScale.step());
+                let x2 = x*Math.cos(radian) - y*Math.sin(radian) + this.xScale.step()/2;
+                let y2 = x*Math.sin(radian) + y*Math.cos(radian) - this.yScale.step()/2;
+                let i = Math.floor(x2/this.xScale.step());
+                let j = Math.floor((y2)/this.yScale.step());
                 // show tooltip
                 let col = this.xScale.domain()[i];
                 let row = this.yScale.domain()[j];
+                let cell = this.dataDict[col+row];
                 // console.log([i, j, col+row])
                 // console.log(dict[col+row]);
-                if (this.dataDict[col+row] !== undefined) this.tooltip.show(`${col} <-> ${row}<br/> Value: ${this.dataDict[col+row].displayValue}`);
+                if (cell !== undefined) {
+                    // console.log(cell)
+                    this.tooltip.show(`${col} <-> ${row}<br/> Value: ${cell.displayValue}`);
+                }
 
             })
             .on('mouseout', () => {
