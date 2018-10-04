@@ -20,7 +20,7 @@ export function render(geneId, rootDivId, spinnerId, urls = getGtexUrls()){
             json(urls.singleTissueEqtl + gene.gencodeId)
                 .then(function(data2){
                     let eqtls = parseSingleTissueEqtls(data2);
-                    let gevConfig = {
+                    let gevCanvasConfig = {
                         id: rootDivId,
                         data: eqtls,
                         width: 2000, //window.innerWidth*0.9,
@@ -29,7 +29,7 @@ export function render(geneId, rootDivId, spinnerId, urls = getGtexUrls()){
                         marginRight: 100,
                         marginBottom: 30,
                         marginLeft: 30,
-                        showLabels: true,
+                        showLabels: false,
                         rowLabelWidth: 150,
                         columnLabelHeight: 100,
                         columnLabelAngle: 90,
@@ -38,9 +38,14 @@ export function render(geneId, rootDivId, spinnerId, urls = getGtexUrls()){
                         logBase: 10,
                         colorScheme: "RdBu", // a diverging color scheme
                         colorScaleDomain: [-0.75, 0.75],
-                        useCanvas: false
+                        useCanvas: true
                     };
-                    renderBubbleMap(gevConfig);
+
+                    renderBubbleMap(gevCanvasConfig);
+                    let gevSvgConfig = gevCanvasConfig;
+                    gevSvgConfig.showLabels = true;
+                    gevSvgConfig.useCanvas = false;
+                    // renderBubbleMap(gevSvgConfig);
                     $('#' + spinnerId).hide();
                 })
         })
@@ -62,9 +67,9 @@ export function renderBubbleMap(par){
         if ($(`#${svgId}`).length == 0) $('<div/>').attr('id', svgId).appendTo($(`#${par.id}`));
         if ($(`#${canvasId}`).length == 0) $('<div/>').attr('id', canvasId).appendTo($(`#${par.id}`));
 
-        let bmapSvg = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, svgId+"-tooltip");
-        let svg = createSvg(svgId, par.width, par.height, margin);
-        bmapSvg.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
+        // let bmapSvg = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, svgId+"-tooltip");
+        // let svg = createSvg(svgId, par.width, par.height, margin);
+        // bmapSvg.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
 
         let bmapCanvas = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, canvasId+"-tooltip");
         let canvas = createCanvas(canvasId, par.width, par.height, margin);

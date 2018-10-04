@@ -51,14 +51,13 @@ export default class BubbleMap {
         context.fillStyle = '#ffffff';
         context.rect(0,0,canvas.attr('width'), canvas.attr('height'));
         context.fill();
-
         // bubbles
         this.data.forEach((d)=>{
-            // context.beginPath();
+            context.beginPath();
             context.fillStyle = this.colorScale(d.value);
             context.arc(this.xScale(d.x) + this.xScale.bandwidth()/2, this.yScale(d.y), this.bubbleScale(d.r), 0, 2*Math.PI);
             context.fill();
-            // context.closePath();
+            context.closePath();
         });
 
         // text labels
