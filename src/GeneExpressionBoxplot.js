@@ -29,7 +29,7 @@ export function launch(rootId, gencodeId, urls=getGtexUrls()) {
                 rootId: rootId,
                 tooltipId: 'boxplot-tooltip'
             };
-            let boxplot = new Boxplot(boxplotData, true);
+            let boxplot = new Boxplot(boxplotData);
             let plotOptions = {
                 width: 1000,
                 height: 600,
