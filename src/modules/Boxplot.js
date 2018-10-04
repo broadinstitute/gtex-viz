@@ -64,6 +64,7 @@ export default class Boxplot {
 
         // render x-axis
         dom.append('g')
+            .attr('class', 'boxplot-x-axis')
             .attr('transform', `translate(${margins.left + scales.x.bandwidth()/2}, ${height - margins.bottom})`)
             .call(xAxis)
             .attr('text-anchor', 'start')
@@ -79,6 +80,7 @@ export default class Boxplot {
 
         // render y-axis
         dom.append('g')
+            .attr('class', 'boxplot-y-axis')
             .attr('transform', `translate(${margins.left}, ${margins.top})`)
             .call(yAxis)
             .attr('font-size', yAxisFontSize);
@@ -91,6 +93,7 @@ export default class Boxplot {
 
         // render IQR box
         dom.append('g')
+            .attr('class', 'boxplot-iqr')
             .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('rect')
             .data(this.boxplotData)
@@ -113,6 +116,7 @@ export default class Boxplot {
 
         // render median
         dom.append('g')
+            .attr('class', 'boxplot-median')
             .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('line')
             .data(this.boxplotData)
@@ -125,8 +129,10 @@ export default class Boxplot {
             .attr('stroke', '#000')
             .attr('stroke-width', 2);
 
+        let whiskers = dom.append('g')
+            .attr('class', 'boxplot-whisker');
         // render high whisker
-        dom.append('g')
+        whiskers.append('g')
             .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('line')
             .data(this.boxplotData)
@@ -137,7 +143,7 @@ export default class Boxplot {
             .attr('x2', (d) => scales.x(d.label))
             .attr('y2', (d) => this.useLog?scales.y(d.upperBound + adjust) : scales.y(d.upperBound))
             .attr('stroke', '#aaa');
-        dom.append('g')
+        whiskers.append('g')
             .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('line')
             .data(this.boxplotData)
@@ -150,7 +156,7 @@ export default class Boxplot {
             .attr('stroke', '#aaa');
 
         // render low whisker
-        dom.append('g')
+        whiskers.append('g')
             .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('line')
             .data(this.boxplotData)
@@ -161,7 +167,7 @@ export default class Boxplot {
             .attr('x2', (d) => scales.x(d.label))
             .attr('y2', (d) => this.useLog?scales.y(d.lowerBound + adjust) : scales.y(d.lowerBound))
             .attr('stroke', '#aaa');
-        dom.append('g')
+        whiskers.append('g')
             .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('line')
             .data(this.boxplotData)
@@ -175,6 +181,7 @@ export default class Boxplot {
 
         // render outliers
         dom.append('g')
+            .attr('class', 'boxplot-outliers')
             .attr('transform', `translate(${margins.left + scales.x.bandwidth()}, ${margins.top})`)
             .selectAll('g')
             .data(this.boxplotData)
