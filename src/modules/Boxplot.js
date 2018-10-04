@@ -102,12 +102,13 @@ export default class Boxplot {
             .attr('height', (d) => this.useLog?scales.y(d.q1 + adjust) - scales.y(d.q3 + adjust) : scales.y(d.q1) - scales.y(d.q3))
             .attr('fill', (d) => `#${d.color}`)
             .attr('stroke', '#aaa')
-            .on('mouseover', (d, i) => {
-                let selectedDom = select(this);
-                this.boxplotMouseover(d, rootId, selectedDom);
+            .on('mouseover', (d, i, nodes) => {
+                let selectedDom = select(nodes[i]);
+                this.boxplotMouseover(d, selectedDom);
             })
-            .on('mouseout', (d, i) => {
-                this.boxplotMouseout();
+            .on('mouseout', (d, i, nodes) => {
+                let selectedDom = select(nodes[i]);
+                this.boxplotMouseout(d, selectedDom);
             });
 
         // render median
@@ -196,14 +197,18 @@ export default class Boxplot {
         select(`#${tooltipDomId}`).attr('class', 'boxplot-tooltip');
     }
 
-    boxplotMouseover(d, dom, selected) {
-        this.tooltip.show(`${d.label}<br/>
-                           ${this.useLog?'Log10(Median TPM)' : 'Median TPM'}: ${d.median.toPrecision(3)}<br/>
-                           Number of Samples: ${d.data.length}`);
+    boxplotMouseover(d, selected) {
+        if (this.tooltip !== undefined) {
+            this.tooltip.show(`${d.label}<br/>
+            ${this.useLog?'Log10(Median TPM)' : 'Median TPM'}: ${d.median.toPrecision(3)}<br/>
+            Number of Samples: ${d.data.length}`);
+        }
+        selected.classed('highlighted', true);
     }
 
-    boxplotMouseout() {
+    boxplotMouseout(d, selected) {
         if (this.tooltip !== undefined) this.tooltip.hide();
+        selected.classed('highlighted', false);
     }
 
     _createSvg(rootId, width, height) {
