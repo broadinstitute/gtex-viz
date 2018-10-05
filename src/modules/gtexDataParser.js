@@ -29,6 +29,9 @@ export function getGtexUrls(){
         // gene expression heat map specific
         medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&pageSize=10000',
 
+        // gene expression boxplot specific
+        geneExpBoxplot: host + 'expression/geneExpression?datasetId=gtex_v7&boxplotDetail=full&gencodeId=',
+
         // top expressed gene expression specific
         topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
         topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v7&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
@@ -496,5 +499,30 @@ export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined
         d.label = d.geneSymbol;
         d.color = colors===undefined?'#90c1c1':colors[d.gencodeId];
     });
+    return data[attr];
+}
+
+/**
+ * parse the expression data of a gene for boxplot
+ * @param data {JSON} from GTEx gene expression web service
+ * @param tissues {Object} mapping of tissue ids to labels (tissue name)
+ * @param colors {Object} mapping of tissue ids to boxplot colors
+ */
+export function parseGeneExpressionForBoxplot(data, tissues=undefined, colors=undefined) {
+    const attr = 'geneExpression';
+
+    if(!data.hasOwnProperty(attr)) throw(`Parsing error: required JSON attribute ${attr} missing.`);
+
+    data[attr].forEach((d)=>{
+        ['data', 'gencodeId', 'geneSymbol', 'tissueSiteDetailId'].forEach((k)=>{
+            if (!d.hasOwnProperty(k)) {
+                console.error(d);
+                throw `Parsing error: required JSON attribute ${k} is missing from a record.`;
+            }
+        });
+        d.label = tissues===undefined?d.tissueSiteDetailId:tissues[d.tissueSiteDetailId];
+        d.color = colors===undefined?'#4682b4':colors[d.tissueSiteDetailId];
+    });
+
     return data[attr];
 }
