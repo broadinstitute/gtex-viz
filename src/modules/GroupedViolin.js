@@ -193,11 +193,9 @@ export default class GroupedViolin {
 
         // adds the text label for the y axis
         dom.append("text")
-            .attr("y", -40) // todo: avoid hard-coded value
-            .attr("x", -100)
             .attr("class", "violin-axis-label")
-            .attr("text-anchor", "start")
-            .attr("transform", "rotate(-90)")
+            .attr("text-anchor", "center")
+            .attr("transform", `translate(-${buffer * 2 + select('.violin-y-axis').node().getBBox().width}, ${height/2}) rotate(-90)`)
             .text(yLabel);
 
         // plot mouse events
