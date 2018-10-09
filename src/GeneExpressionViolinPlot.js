@@ -47,6 +47,8 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
                 tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
             });
             const violinPlotData = parseGeneExpressionForViolin(args[1]);
+            // setting colors for each violin by tissue
+            violinPlotData.forEach((d) => {d.color = `#${tissueIdColorMap[d.tissueSiteDetailId]}`});
             const tissueGroups = violinPlotData.map((d) => d.group);
             let violinPlot = new GroupedViolin(violinPlotData);
             violinPlot.createTooltip(ids.tooltipId)
@@ -57,12 +59,14 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             let xPadding = 0.1;
             let xDomain = tissueGroups.sort(); // alphabetically sorting by tissue
             let yDomain =[];
-            // let yLabel = 'Y axis';
+            let yLabel = 'log10(TPM)';
+            let showX = true;
+            let showSubX = true;
             // let showWhisker = false;
             // let showDivider = false;
             // let showLegend = false;
             // let showSize = false;
-            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain);
+            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX);
         });
 }
 
