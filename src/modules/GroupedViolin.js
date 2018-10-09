@@ -56,7 +56,7 @@ export default class GroupedViolin {
      * @param height {Float}
      * @param xPadding {Float} padding of the x axis
      * @param xDomain {List} the order of X groups
-     * @param yDomain  {List} the min and max values of the y domain
+     * @param yDomain  {List} the min and max values of the y domain. Set to empty array or undefined to auto-calculate.
      * @param yLabel {String}
      * @param showX
      * @param showSubX
