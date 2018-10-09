@@ -46,28 +46,23 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
                 tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
                 tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
             });
-            const violinPlotData = parseGeneExpressionForViolin(args[1]).sort(function(a, b) {
-                if (a.group < b.group) return -1;
-                else if (a.group > b.group) return 1;
-                else return 0;
-            });
-            console.warn(violinPlotData);
+            const violinPlotData = parseGeneExpressionForViolin(args[1]);
+            const tissueGroups = violinPlotData.map((d) => d.group);
             let violinPlot = new GroupedViolin(violinPlotData);
             violinPlot.createTooltip(ids.tooltipId)
-// render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis",
-//    showX=true, showSubX=true, subXAngle=0,
-//    showWhisker=false, showDivider=false, showLegend=false, showSize=false)
+
+
             let width = dim.width;
             let height = dim.height;
             let xPadding = 0.1;
-            // let xDomain = undefined;
-            // let yDomain =[-3,3];
+            let xDomain = tissueGroups.sort(); // alphabetically sorting by tissue
+            let yDomain =[];
             // let yLabel = 'Y axis';
             // let showWhisker = false;
             // let showDivider = false;
             // let showLegend = false;
             // let showSize = false;
-            violinPlot.render(svg, width, height, xPadding);
+            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain);
         });
 }
 
