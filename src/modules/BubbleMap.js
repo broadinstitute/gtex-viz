@@ -116,9 +116,9 @@ export default class BubbleMap {
                 let brushLeft = Math.round(selection[0]/this.xScaleMini.step());
                 let brushRight = Math.round(selection[1]/this.xScaleMini.step());
                 console.log([brushLeft, brushRight]);
-                // console.log(xList.slice(brushLeft, brushRight));
-                this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight-brushLeft+1)); // reset the xScale domain
-                console.log(this.xScale.bandwidth())
+                console.log(this.xScaleMini.domain().slice(brushLeft, brushRight).length);
+                this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
+                console.log(this.xScale.domain().length)
                 let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2;
                 console.log(bubbleMax)
                 this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 2}); // TODO: change hard-coded min radius
