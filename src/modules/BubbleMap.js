@@ -87,9 +87,9 @@ export default class BubbleMap {
         }
     }
 
-    drawCombo(miniDom, focusDom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
+    drawCombo(miniDom, focusDom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=10){
         this._setMiniScales(dimensions, colorScaleDomain);
-        this.drawSvg(focusDom, {w:dimensions.w, h:dimensions.h2, top:dimensions.top, left:dimensions.left}, colorScaleDomain, showLabels);
+        this.drawSvg(focusDom, {w:dimensions.w, h:dimensions.h2, top:dimensions.top, left:dimensions.left}, colorScaleDomain, showLabels, columnLabelAngle, columnLabelPosAdjust);
         let bubbles = miniDom.append("g")
             .attr("clip-path", "url(#clip");
         bubbles.selectAll(".mini-map-cell")
@@ -111,18 +111,14 @@ export default class BubbleMap {
                 [dimensions.w, dimensions.h]
             ])
             .on("brush", ()=>{
-                console.log("brushed");
                 let selection = event.selection;
                 let brushLeft = Math.round(selection[0]/this.xScaleMini.step());
                 let brushRight = Math.round(selection[1]/this.xScaleMini.step());
-                console.log([brushLeft, brushRight]);
-                console.log(this.xScaleMini.domain().slice(brushLeft, brushRight).length);
                 this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
-                console.log(this.xScale.domain().length)
                 let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2;
-                console.log(bubbleMax)
                 this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 2}); // TODO: change hard-coded min radius
 
+                // update the focus bubbles
                 focusDom.selectAll(".bubble-map-cell")
                     .attr("cx", (d)=>{
                         let x = this.xScale(d.displayX?d.displayX:d.x);
@@ -135,11 +131,25 @@ export default class BubbleMap {
                         return x===undefined?0:this.bubbleScale(d.r)
                     })
 
+                // update the column labels
+                focusDom.selectAll(".bubble-map-xlabel")
+                    .attr("transform", (d)=>{
+                        let x = this.xScale(d) + 5||0; // TODO: remove hard-coded value
+                        let y = this.yScale.range()[1] + columnLabelPosAdjust;
+                        return `translate(${x}, ${y}) rotate(${columnLabelAngle})`;
+
+                    })
+                    .style("display", (d)=>{
+                        let x = this.xScale(d); // TODO: remove hard-coded value
+                        return x===undefined?"none":"block";
+                    })
+
             });
         miniDom.append("g")
             .attr("class", "brush")
             .call(brush)
-            .call(brush.move, this.xScaleMini.range());
+            // .call(brush.move, this.xScaleMini.range());
+            .call(brush.move, [0, this.xScaleMini.bandwidth()*50])
     }
 
     drawSvg(dom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0, brushSize=50){
@@ -180,7 +190,7 @@ export default class BubbleMap {
         // text labels
         if(showLabels) {
             // column labels
-            let xLabels = dom.selectAll().data(this.xScale.domain())
+            let xLabels = dom.selectAll('.bubble-map-xlabel').data(this.xScale.domain())
                 .enter().append("text")
                 .attr("class", (d, i) => `bubble-map-xlabel x${i}`)
                 .attr("x", 0)
@@ -195,7 +205,7 @@ export default class BubbleMap {
                 .text((d) => d);
 
             // row labels
-            let yLabels = dom.selectAll().data(this.yScale.domain())
+            let yLabels = dom.selectAll('.bubble-map-ylabel').data(this.yScale.domain())
                 .enter().append("text")
                 .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
                 .attr("x", this.xScale.range()[0] - 10)
