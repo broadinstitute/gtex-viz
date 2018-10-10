@@ -6,8 +6,10 @@
 "use strict";
 import {nest} from "d3-collection";
 import {extent, max, min} from "d3-array";
-import {select, selectAll} from "d3-selection";
+import {select, selectAll, event} from "d3-selection";
 import {scaleBand, scaleLinear, scaleSqrt} from "d3-scale";
+import {brushX} from "d3-brush";
+
 import Tooltip from "./Tooltip";
 import {setColorScale, drawColorLegend} from "./colors";
 
@@ -85,14 +87,64 @@ export default class BubbleMap {
         }
     }
 
-    drawSvg(dom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
-        this._setScales(dimensions, colorScaleDomain);
-        let tooltip = this.tooltip;
-        // bubbles
-        let bubbles = dom.selectAll(".bubble-map-cell")
+    drawCombo(miniDom, focusDom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
+        this.drawSvg(focusDom, {w:dimensions.w, h:dimensions.h2, top:dimensions.top, left:dimensions.left}, colorScaleDomain, showLabels);
+        this._setMiniScales(dimensions, colorScaleDomain);
+        let bubbles = miniDom.append("g")
+            .attr("clip-path", "url(#clip");
+        bubbles.selectAll(".mini-map-cell")
             .data(this.data, (d)=>d.value)
             .enter()
             .append("circle")
+            .attr("row", (d)=> `x${this.xScaleMini.domain().indexOf(d.displayX?d.displayX:d.x)}`)
+            .attr("col", (d)=> `y${this.yScaleMini.domain().indexOf(d.y)}`)
+            .attr("cx", (d)=>this.xScaleMini(d.displayX?d.displayX:d.x) + this.xScaleMini.bandwidth()/2)
+            .attr("cy", (d)=>this.yScaleMini(d.y))
+            .attr("r", (d)=>this.bubbleScaleMini(d.r))
+            .style("fill", (d)=>this.colorScale(d.value));
+
+        let initialBrushSize = 50;
+        let xList = this.xScaleMini.domain();
+        let brush = brushX()
+            .extent([
+                [0, 0],
+                [dimensions.w, dimensions.h]
+            ])
+            .on("brush", ()=>{
+                console.log("brushed");
+                let selection = event.selection;
+                let brushLeft = Math.round(selection[0]/this.xScaleMini.step());
+                let brushRight = Math.round(selection[1]/this.xScaleMini.step());
+                console.log([brushLeft, brushRight]);
+                console.log(xList.slice(brushLeft, brushRight));
+                this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight-brushLeft+1)); // reset the xScale domain
+                focusDom.selectAll(".bubble-map-cell")
+                    .attr("cx", (d)=>{
+                        let x = this.xScale(d.displayX?d.displayX:d.x);
+                        return x===undefined? this.xScale.bandwidth()/2:x+this.xScale.bandwidth()/2;
+
+                    })
+                    .attr("cy", (d)=>this.yScale(d.y))
+                    .attr("r", (d)=>this.bubbleScale(d.r))
+            });
+        miniDom.append("g")
+            .attr("class", "brush")
+            .call(brush)
+            .call(brush.move, this.xScaleMini.range());
+    }
+
+    drawSvg(dom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0, brushSize=50){
+        this._setScales(dimensions, colorScaleDomain, brushSize);
+        let tooltip = this.tooltip;
+        // bubbles
+        let bubbles = dom.append("g")
+            .attr("clip-path", "url(#clip)");
+
+        bubbles.selectAll(".bubble-map-cell")
+            .data(this.data, (d)=>d.value)
+            .enter()
+            .append("circle")
+            .attr("class", "bubble-map-cell")
             .attr("row", (d)=> `x${this.xScale.domain().indexOf(d.displayX?d.displayX:d.x)}`)
             .attr("col", (d)=> `y${this.yScale.domain().indexOf(d.y)}`)
             .attr("cx", (d)=>this.xScale(d.displayX?d.displayX:d.x) + this.xScale.bandwidth()/2)
@@ -191,39 +243,72 @@ export default class BubbleMap {
     }
 
     // private methods
+    _setMiniScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
+        if (this.xScaleMini === undefined) this.xScaleMini = this._setXScaleMini(dimensions);
+        if (this.yScaleMini === undefined) this.yScaleMini = this._setYScaleMini(dimensions);
+        if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
+        if (this.bubbleScaleMini === undefined) {
+            let bubbleMax = min([this.xScaleMini.bandwidth(), this.yScaleMini.bandwidth()])/2; // max radius
+            this.bubbleScaleMini = this._setBubbleScaleMini({max: bubbleMax, min:2});
+        }
+
+    }
+
     _setScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
-        if (this.xScale === undefined) this._setXScale(dimensions);
-        if (this.yScale === undefined) this._setYScale(dimensions);
-        if (this.colorScale === undefined) this._setColorScale(cDomain);
+        if (this.xScale === undefined) this.xScale = this._setXScale(dimensions);
+        if (this.yScale === undefined) this.yScale = this._setYScale(dimensions);
+        if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
         if (this.bubbleScale === undefined) {
-            let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2
-            this._setBubbleScale({max:bubbleMax, min: 2});
+            let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2;
+            this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 1}); // TODO: change hard-coded min radius
         }
     }
 
-    _setXScale(dim={w:1000, left:20}){
-        // use d3 nest data structure to find the unique list of x labels
-        // reference: https://github.com/d3/d3-collection#nests
-        let xList = nest()
+    _parseXList(){
+         let xList = nest()
             .key((d) => d.displayX!==undefined?d.displayX:d.x) // group this.data by d.x
             .entries(this.data)
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
-        this.xScale = scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
-            .domain(xList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
-            .range([dim.left, dim.left+dim.w])
-            .padding(.05); // temporarily hard-coded value
+         return xList;
     }
 
-    _setYScale(dim={h:600, top:20}){
-        // use d3 nest data structure to find the unique list of y labels
-        // reference: https://github.com/d3/d3-collection#nests
+    _parseYList(){
         let yList = nest()
             .key((d) => d.y) // group this.data by d.x
             .entries(this.data)
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
-        this.yScale = scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
+        return yList;
+    }
+
+    _setXScaleMini(dim={w:1000, left:20}){
+        let xList = this._parseXList();
+        return this._setXScale(dim, xList);
+    }
+
+    _setXScale(dim={w:1000, left:20}, xList = undefined){
+        // use d3 nest data structure to find the unique list of x labels
+        // reference: https://github.com/d3/d3-collection#nests
+        xList = xList===undefined?this._parseXList():xList;
+        return scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
+            .domain(xList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
+            .range([dim.left, dim.left+dim.w])
+            .padding(.05); // temporarily hard-coded value
+    }
+
+    _setYScaleMini(dim={h:600, top:20}){
+        // use d3 nest data structure to find the unique list of y labels
+        // reference: https://github.com/d3/d3-collection#nests
+        let yList = this._parseYList();
+        return this._setYScale(dim, yList);
+    }
+
+    _setYScale(dim={h:600, top:20}, yList=undefined){
+        // use d3 nest data structure to find the unique list of y labels
+        // reference: https://github.com/d3/d3-collection#nests
+        yList = yList===undefined?this._parseYList():yList;
+        return scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
             .domain(yList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
             .range([dim.top, dim.top+dim.h])
             .padding(.05); // temporarily hard-coded value
@@ -232,12 +317,16 @@ export default class BubbleMap {
     _setColorScale(domain){
         let useLog = this.useLog;
         let data = domain===undefined?this.data.map((d)=>useLog?this._log(d.value):d.value):domain;
-        this.colorScale = setColorScale(data, this.colorScheme, undefined, undefined, true);
+        return setColorScale(data, this.colorScheme, undefined, undefined, true);
+    }
+
+    _setBubbleScaleMini(range={max:10, min:0}){
+        return this._setBubbleScale(range);
     }
 
     _setBubbleScale(range={max:10, min:0}){
-        this.bubbleScale = scaleSqrt()
-            .domain([2, max(this.data.map((d)=>d.r))])
+        return scaleSqrt()
+            .domain([1, max(this.data.map((d)=>d.r))])
             .range([range.min, range.max]);
     }
 
