@@ -88,8 +88,8 @@ export default class BubbleMap {
     }
 
     drawCombo(miniDom, focusDom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
-        this.drawSvg(focusDom, {w:dimensions.w, h:dimensions.h2, top:dimensions.top, left:dimensions.left}, colorScaleDomain, showLabels);
         this._setMiniScales(dimensions, colorScaleDomain);
+        this.drawSvg(focusDom, {w:dimensions.w, h:dimensions.h2, top:dimensions.top, left:dimensions.left}, colorScaleDomain, showLabels);
         let bubbles = miniDom.append("g")
             .attr("clip-path", "url(#clip");
         bubbles.selectAll(".mini-map-cell")
@@ -116,16 +116,25 @@ export default class BubbleMap {
                 let brushLeft = Math.round(selection[0]/this.xScaleMini.step());
                 let brushRight = Math.round(selection[1]/this.xScaleMini.step());
                 console.log([brushLeft, brushRight]);
-                console.log(xList.slice(brushLeft, brushRight));
+                // console.log(xList.slice(brushLeft, brushRight));
                 this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight-brushLeft+1)); // reset the xScale domain
+                console.log(this.xScale.bandwidth())
+                let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2;
+                console.log(bubbleMax)
+                this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 2}); // TODO: change hard-coded min radius
+
                 focusDom.selectAll(".bubble-map-cell")
                     .attr("cx", (d)=>{
                         let x = this.xScale(d.displayX?d.displayX:d.x);
                         return x===undefined? this.xScale.bandwidth()/2:x+this.xScale.bandwidth()/2;
 
                     })
-                    .attr("cy", (d)=>this.yScale(d.y))
-                    .attr("r", (d)=>this.bubbleScale(d.r))
+                    // .attr("cy", (d)=>this.yScale(d.y))
+                    .attr("r", (d)=>{
+                        let x = this.xScale(d.displayX?d.displayX:d.x);
+                        return x===undefined?0:this.bubbleScale(d.r)
+                    })
+
             });
         miniDom.append("g")
             .attr("class", "brush")
@@ -148,7 +157,7 @@ export default class BubbleMap {
             .attr("row", (d)=> `x${this.xScale.domain().indexOf(d.displayX?d.displayX:d.x)}`)
             .attr("col", (d)=> `y${this.yScale.domain().indexOf(d.y)}`)
             .attr("cx", (d)=>this.xScale(d.displayX?d.displayX:d.x) + this.xScale.bandwidth()/2)
-            .attr("cy", (d)=>this.yScale(d.y))
+            .attr("cy", (d)=>this.yScale(d.y) + this.yScale.bandwidth()/2)
             .attr("r", (d)=>this.bubbleScale(d.r))
             .style("fill", (d)=>this.colorScale(d.value))
             .on("mouseover", function(d){
@@ -190,7 +199,7 @@ export default class BubbleMap {
                 .enter().append("text")
                 .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
                 .attr("x", this.xScale.range()[0] - 10)
-                .attr("y", (d) => this.yScale(d) + 2)
+                .attr("y", (d) => this.yScale(d) + this.yScale.bandwidth()/2 + 2)
                 .style("text-anchor", "end")
                 .style("cursor", "default")
                 .text((d) => d);
@@ -248,10 +257,10 @@ export default class BubbleMap {
         if (this.yScaleMini === undefined) this.yScaleMini = this._setYScaleMini(dimensions);
         if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
         if (this.bubbleScaleMini === undefined) {
-            let bubbleMax = min([this.xScaleMini.bandwidth(), this.yScaleMini.bandwidth()])/2; // max radius
-            this.bubbleScaleMini = this._setBubbleScaleMini({max: bubbleMax, min:2});
+            let bubbleMax = min([this.xScaleMini.bandwidth(), this.yScaleMini.bandwidth()])/2; // the max bubble radius
+            console.log(bubbleMax)
+            this.bubbleScaleMini = this._setBubbleScale({max: bubbleMax, min:1});
         }
-
     }
 
     _setScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
@@ -260,7 +269,8 @@ export default class BubbleMap {
         if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
         if (this.bubbleScale === undefined) {
             let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2;
-            this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 1}); // TODO: change hard-coded min radius
+            console.log(bubbleMax)
+            this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 2}); // TODO: change hard-coded min radius
         }
     }
 
@@ -320,13 +330,13 @@ export default class BubbleMap {
         return setColorScale(data, this.colorScheme, undefined, undefined, true);
     }
 
-    _setBubbleScaleMini(range={max:10, min:0}){
-        return this._setBubbleScale(range);
-    }
+    // _setBubbleScaleMini(range={max:10, min:0}){
+    //     return this._setBubbleScale(range);
+    // }
 
     _setBubbleScale(range={max:10, min:0}){
         return scaleSqrt()
-            .domain([1, max(this.data.map((d)=>d.r))])
+            .domain([3, max(this.data.map((d)=>d.r))]) // set min at 2 for -log(0.01)
             .range([range.min, range.max]);
     }
 

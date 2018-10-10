@@ -79,11 +79,9 @@ export function renderBubbleMap(par){
         .attr("class", "focus")
         .attr("transform", `translate(${par.focusPanelMargin.left}, ${par.focusPanelMargin.top})`);
 
-    bmap.drawCombo(miniG, focusG, {w:par.inWidth, h:par.miniPanelHeight, top:0, left:0, h2: par.focusPanelHeight}, par.colorScaleDomain, par.showLabels);
+    bmap.drawCombo(miniG, focusG, {w:par.inWidth, h:par.miniPanelHeight, top:5, left:0, h2: par.focusPanelHeight}, par.colorScaleDomain, par.showLabels);
 
-    // bmap.drawSvg(focusG, {w: par.inWidth, h: par.focusPanelHeight, top:0, left:0}, par.colorScaleDomain, 50);
 
-    // bmap.drawSvg(svg, {w:par.inWidth, h:par.inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
     // bmap.drawColorLegend(svg, {x: 0, y: -30}, 3, "NES");
     // bmap.drawBubbleLegend(svg, {x: 500, y:-30, title: "-log10(p-value)"}, 5, "-log10(p-value)");
 
