@@ -206,13 +206,11 @@ export default class BubbleMap {
                 .style("text-anchor", "start")
                 .style("cursor", "default")
                 .style("font-size", ()=>{
-                    let size = Math.floor(this.xScale.bandwidth());
-                    console.log(this.xScale.bandwidth());
-                    console.log(size);
+                    let size = Math.floor(this.xScale.bandwidth())/2;
                     return `${size}px`
                 })
                 .attr("transform", (d) => {
-                    let x = this.xScale(d) + this.xScale.bandwidth()/2 + 2; // TODO: remove hard-coded value
+                    let x = this.xScale(d) + this.xScale.bandwidth()/3;
                     let y = this.yScale.range()[1] + columnLabelPosAdjust;
                     return `translate(${x}, ${y}) rotate(${columnLabelAngle})`;
                 })
@@ -223,9 +221,13 @@ export default class BubbleMap {
                 .enter().append("text")
                 .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
                 .attr("x", this.xScale.range()[0] - 10)
-                .attr("y", (d) => this.yScale(d) + this.yScale.bandwidth()/2 + 2)
+                .attr("y", (d) => this.yScale(d) + this.yScale.bandwidth()/1.5)
                 .style("text-anchor", "end")
                 .style("cursor", "default")
+                .style("font-size", ()=>{
+                    let size = Math.floor(this.yScale.bandwidth()/1.5);
+                    return `${size}px`
+                })
                 .text((d) => d);
         }
 

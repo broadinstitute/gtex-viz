@@ -18,18 +18,18 @@ text.bubble-map-xlabel.highlighted {
 }
 text.bubble-map-xlabel.query {
     font-weight: 600;
-    font-size:11px;
+    /*font-size:11px;*/
     fill: #d2111b;
 }
 
 
 text.bubble-map-ylabel {
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
-    font-size: 10px;
+    /*font-size: 10px;*/
 }
 text.bubble-map-ylabel.highlighted {
     font-weight: 400;
-    font-size: 12px;
+    /*font-size: 12px;*/
     text-decoration: underline;
 }
 text.bubble-map-ylabel.clicked, text.bubble-map-xlabel.clicked {
