@@ -40,6 +40,11 @@ export function render(svgPar, geneId, rootDivId, spinnerId, urls = getGtexUrls(
         })
 }
 
+/**
+ * Set the dimensions of the panels
+ * @param par
+ * @returns {*}
+ */
 function setDimensions(par){
     par.margin = {
         left: par.marginLeft + par.focusPanelRowLabelWidth,
@@ -49,7 +54,7 @@ function setDimensions(par){
     };
     par.inWidth = par.width - (par.margin.left + par.margin.right);
     par.inHeight = par.height - (par.margin.top + par.margin.bottom);
-    par.focusPanelHeight = par.inHeight - (par.legendHeight + par.miniPanelHeight + par.width);
+    par.focusPanelHeight = par.inHeight - (par.legendHeight + par.miniPanelHeight);
     if (par.focusPanelHeight < 0) throw "Config error: focus panel height is negative.";
     par.focusPanelMargin = {
         left: par.margin.left,
@@ -102,11 +107,11 @@ function renderBubbleMap(par, gene, urls){
         .attr("class", "focus")
         .attr("transform", `translate(${par.focusPanelMargin.left}, ${par.focusPanelMargin.top})`);
 
-    let ldCanvas = select(`#${par.id}`).append("canvas")
-        .attr("id", par.id + "-ld-canvas")
-        .attr("width", par.inWidth)
-        .attr("height", par.inWidth)
-        // .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
+    // let ldCanvas = select(`#${par.ldId}`).append("canvas")
+    //     .attr("id", par.id + "-ld-canvas")
+    //     .attr("width", par.inWidth)
+    //     .attr("height", par.inWidth)
+    //     .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
 
     let ldG = svg.append("g")
         .attr("class", "ld")
@@ -164,13 +169,14 @@ function renderBubbleMap(par, gene, urls){
                     let x = bmap.xScale(d);
                     return x === undefined ? "none" : "block";
                 });
-            return;
             // render the LD
-            select(`#${par.id}-ld-canvas`).remove();
-            let ldCanvas = select(`#${par.id}`).append("canvas")
-                .attr("id", par.id + "-ld-canvas")
+            select(`#${par.ldId}-ld-canvas`).remove();
+            let ldCanvas = select(`#${par.ldId}`).append("canvas")
+                .attr("id", par.ldId + "-ld-canvas")
                 .attr("width", par.inWidth)
-                .attr("height", par.inWidth);
+                .attr("height", par.inWidth)
+                .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
+
             ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
             // ldMap.drawSvg(ldG, {w:par.inWidth, top:20, left:0}, true, false);
             ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:20, left:0}, [0,1], false);

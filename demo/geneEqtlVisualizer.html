@@ -35,6 +35,7 @@
         <div id="vizRoot">
             <div id="messageBox" style="color: #CB181D;"></div> <!-- for displaying message of input errors-->
             <div id="bmap"></div>
+            <div id="ldMap"></div>
 
         </div>
 
@@ -57,7 +58,7 @@
             let svgConfig = {
                 id: 'bmap',
                 width: 1200,
-                height: 1800,
+                height: 600,
                 marginTop: 40,
                 marginRight: 20,
                 marginBottom: 20,
@@ -72,6 +73,7 @@
                 focusPanelRowLabelWidth: 100, // assuming the label is on the left side
                 focusPanelShowLabels: true,
 
+                ldId: "ldMap",
                 ldCutoff: 0.0,
                 ldColorScheme: "Greys",
                 ldLegendSpace: 50,
