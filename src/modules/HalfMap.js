@@ -242,7 +242,7 @@ export default class HalfMap{
     _setXScale(dim={w:600}, xList=undefined){
         if (xList === undefined){
             xList = nest()
-            .key((d) => d.displayX!==undefined?d.displayX:d.x) // group this.data by d.x
+            .key((d) => d.x) // group this.data by d.x
             .entries(this.data)
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});

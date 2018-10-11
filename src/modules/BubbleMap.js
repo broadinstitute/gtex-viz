@@ -101,9 +101,9 @@ export default class BubbleMap {
             .data(this.data, (d) => d.value)
             .enter()
             .append("circle")
-            .attr("row", (d) => `x${this.xScaleMini.domain().indexOf(d.displayX ? d.displayX : d.x)}`)
+            .attr("row", (d) => `x${this.xScaleMini.domain().indexOf(d.x)}`)
             .attr("col", (d) => `y${this.yScaleMini.domain().indexOf(d.y)}`)
-            .attr("cx", (d) => this.xScaleMini(d.displayX ? d.displayX : d.x) + this.xScaleMini.bandwidth() / 2)
+            .attr("cx", (d) => this.xScaleMini(d.x) + this.xScaleMini.bandwidth() / 2)
             .attr("cy", (d) => this.yScaleMini(d.y))
             .attr("r", (d) => this.bubbleScaleMini(d.r))
             .style("fill", (d) => this.colorScale(d.value));
@@ -122,13 +122,13 @@ export default class BubbleMap {
                 // update the focus bubbles
                 focusDom.selectAll(".bubble-map-cell")
                     .attr("cx", (d) => {
-                        let x = this.xScale(d.displayX ? d.displayX : d.x);
+                        let x = this.xScale(d.x);
                         return x === undefined ? this.xScale.bandwidth() / 2 : x + this.xScale.bandwidth() / 2;
 
                     })
                     // .attr("cy", (d)=>this.yScale(d.y))
                     .attr("r", (d) => {
-                        let x = this.xScale(d.displayX ? d.displayX : d.x);
+                        let x = this.xScale(d.x);
                         return x === undefined ? 0 : this.bubbleScale(d.r)
                     });
 
@@ -172,9 +172,9 @@ export default class BubbleMap {
             .enter()
             .append("circle")
             .attr("class", "bubble-map-cell")
-            .attr("row", (d)=> `x${this.xScale.domain().indexOf(d.displayX?d.displayX:d.x)}`)
+            .attr("row", (d)=> `x${this.xScale.domain().indexOf(d.x)}`)
             .attr("col", (d)=> `y${this.yScale.domain().indexOf(d.y)}`)
-            .attr("cx", (d)=>this.xScale(d.displayX?d.displayX:d.x) + this.xScale.bandwidth()/2)
+            .attr("cx", (d)=>this.xScale(d.x) + this.xScale.bandwidth()/2)
             .attr("cy", (d)=>this.yScale(d.y) + this.yScale.bandwidth()/2)
             .attr("r", (d)=>this.bubbleScale(d.r))
             .style("fill", (d)=>this.colorScale(d.value))
@@ -198,6 +198,13 @@ export default class BubbleMap {
         // text labels
         if(showLabels) {
             // column labels
+            let lookup = {};
+            nest()
+                .key((d) => d.x) // group this.data by d.x
+                .entries(this.data)
+                .forEach((d)=>{
+                    lookup[d.key] = d.values[0].displayX
+                });
             let xLabels = dom.selectAll('.bubble-map-xlabel').data(this.xScale.domain())
                 .enter().append("text")
                 .attr("class", (d, i) => `bubble-map-xlabel x${i}`)
@@ -214,7 +221,7 @@ export default class BubbleMap {
                     let y = this.yScale.range()[1] + columnLabelPosAdjust;
                     return `translate(${x}, ${y}) rotate(${columnLabelAngle})`;
                 })
-                .text((d) => d);
+                .text((d) => lookup[d]);
 
             // row labels
             let yLabels = dom.selectAll('.bubble-map-ylabel').data(this.yScale.domain())
@@ -300,7 +307,7 @@ export default class BubbleMap {
 
     _parseXList(){
          let xList = nest()
-            .key((d) => d.displayX!==undefined?d.displayX:d.x) // group this.data by d.x
+            .key((d) => d.x) // group this.data by d.x
             .entries(this.data)
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});

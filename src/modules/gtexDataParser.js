@@ -68,23 +68,7 @@ export function parseSingleTissueEqtls(data){
     ['variantId', 'tissueSiteDetailId', 'nes', 'pValue'].forEach((k)=>{
         if (!data[attr][0].hasOwnProperty(k)) throw 'Parsing Error: required attribute is missing: ' + attr;
     });
-    const generateShortVariantId = function(id){
-        var temp = id.split("_");
-        if(temp[2].length == 1 && temp[3].length == 1) return id;
-        if(temp[2].length > temp[3].length) {
-            temp[2] = "del";
-            temp.splice(3, 1); // delete the alt
-        }
-        else if(temp[3].length > temp[2].length) {
-            temp[3] = "ins";
-            temp.splice(2, 1); // delete the ref
-        }
-        else { // temp[3].length == temp[2].length and temp[3].length > 1
-            temp[3] = "sub";
-            temp.splice(2, 1); // delete the ref
-        }
-        return temp.join("_");
-    };
+
 
     return data[attr].map((d)=>{
         d.x = d.variantId;
@@ -97,8 +81,6 @@ export function parseSingleTissueEqtls(data){
         return d;
     })
 }
-
-
 
 /**
  * Parse the genes from GTEx web service
@@ -520,7 +502,9 @@ export function parseLD(data) {
         unique[labels[1]] = true;
         parsed.push({
             x: labels[0],
+            displayX: generateShortVariantId(labels[0]),
             y: labels[1],
+            displayY: generateShortVariantId(labels[1]),
             value: parseFloat(d[1]),
             displayValue: parseFloat(d[1]).toPrecision(3) // toPrecision() returns a string
         })
@@ -528,10 +512,11 @@ export function parseLD(data) {
     Object.keys(unique).forEach((d)=>{
         parsed.push({
             x: d,
+            displayX: generateShortVariantId(d),
             y: d,
+            displayY: generateShortVariantId(d),
             value: 1,
             displayValue: "1"
-
         })
     });
     return parsed;
@@ -559,4 +544,27 @@ export function parseGeneExpressionForBoxplot(data, tissues=undefined, colors=un
     });
 
     return data[attr];
+}
+
+/**
+ * generate variant ID shorthand
+ * @param id
+ * @returns {*}
+ */
+function generateShortVariantId(id){
+    let temp = id.split("_");
+    if(temp[2].length == 1 && temp[3].length == 1) return id;
+    if(temp[2].length > temp[3].length) {
+        temp[2] = "del";
+        temp.splice(3, 1); // delete the alt
+    }
+    else if(temp[3].length > temp[2].length) {
+        temp[3] = "ins";
+        temp.splice(2, 1); // delete the ref
+    }
+    else { // temp[3].length == temp[2].length and temp[3].length > 1
+        temp[3] = "sub";
+        temp.splice(2, 1); // delete the ref
+    }
+    return temp.join("_");
 }
