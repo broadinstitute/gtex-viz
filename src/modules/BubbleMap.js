@@ -87,69 +87,77 @@ export default class BubbleMap {
         }
     }
 
-    drawCombo(miniDom, focusDom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=10){
+    drawCombo(miniDom, focusDom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=10, addBrush=true) {
         this._setMiniScales(dimensions, colorScaleDomain);
-        this.drawSvg(focusDom, {w:dimensions.w, h:dimensions.h2, top:dimensions.top, left:dimensions.left}, colorScaleDomain, showLabels, columnLabelAngle, columnLabelPosAdjust);
+        this.drawSvg(focusDom, {
+            w: dimensions.w,
+            h: dimensions.h2,
+            top: dimensions.top,
+            left: dimensions.left
+        }, colorScaleDomain, showLabels, columnLabelAngle, columnLabelPosAdjust);
         let bubbles = miniDom.append("g")
-            .attr("clip-path", "url(#clip");
+            .attr("clip-path", "url(#clip)");
         bubbles.selectAll(".mini-map-cell")
-            .data(this.data, (d)=>d.value)
+            .data(this.data, (d) => d.value)
             .enter()
             .append("circle")
-            .attr("row", (d)=> `x${this.xScaleMini.domain().indexOf(d.displayX?d.displayX:d.x)}`)
-            .attr("col", (d)=> `y${this.yScaleMini.domain().indexOf(d.y)}`)
-            .attr("cx", (d)=>this.xScaleMini(d.displayX?d.displayX:d.x) + this.xScaleMini.bandwidth()/2)
-            .attr("cy", (d)=>this.yScaleMini(d.y))
-            .attr("r", (d)=>this.bubbleScaleMini(d.r))
-            .style("fill", (d)=>this.colorScale(d.value));
+            .attr("row", (d) => `x${this.xScaleMini.domain().indexOf(d.displayX ? d.displayX : d.x)}`)
+            .attr("col", (d) => `y${this.yScaleMini.domain().indexOf(d.y)}`)
+            .attr("cx", (d) => this.xScaleMini(d.displayX ? d.displayX : d.x) + this.xScaleMini.bandwidth() / 2)
+            .attr("cy", (d) => this.yScaleMini(d.y))
+            .attr("r", (d) => this.bubbleScaleMini(d.r))
+            .style("fill", (d) => this.colorScale(d.value));
 
         let initialBrushSize = 50;
         let xList = this.xScaleMini.domain();
-        let brush = brushX()
-            .extent([
-                [0, 0],
-                [dimensions.w, dimensions.h]
-            ])
-            .on("brush", ()=>{
+        if (addBrush) {
+            const brushed = () => {
                 let selection = event.selection;
-                let brushLeft = Math.round(selection[0]/this.xScaleMini.step());
-                let brushRight = Math.round(selection[1]/this.xScaleMini.step());
+                let brushLeft = Math.round(selection[0] / this.xScaleMini.step());
+                let brushRight = Math.round(selection[1] / this.xScaleMini.step());
                 this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
-                let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2;
-                this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 2}); // TODO: change hard-coded min radius
+                let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()]) / 2;
+                this.bubbleScale = this._setBubbleScale({max: bubbleMax, min: 2}); // TODO: change hard-coded min radius
 
                 // update the focus bubbles
                 focusDom.selectAll(".bubble-map-cell")
-                    .attr("cx", (d)=>{
-                        let x = this.xScale(d.displayX?d.displayX:d.x);
-                        return x===undefined? this.xScale.bandwidth()/2:x+this.xScale.bandwidth()/2;
+                    .attr("cx", (d) => {
+                        let x = this.xScale(d.displayX ? d.displayX : d.x);
+                        return x === undefined ? this.xScale.bandwidth() / 2 : x + this.xScale.bandwidth() / 2;
 
                     })
                     // .attr("cy", (d)=>this.yScale(d.y))
-                    .attr("r", (d)=>{
-                        let x = this.xScale(d.displayX?d.displayX:d.x);
-                        return x===undefined?0:this.bubbleScale(d.r)
-                    })
+                    .attr("r", (d) => {
+                        let x = this.xScale(d.displayX ? d.displayX : d.x);
+                        return x === undefined ? 0 : this.bubbleScale(d.r)
+                    });
 
                 // update the column labels
                 focusDom.selectAll(".bubble-map-xlabel")
-                    .attr("transform", (d)=>{
-                        let x = this.xScale(d) + 5||0; // TODO: remove hard-coded value
+                    .attr("transform", (d) => {
+                        let x = this.xScale(d) + 5 || 0; // TODO: remove hard-coded value
                         let y = this.yScale.range()[1] + columnLabelPosAdjust;
                         return `translate(${x}, ${y}) rotate(${columnLabelAngle})`;
 
                     })
-                    .style("display", (d)=>{
+                    .style("display", (d) => {
                         let x = this.xScale(d); // TODO: remove hard-coded value
-                        return x===undefined?"none":"block";
-                    })
+                        return x === undefined ? "none" : "block";
+                    });
+            };
+            let brush = brushX()
+                .extent([
+                    [0, 0],
+                    [dimensions.w, dimensions.h]
+                ])
+                .on("brush", brushed);
+            miniDom.append("g")
+                .attr("class", "brush")
+                .call(brush)
+                // .call(brush.move, this.xScaleMini.range());
+                .call(brush.move, [0, this.xScaleMini.bandwidth() * 50]);
+        }
 
-            });
-        miniDom.append("g")
-            .attr("class", "brush")
-            .call(brush)
-            // .call(brush.move, this.xScaleMini.range());
-            .call(brush.move, [0, this.xScaleMini.bandwidth()*50])
     }
 
     drawSvg(dom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0, brushSize=50){

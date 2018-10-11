@@ -9,6 +9,8 @@ export function getGtexUrls(){
     return {
         // gene-eqtl visualizer specific
         singleTissueEqtl: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v7&gencodeId=',
+        ld: host + 'dataset/ld?format=json&datasetId=gtex_v7&gencodeId=',
+
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
         snp: host + 'reference/variant?format=json&snpId=',
@@ -137,12 +139,12 @@ export function parseGenes(data, single=false, geneId=null){
  */
 export function parseTissues(json){
     const attr = 'tissueSiteDetail';
-    if(!json.hasOwnProperty(attr)) throw 'Parse Error: required json attr is missing: ' + attr;
+    if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attr is missing: ' + attr;
     const tissues = json[attr];
 
     // sanity check
     ['tissueSiteDetailId', 'tissueSiteDetail', 'colorHex'].forEach((d)=>{
-        if (!tissues[0].hasOwnProperty(d)) throw 'Parse Error: required json attr is missing: ' + d;
+        if (!tissues[0].hasOwnProperty(d)) throw 'Parsing Error: required json attr is missing: ' + d;
     });
 
     return tissues;
@@ -160,7 +162,7 @@ export function parseTissueSites(data, forEqtl=false){
     const invalidTissues = ['Bladder', 'Cervix_Ectocervix', 'Cervix_Endocervix', 'Fallopian_Tube', 'Kidney_Cortex'];
 
     const attr = 'tissueSiteDetail';
-    if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
+    if(!data.hasOwnProperty(attr)) throw 'Parsing Error: required json attribute is missing: ' + attr;
     let tissues = data[attr];
     ['tissueSite','tissueSiteDetailId','tissueSiteDetail'].forEach((d)=>{
         if (!tissues[0].hasOwnProperty(d)) throw `parseTissueSites attr error. ${d} is not found`;
@@ -204,11 +206,11 @@ export function parseModelExons(json){
     const attr = 'collapsedGeneModelExon';
     if(!json.hasOwnProperty(attr)){
         console.error(json);
-        throw 'Parse Error: Required json attribute is missing: ' + attr;
+        throw 'Parsing Error: Required json attribute is missing: ' + attr;
     }
     // sanity check
     ['start', 'end'].forEach((d)=>{
-        if (!json[attr][0].hasOwnProperty(d)) throw 'Parse Error: Required json attribute is missing: ' + d;
+        if (!json[attr][0].hasOwnProperty(d)) throw 'Parsing Error: Required json attribute is missing: ' + d;
     });
     return json[attr].map((d)=>{
         d.chromStart = d.start;
@@ -230,14 +232,14 @@ export function parseModelExons(json){
 export function parseJunctions(json){
 
     const attr = 'medianJunctionExpression';
-    if(!json.hasOwnProperty(attr)) throw 'Parse Error: parseJunctions input error. ' + attr;
+    if(!json.hasOwnProperty(attr)) throw 'Parsing Error: parseJunctions input error. ' + attr;
 
     // check required json attributes
     ['tissueSiteDetailId', 'junctionId'].forEach((d)=>{
         // use the first element in the json objects as a test case
         if(!json[attr][0].hasOwnProperty(d)){
             console.error(json[attr][0]);
-            throw 'Parse Error: required junction attribute is missing: ' + d;
+            throw 'Parsing Error: required junction attribute is missing: ' + d;
         }
     });
     return json[attr].filter((d)=>d.tissueSiteDetailId=='Liver')
@@ -259,13 +261,13 @@ export function parseJunctions(json){
  */
 export function parseExons(json){
     const attr = 'exon';
-    if(!json.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: exon';
+    if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attribute is missing: exon';
     return json[attr].reduce((a, d)=>{
         // check required attributes
         ['transcriptId', 'chromosome', 'start', 'end', 'exonNumber', 'exonId'].forEach((k)=>{
             if(!d.hasOwnProperty(k)) {
                 console.error(d);
-                throw 'Parse Error: required json attribute is missing: ' + k
+                throw 'Parsing Error: required json attribute is missing: ' + k
             }
         });
         if (a[d.transcriptId] === undefined) a[d.transcriptId] = [];
@@ -290,7 +292,7 @@ export function parseTranscripts(json){
     ['transcriptId', 'start', 'end'].forEach((k)=>{
         if(!json[attr][0].hasOwnProperty(k)) {
             console.error(d);
-            throw 'Parse Error: required json attribute is missing: ' + k
+            throw 'Parsing Error: required json attribute is missing: ' + k
         }
     });
 
@@ -366,7 +368,7 @@ export function parseJunctionExpression(data){
         ['tissueSiteDetailId', 'junctionId', 'median', 'gencodeId'].forEach((k)=>{
             if (!d.hasOwnProperty(k)) {
                 console.error(d);
-                throw 'Parser Error: parseJunctionExpression attr not found: ' + k;
+                throw 'Parsingr Error: parseJunctionExpression attr not found: ' + k;
             }
         });
         let median = d.median;
@@ -394,13 +396,13 @@ export function parseJunctionExpression(data){
  */
 export function parseTranscriptExpression(data){
     const attr = 'medianTranscriptExpression';
-    if(!data.hasOwnProperty(attr)) throw('Parse Error: parseTranscriptExpression input error');
+    if(!data.hasOwnProperty(attr)) throw('Parsing Error: parseTranscriptExpression input error');
     // parse GTEx isoform median TPM
     data[attr].forEach((d) => {
         ['median', 'transcriptId', 'tissueSiteDetailId', 'gencodeId'].forEach((k)=>{
             if(!d.hasOwnProperty(k)) {
                 console.error(d);
-                throw('Parse Error: required transcipt attribute is missing: ' + k);
+                throw('Parsing Error: required transcipt attribute is missing: ' + k);
             }
         });
         d.value = Number(d.median);
@@ -423,14 +425,14 @@ export function parseTranscriptExpressionTranspose(data){
     const attr = 'medianTranscriptExpression';
     if(!data.hasOwnProperty(attr)) {
         console.error(data);
-        throw('Parse Error: parseTranscriptExpressionTranspose input error.');
+        throw('Parsing Error: parseTranscriptExpressionTranspose input error.');
     }
     // parse GTEx isoform median TPM
     data[attr].forEach((d) => {
         ['median', 'transcriptId', 'tissueSiteDetailId', 'gencodeId'].forEach((k)=>{
             if(!d.hasOwnProperty(k)) {
                 console.error(d);
-                throw('Parse Error: Required transcript attribute is missing: ' + k);
+                throw('Parsing Error: Required transcript attribute is missing: ' + k);
             }
         });
         const median = d.median;
@@ -453,7 +455,7 @@ export function parseTranscriptExpressionTranspose(data){
  */
 export function parseMedianExpression(data){
     const attr = 'medianGeneExpression';
-    if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
+    if(!data.hasOwnProperty(attr)) throw 'Parsing Error: required json attribute is missing: ' + attr;
     const adjust = 1;
     // parse GTEx median gene expression
     // error-checking the required attributes:
@@ -461,7 +463,7 @@ export function parseMedianExpression(data){
     ['median', 'tissueSiteDetailId', 'gencodeId'].forEach((d)=>{
         if (!data[attr][0].hasOwnProperty(d)) {
             console.error(data[attr][0]);
-            throw `Parse Error: required json attribute is missingp: ${d}`;
+            throw `Parsing Error: required json attribute is missingp: ${d}`;
         }
     });
     let results = data[attr];
@@ -483,12 +485,12 @@ export function parseMedianExpression(data){
  */
 export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined){
     const attr = 'geneExpression';
-    if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
+    if(!data.hasOwnProperty(attr)) throw 'Parsing Error: required json attribute is missing: ' + attr;
     data[attr].forEach((d)=>{
         ['data', 'tissueSiteDetailId', 'geneSymbol', 'gencodeId'].forEach((k)=>{
             if(!d.hasOwnProperty(k)){
                 console.error(d);
-                throw 'Parse Error: required json attribute is missing: ' + k;
+                throw 'Parsing Error: required json attribute is missing: ' + k;
             }
         });
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
@@ -497,4 +499,25 @@ export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined
         d.color = colors===undefined?'#90c1c1':colors[d.gencodeId];
     });
     return data[attr];
+}
+
+/**
+ * parse the LD (linkage disequilibrium data)
+ * @param data {JSON} from GTEx ld web service
+ * @returns {Array}
+ */
+export function parseLD(data){
+    const attr = 'ld';
+    if(!data.hasOwnProperty(attr)) throw 'Parsing Error: required json attribute is missing: ' + attr;
+    let parsed = []
+    data[attr].forEach((d)=>{
+        let labels = d[0].split(",");
+        parsed.push({
+            x: labels[0],
+            y: labels[1],
+            value: parseFloat(d[1]),
+            displayValue: parseFloat(d[1]).toPrecision(3)
+        })
+    });
+    return parsed;
 }

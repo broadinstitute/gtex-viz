@@ -12,6 +12,15 @@ import {scaleBand, scaleLinear} from "d3-scale";
 
 
 export default class HalfMap{
+    /**
+     *
+     * @param data {Object} TODO: describe the data structure
+     * @param cutoff
+     * @param useLog
+     * @param logBase
+     * @param colorScheme
+     * @param tooltipId
+     */
     constructor(data, cutoff = 0.0, useLog=true, logBase=10, colorScheme="Greys", tooltipId="tooltip"){
         this.data= data;
         this.dataDict = {};
@@ -34,7 +43,8 @@ export default class HalfMap{
 
     draw(canvas, svg, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], showLabels=true, labelAngle=90){
         this._drawCanvas(canvas, dimensions, colorScaleDomain, showLabels);
-        this._drawSvg(svg, dimensions, showLabels, labelAngle);
+        let drawCells = false;
+        this.drawSvg(svg, dimensions, drawCells, showLabels, labelAngle);
     }
 
     drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){
@@ -42,6 +52,10 @@ export default class HalfMap{
     }
 
     // private methods
+    _log(v){
+        const adjust = 1;
+        return Math.log(Number(v+adjust))/Math.log(this.logBase);
+    }
     _drawCanvas(canvas, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1]){
         this._setScales(dimensions, colorScaleDomain);
         let visibleData = this._filter(this.data, this.cutoff);
@@ -56,7 +70,7 @@ export default class HalfMap{
         visibleData.forEach((d)=>{
             let x = this.xScale(d.x);
             let y = this.yScale(d.y);
-            d.color = this.colorScale(d.value);
+            d.color = d.value==0?"#fff":this.useLog?this.colorScale(this._log(d.value)):this.colorScale(d.value);
             context.fillStyle = this.colorScale(d.value);
             // console.log(d);
             context.fillRect(x, y, this.xScale.bandwidth(), this.yScale.bandwidth());
@@ -70,7 +84,31 @@ export default class HalfMap{
         context.restore();
     }
 
-    _drawSvg(svg, dimensions, showLabels=true, labelAngle=90){
+    drawSvg(svg, dimensions, drawCells=true, showLabels=true, labelAngle=90, colorScaleDomain=[0,1]){
+        if (drawCells){
+            this._setScales(dimensions, colorScaleDomain);
+            let mapG = svg.append("g")
+                .attr("clip-path", "url(#clip)");
+            let cells = mapG.selectAll(".half-map-cell")
+                .data(this._filter(this.data, this.cutoff));
+
+            // add new rects
+            cells.enter()
+                .append("rect")
+                .attr("class", "half-map-cell")
+                .attr("row", (d)=>`y${this.yScale.domain().indexOf(d.y)}`)
+                .attr("column", (d)=>`x${this.xScale.domain().indexOf(d.x)}`)
+                .attr("width", this.xScale.bandwidth())
+                .attr("height", this.yScale.bandwidth())
+                .attr("x", (d)=>this.xScale(d.x))
+                .attr("y", (d)=>this.yScale(d.y))
+                .attr("transform", `rotate(-45)`)
+                .merge(cells)
+                .style("fill", (d)=>d.value==0?"#fff":this.useLog?this.colorScale(this._log(d.value)):this.colorScale(d.value))
+
+
+        }
+
         if(showLabels){
             this._setLabelScale(dimensions);
             svg.selectAll().data(this.labelScale.domain())
@@ -105,7 +143,7 @@ export default class HalfMap{
             svg.selectAll('.half-map-label').classed('highlighted', false);
         });
         select(svg.node().parentNode)
-            .style("cursor", "none")
+            // .style("cursor", "none")
             .on('mousemove', () => {
                 let pos = mouse(svg.node()); // retrieve the mouse position relative to the SVG element
                 let x = pos[0];
@@ -173,6 +211,7 @@ export default class HalfMap{
             if (pairs.hasOwnProperty(p) || pairs.hasOwnProperty(p2)) return false;
             pairs[p] = true;
             if (d.value < cutoff) return false;
+            if (this.xScale(d.x) === undefined) return false; // filter the data that are not going to be rendered
             return true;
         });
     }

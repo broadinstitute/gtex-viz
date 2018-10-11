@@ -12,7 +12,7 @@
     </head>
 
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
-    <h3>GTEx Gene-Eqtl Visualizer</h3>
+    <h3>GTEx Gene-EQTL Visualizer</h3>
     <hr>
         <div class="row">
             <div class="col-xs-12 col-sm-2">
@@ -57,7 +57,7 @@
             let svgConfig = {
                 id: 'bmap',
                 width: 1200,
-                height: 600,
+                height: 1800,
                 marginTop: 40,
                 marginRight: 20,
                 marginBottom: 20,
@@ -68,8 +68,13 @@
 
                 focusPanelColumnLabelHeight: 100, // assuming the label is at the bottom
                 focusPanelColumnLabelAngle: 90,
+                focusPanelColumnLabelAdjust: 10,
                 focusPanelRowLabelWidth: 100, // assuming the label is on the left side
                 focusPanelShowLabels: true,
+
+                ldCutoff: 0.0,
+                ldColorScheme: "Greys",
+                ldLegendSpace: 50,
 
                 colorScheme: "RdBu",
                 colorScaleDomain: [-0.75, 0.75],
