@@ -6,7 +6,7 @@
 
 import {json} from 'd3-fetch';
 import {select} from 'd3-selection';
-import {getGtexUrls, parseGeneExpressionForViolin, parseTissues} from './modules/gtexDataParser';
+import {getGtexUrls, parseTissues} from './modules/gtexDataParser';
 
 import GroupedViolin from './modules/GroupedViolin';
 
@@ -46,7 +46,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
                 tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
                 tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
             });
-            const violinPlotData = parseGeneExpressionForViolin(args[1]);
+            const violinPlotData = parseGeneExpressionForViolin(args[1], tissueIdNameMap, tissueIdColorMap);
             // setting colors for each violin by tissue
             violinPlotData.forEach((d) => {d.color = `#${tissueIdColorMap[d.tissueSiteDetailId]}`});
             const tissueGroups = violinPlotData.map((d) => d.group);
@@ -103,4 +103,34 @@ function _setViolinPlotDimensions(width=1200, height=250, margin=_setViolinPlotM
         outerWidth: width + (margin.left + margin.right),
         outerHeight: height + (margin.top + margin.bottom)
     }
+}
+
+/**
+ *
+ * DATA PARSERS
+ *
+ */
+
+/**
+ * parse the expression data of a gene for a grouped violin plot
+ * @param data {JSON} from GTEx gene expression web service
+ * @param colors {Dictionary} the violin color for genes
+ * @param IdNameMap {Dictionary} mapping of tissueIds to tissue names
+ */
+function parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefined, useLog=true){
+    const attr = 'geneExpression';
+    if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
+    data[attr].forEach((d)=>{
+        ['data', 'tissueSiteDetailId', 'geneSymbol', 'gencodeId'].forEach((k)=>{
+            if(!d.hasOwnProperty(k)){
+                console.error(d);
+                throw 'Parse Error: required json attribute is missing: ' + k;
+            }
+        });
+        d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
+        d.group = idNameMap===undefined?d.tissueSiteDetailId:idNameMap[d.tissueSiteDetailId];
+        d.label = d.subsetGroup===undefined?d.geneSymbol:d.subsetGroup;
+        d.color = colors===undefined?'#90c1c1':colors[d.tissueSiteDetailId];
+    });
+    return data[attr];
 }
