@@ -142,8 +142,8 @@ function renderBubbleMap(par, gene, urls){
             let bubbleMax = min([bmap.xScale.bandwidth(), bmap.yScale.bandwidth()]) / 2;
             bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
 
-            ldMap.xScale = bmap.xScale;
-            ldMap.yScale = bmap.xScale;
+            if (ldMap.xScale !== undefined) ldMap.xScale.domain(bmap.xScale.domain());
+            if (ldMap.yScale !== undefined) ldMap.yScale.domain(bmap.xScale.domain());
 
             // update the focus bubbles
             focusG.selectAll(".bubble-map-cell")
@@ -160,15 +160,17 @@ function renderBubbleMap(par, gene, urls){
             // update the column labels
             focusG.selectAll(".bubble-map-xlabel")
                 .attr("transform", (d) => {
-                    let x = bmap.xScale(d) + 5 || 0; // TODO: remove hard-coded value
+                    let x = bmap.xScale(d) + bmap.xScale.bandwidth()/3 || 0; // TODO: remove hard-coded value
                     let y = bmap.yScale.range()[1] + par.focusPanelColumnLabelAdjust;
                     return `translate(${x}, ${y}) rotate(${par.focusPanelColumnLabelAngle})`;
 
                 })
+                .style("font-size", `${Math.floor(bmap.xScale.bandwidth())/2}px`)
                 .style("display", (d) => {
                     let x = bmap.xScale(d);
                     return x === undefined ? "none" : "block";
                 });
+
             // render the LD
             ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
             // clear the canvas context
@@ -177,16 +179,12 @@ function renderBubbleMap(par, gene, urls){
             context.setTransform(1,0,0,1,0,0);
             context.clearRect(0, 0, ldCanvas.width, ldCanvas.height); // clear the canvas
             // draw
-            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:0, left:par.ldPanelMargin.left}, [0,1], false);
+            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:0, left:par.ldPanelMargin.left}, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
         });
     miniG.append("g")
         .attr("class", "brush")
         .call(brush)
         .call(brush.move, [0, bmap.xScaleMini.bandwidth()*50]);
-
-    // let ldMap = new HalfMap(ldConfig.data, ldConfig.cutoff, ldConfig.useLog, ldConfig.logBase, ldConfig.colorScheme, ldConfig.id+"-tooltip");
-    // ldMap.drawSvg(ldG, {w: par.inWidth, top:20, left: 0}, true, false, undefined);
-
 
 
 

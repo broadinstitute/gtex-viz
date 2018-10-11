@@ -9,11 +9,11 @@ text.color-legend {
 
 text.bubble-map-xlabel {
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
-    font-size: 10px;
+    /*font-size: 10px;*/
 }
 text.bubble-map-xlabel.highlighted {
     font-weight: 400;
-    font-size: 12px;
+    /*font-size: 12px;*/
     text-decoration: underline;
 }
 text.bubble-map-xlabel.query {

@@ -505,7 +505,6 @@ export function parseGeneExpressionForViolin(data, useLog=true, colors=undefined
 }
 
 /**
-<<<<<<< HEAD
  * parse the LD (linkage disequilibrium data)
  * @param data {JSON} from GTEx ld web service
  * @returns {Array}
@@ -514,13 +513,25 @@ export function parseLD(data) {
     const attr = 'ld';
     if (!data.hasOwnProperty(attr)) throw 'Parsing Error: required json attribute is missing: ' + attr;
     let parsed = [];
+    let unique = {};
     data[attr].forEach((d) => {
-        let labels = d[0].split(",");
+        let labels = d[0].split(",").sort(); // sort the variant IDs
+        unique[labels[0]] = true;
+        unique[labels[1]] = true;
         parsed.push({
             x: labels[0],
             y: labels[1],
             value: parseFloat(d[1]),
-            displayValue: parseFloat(d[1]).toPrecision(3)
+            displayValue: parseFloat(d[1]).toPrecision(3) // toPrecision() returns a string
+        })
+    });
+    Object.keys(unique).forEach((d)=>{
+        parsed.push({
+            x: d,
+            y: d,
+            value: 1,
+            displayValue: "1"
+
         })
     });
     return parsed;

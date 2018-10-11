@@ -41,10 +41,10 @@ export default class HalfMap{
         select(`#${tooltipId}`).classed('half-map-tooltip', true);
     }
 
-    draw(canvas, svg, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], showLabels=true, labelAngle=90){
-        this._drawCanvas(canvas, dimensions, colorScaleDomain, showLabels);
+    draw(canvas, svg, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], showLabels=true, labelAngle=90, xScaleDomain=undefined, yScaleDomain=undefined){
+        this._drawCanvas(canvas, dimensions, colorScaleDomain, xScaleDomain, yScaleDomain);
         let drawCells = false;
-        this.drawSvg(svg, dimensions, drawCells, showLabels, labelAngle);
+        this.drawSvg(svg, dimensions, drawCells, showLabels, labelAngle, colorScaleDomain, xScaleDomain, yScaleDomain);
     }
 
     drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){
@@ -56,8 +56,8 @@ export default class HalfMap{
         const adjust = 1;
         return Math.log(Number(v+adjust))/Math.log(this.logBase);
     }
-    _drawCanvas(canvas, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1]){
-        this._setScales(dimensions, colorScaleDomain);
+    _drawCanvas(canvas, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], xScaleDomain=undefined, yScaleDomain=undefined){
+        this._setScales(dimensions, colorScaleDomain, xScaleDomain, yScaleDomain);
         let visibleData = this._filter(this.data, this.cutoff);
         let context = canvas.node().getContext('2d');
 
@@ -65,12 +65,13 @@ export default class HalfMap{
         context.save();
         context.translate(dimensions.left , dimensions.top + (this.xScale.bandwidth()*Math.sqrt(2)/2)); // shift the radius distance...
         context.rotate(Math.PI*(-45/180)); // rotate counterclockwise (negative) 45 degrees
-        context.clearRect(0,0,dimensions.w, dimensions.w);
+        context.clearRect(-dimensions.w,-dimensions.w,dimensions.w*2, dimensions.w*2);
 
         // LD canvas rendering from GEV old code
         visibleData.forEach((d)=>{
             let x = this.xScale(d.x);
             let y = this.yScale(d.y);
+            if (x === undefined || y === undefined) return;
             d.color = d.value==0?"#fff":this.useLog?this.colorScale(this._log(d.value)):this.colorScale(d.value);
             context.fillStyle = this.colorScale(d.value);
             // console.log(d);
@@ -79,15 +80,16 @@ export default class HalfMap{
             // context.textAlign = 'left';
             // context.fillStyle = 'white';
             // context.font = '10px Open Sans';
-            // context.fillText(d.x+' '+d.y, x+10, y+10);
+            // context.fillText(d.x, x+10, y+10);
+            // context.fillText(d.y, x+10, y+30);
         });
         this.dataDict = this._generateDataDict(visibleData);
         context.restore();
     }
 
-    drawSvg(svg, dimensions, drawCells=true, showLabels=true, labelAngle=90, colorScaleDomain=[0,1]){
+    drawSvg(svg, dimensions, drawCells=true, showLabels=true, labelAngle=90, colorScaleDomain=[0,1], xScaleDomain, yScaleDomain=undefined){
         if (drawCells){
-            this._setScales(dimensions, colorScaleDomain);
+            this._setScales(dimensions, colorScaleDomain, xScaleDomain, yScaleDomain);
             let mapG = svg.append("g")
                 .attr("clip-path", "url(#clip)");
             let cells = mapG.selectAll(".half-map-cell")
@@ -231,18 +233,21 @@ export default class HalfMap{
         return dict;
     }
 
-    _setScales(dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1]){
-        if (this.xScale === undefined) this._setXScale(dimensions);
-        if (this.yScale === undefined) this._setYScale(dimensions);
+    _setScales(dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], xScaleDomain, yScaleDomain){
+        if (this.xScale === undefined) this._setXScale(dimensions, xScaleDomain);
+        if (this.yScale === undefined) this._setYScale(dimensions, yScaleDomain);
         if (this.colorScale === undefined) this._setColorScale(colorScaleDomain);
     }
 
-    _setXScale(dim={w:600}){
-        let xList = nest()
+    _setXScale(dim={w:600}, xList=undefined){
+        if (xList === undefined){
+            xList = nest()
             .key((d) => d.displayX!==undefined?d.displayX:d.x) // group this.data by d.x
             .entries(this.data)
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
+        }
+
         this.xScale = scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
             .domain(xList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
             // .range([dim.left, dim.left+(dim.w/Math.sqrt(2))])
@@ -250,14 +255,17 @@ export default class HalfMap{
             .padding(.05); // temporarily hard-coded value
     }
 
-    _setYScale(dim={w:600}){
+    _setYScale(dim={w:600}, yList){
         // use d3 nest data structure to find the unique list of y labels
         // reference: https://github.com/d3/d3-collection#nests
-        let yList = nest()
+        if (yList === undefined){
+            yList = nest()
             .key((d) => d.y) // group this.data by d.x
             .entries(this.data)
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
+        }
+
         this.yScale = scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
             .domain(yList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
             // .range([dim.top, dim.top+(dim.w/Math.sqrt(2))])
@@ -267,7 +275,7 @@ export default class HalfMap{
 
     _setLabelScale(dim={w:600}){
         if (this.xScale === undefined) this._setXScale();
-        let xList = this.xScale.domain();
+        let xList = this.xScale.domain(); // TODO: this assumes that the half map is symmetrical
         this.labelScale = scaleBand()
             .domain(xList)
             .range([0, dim.w])
