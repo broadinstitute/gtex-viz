@@ -12,7 +12,7 @@
     </head>
 
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
-    <h3>GTEx Gene-Eqtl Visualizer</h3>
+    <h3>GTEx Gene-EQTL Visualizer</h3>
     <hr>
         <div class="row">
             <div class="col-xs-12 col-sm-2">
@@ -32,9 +32,10 @@
                 </div>
             </div>
         </div>
-        <div id="searchResult" class="col-xs-12">
+        <div id="vizRoot">
             <div id="messageBox" style="color: #CB181D;"></div> <!-- for displaying message of input errors-->
-            <div id="vizRoot" style="width:80%;"></div> <!-- the bubble map root div -->
+            <div id="bmap"></div>
+
         </div>
 
     </body>
@@ -51,8 +52,40 @@
     <script src="/build/js/gev.bundle.dev.js"></script>
     <script>
         $(document).ready(function(){
-            let geneId = "actn1";
-            GeneEqtlVisualizer.render(geneId, "vizRoot", "spinner");
+            let geneId = "actn3";
+
+            let svgConfig = {
+                id: 'bmap',
+                width: 1200,
+                height: 1800,
+                marginTop: 40,
+                marginRight: 20,
+                marginBottom: 20,
+                marginLeft: 50,
+                legendHeight: 50, // assuming the legends appear at the top of the focus panel
+
+                miniPanelHeight: 100,
+
+                focusPanelColumnLabelHeight: 100, // assuming the label is at the bottom
+                focusPanelColumnLabelAngle: 90,
+                focusPanelColumnLabelAdjust: 10,
+                focusPanelRowLabelWidth: 100, // assuming the label is on the left side
+                focusPanelShowLabels: true,
+
+                ldCutoff: 0.0,
+                ldColorScheme: "Greys",
+                ldLegendSpace: 50,
+
+                colorScheme: "RdBu",
+                colorScaleDomain: [-0.75, 0.75],
+
+                useLog: false,
+                logBase: undefined,
+
+
+            };
+
+            GeneEqtlVisualizer.render(svgConfig, geneId, "vizRoot", "spinner");
 
             // $('#gene').keypress(function(e){
             //     if(e.keyCode == 13){

@@ -4,15 +4,21 @@
  */
 "use strict";
 import {json} from "d3-fetch";
-import {createSvg, createCanvas} from "./modules/utils";
+import {brushX} from "d3-brush";
+import {select, selectAll, event} from "d3-selection";
+import {extent, max, min} from "d3-array";
+
+import {checkDomId} from "./modules/utils";
 import {
     getGtexUrls,
     parseGenes,
-    parseSingleTissueEqtls
+    parseSingleTissueEqtls,
+    parseLD
 } from "./modules/gtexDataParser";
 import BubbleMap from "./modules/BubbleMap";
+import HalfMap from "./modules/HalfMap";
 
-export function render(geneId, rootDivId, spinnerId, urls = getGtexUrls()){
+export function render(svgPar, geneId, rootDivId, spinnerId, urls = getGtexUrls()){
     console.log(geneId);
     json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
         .then(function(data){
@@ -20,64 +26,169 @@ export function render(geneId, rootDivId, spinnerId, urls = getGtexUrls()){
             json(urls.singleTissueEqtl + gene.gencodeId)
                 .then(function(data2){
                     let eqtls = parseSingleTissueEqtls(data2);
-                    let gevConfig = {
-                        id: rootDivId,
-                        data: eqtls,
-                        width: 2000, //window.innerWidth*0.9,
-                        height: 330, // TODO: use a dynamic width based on the matrix size
-                        marginTop: 100,
-                        marginRight: 100,
-                        marginBottom: 30,
-                        marginLeft: 30,
-                        showLabels: true,
-                        rowLabelWidth: 150,
-                        columnLabelHeight: 100,
-                        columnLabelAngle: 90,
-                        columnLabelPosAdjust: 10,
-                        useLog: false,
-                        logBase: 10,
-                        colorScheme: "RdBu", // a diverging color scheme
-                        colorScaleDomain: [-0.75, 0.75],
-                        useCanvas: false
-                    };
-                    renderBubbleMap(gevConfig);
-                    $('#' + spinnerId).hide();
+                    // canvasPar.data = eqtls;
+                    svgPar.data = eqtls;
+                    json(urls.ld + gene.gencodeId)
+                    .then(function(data) {
+                        let ld = parseLD(data);
+                        svgPar.ldData = ld.filter((d)=>d.value>=svgPar.ldCutoff); // filter unused data
+                        renderBubbleMap(svgPar, gene, urls);
+                        $('#' + spinnerId).hide();
+                    });
+
                 })
         })
 }
 
-export function renderBubbleMap(par){
-    let margin = {
-        left: par.showLabels?par.marginLeft + par.rowLabelWidth: par.marginLeft,
+function setDimensions(par){
+    par.margin = {
+        left: par.marginLeft + par.focusPanelRowLabelWidth,
         top: par.marginTop,
         right: par.marginRight,
-        bottom: par.showLabels?par.marginBottom + par.columnLabelHeight:par.marginBottom
+        bottom: par.marginBottom + par.focusPanelColumnLabelHeight
     };
-    let inWidth = par.width - (par.rowLabelWidth + par.marginLeft + par.marginRight);
-    let inHeight = par.height - (par.columnLabelHeight + par.marginTop + par.marginBottom);
+    par.inWidth = par.width - (par.margin.left + par.margin.right);
+    par.inHeight = par.height - (par.margin.top + par.margin.bottom);
+    par.focusPanelHeight = par.inHeight - (par.legendHeight + par.miniPanelHeight + par.width);
+    if (par.focusPanelHeight < 0) throw "Config error: focus panel height is negative.";
+    par.focusPanelMargin = {
+        left: par.margin.left,
+        top: par.margin.top + par.miniPanelHeight + par.legendHeight
+    };
+    par.ldPanelMargin = {
+        left: par.margin.left,
+        top: par.focusPanelMargin.top + par.focusPanelHeight + par.focusPanelColumnLabelHeight + 80
+    };
+    return par;
+}
 
-    if(par.useCanvas) {
-        let svgId = par.id + '-svgDiv';
-        let canvasId = par.id + '-canvasDiv';
-        if ($(`#${svgId}`).length == 0) $('<div/>').attr('id', svgId).appendTo($(`#${par.id}`));
-        if ($(`#${canvasId}`).length == 0) $('<div/>').attr('id', canvasId).appendTo($(`#${par.id}`));
+function createSvg(rootId, width, height, margin, svgId=undefined){
+    checkDomId(rootId);
+    if (svgId===undefined) svgId=`${rootId}-svg`;
+    let svg = select("#"+rootId).append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("id", svgId);
 
-        let bmapSvg = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, svgId+"-tooltip");
-        let svg = createSvg(svgId, par.width, par.height, margin);
-        bmapSvg.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
+    svg.append("defs").append("clipPath")
+        .attr("id", "clip")
+        .append("rect")
+        .attr("width", width)
+        .attr("height", height);
 
-        let bmapCanvas = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, canvasId+"-tooltip");
-        let canvas = createCanvas(canvasId, par.width, par.height, margin);
-        bmapCanvas.drawCanvas(canvas, {w:inWidth, h:inHeight, top: margin.top, left: margin.left}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust)
-        return bmapCanvas;
-    }
-    else {
-        let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
-        let svg = createSvg(par.id, par.width, par.height, margin);
-        bmap.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
-        bmap.drawColorLegend(svg, {x: 0, y: -30}, 3, "NES");
-        bmap.drawBubbleLegend(svg, {x: 500, y:-30, title: "-log10(p-value)"}, 5, "-log10(p-value)");
-        return bmap;
+    return svg;
+}
 
-    }
+/**
+ * Render the bubble heatmap
+ * @param par {Object} configure the visualizations
+ * TODO: check required attributes in par
+ * @param gene {Object} containing attr: gencodeId
+ * @returns {BubbleMap}
+ */
+function renderBubbleMap(par, gene, urls){
+    par = setDimensions(par);
+
+    let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
+    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-tooltip");
+
+    let svg = createSvg(par.id, par.width, par.height, par.margin, undefined);
+
+    let miniG = svg.append("g")
+        .attr("class", "context")
+        .attr("transform", `translate(${par.margin.left}, ${par.margin.top})`);
+
+    let focusG = svg.append("g")
+        .attr("class", "focus")
+        .attr("transform", `translate(${par.focusPanelMargin.left}, ${par.focusPanelMargin.top})`);
+
+    let ldCanvas = select(`#${par.id}`).append("canvas")
+        .attr("id", par.id + "-ld-canvas")
+        .attr("width", par.inWidth)
+        .attr("height", par.inWidth)
+        // .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
+
+    let ldG = svg.append("g")
+        .attr("class", "ld")
+        .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
+
+    bmap.drawCombo(
+        miniG,
+        focusG,
+        {w:par.inWidth, h:par.miniPanelHeight, top:5, left:0, h2: par.focusPanelHeight},
+        par.colorScaleDomain,
+        par.showLabels,
+        par.focusPanelColumnLabelAngle,
+        par.focusPanelColumnLabelAdjust,
+        false);
+
+    // add customed brush
+    let brush = brushX()
+        .extent([
+            [0,0],
+            [par.inWidth, par.miniPanelHeight]
+        ])
+        .on("brush", ()=>{
+            let selection = event.selection;
+            let brushLeft = Math.round(selection[0] / bmap.xScaleMini.step());
+            let brushRight = Math.round(selection[1] / bmap.xScaleMini.step());
+
+            bmap.xScale.domain(bmap.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
+            let bubbleMax = min([bmap.xScale.bandwidth(), bmap.yScale.bandwidth()]) / 2;
+            bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
+
+            ldMap.xScale = bmap.xScale;
+            ldMap.yScale = bmap.xScale;
+
+            // update the focus bubbles
+            focusG.selectAll(".bubble-map-cell")
+                .attr("cx", (d) => {
+                    let x = bmap.xScale(d.displayX ? d.displayX : d.x);
+                    return x === undefined ? bmap.xScale.bandwidth() / 2 : x + bmap.xScale.bandwidth() / 2;
+
+                })
+                .attr("r", (d) => {
+                    let x = bmap.xScale(d.displayX ? d.displayX : d.x);
+                    return x === undefined ? 0 : bmap.bubbleScale(d.r)
+                });
+
+            // update the column labels
+            focusG.selectAll(".bubble-map-xlabel")
+                .attr("transform", (d) => {
+                    let x = bmap.xScale(d) + 5 || 0; // TODO: remove hard-coded value
+                    let y = bmap.yScale.range()[1] + par.focusPanelColumnLabelAdjust;
+                    return `translate(${x}, ${y}) rotate(${par.focusPanelColumnLabelAngle})`;
+
+                })
+                .style("display", (d) => {
+                    let x = bmap.xScale(d);
+                    return x === undefined ? "none" : "block";
+                });
+            return;
+            // render the LD
+            select(`#${par.id}-ld-canvas`).remove();
+            let ldCanvas = select(`#${par.id}`).append("canvas")
+                .attr("id", par.id + "-ld-canvas")
+                .attr("width", par.inWidth)
+                .attr("height", par.inWidth);
+            ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
+            // ldMap.drawSvg(ldG, {w:par.inWidth, top:20, left:0}, true, false);
+            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:20, left:0}, [0,1], false);
+        });
+    miniG.append("g")
+        .attr("class", "brush")
+        .call(brush)
+        .call(brush.move, [0, bmap.xScaleMini.bandwidth()*50]);
+
+    // let ldMap = new HalfMap(ldConfig.data, ldConfig.cutoff, ldConfig.useLog, ldConfig.logBase, ldConfig.colorScheme, ldConfig.id+"-tooltip");
+    // ldMap.drawSvg(ldG, {w: par.inWidth, top:20, left: 0}, true, false, undefined);
+
+
+
+
+    // bmap.drawColorLegend(svg, {x: 0, y: -30}, 3, "NES");
+    // bmap.drawBubbleLegend(svg, {x: 500, y:-30, title: "-log10(p-value)"}, 5, "-log10(p-value)");
+
+    return bmap;
+
 }

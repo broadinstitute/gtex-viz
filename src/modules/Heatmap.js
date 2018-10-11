@@ -160,7 +160,7 @@ export default class Heatmap {
         // update old elements
         cells.attr("x", (d) => this.xScale(d.x))
             .attr("y", (d) => this.yScale(d.y))
-            .attr("row", (d) => `x${this.xList.indexOf(d.x)}`)
+            .attr("row", (d) => `x${this.xList.indexOf(d.x)}`) // TODO: row should be y, column should be x...
             .attr("col", (d) => `y${this.yList.indexOf(d.y)}`);
 
         // enter new elements
@@ -174,10 +174,10 @@ export default class Heatmap {
             .attr("y", (d) => this.yScale(d.y))
             .attr("rx", this.r)
             .attr('ry', this.r)
-            .attr("class", (d) => `exp-map-cell`)
+            .attr("class", "exp-map-cell")
             .attr("width", this.xScale.bandwidth())
             .attr("height", this.yScale.bandwidth())
-            .style("fill", (d) => "#eeeeee")
+            .style("fill", "#eeeeee")
             .on("mouseover", function(d){
                 const selected = select(this); // Note: "this" here refers to the dom element not the object
                 self.cellMouseover(d, dom, selected);
