@@ -40,6 +40,11 @@ export function render(svgPar, geneId, rootDivId, spinnerId, urls = getGtexUrls(
         })
 }
 
+/**
+ * Set the dimensions of the panels
+ * @param par
+ * @returns {*}
+ */
 function setDimensions(par){
     par.margin = {
         left: par.marginLeft + par.focusPanelRowLabelWidth,
@@ -49,7 +54,7 @@ function setDimensions(par){
     };
     par.inWidth = par.width - (par.margin.left + par.margin.right);
     par.inHeight = par.height - (par.margin.top + par.margin.bottom);
-    par.focusPanelHeight = par.inHeight - (par.legendHeight + par.miniPanelHeight + par.width);
+    par.focusPanelHeight = par.inHeight - (par.legendHeight + par.miniPanelHeight);
     if (par.focusPanelHeight < 0) throw "Config error: focus panel height is negative.";
     par.focusPanelMargin = {
         left: par.margin.left,
@@ -62,7 +67,7 @@ function setDimensions(par){
     return par;
 }
 
-function createSvg(rootId, width, height, margin, svgId=undefined){
+function createSvg(rootId, width, height, svgId=undefined){
     checkDomId(rootId);
     if (svgId===undefined) svgId=`${rootId}-svg`;
     let svg = select("#"+rootId).append("svg")
@@ -89,10 +94,10 @@ function createSvg(rootId, width, height, margin, svgId=undefined){
 function renderBubbleMap(par, gene, urls){
     par = setDimensions(par);
 
-    let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
-    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-tooltip");
+    let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
+    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip");
 
-    let svg = createSvg(par.id, par.width, par.height, par.margin, undefined);
+    let svg = createSvg(par.id, par.width, par.height, undefined);
 
     let miniG = svg.append("g")
         .attr("class", "context")
@@ -102,15 +107,15 @@ function renderBubbleMap(par, gene, urls){
         .attr("class", "focus")
         .attr("transform", `translate(${par.focusPanelMargin.left}, ${par.focusPanelMargin.top})`);
 
-    let ldCanvas = select(`#${par.id}`).append("canvas")
+    let ldCanvas = select(`#${par.ldId}`).append("canvas")
         .attr("id", par.id + "-ld-canvas")
-        .attr("width", par.inWidth)
-        .attr("height", par.inWidth)
-        // .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
+        .attr("width", par.width)
+        .attr("height", par.width);
 
-    let ldG = svg.append("g")
+    let ldSvg = createSvg(par.ldId, par.width, par.width, undefined);
+    let ldG = ldSvg.append("g")
         .attr("class", "ld")
-        .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
+        .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`)
 
     bmap.drawCombo(
         miniG,
@@ -133,12 +138,13 @@ function renderBubbleMap(par, gene, urls){
             let brushLeft = Math.round(selection[0] / bmap.xScaleMini.step());
             let brushRight = Math.round(selection[1] / bmap.xScaleMini.step());
 
+            // update scales
             bmap.xScale.domain(bmap.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
             let bubbleMax = min([bmap.xScale.bandwidth(), bmap.yScale.bandwidth()]) / 2;
             bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
 
-            ldMap.xScale = bmap.xScale;
-            ldMap.yScale = bmap.xScale;
+            if (ldMap.xScale !== undefined) ldMap.xScale.domain(bmap.xScale.domain());
+            if (ldMap.yScale !== undefined) ldMap.yScale.domain(bmap.xScale.domain());
 
             // update the focus bubbles
             focusG.selectAll(".bubble-map-cell")
@@ -155,34 +161,31 @@ function renderBubbleMap(par, gene, urls){
             // update the column labels
             focusG.selectAll(".bubble-map-xlabel")
                 .attr("transform", (d) => {
-                    let x = bmap.xScale(d) + 5 || 0; // TODO: remove hard-coded value
+                    let x = bmap.xScale(d) + bmap.xScale.bandwidth()/3 || 0; // TODO: remove hard-coded value
                     let y = bmap.yScale.range()[1] + par.focusPanelColumnLabelAdjust;
                     return `translate(${x}, ${y}) rotate(${par.focusPanelColumnLabelAngle})`;
 
                 })
+                .style("font-size", `${Math.floor(bmap.xScale.bandwidth())/2}px`)
                 .style("display", (d) => {
                     let x = bmap.xScale(d);
                     return x === undefined ? "none" : "block";
                 });
-            return;
+
             // render the LD
-            select(`#${par.id}-ld-canvas`).remove();
-            let ldCanvas = select(`#${par.id}`).append("canvas")
-                .attr("id", par.id + "-ld-canvas")
-                .attr("width", par.inWidth)
-                .attr("height", par.inWidth);
             ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
-            // ldMap.drawSvg(ldG, {w:par.inWidth, top:20, left:0}, true, false);
-            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:20, left:0}, [0,1], false);
+            // clear the canvas context
+            let context = ldCanvas.node().getContext('2d');
+            context.save();
+            context.setTransform(1,0,0,1,0,0);
+            context.clearRect(0, 0, ldCanvas.width, ldCanvas.height); // clear the canvas
+            // draw
+            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:0, left:par.ldPanelMargin.left}, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
         });
     miniG.append("g")
         .attr("class", "brush")
         .call(brush)
         .call(brush.move, [0, bmap.xScaleMini.bandwidth()*50]);
-
-    // let ldMap = new HalfMap(ldConfig.data, ldConfig.cutoff, ldConfig.useLog, ldConfig.logBase, ldConfig.colorScheme, ldConfig.id+"-tooltip");
-    // ldMap.drawSvg(ldG, {w: par.inWidth, top:20, left: 0}, true, false, undefined);
-
 
 
 

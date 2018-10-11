@@ -14,7 +14,6 @@
 import {select} from "d3-selection";
 import {range} from "d3-array";
 
-
 export function checkDomId(id){
     // test input params
     if ($(`#${id}`).length == 0) {
