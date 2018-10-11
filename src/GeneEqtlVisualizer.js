@@ -107,11 +107,10 @@ function renderBubbleMap(par, gene, urls){
         .attr("class", "focus")
         .attr("transform", `translate(${par.focusPanelMargin.left}, ${par.focusPanelMargin.top})`);
 
-    // let ldCanvas = select(`#${par.ldId}`).append("canvas")
-    //     .attr("id", par.id + "-ld-canvas")
-    //     .attr("width", par.inWidth)
-    //     .attr("height", par.inWidth)
-    //     .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
+    let ldCanvas = select(`#${par.ldId}`).append("canvas")
+        .attr("id", par.id + "-ld-canvas")
+        .attr("width", par.width)
+        .attr("height", par.width);
 
     let ldG = svg.append("g")
         .attr("class", "ld")
@@ -138,6 +137,7 @@ function renderBubbleMap(par, gene, urls){
             let brushLeft = Math.round(selection[0] / bmap.xScaleMini.step());
             let brushRight = Math.round(selection[1] / bmap.xScaleMini.step());
 
+            // update scales
             bmap.xScale.domain(bmap.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
             let bubbleMax = min([bmap.xScale.bandwidth(), bmap.yScale.bandwidth()]) / 2;
             bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
@@ -170,16 +170,14 @@ function renderBubbleMap(par, gene, urls){
                     return x === undefined ? "none" : "block";
                 });
             // render the LD
-            select(`#${par.ldId}-ld-canvas`).remove();
-            let ldCanvas = select(`#${par.ldId}`).append("canvas")
-                .attr("id", par.ldId + "-ld-canvas")
-                .attr("width", par.inWidth)
-                .attr("height", par.inWidth)
-                .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
-
             ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
-            // ldMap.drawSvg(ldG, {w:par.inWidth, top:20, left:0}, true, false);
-            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:20, left:0}, [0,1], false);
+            // clear the canvas context
+            let context = ldCanvas.node().getContext('2d');
+            context.save();
+            context.setTransform(1,0,0,1,0,0);
+            context.clearRect(0, 0, ldCanvas.width, ldCanvas.height); // clear the canvas
+            // draw
+            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:0, left:par.ldPanelMargin.left}, [0,1], false);
         });
     miniG.append("g")
         .attr("class", "brush")

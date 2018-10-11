@@ -65,6 +65,7 @@ export default class HalfMap{
         context.save();
         context.translate(dimensions.left , dimensions.top + (this.xScale.bandwidth()*Math.sqrt(2)/2)); // shift the radius distance...
         context.rotate(Math.PI*(-45/180)); // rotate counterclockwise (negative) 45 degrees
+        context.clearRect(0,0,dimensions.w, dimensions.w);
 
         // LD canvas rendering from GEV old code
         visibleData.forEach((d)=>{

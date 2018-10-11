@@ -276,7 +276,6 @@ export default class BubbleMap {
         if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
         if (this.bubbleScaleMini === undefined) {
             let bubbleMax = min([this.xScaleMini.bandwidth(), this.yScaleMini.bandwidth()])/2; // the max bubble radius
-            console.log(bubbleMax)
             this.bubbleScaleMini = this._setBubbleScale({max: bubbleMax, min:1});
         }
     }
@@ -287,7 +286,6 @@ export default class BubbleMap {
         if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
         if (this.bubbleScale === undefined) {
             let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2;
-            console.log(bubbleMax)
             this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 2}); // TODO: change hard-coded min radius
         }
     }
