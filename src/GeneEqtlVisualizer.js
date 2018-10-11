@@ -94,8 +94,8 @@ function createSvg(rootId, width, height, margin, svgId=undefined){
 function renderBubbleMap(par, gene, urls){
     par = setDimensions(par);
 
-    let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
-    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-tooltip");
+    let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
+    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip");
 
     let svg = createSvg(par.id, par.width, par.height, par.margin, undefined);
 
