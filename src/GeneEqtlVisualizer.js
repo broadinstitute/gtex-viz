@@ -67,7 +67,7 @@ function setDimensions(par){
     return par;
 }
 
-function createSvg(rootId, width, height, margin, svgId=undefined){
+function createSvg(rootId, width, height, svgId=undefined){
     checkDomId(rootId);
     if (svgId===undefined) svgId=`${rootId}-svg`;
     let svg = select("#"+rootId).append("svg")
@@ -97,7 +97,7 @@ function renderBubbleMap(par, gene, urls){
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
     let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip");
 
-    let svg = createSvg(par.id, par.width, par.height, par.margin, undefined);
+    let svg = createSvg(par.id, par.width, par.height, undefined);
 
     let miniG = svg.append("g")
         .attr("class", "context")
@@ -112,9 +112,10 @@ function renderBubbleMap(par, gene, urls){
         .attr("width", par.width)
         .attr("height", par.width);
 
-    let ldG = svg.append("g")
+    let ldSvg = createSvg(par.ldId, par.width, par.width, undefined);
+    let ldG = ldSvg.append("g")
         .attr("class", "ld")
-        .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
+        .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`)
 
     bmap.drawCombo(
         miniG,

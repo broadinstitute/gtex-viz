@@ -139,15 +139,17 @@ export default class HalfMap{
             .style("stroke", "#d2111b")
             .style("stroke-width", 1)
             .style("fill", "none")
-            .style("display", 'none');
+            // .style("display", 'none');
         svg.on('mouseout', ()=>{
             cursor.style("display", "none");
             this.tooltip.hide();
             svg.selectAll('.half-map-label').classed('highlighted', false);
         });
         select(svg.node().parentNode)
-            // .style("cursor", "none")
+            .style("cursor", "none")
+            .style("position", "absolute")
             .on('mousemove', () => {
+                console.log("mouse moving")
                 let pos = mouse(svg.node()); // retrieve the mouse position relative to the SVG element
                 let x = pos[0];
                 let y = pos[1];
