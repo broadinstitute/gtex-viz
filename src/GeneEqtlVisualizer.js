@@ -77,7 +77,6 @@ function createSvg(rootId, width, height, margin, svgId=undefined){
         .attr("height", height);
 
     return svg;
-
 }
 
 /**
@@ -102,6 +101,12 @@ function renderBubbleMap(par, gene, urls){
     let focusG = svg.append("g")
         .attr("class", "focus")
         .attr("transform", `translate(${par.focusPanelMargin.left}, ${par.focusPanelMargin.top})`);
+
+    let ldCanvas = select(`#${par.id}`).append("canvas")
+        .attr("id", par.id + "-ld-canvas")
+        .attr("width", par.inWidth)
+        .attr("height", par.inWidth)
+        // .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
 
     let ldG = svg.append("g")
         .attr("class", "ld")
@@ -159,11 +164,16 @@ function renderBubbleMap(par, gene, urls){
                     let x = bmap.xScale(d);
                     return x === undefined ? "none" : "block";
                 });
-
+            return;
             // render the LD
+            select(`#${par.id}-ld-canvas`).remove();
+            let ldCanvas = select(`#${par.id}`).append("canvas")
+                .attr("id", par.id + "-ld-canvas")
+                .attr("width", par.inWidth)
+                .attr("height", par.inWidth);
             ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
-            ldMap.drawSvg(ldG, {w:par.inWidth, top:20, left:0}, true, false);
-
+            // ldMap.drawSvg(ldG, {w:par.inWidth, top:20, left:0}, true, false);
+            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:20, left:0}, [0,1], false);
         });
     miniG.append("g")
         .attr("class", "brush")
