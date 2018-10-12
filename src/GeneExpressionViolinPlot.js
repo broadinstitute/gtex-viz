@@ -17,20 +17,31 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
     ];
 
     const ids = {
-        rootId: rootId,
-        tooltipId: tooltipRootId
+        root: rootId,
+        svg: `${rootId}-svg`,
+        tooltip: tooltipRootId,
+        toolbar: `${rootId}-toolbar`,
+        clone: `${rootId}-svg-clone`, // for user download
+        buttons: {
+            download: `${rootId}-svg-download`
+        }
+
     };
                                         // top, right, bottom, left
     const margin = _setViolinPlotMargins(10, 75, 250, 50);
                                         // height, width, margins
     const dim = _setViolinPlotDimensions(1200, 250, margin);
 
-    if ($(`#${ids.rootId}`).length == 0) throw 'Violin Plot Error: rootId does not exist.';
-    if ($(`#${ids.tooltipId}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($('body')); // create if not already present
+    if ($(`#${ids.root}`).length == 0) throw 'Violin Plot Error: rootId does not exist.';
+    // create DOM components if not already present
+    if ($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($(`#${ids.root}`));
+    if ($(`#${ids.toolbar}`).length == 0) $('<div/>').attr('id', ids.toolbar).appendTo($(`#${ids.root}`));
+    if ($(`#${ids.clone}`).length == 0) $('<div/>').attr('id', ids.clone).appendTo($(`#${ids.root}`));
 
 
-    let svg = select(`#${ids.rootId}`)
+    let svg = select(`#${ids.root}`)
                 .append('svg')
+                .attr('id', ids.svg)
                 .attr('width', dim.outerWidth)
                 .attr('height', dim.outerHeight)
                 .append('g')
@@ -46,12 +57,12 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
                 tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
                 tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
             });
-            const violinPlotData = parseGeneExpressionForViolin(args[1], tissueIdNameMap, tissueIdColorMap);
+            const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, tissueIdColorMap);
             // setting colors for each violin by tissue
             violinPlotData.forEach((d) => {d.color = `#${tissueIdColorMap[d.tissueSiteDetailId]}`});
             const tissueGroups = violinPlotData.map((d) => d.group);
             let violinPlot = new GroupedViolin(violinPlotData);
-            violinPlot.createTooltip(ids.tooltipId)
+            let tooltip = violinPlot.createTooltip(ids.tooltip)
 
 
             let width = dim.width;
@@ -62,11 +73,13 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             let yLabel = 'log10(TPM)';
             let showX = true;
             let showSubX = false;
-            // let showWhisker = false;
-            // let showDivider = false;
-            // let showLegend = false;
+            let subXAngle = 0;
+            let showWhisker = false;
+            let showDivider = false;
+            let showLegend = false;
             // let showSize = false;
-            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX);
+            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
+            _addToolbar(violinPlot, tooltip, ids);
         });
 }
 
@@ -105,11 +118,10 @@ function _setViolinPlotDimensions(width=1200, height=250, margin=_setViolinPlotM
     }
 }
 
-/**
- *
- * DATA PARSERS
- *
- */
+function _addToolbar(vplot, tooltip, ids) {
+    let toolbar = vplot.createToolbar(ids.toolbar, tooltip);
+    toolbar.createDownloadSvgButton(ids.buttons.download, ids.svg, 'gtex-violin-plot.svg', ids.clone);
+}
 
 /**
  * parse the expression data of a gene for a grouped violin plot
@@ -117,7 +129,7 @@ function _setViolinPlotDimensions(width=1200, height=250, margin=_setViolinPlotM
  * @param colors {Dictionary} the violin color for genes
  * @param IdNameMap {Dictionary} mapping of tissueIds to tissue names
  */
-function parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefined, useLog=true){
+function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefined, useLog=true){
     const attr = 'geneExpression';
     if(!data.hasOwnProperty(attr)) throw 'Parse Error: required json attribute is missing: ' + attr;
     data[attr].forEach((d)=>{
