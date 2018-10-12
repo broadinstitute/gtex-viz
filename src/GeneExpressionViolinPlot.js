@@ -23,7 +23,11 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
         toolbar: `${rootId}-toolbar`,
         clone: `${rootId}-svg-clone`, // for user download
         buttons: {
-            download: `${rootId}-svg-download`
+            download: `${rootId}-svg-download`,
+            ascAlphaSort: `${rootId}-svg-asc-alphasort`,
+            descAlphaSort: `${rootId}-svg-desc-alphasort`,
+            ascSort: `${rootId}-svg-asc-sort`,
+            descSort: `${rootId}-svg-desc-sort`
         }
 
     };
@@ -121,6 +125,70 @@ function _setViolinPlotDimensions(width=1200, height=250, margin=_setViolinPlotM
 function _addToolbar(vplot, tooltip, ids) {
     let toolbar = vplot.createToolbar(ids.toolbar, tooltip);
     toolbar.createDownloadSvgButton(ids.buttons.download, ids.svg, 'gtex-violin-plot.svg', ids.clone);
+    // ascending alphabetical sort
+    toolbar.createButton(ids.buttons.ascAlphaSort, 'fa-sort-alpha-down');
+    let ascAlphaSortButton = select(`#${ids.buttons.ascAlphaSort}`)
+        .classed('active', true)
+        .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Asc)');})
+        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+
+    // descending alphabetical sort
+    toolbar.createButton(ids.buttons.descAlphaSort, 'fa-sort-alpha-up');
+    let descAlphaSortButton = select(`#${ids.buttons.descAlphaSort}`)
+        .classed('active', false)
+        .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Desc)');})
+        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+
+    // ascending numerical sort
+    toolbar.createButton(ids.buttons.ascSort, 'fa-sort-numeric-down');
+    let ascNumSortButton = select(`#${ids.buttons.ascSort}`)
+        .classed('active', false)
+        .on('mouseover', ()=>{toolbar.tooltip.show('Sort by Median (Asc)');})
+        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+    // descending numerical sort
+    toolbar.createButton(ids.buttons.descSort, 'fa-sort-numeric-up');
+    let descNumSortButton = select(`#${ids.buttons.descSort}`)
+        .classed('active', false)
+        .on('mouseover', ()=>{toolbar.tooltip.show('Sort by Median (Desc)');})
+        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+
+
+    ascAlphaSortButton.on('click', (d, i, nodes)=>{
+        if (!ascAlphaSortButton.classed('active')) {
+            ascAlphaSortButton.classed('active', true);
+            descAlphaSortButton.classed('active', false);
+            ascNumSortButton.classed('active', false);
+            descNumSortButton.classed('active', false);
+        }
+    });
+
+    descAlphaSortButton.on('click', (d, i, nodes)=>{
+        if (!descAlphaSortButton.classed('active')) {
+            ascAlphaSortButton.classed('active', false);
+            descAlphaSortButton.classed('active', true);
+            ascNumSortButton.classed('active', false);
+            descNumSortButton.classed('active', false);
+        }
+    });
+
+    ascNumSortButton.on('click', (d, i, nodes)=>{
+        if (!ascNumSortButton.classed('active')) {
+            descAlphaSortButton.classed('active', false);
+            ascAlphaSortButton.classed('active', false);
+            ascNumSortButton.classed('active', true);
+            descNumSortButton.classed('active', false);
+        }
+    });
+
+    descNumSortButton.on('click', (d, i, nodes)=>{
+        if (!descNumSortButton.classed('active')) {
+            descAlphaSortButton.classed('active', false);
+            ascAlphaSortButton.classed('active', false);
+            ascNumSortButton.classed('active', false);
+            descNumSortButton.classed('active', true);
+        }
+    });
+
 }
 
 /**
