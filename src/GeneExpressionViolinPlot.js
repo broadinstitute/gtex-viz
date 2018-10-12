@@ -62,8 +62,6 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
                 tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
             });
             const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, tissueIdColorMap);
-            // setting colors for each violin by tissue
-            violinPlotData.forEach((d) => {d.color = `#${tissueIdColorMap[d.tissueSiteDetailId]}`});
             const tissueGroups = violinPlotData.map((d) => d.group);
             let violinPlot = new GroupedViolin(violinPlotData);
             let tooltip = violinPlot.createTooltip(ids.tooltip)
@@ -72,7 +70,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             let width = dim.width;
             let height = dim.height;
             let xPadding = 0.1;
-            let xDomain = tissueGroups.sort(); // alphabetically sorting by tissue
+            let xDomain = tissueGroups.sort(); // alphabetically sorting by tissue by default
             let yDomain =[];
             let yLabel = 'log10(TPM)';
             let showX = true;
@@ -159,7 +157,12 @@ function _addToolbar(vplot, tooltip, ids) {
             descAlphaSortButton.classed('active', false);
             ascNumSortButton.classed('active', false);
             descNumSortButton.classed('active', false);
+
+            let tissueGroups = vplot.data.map((d) => d.group);
+            let xDomain = tissueGroups.sort();
+            vplot.updateXScale(xDomain);
         }
+
     });
 
     descAlphaSortButton.on('click', (d, i, nodes)=>{
@@ -168,7 +171,17 @@ function _addToolbar(vplot, tooltip, ids) {
             descAlphaSortButton.classed('active', true);
             ascNumSortButton.classed('active', false);
             descNumSortButton.classed('active', false);
-        }
+
+            let tissueGroups = vplot.data.map((d) => d.group);
+            let xDomain = tissueGroups.sort((a,b) => {
+                if (a < b) return 1;
+                else if (a > b) return -1;
+                else return 0;
+            });
+            // let xDomain = data.forEach((d)=>{})
+            vplot.updateXScale(xDomain);
+                // console.log(vplot.data);
+            }
     });
 
     ascNumSortButton.on('click', (d, i, nodes)=>{
@@ -208,6 +221,7 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
             }
         });
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
+        // d.median = useLog?d.data.map((i)=>{})
         d.group = idNameMap===undefined?d.tissueSiteDetailId:idNameMap[d.tissueSiteDetailId];
         d.label = d.subsetGroup===undefined?d.geneSymbol:d.subsetGroup;
         d.color = colors===undefined?'#90c1c1':colors[d.tissueSiteDetailId];

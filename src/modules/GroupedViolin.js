@@ -369,6 +369,13 @@ export default class GroupedViolin {
 
     }
 
+    updateXScale(xDomain=undefined) {
+        if (xDomain === undefined) console.error('updateXScale called without new X domain');
+        this.scale.x.domain(xDomain);
+        select('.violin-x-axis').call(axisBottom(this.scale.x));
+
+    }
+
     /**
      * render the violin and box plots
      * @param dom {D3 DOM}
