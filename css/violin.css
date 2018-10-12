@@ -63,6 +63,7 @@
 .violin-axis-label {
     fill: SlateGray;
     font-size: 9px;
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
 }
 .violin-group-label {
     font-size: 9px;
@@ -70,7 +71,7 @@
 }
 
 div.violin-tooltip {
-   min-width: 100px;
+   min-width: 50px;
    display: none;
    background-color : rgba(32, 53, 73, 0.95);
    padding: 10px;
