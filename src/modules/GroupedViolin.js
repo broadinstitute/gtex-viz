@@ -77,6 +77,12 @@ export default class GroupedViolin {
             this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize);
         };
 
+        this.updateXScale = function(xDomain=undefined) {
+            if (xDomain === undefined) console.error('updateXScale called without new X domain');
+            dom.selectAll("*").remove();
+            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
+
+        };
 
         // defines the X, subX, Y, Z scales
         if (yDomain===undefined || 0 == yDomain.length){
@@ -366,13 +372,6 @@ export default class GroupedViolin {
                     .attr("y2", this.scale.y(med))
             });
         });
-
-    }
-
-    updateXScale(xDomain=undefined) {
-        if (xDomain === undefined) console.error('updateXScale called without new X domain');
-        this.scale.x.domain(xDomain);
-        select('.violin-x-axis').call(axisBottom(this.scale.x));
 
     }
 

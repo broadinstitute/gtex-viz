@@ -178,10 +178,8 @@ function _addToolbar(vplot, tooltip, ids) {
                 else if (a > b) return -1;
                 else return 0;
             });
-            // let xDomain = data.forEach((d)=>{})
             vplot.updateXScale(xDomain);
-                // console.log(vplot.data);
-            }
+        }
     });
 
     ascNumSortButton.on('click', (d, i, nodes)=>{
