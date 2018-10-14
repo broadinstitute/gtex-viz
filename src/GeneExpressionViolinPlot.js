@@ -5,6 +5,7 @@
 'use strict';
 
 import {json} from 'd3-fetch';
+import {median} from 'd3-array';
 import {select} from 'd3-selection';
 import {getGtexUrls, parseTissues} from './modules/gtexDataParser';
 
@@ -188,6 +189,11 @@ function _addToolbar(vplot, tooltip, ids) {
             ascAlphaSortButton.classed('active', false);
             ascNumSortButton.classed('active', true);
             descNumSortButton.classed('active', false);
+
+            let sortedData = vplot.data.sort((a,b) => { return a.median - b.median;
+            });
+            let tissueGroups = vplot.data.map((d) => d.group);
+            vplot.updateXScale(tissueGroups);
         }
     });
 
@@ -197,6 +203,11 @@ function _addToolbar(vplot, tooltip, ids) {
             ascAlphaSortButton.classed('active', false);
             ascNumSortButton.classed('active', false);
             descNumSortButton.classed('active', true);
+
+            let sortedData = vplot.data.sort((a,b) => { return b.median - a.median;
+            });
+            let tissueGroups = vplot.data.map((d) => d.group);
+            vplot.updateXScale(tissueGroups);
         }
     });
 
@@ -219,7 +230,7 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
             }
         });
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
-        // d.median = useLog?d.data.map((i)=>{})
+        d.median = useLog?Math.log(median(d.data)+1):median(d.data);
         d.group = idNameMap===undefined?d.tissueSiteDetailId:idNameMap[d.tissueSiteDetailId];
         d.label = d.subsetGroup===undefined?d.geneSymbol:d.subsetGroup;
         d.color = colors===undefined?'#90c1c1':colors[d.tissueSiteDetailId];
