@@ -95,7 +95,7 @@ function renderBubbleMap(par, gene, urls){
     par = setDimensions(par);
 
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
-    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip");
+    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip", [0,1]);
 
     let svg = createSvg(par.id, par.width, par.height, undefined);
 
@@ -129,6 +129,7 @@ function renderBubbleMap(par, gene, urls){
         false
     );
     bmap.drawColorLegend(svg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-20}, 3, "NES");
+    ldMap.drawColorLegend(ldSvg, {x: par.ldPanelMargin.left, y: 100}, 10, "LD");
 
 
     // add customed brush
@@ -185,6 +186,7 @@ function renderBubbleMap(par, gene, urls){
             context.clearRect(0, 0, ldCanvas.width, ldCanvas.height); // clear the canvas
             // draw
             ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left}, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
+
         });
     miniG.append("g")
         .attr("class", "brush")

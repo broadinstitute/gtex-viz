@@ -21,7 +21,7 @@ export default class HalfMap{
      * @param colorScheme
      * @param tooltipId
      */
-    constructor(data, cutoff = 0.0, useLog=true, logBase=10, colorScheme="Greys", tooltipId="tooltip"){
+    constructor(data, cutoff = 0.0, useLog=true, logBase=10, colorScheme="Greys", tooltipId="tooltip", colorScaleDomain=[0,1]){
         this.data= data;
         this.dataDict = {};
         this.cutoff = cutoff;
@@ -29,9 +29,14 @@ export default class HalfMap{
         this.logBase = logBase;
         this.colorScheme = colorScheme;
 
+        // color scale normally doesn't change with the same data set
+        // therefore can be defined at instantiation
+        this.colorScale = this._setColorScale(colorScaleDomain);
+
+        // the following scales could change depending on the user defined dimensions
+        // therefore they are undefined at instantiation
         this.xScale = undefined;
         this.yScale = undefined;
-        this.colorScale = undefined;
         this.labelScale = undefined;
 
         // peripheral features
@@ -47,7 +52,8 @@ export default class HalfMap{
         this.drawSvg(svg, dimensions, drawCells, showLabels, labelAngle, colorScaleDomain, xScaleDomain, yScaleDomain);
     }
 
-    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){
+    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit="", colorScaleDomain=[0,1]){
+        if (this.colorScale === undefined) this._setColorScale(colorScaleDomain);
         drawColorLegend(unit, dom, this.colorScale, legendConfig, this.useLog, ticks, this.logBase, {h:20, w:10}, "v");
     }
 
