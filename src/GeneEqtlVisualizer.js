@@ -62,7 +62,7 @@ function setDimensions(par){
     };
     par.ldPanelMargin = {
         left: par.margin.left,
-        top: par.focusPanelMargin.top + par.focusPanelHeight + par.focusPanelColumnLabelHeight + 80
+        top: 0
     };
     return par;
 }
@@ -110,12 +110,13 @@ function renderBubbleMap(par, gene, urls){
     let ldCanvas = select(`#${par.ldId}`).append("canvas")
         .attr("id", par.id + "-ld-canvas")
         .attr("width", par.width)
-        .attr("height", par.width);
+        .attr("height", par.width)
+        .style("position", "absolute");
 
     let ldSvg = createSvg(par.ldId, par.width, par.width, undefined);
     let ldG = ldSvg.append("g")
         .attr("class", "ld")
-        .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`)
+        .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
 
     bmap.drawCombo(
         miniG,
@@ -180,7 +181,7 @@ function renderBubbleMap(par, gene, urls){
             context.setTransform(1,0,0,1,0,0);
             context.clearRect(0, 0, ldCanvas.width, ldCanvas.height); // clear the canvas
             // draw
-            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:0, left:par.ldPanelMargin.left}, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
+            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left}, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
         });
     miniG.append("g")
         .attr("class", "brush")

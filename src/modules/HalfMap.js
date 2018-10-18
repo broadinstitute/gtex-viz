@@ -138,7 +138,8 @@ export default class HalfMap{
             .attr("height", this.yScale.bandwidth())
             .style("stroke", "#d2111b")
             .style("stroke-width", 1)
-            .style("fill", "none");
+            .style("fill", "none")
+            .style("display", "none");
 
         svg.on('mouseout', ()=>{
             cursor.style("display", "none");
@@ -149,7 +150,6 @@ export default class HalfMap{
             .style("cursor", "none")
             .style("position", "absolute")
             .on('mousemove', () => {
-                console.log("mouse moving")
                 let pos = mouse(svg.node()); // retrieve the mouse position relative to the SVG element
                 let x = pos[0];
                 let y = pos[1];
@@ -169,7 +169,7 @@ export default class HalfMap{
                 let col = this.xScale.domain()[i];
                 let row = this.yScale.domain()[j];
                 let cell = this.dataDict[col+row];
-                // console.log([x, y, x2, y2, col, row]) // debugging
+                console.log([x, y, x2, y2, col, row]); // debugging
                 if (cell !== undefined) {
 
                     cursor.attr('transform', `translate(${x},${y}) rotate(-45)`);
