@@ -25,6 +25,8 @@ export default class HalfMap{
         this.data= data;
         this.dataDict = {};
         this.cutoff = cutoff;
+        this.filteredData = this._filter(this.data, this.cutoff);
+        this.dataDict = this._generateDataDict(this.filteredData);
         this.useLog = useLog;
         this.logBase = logBase;
         this.colorScheme = colorScheme;
@@ -64,7 +66,6 @@ export default class HalfMap{
     }
     _drawCanvas(canvas, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], xScaleDomain=undefined, yScaleDomain=undefined){
         this._setScales(dimensions, colorScaleDomain, xScaleDomain, yScaleDomain);
-        let visibleData = this._filter(this.data, this.cutoff);
         let context = canvas.node().getContext('2d');
 
         // transform the canvas
@@ -74,13 +75,12 @@ export default class HalfMap{
         context.clearRect(-dimensions.w,-dimensions.w,dimensions.w*2, dimensions.w*2);
 
         // LD canvas rendering from GEV old code
-        visibleData.forEach((d)=>{
+        this.filteredData.forEach((d)=>{
             let x = this.xScale(d.x);
             let y = this.yScale(d.y);
             if (x === undefined || y === undefined) return;
             d.color = d.value==0?"#fff":this.useLog?this.colorScale(this._log(d.value)):this.colorScale(d.value);
             context.fillStyle = this.colorScale(d.value);
-            // console.log(d);
             context.fillRect(x, y, this.xScale.bandwidth(), this.yScale.bandwidth());
             // uncomment the following for debugging
             // context.textAlign = 'left';
@@ -89,7 +89,6 @@ export default class HalfMap{
             // context.fillText(d.x, x+10, y+10);
             // context.fillText(d.y, x+10, y+30);
         });
-        this.dataDict = this._generateDataDict(visibleData);
         context.restore();
     }
 
@@ -99,7 +98,7 @@ export default class HalfMap{
             let mapG = svg.append("g")
                 .attr("clip-path", "url(#clip)");
             let cells = mapG.selectAll(".half-map-cell")
-                .data(this._filter(this.data, this.cutoff));
+                .data(this.filteredData);
 
             // add new rects
             cells.enter()
@@ -222,7 +221,6 @@ export default class HalfMap{
             if (pairs.hasOwnProperty(p) || pairs.hasOwnProperty(p2)) return false;
             pairs[p] = true;
             if (d.value < cutoff) return false;
-            if (this.xScale(d.x) === undefined) return false; // filter the data that are not going to be rendered
             return true;
         });
     }

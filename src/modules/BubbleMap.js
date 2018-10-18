@@ -246,30 +246,29 @@ export default class BubbleMap {
     }
 
     drawBubbleLegend(dom, legendConfig={x:0, y:0, title:"Bubble legend"}, ticks=5, unit=""){
-        console.log(this.bubbleScale.domain());
-        console.log(this.bubbleScale.range());
+        dom.selectAll(".bmap-bubble-legend").remove(); // clear previously rendered legend if any.
+
         let range = [...Array(ticks+1).keys()];
         let interval = (this.bubbleScale.domain()[1]-this.bubbleScale.domain()[0])/ticks;
         let data = range.map((d)=>this.bubbleScale.domain()[0]+d*interval); // assuming d is positive
-        console.log(data);
 
         // legend groups
-        let legends = dom.append("g")
-                .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`)
-                .selectAll(".legend").data(data);
-        let g = legends.enter().append("g").classed("legend", true);
-
-        // legend title
-        dom.append("text")
+        let legendG = dom.append("g")
+                .attr("class", "bmap-bubble-legend")
+                .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
+         // legend title
+        legendG.append("text")
             .attr("class", "color-legend")
             .text(legendConfig.title)
             .attr("x", -10)
             .attr("text-anchor", "end")
-            .attr("y", 10)
-            .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
+            .attr("y", 10);
 
+        let legends = legendG.selectAll(".legend").data(data);
+
+        let g = legends.enter().append("g").classed("legend", true);
         // the bubbles
-        let cellW = this.xScale.bandwidth()*2;
+        let cellW = 40;
         console.log(cellW);
         g.append("circle")
             .attr("cx", (d, i) => cellW*i)

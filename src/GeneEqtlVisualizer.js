@@ -150,6 +150,7 @@ function renderBubbleMap(par, gene, urls){
 
             if (ldMap.xScale !== undefined) ldMap.xScale.domain(bmap.xScale.domain());
             if (ldMap.yScale !== undefined) ldMap.yScale.domain(bmap.xScale.domain());
+            bmap.drawBubbleLegend(svg, {x: par.width/2, y:par.focusPanelMargin.top-20, title: "-log10(p-value)"}, 5, "-log10(p-value)");
 
             // update the focus bubbles
             focusG.selectAll(".bubble-map-cell")
@@ -177,13 +178,15 @@ function renderBubbleMap(par, gene, urls){
                     return x === undefined ? "none" : "block";
                 });
 
+
+
             // render the LD
             ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
             // clear the canvas context
-            let context = ldCanvas.node().getContext('2d');
-            context.save();
-            context.setTransform(1,0,0,1,0,0);
-            context.clearRect(0, 0, ldCanvas.width, ldCanvas.height); // clear the canvas
+            // let context = ldCanvas.node().getContext('2d');
+            // context.save();
+            // context.setTransform(1,0,0,1,0,0);
+            // context.clearRect(0, 0, ldCanvas.width, ldCanvas.height); // clear the canvas
             // draw
             ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left}, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
 
