@@ -126,7 +126,10 @@ function renderBubbleMap(par, gene, urls){
         par.showLabels,
         par.focusPanelColumnLabelAngle,
         par.focusPanelColumnLabelAdjust,
-        false);
+        false
+    );
+    bmap.drawColorLegend(svg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-20}, 3, "NES");
+
 
     // add customed brush
     let brush = brushX()
