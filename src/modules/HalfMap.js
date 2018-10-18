@@ -152,7 +152,7 @@ export default class HalfMap{
             svg.selectAll('.half-map-label').classed('highlighted', false);
         });
         select(svg.node().parentNode)
-            .style("cursor", "none")
+            // .style("cursor", "none")
             .style("position", "absolute")
             .on('mousemove', () => {
                 let pos = mouse(svg.node()); // retrieve the mouse position relative to the SVG element

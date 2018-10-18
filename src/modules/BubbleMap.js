@@ -101,6 +101,7 @@ export default class BubbleMap {
             .data(this.data, (d) => d.value)
             .enter()
             .append("circle")
+            .attr('class', 'mini-map-cell')
             .attr("row", (d) => `x${this.xScaleMini.domain().indexOf(d.x)}`)
             .attr("col", (d) => `y${this.yScaleMini.domain().indexOf(d.y)}`)
             .attr("cx", (d) => this.xScaleMini(d.x) + this.xScaleMini.bandwidth() / 2)
@@ -108,7 +109,6 @@ export default class BubbleMap {
             .attr("r", (d) => this.bubbleScaleMini(d.r))
             .style("fill", (d) => this.colorScale(d.value));
 
-        let initialBrushSize = 50;
         let xList = this.xScaleMini.domain();
         if (addBrush) {
             const brushed = () => {
@@ -126,7 +126,6 @@ export default class BubbleMap {
                         return x === undefined ? this.xScale.bandwidth() / 2 : x + this.xScale.bandwidth() / 2;
 
                     })
-                    // .attr("cy", (d)=>this.yScale(d.y))
                     .attr("r", (d) => {
                         let x = this.xScale(d.x);
                         return x === undefined ? 0 : this.bubbleScale(d.r)
@@ -237,8 +236,6 @@ export default class BubbleMap {
                 })
                 .text((d) => d);
         }
-
-
     }
 
     drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){

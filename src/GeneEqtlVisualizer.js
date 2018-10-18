@@ -18,8 +18,8 @@ import {
 import BubbleMap from "./modules/BubbleMap";
 import HalfMap from "./modules/HalfMap";
 
-export function render(svgPar, geneId, rootDivId, spinnerId, urls = getGtexUrls()){
-    console.log(geneId);
+export function render(svgPar, geneId, rootDivId, spinnerId, dashboardId, urls = getGtexUrls()){
+    $(`#${spinnerId}`).show();
     json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
         .then(function(data){
             let gene = parseGenes(data, true, geneId); // fetch the gene by user specified gene ID
@@ -32,8 +32,9 @@ export function render(svgPar, geneId, rootDivId, spinnerId, urls = getGtexUrls(
                     .then(function(data) {
                         let ld = parseLD(data);
                         svgPar.ldData = ld.filter((d)=>d.value>=svgPar.ldCutoff); // filter unused data
-                        renderBubbleMap(svgPar, gene, urls);
-                        $('#' + spinnerId).hide();
+                        renderDashboard(dashboardId);
+                        renderBubbleMap(svgPar, gene);
+                        $(`#${spinnerId}`).hide();
                     });
 
                 })
@@ -67,6 +68,14 @@ function setDimensions(par){
     return par;
 }
 
+/**
+ * Create an SVG
+ * @param rootId {String} a DIV dom ID
+ * @param width {Integer}
+ * @param height {Integer}
+ * @param svgId {String} specify the svg ID (optional)
+ * @returns {*}
+ */
 function createSvg(rootId, width, height, svgId=undefined){
     checkDomId(rootId);
     if (svgId===undefined) svgId=`${rootId}-svg`;
@@ -89,9 +98,10 @@ function createSvg(rootId, width, height, svgId=undefined){
  * @param par {Object} configure the visualizations
  * TODO: check required attributes in par
  * @param gene {Object} containing attr: gencodeId
+ * @param searchOptions {List} from renderDashboard()
  * @returns {BubbleMap}
  */
-function renderBubbleMap(par, gene, urls){
+function renderBubbleMap(par, gene){
     par = setDimensions(par);
 
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
@@ -130,7 +140,6 @@ function renderBubbleMap(par, gene, urls){
     );
     bmap.drawColorLegend(svg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-20}, 3, "NES");
     ldMap.drawColorLegend(ldSvg, {x: par.ldPanelMargin.left, y: 100}, 10, "LD");
-
 
     // add customed brush
     let brush = brushX()
@@ -180,25 +189,84 @@ function renderBubbleMap(par, gene, urls){
 
             // render the LD
             ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
-            // clear the canvas context
-            // let context = ldCanvas.node().getContext('2d');
-            // context.save();
-            // context.setTransform(1,0,0,1,0,0);
-            // context.clearRect(0, 0, ldCanvas.width, ldCanvas.height); // clear the canvas
-            // draw
             ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left}, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
 
         });
+
     miniG.append("g")
         .attr("class", "brush")
         .call(brush)
         .call(brush.move, [0, bmap.xScaleMini.bandwidth()*100]);
 
-
-
-    // bmap.drawColorLegend(svg, {x: 0, y: -30}, 3, "NES");
-    // bmap.drawBubbleLegend(svg, {x: 500, y:-30, title: "-log10(p-value)"}, 5, "-log10(p-value)");
+    // pvalue filter events
+    $('#pvalueLimit').keydown(function(e){
+        if(e.keyCode == 13){
+            let v = parseFloat($('#pvalueLimit').val());
+            // bmap.filterByBubble(v);
+            console.log(v);
+            focusG.selectAll('.bubble-map-cell')
+                .style('fill', (d)=>{
+                    return d.r >= v?bmap.colorScale(d.value):'#fff'
+                });
+            miniG.selectAll('.mini-map-cell')
+                .style('fill', (d)=>{
+                    return d.r >= v?bmap.colorScale(d.value):'#fff'
+                });
+        }
+    });
 
     return bmap;
 
+}
+
+/**
+ *
+ * @param id {String} the DIV root ID
+ * dependencies: jQuery
+ */
+function renderDashboard(id){
+    checkDomId(id);
+    let searches = [
+        {
+            id: 'pvalueLimit',
+            size: 3,
+            value: 0,
+            label: '-log<sub>10</sub>(p-value) >= '
+        },
+        {
+            id: 'nesLimit',
+            size: 3,
+            value: 0,
+            label: 'abs(NES) >= '
+        },
+        {
+            id: 'ldLimit',
+            size: 3,
+            value: 0,
+            label: 'LD cutoff R<sup>2</sup> >= '
+        },
+        {
+            id: 'varLocator',
+            size: 30,
+            label: 'Variant locator ',
+            placeholder: '  Variant ID... '
+        }
+    ];
+
+    // create each search section
+    searches.forEach((s)=>{
+        if ($(`#${s.id}`).length == 0) { // if it doesn't already exist, then create it
+            let div = $('<div/>').appendTo($(`#${id}`));
+            div.addClass('col-xs-12 col-sm-6 col-md-3');
+            div.html(s.label);
+            let input = $('<input/>')
+                .attr('id', s.id)
+                .attr('value', s.value)
+                .attr('size', s.size)
+                .appendTo(div);
+
+            if (s.placeholder) input.attr('placeholder', s.placeholder);
+
+        } // add the new element to the dashboard
+    });
 }
