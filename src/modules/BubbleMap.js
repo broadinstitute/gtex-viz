@@ -116,7 +116,7 @@ export default class BubbleMap {
                 let brushLeft = Math.round(selection[0] / this.xScaleMini.step());
                 let brushRight = Math.round(selection[1] / this.xScaleMini.step());
                 this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
-                let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()]) / 2;
+                let bubbleMax = this._setBubbleMax();
                 this.bubbleScale = this._setBubbleScale({max: bubbleMax, min: 2}); // TODO: change hard-coded min radius
 
                 // update the focus bubbles
@@ -269,7 +269,6 @@ export default class BubbleMap {
         let g = legends.enter().append("g").classed("legend", true);
         // the bubbles
         let cellW = 40;
-        console.log(cellW);
         g.append("circle")
             .attr("cx", (d, i) => cellW*i)
             .attr("cy", 10)
@@ -289,7 +288,7 @@ export default class BubbleMap {
         if (this.yScaleMini === undefined) this.yScaleMini = this._setYScaleMini(dimensions);
         if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
         if (this.bubbleScaleMini === undefined) {
-            let bubbleMax = min([this.xScaleMini.bandwidth(), this.yScaleMini.bandwidth()])/2; // the max bubble radius
+            let bubbleMax = this._setBubbleMax(true);
             this.bubbleScaleMini = this._setBubbleScale({max: bubbleMax, min:1});
         }
     }
@@ -299,7 +298,7 @@ export default class BubbleMap {
         if (this.yScale === undefined) this.yScale = this._setYScale(dimensions);
         if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
         if (this.bubbleScale === undefined) {
-            let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2;
+            let bubbleMax = this._setBubbleMax();
             this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 2}); // TODO: change hard-coded min radius
         }
     }
@@ -360,9 +359,20 @@ export default class BubbleMap {
         return setColorScale(data, this.colorScheme, undefined, undefined, true);
     }
 
-    // _setBubbleScaleMini(range={max:10, min:0}){
-    //     return this._setBubbleScale(range);
-    // }
+    /**
+     * Sets the bubble max
+     * @param mini {Boolean} setting for the mini map
+     * @param scaleFactor {Integer}
+     * @param absMax {Number} set an absolute max value
+     * @returns {number}
+     * @private
+     */
+    _setBubbleMax(mini=false, scaleFactor=2, absMax = 10){
+        let xScale = mini? this.xScaleMini:this.xScale;
+        let yScale = mini? this.yScaleMini:this.yScale;
+        let rmax = max([xScale.bandwidth(), yScale.bandwidth()])/scaleFactor
+        return absMax<rmax?absMax:rmax;
+    }
 
     _setBubbleScale(range={max:10, min:0}){
         return scaleSqrt()

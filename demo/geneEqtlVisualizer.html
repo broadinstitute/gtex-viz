@@ -11,7 +11,6 @@
         <link rel="stylesheet" type="text/css" href="/css/bubbleMap.css">
         <link rel="stylesheet" type="text/css" href="/css/halfMap.css">
     </head>
-
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
     <h3>GTEx Gene-EQTL Visualizer</h3>
     <hr>
@@ -25,7 +24,7 @@
                 </form>
             </div>
             <div id="InfoBox" class="col-xs-12 col-sm-10">
-                <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i></div>
+                <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none; "></i></div>
                 <div style="font-size:12px;">
                     <p>
                         GTEx Transcript Browser is for exploring genetic variations associated with tissue-specific gene expression.
@@ -33,11 +32,28 @@
                 </div>
             </div>
         </div>
+        <div id="vizRoot-dashboard" class="row" style="border: 1px solid #EEEEEE; padding: 5px 0 5px 0">
+            <div class="col-xs-12 col-sm-6 col-md-3">
+                Variant locator
+                <input id="varLocate" type="text" size="30" placeholder="  Variant ID...">
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-2">
+                -log<sub>10</sub>(p-value) >=
+                <input id="pvalueLimit" type="text" size="3" value="0">
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-2">
+                abs(NES) >=
+                <input id="nesLimit" type="text" size="3" value="0">
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-2">
+                LD cutoff R<sup>2</sup> >=
+                <input id="ldLimit" type="text" size="3" value="0">
+            </div>
+        </div>
         <div id="vizRoot">
             <div id="messageBox" style="color: #CB181D;"></div> <!-- for displaying message of input errors-->
             <div id="bmap"></div>
             <div id="ldMap"></div>
-
         </div>
 
     </body>

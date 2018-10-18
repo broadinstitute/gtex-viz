@@ -145,7 +145,7 @@ function renderBubbleMap(par, gene, urls){
 
             // update scales
             bmap.xScale.domain(bmap.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
-            let bubbleMax = min([bmap.xScale.bandwidth(), bmap.yScale.bandwidth()]) / 2;
+            let bubbleMax = bmap._setBubbleMax();
             bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
 
             if (ldMap.xScale !== undefined) ldMap.xScale.domain(bmap.xScale.domain());
@@ -178,8 +178,6 @@ function renderBubbleMap(par, gene, urls){
                     return x === undefined ? "none" : "block";
                 });
 
-
-
             // render the LD
             ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
             // clear the canvas context
@@ -194,7 +192,7 @@ function renderBubbleMap(par, gene, urls){
     miniG.append("g")
         .attr("class", "brush")
         .call(brush)
-        .call(brush.move, [0, bmap.xScaleMini.bandwidth()*50]);
+        .call(brush.move, [0, bmap.xScaleMini.bandwidth()*100]);
 
 
 
