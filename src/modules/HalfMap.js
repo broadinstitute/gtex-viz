@@ -138,8 +138,8 @@ export default class HalfMap{
             .attr("height", this.yScale.bandwidth())
             .style("stroke", "#d2111b")
             .style("stroke-width", 1)
-            .style("fill", "none")
-            // .style("display", 'none');
+            .style("fill", "none");
+
         svg.on('mouseout', ()=>{
             cursor.style("display", "none");
             this.tooltip.hide();
