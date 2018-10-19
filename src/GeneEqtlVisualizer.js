@@ -139,7 +139,7 @@ function renderBubbleMap(par, gene, dashboardId){
     );
     bmap.drawColorLegend(svg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-20}, 3, "NES");
     ldMap.drawColorLegend(ldSvg, {x: par.ldPanelMargin.left, y: 100}, 10, "LD");
-
+    let ldConfig = {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left};
     // add a brush
     let brush = brushX()
         .extent([
@@ -188,7 +188,8 @@ function renderBubbleMap(par, gene, dashboardId){
 
             // render the LD
             ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
-            ldMap.draw(ldCanvas, ldG, {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left}, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
+
+            ldMap.draw(ldCanvas, ldG, ldConfig, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
 
         });
 
@@ -198,7 +199,7 @@ function renderBubbleMap(par, gene, dashboardId){
         .call(brush.move, [0, bmap.xScaleMini.bandwidth()*100]);
 
     // filter events
-    renderDashboard(dashboardId, bmap, miniG, focusG);
+    renderDashboard(dashboardId, bmap, miniG, focusG, ldMap, ldG, ldCanvas, ldConfig);
 
 
     return bmap;
@@ -211,9 +212,13 @@ function renderBubbleMap(par, gene, dashboardId){
  * @param bmap {BubbleMap} a bubble map object
  * @param miniG {Object} the D3 object of the mini bubble map
  * @param focusG {Object} the D3 object of the zoom bubble map
+ * @param ldMap {HalfMap} the HalfMap object of the LD plot
+ * @param ldG {Object} the D3 object of the ld SVG plot
+ * @param ldCanvas {Object} the D3 object of the ld canvas
+ * @param ldConfig {Object} the dimensions of the LD plot
  * dependencies: jQuery
  */
-function renderDashboard(id, bmap, miniG, focusG){
+function renderDashboard(id, bmap, miniG, focusG, ldMap, ldG, ldCanvas, ldConfig){
     checkDomId(id);
     let searches = [
         {
@@ -306,6 +311,7 @@ function renderDashboard(id, bmap, miniG, focusG){
     // definte the filter events
     let minP = 0;
     let minNes = 0;
+    let minLd = 0;
     const updateBubbles = ()=>{
         focusG.selectAll('.bubble-map-cell')
             .style('fill', (d)=>{
@@ -319,6 +325,12 @@ function renderDashboard(id, bmap, miniG, focusG){
                 if (Math.abs(d.value) < minNes) return "#fff";
                 return bmap.colorScale(d.value);
             });
+    };
+
+    const updateLD = ()=>{
+        ldMap.filteredData = ldMap._filter(ldMap.data, minLd);
+        ldG.selectAll("*").remove();
+        ldMap.draw(ldCanvas, ldG, ldConfig, [0,1], false, undefined)
     };
 
     //---- p-value filter events
@@ -350,4 +362,20 @@ function renderDashboard(id, bmap, miniG, focusG){
         minNes = v;
         updateBubbles();
     });
+
+    //---- LD filter events
+    $('#ldLimit').keydown((e)=>{
+        if(e.keyCode == 13) {
+            let v = parseFloat($('#ldLimit').val());
+            minLd = v;
+            updateLD();
+        }
+    });
+
+    $('#ldSlider').on('change mousemove', ()=>{
+        let v = $('#ldSlider').val();
+        $('#ldLimit').val(v);
+        minLd = v;
+        updateLD();
+    })
 }
