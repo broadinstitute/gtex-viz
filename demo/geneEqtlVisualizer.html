@@ -27,7 +27,7 @@
                 <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none; "></i></div>
                 <div style="font-size:12px;">
                     <p>
-                        GTEx Transcript Browser is for exploring genetic variations associated with tissue-specific gene expression.
+                        GTEx Gene-eQTL Visualizer (GEV) is for exploring genetic variations associated with tissue-specific gene expression.
                     </p>
                 </div>
             </div>
@@ -89,6 +89,7 @@
 
             GeneEqtlVisualizer.render(svgConfig, geneId, "vizRoot", "spinner", "vizRoot-dashboard");
 
+            // temporarily commented out the gene search functionality for now
             // $('#gene').keypress(function(e){
             //     if(e.keyCode == 13){
             //         // bind the enter key
