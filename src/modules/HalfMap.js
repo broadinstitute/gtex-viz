@@ -13,7 +13,7 @@ import {scaleBand, scaleLinear} from "d3-scale";
 
 export default class HalfMap{
     /**
-     *
+     * HalfMap is a special heatmap designed for a symmetrical matrix
      * @param data {Object} TODO: describe the data structure
      * @param cutoff
      * @param useLog
@@ -22,7 +22,7 @@ export default class HalfMap{
      * @param tooltipId
      */
     constructor(data, cutoff = 0.0, useLog=true, logBase=10, colorScheme="Greys", tooltipId="tooltip", colorScaleDomain=[0,1]){
-        this.data= data;
+        this.data= this._unique(data); // remove redundancy
         this.dataDict = {};
         this.cutoff = cutoff;
         this.filteredData = this._filter(this.data, this.cutoff);
@@ -195,16 +195,8 @@ export default class HalfMap{
             })
     }
 
-    /**
-     * Filter redundant data in a symmetrical matrix
-     * @param data
-     * @param cutoff {Number} filter data by this minimum value
-     * @returns {*}
-     * @private
-     */
-    _filter(data, cutoff){
-        let pairs = {};
-        // // first sort the data based on the x, y alphabetical order
+    _unique(data){
+        // first sort the data based on the x, y alphabetical order
         data.sort((a, b)=>{
             if(a.x < b.x) return -1;
             if (a.x > b.x) return 1;
@@ -214,12 +206,26 @@ export default class HalfMap{
                 return 0;
             }
         });
+
+        let pairs = {};
         return data.filter((d)=>{
             // check redundant data
             let p = d.x + d.y;
             let p2 = d.y + d.x;
             if (pairs.hasOwnProperty(p) || pairs.hasOwnProperty(p2)) return false;
             pairs[p] = true;
+            return true;
+        });
+    }
+    /**
+     * Filter redundant data in a symmetrical matrix
+     * @param data
+     * @param cutoff {Number} filter data by this minimum value
+     * @returns {*}
+     * @private
+     */
+    _filter(data, cutoff){
+        return data.filter((d)=>{
             if (d.value < cutoff) return false;
             return true;
         });
