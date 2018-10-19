@@ -377,5 +377,17 @@ function renderDashboard(id, bmap, miniG, focusG, ldMap, ldG, ldCanvas, ldConfig
         $('#ldLimit').val(v);
         minLd = v;
         updateLD();
-    })
+    });
+
+    // Variant locator
+    $('#varLocator').keydown((e)=>{
+        let v = $('#varLocator').val();
+        if (v.length >3){
+            const regex = new RegExp(v);
+            focusG.selectAll('.bubble-map-xlabel')
+                .classed('query', (d)=>regex.test(d));
+
+            // TODO: mark the matched variants on the mini map
+        }
+    });
 }
