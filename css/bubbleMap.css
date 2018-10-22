@@ -22,7 +22,6 @@ text.bubble-map-xlabel.query {
     fill: #d2111b;
 }
 
-
 text.bubble-map-ylabel {
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
     /*font-size: 10px;*/
@@ -42,6 +41,14 @@ rect.bubble-map-cell {
 rect.bubble-map-cell.highlighted {
     stroke: #D25C43;
     stroke-width:2px;
+}
+
+rect.mini-marker {
+    fill: none;
+}
+
+rect.mini-marker.highlighted {
+    fill: #D25C43;
 }
 
 div.bubblemap-tooltip {

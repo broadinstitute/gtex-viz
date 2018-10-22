@@ -13,7 +13,7 @@ import {scaleBand, scaleLinear} from "d3-scale";
 
 export default class HalfMap{
     /**
-     *
+     * HalfMap is a special heatmap designed for a symmetrical matrix
      * @param data {Object} TODO: describe the data structure
      * @param cutoff
      * @param useLog
@@ -21,17 +21,24 @@ export default class HalfMap{
      * @param colorScheme
      * @param tooltipId
      */
-    constructor(data, cutoff = 0.0, useLog=true, logBase=10, colorScheme="Greys", tooltipId="tooltip"){
-        this.data= data;
+    constructor(data, cutoff = 0.0, useLog=true, logBase=10, colorScheme="Greys", tooltipId="tooltip", colorScaleDomain=[0,1]){
+        this.data= this._unique(data); // remove redundancy
         this.dataDict = {};
         this.cutoff = cutoff;
+        this.filteredData = this._filter(this.data, this.cutoff);
+        this.dataDict = this._generateDataDict(this.filteredData);
         this.useLog = useLog;
         this.logBase = logBase;
         this.colorScheme = colorScheme;
 
+        // color scale normally doesn't change with the same data set
+        // therefore can be defined at instantiation
+        this.colorScale = this._setColorScale(colorScaleDomain);
+
+        // the following scales could change depending on the user defined dimensions
+        // therefore they are undefined at instantiation
         this.xScale = undefined;
         this.yScale = undefined;
-        this.colorScale = undefined;
         this.labelScale = undefined;
 
         // peripheral features
@@ -47,7 +54,8 @@ export default class HalfMap{
         this.drawSvg(svg, dimensions, drawCells, showLabels, labelAngle, colorScaleDomain, xScaleDomain, yScaleDomain);
     }
 
-    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){
+    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit="", colorScaleDomain=[0,1]){
+        if (this.colorScale === undefined) this._setColorScale(colorScaleDomain);
         drawColorLegend(unit, dom, this.colorScale, legendConfig, this.useLog, ticks, this.logBase, {h:20, w:10}, "v");
     }
 
@@ -58,7 +66,6 @@ export default class HalfMap{
     }
     _drawCanvas(canvas, dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], xScaleDomain=undefined, yScaleDomain=undefined){
         this._setScales(dimensions, colorScaleDomain, xScaleDomain, yScaleDomain);
-        let visibleData = this._filter(this.data, this.cutoff);
         let context = canvas.node().getContext('2d');
 
         // transform the canvas
@@ -68,13 +75,12 @@ export default class HalfMap{
         context.clearRect(-dimensions.w,-dimensions.w,dimensions.w*2, dimensions.w*2);
 
         // LD canvas rendering from GEV old code
-        visibleData.forEach((d)=>{
+        this.filteredData.forEach((d)=>{
             let x = this.xScale(d.x);
             let y = this.yScale(d.y);
             if (x === undefined || y === undefined) return;
             d.color = d.value==0?"#fff":this.useLog?this.colorScale(this._log(d.value)):this.colorScale(d.value);
             context.fillStyle = this.colorScale(d.value);
-            // console.log(d);
             context.fillRect(x, y, this.xScale.bandwidth(), this.yScale.bandwidth());
             // uncomment the following for debugging
             // context.textAlign = 'left';
@@ -83,7 +89,6 @@ export default class HalfMap{
             // context.fillText(d.x, x+10, y+10);
             // context.fillText(d.y, x+10, y+30);
         });
-        this.dataDict = this._generateDataDict(visibleData);
         context.restore();
     }
 
@@ -93,7 +98,7 @@ export default class HalfMap{
             let mapG = svg.append("g")
                 .attr("clip-path", "url(#clip)");
             let cells = mapG.selectAll(".half-map-cell")
-                .data(this._filter(this.data, this.cutoff));
+                .data(this.filteredData);
 
             // add new rects
             cells.enter()
@@ -139,17 +144,17 @@ export default class HalfMap{
             .style("stroke", "#d2111b")
             .style("stroke-width", 1)
             .style("fill", "none")
-            // .style("display", 'none');
+            .style("display", "none");
+
         svg.on('mouseout', ()=>{
             cursor.style("display", "none");
             this.tooltip.hide();
             svg.selectAll('.half-map-label').classed('highlighted', false);
         });
         select(svg.node().parentNode)
-            .style("cursor", "none")
+            // .style("cursor", "none")
             .style("position", "absolute")
             .on('mousemove', () => {
-                console.log("mouse moving")
                 let pos = mouse(svg.node()); // retrieve the mouse position relative to the SVG element
                 let x = pos[0];
                 let y = pos[1];
@@ -169,7 +174,7 @@ export default class HalfMap{
                 let col = this.xScale.domain()[i];
                 let row = this.yScale.domain()[j];
                 let cell = this.dataDict[col+row];
-                // console.log([x, y, x2, y2, col, row]) // debugging
+                // console.log([x, y, x2, y2, col, row]); // debugging
                 if (cell !== undefined) {
 
                     cursor.attr('transform', `translate(${x},${y}) rotate(-45)`);
@@ -190,16 +195,8 @@ export default class HalfMap{
             })
     }
 
-    /**
-     * Filter redundant data in a symmetrical matrix
-     * @param data
-     * @param cutoff {Number} filter data by this minimum value
-     * @returns {*}
-     * @private
-     */
-    _filter(data, cutoff){
-        let pairs = {};
-        // // first sort the data based on the x, y alphabetical order
+    _unique(data){
+        // first sort the data based on the x, y alphabetical order
         data.sort((a, b)=>{
             if(a.x < b.x) return -1;
             if (a.x > b.x) return 1;
@@ -209,14 +206,27 @@ export default class HalfMap{
                 return 0;
             }
         });
+
+        let pairs = {};
         return data.filter((d)=>{
             // check redundant data
             let p = d.x + d.y;
             let p2 = d.y + d.x;
             if (pairs.hasOwnProperty(p) || pairs.hasOwnProperty(p2)) return false;
             pairs[p] = true;
+            return true;
+        });
+    }
+    /**
+     * Filter redundant data in a symmetrical matrix
+     * @param data
+     * @param cutoff {Number} filter data by this minimum value
+     * @returns {*}
+     * @private
+     */
+    _filter(data, cutoff){
+        return data.filter((d)=>{
             if (d.value < cutoff) return false;
-            if (this.xScale(d.x) === undefined) return false; // filter the data that are not going to be rendered
             return true;
         });
     }

@@ -101,6 +101,7 @@ export default class BubbleMap {
             .data(this.data, (d) => d.value)
             .enter()
             .append("circle")
+            .attr('class', 'mini-map-cell')
             .attr("row", (d) => `x${this.xScaleMini.domain().indexOf(d.x)}`)
             .attr("col", (d) => `y${this.yScaleMini.domain().indexOf(d.y)}`)
             .attr("cx", (d) => this.xScaleMini(d.x) + this.xScaleMini.bandwidth() / 2)
@@ -108,7 +109,6 @@ export default class BubbleMap {
             .attr("r", (d) => this.bubbleScaleMini(d.r))
             .style("fill", (d) => this.colorScale(d.value));
 
-        let initialBrushSize = 50;
         let xList = this.xScaleMini.domain();
         if (addBrush) {
             const brushed = () => {
@@ -116,7 +116,7 @@ export default class BubbleMap {
                 let brushLeft = Math.round(selection[0] / this.xScaleMini.step());
                 let brushRight = Math.round(selection[1] / this.xScaleMini.step());
                 this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
-                let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()]) / 2;
+                let bubbleMax = this._setBubbleMax();
                 this.bubbleScale = this._setBubbleScale({max: bubbleMax, min: 2}); // TODO: change hard-coded min radius
 
                 // update the focus bubbles
@@ -126,7 +126,6 @@ export default class BubbleMap {
                         return x === undefined ? this.xScale.bandwidth() / 2 : x + this.xScale.bandwidth() / 2;
 
                     })
-                    // .attr("cy", (d)=>this.yScale(d.y))
                     .attr("r", (d) => {
                         let x = this.xScale(d.x);
                         return x === undefined ? 0 : this.bubbleScale(d.r)
@@ -188,7 +187,8 @@ export default class BubbleMap {
                     .classed('highlighted', true);
                 selected.classed('highlighted', true);
                 let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
-                tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}`);
+                let displaySize = d.r.toPrecision(4)
+                tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`);
             })
             .on("mouseout", function(){
                 dom.selectAll("*").classed('highlighted', false);
@@ -237,8 +237,6 @@ export default class BubbleMap {
                 })
                 .text((d) => d);
         }
-
-
     }
 
     drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){
@@ -246,31 +244,29 @@ export default class BubbleMap {
     }
 
     drawBubbleLegend(dom, legendConfig={x:0, y:0, title:"Bubble legend"}, ticks=5, unit=""){
-        console.log(this.bubbleScale.domain());
-        console.log(this.bubbleScale.range());
+        dom.selectAll(".bmap-bubble-legend").remove(); // clear previously rendered legend if any.
+
         let range = [...Array(ticks+1).keys()];
         let interval = (this.bubbleScale.domain()[1]-this.bubbleScale.domain()[0])/ticks;
         let data = range.map((d)=>this.bubbleScale.domain()[0]+d*interval); // assuming d is positive
-        console.log(data);
 
         // legend groups
-        let legends = dom.append("g")
-                .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`)
-                .selectAll(".legend").data(data);
-        let g = legends.enter().append("g").classed("legend", true);
-
-        // legend title
-        dom.append("text")
+        let legendG = dom.append("g")
+                .attr("class", "bmap-bubble-legend")
+                .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
+         // legend title
+        legendG.append("text")
             .attr("class", "color-legend")
             .text(legendConfig.title)
             .attr("x", -10)
             .attr("text-anchor", "end")
-            .attr("y", 10)
-            .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
+            .attr("y", 10);
 
+        let legends = legendG.selectAll(".legend").data(data);
+
+        let g = legends.enter().append("g").classed("legend", true);
         // the bubbles
-        let cellW = this.xScale.bandwidth()*2;
-        console.log(cellW);
+        let cellW = 40;
         g.append("circle")
             .attr("cx", (d, i) => cellW*i)
             .attr("cy", 10)
@@ -290,7 +286,7 @@ export default class BubbleMap {
         if (this.yScaleMini === undefined) this.yScaleMini = this._setYScaleMini(dimensions);
         if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
         if (this.bubbleScaleMini === undefined) {
-            let bubbleMax = min([this.xScaleMini.bandwidth(), this.yScaleMini.bandwidth()])/2; // the max bubble radius
+            let bubbleMax = this._setBubbleMax(true);
             this.bubbleScaleMini = this._setBubbleScale({max: bubbleMax, min:1});
         }
     }
@@ -300,7 +296,7 @@ export default class BubbleMap {
         if (this.yScale === undefined) this.yScale = this._setYScale(dimensions);
         if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
         if (this.bubbleScale === undefined) {
-            let bubbleMax = min([this.xScale.bandwidth(), this.yScale.bandwidth()])/2;
+            let bubbleMax = this._setBubbleMax();
             this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 2}); // TODO: change hard-coded min radius
         }
     }
@@ -361,9 +357,20 @@ export default class BubbleMap {
         return setColorScale(data, this.colorScheme, undefined, undefined, true);
     }
 
-    // _setBubbleScaleMini(range={max:10, min:0}){
-    //     return this._setBubbleScale(range);
-    // }
+    /**
+     * Sets the bubble max
+     * @param mini {Boolean} setting for the mini map
+     * @param scaleFactor {Integer}
+     * @param absMax {Number} set an absolute max value
+     * @returns {number}
+     * @private
+     */
+    _setBubbleMax(mini=false, scaleFactor=2, absMax = 10){
+        let xScale = mini? this.xScaleMini:this.xScale;
+        let yScale = mini? this.yScaleMini:this.yScale;
+        let rmax = max([xScale.bandwidth(), yScale.bandwidth()])/scaleFactor
+        return absMax<rmax?absMax:rmax;
+    }
 
     _setBubbleScale(range={max:10, min:0}){
         return scaleSqrt()

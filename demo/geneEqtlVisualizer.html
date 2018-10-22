@@ -9,8 +9,8 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Franklin:300,400" >
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css">
         <link rel="stylesheet" type="text/css" href="/css/bubbleMap.css">
+        <link rel="stylesheet" type="text/css" href="/css/halfMap.css">
     </head>
-
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
     <h3>GTEx Gene-EQTL Visualizer</h3>
     <hr>
@@ -24,19 +24,20 @@
                 </form>
             </div>
             <div id="InfoBox" class="col-xs-12 col-sm-10">
-                <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i></div>
+                <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none; "></i></div>
                 <div style="font-size:12px;">
                     <p>
-                        GTEx Transcript Browser is for exploring genetic variations associated with tissue-specific gene expression.
+                        GTEx Gene-eQTL Visualizer (GEV) is for exploring genetic variations associated with tissue-specific gene expression.
                     </p>
                 </div>
             </div>
+        </div>
+        <div id="vizRoot-dashboard" class="row" style="border: 1px solid #EEEEEE; padding: 5px 0 5px 0">
         </div>
         <div id="vizRoot">
             <div id="messageBox" style="color: #CB181D;"></div> <!-- for displaying message of input errors-->
             <div id="bmap"></div>
             <div id="ldMap"></div>
-
         </div>
 
     </body>
@@ -54,16 +55,15 @@
     <script>
         $(document).ready(function(){
             let geneId = "actn3";
-
             let svgConfig = {
                 id: 'bmap',
-                width: 1200,
+                width: 1800,
                 height: 600,
                 marginTop: 40,
                 marginRight: 20,
                 marginBottom: 20,
                 marginLeft: 50,
-                legendHeight: 50, // assuming the legends appear at the top of the focus panel
+                legendHeight: 70, // assuming the legends appear at the top of the focus panel
 
                 miniPanelHeight: 100,
 
@@ -74,7 +74,7 @@
                 focusPanelShowLabels: true,
 
                 ldId: "ldMap",
-                ldCutoff: 0.1,
+                ldCutoff: 0.0,
                 ldColorScheme: "Greys",
                 ldLegendSpace: 50,
 
@@ -87,8 +87,9 @@
 
             };
 
-            GeneEqtlVisualizer.render(svgConfig, geneId, "vizRoot", "spinner");
+            GeneEqtlVisualizer.render(svgConfig, geneId, "vizRoot", "spinner", "vizRoot-dashboard");
 
+            // temporarily commented out the gene search functionality for now
             // $('#gene').keypress(function(e){
             //     if(e.keyCode == 13){
             //         // bind the enter key
