@@ -380,14 +380,36 @@ function renderDashboard(id, bmap, miniG, focusG, ldMap, ldG, ldCanvas, ldConfig
     });
 
     // Variant locator
-    $('#varLocator').keydown((e)=>{
+    miniG.selectAll('.mini-marker')
+        .data(bmap.xScaleMini.domain())
+        .enter()
+        .append('rect')
+        .classed('mini-marker', true)
+        .attr('x', (d)=>bmap.xScaleMini(d))
+        .attr('y', bmap.yScaleMini.range()[1])
+        .attr('width', bmap.xScaleMini.bandwidth())
+        .attr('height', bmap.yScaleMini.bandwidth());
+
+    $('#varLocator').keyup((e)=>{
         let v = $('#varLocator').val();
+        console.log(v);
         if (v.length >3){
             const regex = new RegExp(v);
             focusG.selectAll('.bubble-map-xlabel')
                 .classed('query', (d)=>regex.test(d));
 
             // TODO: mark the matched variants on the mini map
+            miniG.selectAll('.mini-marker')
+                .classed('highlighted', (d)=>regex.test(d));
+
+        } else {
+            focusG.selectAll('.bubble-map-xlabel')
+                .classed('query', false);
+            miniG.selectAll('.mini-marker')
+                .classed('highlighted', false);
         }
+
     });
+
+
 }
