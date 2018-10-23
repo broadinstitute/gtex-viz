@@ -128,7 +128,7 @@ export default class BubbleMap {
                     })
                     .attr("r", (d) => {
                         let x = this.xScale(d.x);
-                        return x === undefined ? 0 : this.bubbleScale(d.r)
+                        return x === undefined ? 0 : this.bubbleScale(d.r); // indicating that the bubble is not in focus zone, so set the radius to zero
                     });
 
                 // update the column labels
@@ -173,10 +173,10 @@ export default class BubbleMap {
             .attr("class", "bubble-map-cell")
             .attr("row", (d)=> `x${this.xScale.domain().indexOf(d.x)}`)
             .attr("col", (d)=> `y${this.yScale.domain().indexOf(d.y)}`)
-            .attr("cx", (d)=>this.xScale(d.x) + this.xScale.bandwidth()/2)
-            .attr("cy", (d)=>this.yScale(d.y) + this.yScale.bandwidth()/2)
-            .attr("r", (d)=>this.bubbleScale(d.r))
-            .style("fill", (d)=>this.colorScale(d.value))
+            .attr("cx", (d) => this.xScale(d.x) + this.xScale.bandwidth()/2)
+            .attr("cy", (d) => this.yScale(d.y) + this.yScale.bandwidth()/2)
+            .attr("r", (d) => this.bubbleScale(d.r))
+            .style("fill", (d) => this.colorScale(d.value))
             .on("mouseover", function(d){
                 let selected = select(this);
                 let rowClass = selected.attr("row");
@@ -187,7 +187,7 @@ export default class BubbleMap {
                     .classed('highlighted', true);
                 selected.classed('highlighted', true);
                 let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
-                let displaySize = d.r.toPrecision(4)
+                let displaySize = d.r.toPrecision(4);
                 tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`);
             })
             .on("mouseout", function(){

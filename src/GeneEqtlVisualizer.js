@@ -164,13 +164,13 @@ function renderBubbleMap(par, gene, dashboardId){
             // update the focus bubbles
             focusG.selectAll(".bubble-map-cell")
                 .attr("cx", (d) => {
-                    let x = bmap.xScale(d.displayX ? d.displayX : d.x);
+                    let x = bmap.xScale(d.x);
                     return x === undefined ? bmap.xScale.bandwidth() / 2 : x + bmap.xScale.bandwidth() / 2;
 
                 })
                 .attr("r", (d) => {
-                    let x = bmap.xScale(d.displayX ? d.displayX : d.x);
-                    return x === undefined ? 0 : bmap.bubbleScale(d.r)
+                    let x = bmap.xScale(d.x);
+                    return x === undefined ? 0 : bmap.bubbleScale(d.r); // set the r to zero when x is not in the zoom view.
                 });
 
             // update the column labels
