@@ -107,13 +107,15 @@ function renderBubbleMap(par, gene, dashboardId){
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
     let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip", [0,1]);
 
-    let svg = createSvg(par.id, par.width, par.height, undefined);
+    let bmapSvg = createSvg(par.id, par.width, par.height, undefined);
 
-    let miniG = svg.append("g")
+    let miniG = bmapSvg.append("g")
         .attr("class", "context")
+        .attr("id", "miniG")
         .attr("transform", `translate(${par.margin.left}, ${par.margin.top})`);
 
-    let focusG = svg.append("g")
+    let focusG = bmapSvg.append("g")
+        .attr("id", "focusG")
         .attr("class", "focus")
         .attr("transform", `translate(${par.focusPanelMargin.left}, ${par.focusPanelMargin.top})`);
 
@@ -126,6 +128,7 @@ function renderBubbleMap(par, gene, dashboardId){
     let ldSvg = createSvg(par.ldId, par.width, par.width, undefined);
     let ldG = ldSvg.append("g")
         .attr("class", "ld")
+        .attr("id", "ldG")
         .attr("transform", `translate(${par.ldPanelMargin.left}, ${par.ldPanelMargin.top})`);
 
     bmap.drawCombo(
@@ -136,9 +139,8 @@ function renderBubbleMap(par, gene, dashboardId){
         false,
         par.focusPanelLabels
     );
-    bmap.drawColorLegend(svg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-20}, 3, "NES");
+    bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-20}, 3, "NES");
     ldMap.drawColorLegend(ldSvg, {x: par.ldPanelMargin.left, y: 100}, 10, "LD");
-    let ldConfig = {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left};
     // add a brush
     let brush = brushX()
         .extent([
@@ -146,51 +148,7 @@ function renderBubbleMap(par, gene, dashboardId){
             [par.inWidth, par.miniPanelHeight]
         ])
         .on("brush", ()=>{
-            let selection = event.selection;
-            let brushLeft = Math.round(selection[0] / bmap.xScaleMini.step());
-            let brushRight = Math.round(selection[1] / bmap.xScaleMini.step());
-
-            // update scales
-            bmap.xScale.domain(bmap.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
-            let bubbleMax = bmap._setBubbleMax();
-            bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
-
-            if (ldMap.xScale !== undefined) ldMap.xScale.domain(bmap.xScale.domain());
-            if (ldMap.yScale !== undefined) ldMap.yScale.domain(bmap.xScale.domain());
-            bmap.drawBubbleLegend(svg, {x: par.width/2, y:par.focusPanelMargin.top-20, title: "-log10(p-value)"}, 5, "-log10(p-value)");
-
-            // update the focus bubbles
-            focusG.selectAll(".bubble-map-cell")
-                .attr("cx", (d) => {
-                    let x = bmap.xScale(d.x);
-                    return x === undefined ? bmap.xScale.bandwidth() / 2 : x + bmap.xScale.bandwidth() / 2;
-
-                })
-                .attr("r", (d) => {
-                    let x = bmap.xScale(d.x);
-                    return x === undefined ? 0 : bmap.bubbleScale(d.r); // set the r to zero when x is not in the zoom view.
-                });
-
-            // update the column labels
-            let cl = par.focusPanelLabels.column;
-            focusG.selectAll(".bubble-map-xlabel")
-                .attr("transform", (d) => {
-                    let x = bmap.xScale(d) + bmap.xScale.bandwidth()/3 || 0; // TODO: remove hard-coded value
-                    let y = bmap.yScale.range()[1] + cl.adjust;
-                    return `translate(${x}, ${y}) rotate(${cl.angle})`;
-
-                })
-                .style("font-size", `${Math.floor(bmap.xScale.bandwidth())/2}px`)
-                .style("display", (d) => {
-                    let x = bmap.xScale(d);
-                    return x === undefined ? "none" : "block";
-                });
-
-            // render the LD
-            ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
-
-            ldMap.draw(ldCanvas, ldG, ldConfig, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
-
+            brushed(bmap, ldMap, par, bmapSvg, focusG, ldCanvas, ldG);
         });
 
     miniG.append("g")
@@ -199,12 +157,70 @@ function renderBubbleMap(par, gene, dashboardId){
         .call(brush.move, [0, bmap.xScaleMini.bandwidth()*100]);
 
     // filter events
+    let ldConfig = {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left};
     renderDashboard(dashboardId, bmap, miniG, focusG, ldMap, ldG, ldCanvas, ldConfig);
-
-
     return bmap;
 
 }
+
+/**
+ * Define the brush event
+ * @param bmap {BubbleMap} a bubble map object
+ * @param ldMap {HalfMap} the HalfMap object of the LD plot
+ * @param par {Object} the GEV config object
+ * @param bmapSvg {Object} the D3 SVG object of the bubble map
+ * @param focusG {Object} the D3 object of the zoom bubble map
+ * @param ldCanvas {Object} the D3 object of the ld canvas
+ * @param ldG {Object} the D3 object of the ld SVG plot
+ */
+function brushed(bmap, ldMap, par, bmapSvg, focusG, ldCanvas, ldG){
+    let selection = event.selection;
+    let brushLeft = Math.round(selection[0] / bmap.xScaleMini.step());
+    let brushRight = Math.round(selection[1] / bmap.xScaleMini.step());
+
+    // update scales
+    bmap.xScale.domain(bmap.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
+    let bubbleMax = bmap._setBubbleMax();
+    bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
+
+    if (ldMap.xScale !== undefined) ldMap.xScale.domain(bmap.xScale.domain());
+    if (ldMap.yScale !== undefined) ldMap.yScale.domain(bmap.xScale.domain());
+    bmap.drawBubbleLegend(bmapSvg, {x: par.width/2, y:par.focusPanelMargin.top-20, title: "-log10(p-value)"}, 5, "-log10(p-value)");
+
+    // update the focus bubbles
+    focusG.selectAll(".bubble-map-cell")
+        .attr("cx", (d) => {
+            let x = bmap.xScale(d.x);
+            return x === undefined ? bmap.xScale.bandwidth() / 2 : x + bmap.xScale.bandwidth() / 2;
+
+        })
+        .attr("r", (d) => {
+            let x = bmap.xScale(d.x);
+            return x === undefined ? 0 : bmap.bubbleScale(d.r); // set the r to zero when x is not in the zoom view.
+        });
+
+    // update the column labels
+    let cl = par.focusPanelLabels.column;
+    focusG.selectAll(".bubble-map-xlabel")
+        .attr("transform", (d) => {
+            let x = bmap.xScale(d) + bmap.xScale.bandwidth()/3 || 0; // TODO: remove hard-coded value
+            let y = bmap.yScale.range()[1] + cl.adjust;
+            return `translate(${x}, ${y}) rotate(${cl.angle})`;
+
+        })
+        .style("font-size", `${Math.floor(bmap.xScale.bandwidth())/2}px`)
+        .style("display", (d) => {
+            let x = bmap.xScale(d);
+            return x === undefined ? "none" : "block";
+        });
+
+    // render the LD
+    ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
+    let ldConfig = {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left};
+
+    ldMap.draw(ldCanvas, ldG, ldConfig, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
+}
+
 
 /**
  * Use jQuery to build the dashboard DOM elements
