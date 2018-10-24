@@ -77,6 +77,12 @@ export default class GroupedViolin {
             this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize);
         };
 
+        this.updateYScale = function(yLabel=undefined, yScale=undefined) {
+            dom.selectAll("*").remove();
+            if (yScale === undefined) yScale = [];
+            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
+        };
+
         this.updateXScale = function(xDomain=undefined) {
             if (xDomain === undefined) console.error('updateXScale called without new X domain');
             dom.selectAll("*").remove();
