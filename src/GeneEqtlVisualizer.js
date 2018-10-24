@@ -48,10 +48,10 @@ export function render(svgPar, geneId, rootDivId, spinnerId, dashboardId, urls =
  */
 function setDimensions(par){
     par.margin = {
-        left: par.marginLeft + par.focusPanelRowLabelWidth,
+        left: par.marginLeft + par.focusPanelLabels.row.width + par.focusPanelLabels.row.adjust,
         top: par.marginTop,
         right: par.marginRight,
-        bottom: par.marginBottom + par.focusPanelColumnLabelHeight
+        bottom: par.marginBottom + par.focusPanelLabels.column.height
     };
     par.inWidth = par.width - (par.margin.left + par.margin.right);
     par.inHeight = par.height - (par.margin.top + par.margin.bottom);
@@ -133,10 +133,8 @@ function renderBubbleMap(par, gene, dashboardId){
         focusG,
         {w:par.inWidth, h:par.miniPanelHeight, top:5, left:0, h2: par.focusPanelHeight},
         par.colorScaleDomain,
-        par.showLabels,
-        par.focusPanelColumnLabelAngle,
-        par.focusPanelColumnLabelAdjust,
-        false
+        false,
+        par.focusPanelLabels
     );
     bmap.drawColorLegend(svg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-20}, 3, "NES");
     ldMap.drawColorLegend(ldSvg, {x: par.ldPanelMargin.left, y: 100}, 10, "LD");
@@ -174,11 +172,12 @@ function renderBubbleMap(par, gene, dashboardId){
                 });
 
             // update the column labels
+            let cl = par.focusPanelLabels.column;
             focusG.selectAll(".bubble-map-xlabel")
                 .attr("transform", (d) => {
                     let x = bmap.xScale(d) + bmap.xScale.bandwidth()/3 || 0; // TODO: remove hard-coded value
-                    let y = bmap.yScale.range()[1] + par.focusPanelColumnLabelAdjust;
-                    return `translate(${x}, ${y}) rotate(${par.focusPanelColumnLabelAngle})`;
+                    let y = bmap.yScale.range()[1] + cl.adjust;
+                    return `translate(${x}, ${y}) rotate(${cl.angle})`;
 
                 })
                 .style("font-size", `${Math.floor(bmap.xScale.bandwidth())/2}px`)

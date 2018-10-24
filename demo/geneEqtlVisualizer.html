@@ -67,11 +67,24 @@
 
                 miniPanelHeight: 100,
 
-                focusPanelColumnLabelHeight: 100, // assuming the label is at the bottom
-                focusPanelColumnLabelAngle: 90,
-                focusPanelColumnLabelAdjust: 10,
-                focusPanelRowLabelWidth: 100, // assuming the label is on the left side
-                focusPanelShowLabels: true,
+                focusPanelLabels: {
+                    column: {
+                        show: true,
+                        height: 100,
+                        angle: 90,
+                        adjust: 10,
+                        location: 'bottom',
+                        textAlign: 'left'
+                    },
+                    row: {
+                        show: true,
+                        width: 100,
+                        angle: 0,
+                        adjust: 20,
+                        location: 'left',
+                        textAlign: 'right'
+                    }
+                },
 
                 ldId: "ldMap",
                 ldCutoff: 0.0,
