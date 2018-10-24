@@ -28,7 +28,9 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             ascAlphaSort: `${rootId}-svg-asc-alphasort`,
             descAlphaSort: `${rootId}-svg-desc-alphasort`,
             ascSort: `${rootId}-svg-asc-sort`,
-            descSort: `${rootId}-svg-desc-sort`
+            descSort: `${rootId}-svg-desc-sort`,
+            logScale: `${rootId}-svg-log-scale`,
+            linearScale: `${rootId}-svg-linear-scale`,
         }
 
     };
@@ -134,21 +136,32 @@ function _addToolbar(vplot, tooltip, ids) {
     // descending alphabetical sort
     toolbar.createButton(ids.buttons.descAlphaSort, 'fa-sort-alpha-up');
     let descAlphaSortButton = select(`#${ids.buttons.descAlphaSort}`)
-        .classed('active', false)
         .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Desc)');})
         .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
     // ascending numerical sort
     toolbar.createButton(ids.buttons.ascSort, 'fa-sort-numeric-down');
     let ascNumSortButton = select(`#${ids.buttons.ascSort}`)
-        .classed('active', false)
         .on('mouseover', ()=>{toolbar.tooltip.show('Sort by Median (Asc)');})
         .on('mouseout', ()=>{toolbar.tooltip.hide();});
+
     // descending numerical sort
     toolbar.createButton(ids.buttons.descSort, 'fa-sort-numeric-up');
     let descNumSortButton = select(`#${ids.buttons.descSort}`)
-        .classed('active', false)
         .on('mouseover', ()=>{toolbar.tooltip.show('Sort by Median (Desc)');})
+        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+
+    // log scale
+    toolbar.createButton(ids.buttons.logScale, 'fa-sliders-h');
+    let logScaleButton = select(`#${ids.buttons.logScale}`)
+        .classed('active', true)
+        .on('mouseover', ()=>{toolbar.tooltip.show('Log Scale');})
+        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+
+    // linear scale
+    toolbar.createButton(ids.buttons.linearScale, 'fa-sliders-h');
+    let linearScaleButton = select(`#${ids.buttons.linearScale}`)
+        .on('mouseover', ()=>{toolbar.tooltip.show('Linear Scale');})
         .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
 
@@ -211,6 +224,34 @@ function _addToolbar(vplot, tooltip, ids) {
         }
     });
 
+    linearScaleButton.on('click', (d, i, nodes)=>{
+        if (!linearScaleButton.classed('active')) {
+            logScaleButton.classed('active', false);
+            linearScaleButton.classed('active', true);
+
+            _calcViolinPlotValues(vplot.data, false);
+            vplot.updateYScale('TPM');
+        }
+    });
+
+    logScaleButton.on('click', (d, i, nodes)=>{
+        if (!logScaleButton.classed('active')) {
+            logScaleButton.classed('active', true);
+            linearScaleButton.classed('active', false);
+
+            _calcViolinPlotValues(vplot.data, true);
+            vplot.updateYScale('log10(TPM)');
+        }
+    });
+
+}
+
+function _calcViolinPlotValues(data, useLog=true) {
+    data.forEach((d)=>{
+        d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
+        d.median = useLog?Math.log(median(d.data)+1):median(d.data);
+    });
+    return data;
 }
 
 /**
@@ -229,11 +270,10 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
                 throw 'Parse Error: required json attribute is missing: ' + k;
             }
         });
-        d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
-        d.median = useLog?Math.log(median(d.data)+1):median(d.data);
         d.group = idNameMap===undefined?d.tissueSiteDetailId:idNameMap[d.tissueSiteDetailId];
         d.label = d.subsetGroup===undefined?d.geneSymbol:d.subsetGroup;
         d.color = colors===undefined?'#90c1c1':colors[d.tissueSiteDetailId];
     });
+    _calcViolinPlotValues(data[attr], useLog);
     return data[attr];
 }
