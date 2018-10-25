@@ -34,7 +34,7 @@ export function render(par, geneId, rootDivId, spinnerId, dashboardId, urls = ge
                     .then(function(data) {
                         let ld = parseLD(data);
                         par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data
-                        renderLdMap(par, bmap);
+                        renderLdMap(par, bmap, dashboardId);
                         $(`#${spinnerId}`).hide();
                     });
 
@@ -94,7 +94,13 @@ function createSvg(rootId, width, height, svgId=undefined){
     return svg;
 }
 
-function renderLdMap(par, bmap){
+/**
+ * Render the LD heat map
+ * @param par {Object} the map's config object
+ * @param bmap {BubbleMap} object of the bubble map because the LD rendering domain is based on the bubble map's focus domain.
+ * @param dashboardId {String} a <div> ID of the dashboard, where the filters should be rendered.
+ */
+function renderLdMap(par, bmap, dashboardId){
     let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip", [0,1]);
     let ldCanvas = select(`#${par.ldId}`).append("canvas")
         .attr("id", par.ldId + "-ld-canvas")
@@ -110,14 +116,17 @@ function renderLdMap(par, bmap){
     ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
     let ldConfig = {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left};
     ldMap.draw(ldCanvas, ldG, ldConfig, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
-    // update the brush on the mini bubble map after LD map is rendered
 
+    // update the brush event on the mini bubble map after LD map is rendered
+    // the brush needs to control of the LD map view range as well.
     bmap.brush.on("brush", ()=>{
         bmap.brushEvent();
         ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
         ldMap.draw(ldCanvas, ldG, ldConfig, [0,1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
-        console.log("LD event added");
     });
+
+    // LD filters
+    renderLDFilters(dashboardId, ldMap, ldCanvas, ldG, ldConfig);
 }
 
 /**
@@ -176,6 +185,13 @@ function renderBubbleMap(par, gene, dashboardId){
 
 }
 
+/**
+ * Update the focus bubble map
+ * @param par {Object} of the plot's configuration
+ * @param bmap {BubbleMap}
+ * @param bmapSvg {D3} the SVG of the bubble map.
+ * @returns {*}
+ */
 function updateFocusView(par, bmap, bmapSvg){
     let selection = event.selection;
     let brushLeft = Math.round(selection[0] / bmap.xScaleMini.step());
@@ -218,6 +234,12 @@ function updateFocusView(par, bmap, bmapSvg){
     return focusDomain;
 }
 
+/**
+ * Render bubble map related filters
+ * @param id {String} a <div> ID where the filters should be rendered.
+ * @param bmap {BubbleMap} of the bubble map
+ * @param bmapSvg {D3} of the bubble map's SVG
+ */
 function renderBmapFilters(id, bmap, bmapSvg){
     checkDomId(id);
     let panels = [
@@ -300,309 +322,8 @@ function renderBmapFilters(id, bmap, bmapSvg){
     let minP = 0;
     let minNes = 0;
     let minLd = 0;
-    const updateBubbles = ()=>{
-        bmapSvg.select("#focusG").selectAll('.bubble-map-cell')
-            .style('fill', (d)=>{
-                if (d.r < minP) return "#fff";
-                if (Math.abs(d.value) < minNes) return "#fff";
-                return bmap.colorScale(d.value);
-            });
-        bmapSvg.select("#miniG").selectAll('.mini-map-cell')
-            .style('fill', (d)=>{
-                if (d.r < minP) return "#fff";
-                if (Math.abs(d.value) < minNes) return "#fff";
-                return bmap.colorScale(d.value);
-            });
-    };
-
-    //---- p-value filter events
-    $('#pvalueLimit').keydown((e)=>{
-        if(e.keyCode == 13){
-            minP = parseFloat($('#pvalueLimit').val());
-            updateBubbles();
-        }
-    });
-
-    $('#pvalueSlider').on('change mousemove', ()=>{
-        let v = $('#pvalueSlider').val();
-        $('#pvalueLimit').val(v);
-        minP = v;
-        updateBubbles();
-    });
-
-    //---- nes filter events
-    $('#nesLimit').keydown((e)=>{
-        if(e.keyCode == 13){
-            minNes = parseFloat($('#nesLimit').val());
-            updateBubbles();
-        }
-    });
-
-    $('#nesSlider').on('change mousemove', ()=>{
-        let v = $('#nesSlider').val();
-        $('#nesLimit').val(v);
-        minNes = v;
-        updateBubbles();
-    });
-
-    // Variant locator
-    let rsLookUp = {};
-    let varLookUp = {};
-    nest()
-        .key((d)=>d.x)
-        .entries(bmap.data)
-        .forEach((d)=> {
-            let v = d.values[0];
-            if(v.hasOwnProperty('snpId') === undefined) throw 'Input Error: RS ID lookup table is not built.';
-            if(v.hasOwnProperty('displayX') === undefined) throw 'Input Error: display label lookup table is not built.';
-
-            rsLookUp[d.key] = d.values[0].snpId;
-            varLookUp[d.key] = d.values[0].displayX;
-        });
-
-    bmapSvg.select("#miniG").selectAll('.mini-marker')
-        .data(bmap.xScaleMini.domain())
-        .enter()
-        .append('rect')
-        .classed('mini-marker', true)
-        .attr('x', (d)=>bmap.xScaleMini(d))
-        .attr('y', bmap.yScaleMini.range()[1])
-        .attr('width', bmap.xScaleMini.bandwidth())
-        .attr('height', bmap.yScaleMini.bandwidth());
-
-    $('#varLocator').keyup((e)=>{
-        let v = $('#varLocator').val();
-        if (v.length >3){
-            const regex = new RegExp(v);
-            bmap.select("#focusG").selectAll('.bubble-map-xlabel')
-                .classed('query', (d)=>{
-                    return regex.test(d)||regex.test(rsLookUp[d])||regex.test(varLookUp[d]);
-                });
-
-            // TODO: mark the matched variants on the mini map
-            bmap.select("#miniG").selectAll('.mini-marker')
-                .classed('highlighted', (d)=>{
-                    return regex.test(d)||regex.test(rsLookUp[d])||regex.test(varLookUp[d]);
-                });
-
-        } else {
-            bmap.select("#focusG").selectAll('.bubble-map-xlabel')
-                .classed('query', false);
-            bmap.select("#miniG").selectAll('.mini-marker')
-                .classed('highlighted', false);
-        }
-
-    });
-
-    // rsId
-
-    $('#rsSwitch').change(()=>{
-        if ( $('#rsSwitch').is(':checked') ) {
-            bmap.select("#focusG").selectAll('.bubble-map-xlabel')
-                .text((d)=>rsLookUp[d]);
-        } else {
-            bmap.select("#focusG").selectAll('.bubble-map-xlabel')
-                .text((d)=>varLookUp[d]);
-        }
-
-    });
-}
-
-function panelBuilder(panels, id){
-    panels.forEach((p, i)=>{
-        if ($(`#${p.id}`).length == 0) { // if it doesn't already exist in HTML document, then create it
-            let div = $('<div/>')
-                .attr('id', p.id)
-                .attr('class', p.class)
-                .css('font-size', p.fontSize)
-                .css('background-color', "#eeeeee")
-                .css('margin', '1px')
-                .css('padding-top', '2px')
-                .css('border', '1px solid #d1d1d1')
-                .appendTo($(`#${id}`));
-            div.addClass(p.class);
-
-            // add the search box
-            $('<label/>')
-                .html(p.search.label)
-                .appendTo(div);
-
-            let input = $('<input/>')
-                .attr('id', p.search.id)
-                .attr('value', p.search.value)
-                .attr('size', p.search.size)
-                .attr('placeholder', p.search.placeholder)
-                .css('margin-left', '10px')
-                .appendTo(div);
-
-            // add the slider if defined
-            if (p.slider !== undefined) {
-                $('<input/>')
-                .attr('id', p.slider.id)
-                .attr('value', p.slider.value)
-                .attr('type', p.slider.type)
-                .attr('min', p.slider.min)
-                .attr('max', p.slider.max)
-                .attr('step', p.slider.step)
-                .css('margin-left', '10px')
-                .appendTo(div);
-            }
-        } // add the new element to the dashboard
-    });
-}
-/**
- * Use jQuery to build the dashboard DOM elements
- * @param id {String} the DIV root ID
- * @param bmap {BubbleMap} a bubble map object
- * @param miniG {Object} the D3 object of the mini bubble map
- * @param focusG {Object} the D3 object of the zoom bubble map
- * @param ldMap {HalfMap} the HalfMap object of the LD plot
- * @param ldG {Object} the D3 object of the ld SVG plot
- * @param ldCanvas {Object} the D3 object of the ld canvas
- * @param ldConfig {Object} the dimensions of the LD plot
- * dependencies: jQuery
- */
-function renderDashboard(id, bmap, miniG, focusG, ldMap, ldG, ldCanvas, ldConfig){
-    checkDomId(id);
-    let panels = [
-        {
-            id: 'pvaluePanel',
-            class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '12px',
-            search: {
-                id: 'pvalueLimit',
-                size: 3,
-                value: 0,
-                label: '-log<sub>10</sub>(p-value) >= '
-            },
-            slider: {
-                id: 'pvalueSlider',
-                type: 'range',
-                min: 0,
-                max: 20,
-                step: 1,
-                value: 0
-            },
-        },
-        {
-            id: 'nesPanel',
-            class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '12px',
-            search:  {
-                id: 'nesLimit',
-                size: 3,
-                value: 0,
-                label: 'abs(NES) >= '
-            },
-            slider: {
-                id: 'nesSlider',
-                type: 'range',
-                min: 0,
-                max: 1,
-                step: 0.1,
-                value: 0
-            },
-        },
-        {
-            id: 'ldPanel',
-            class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '12px',
-            search:  {
-                id: 'ldLimit',
-                size: 3,
-                value: 0,
-                label: 'LD cutoff R<sup>2</sup> >= '
-            },
-            slider: {
-                id: 'ldSlider',
-                type: 'range',
-                min: 0,
-                max: 1,
-                step: 0.1,
-                value: 0
-            },
-        },
-        {
-            id: 'variantPanel',
-            fontSize: '12px',
-            class: 'col-xs-12 col-sm-6 col-lg-2',
-            search: {
-                id: 'varLocator',
-                size: 20,
-                label: 'Variant locator ',
-                placeholder: '  Variant or RS ID... '
-            },
-        }
-    ];
-
-    // create each search section
-    $('<label/>')
-        .attr('font-size', '12px')
-        .attr('class', 'col-xs-12 col-md-12 col-lg-1')
-        .html('Apply Filters: ')
-        .appendTo($(`#${id}`));
-
-    // Special case: add the RS ID option here
-    let rsDiv = $('<div/>')
-        .attr('class', 'col-xs-12 col-sm-6 col-md-1')
-        .css('font-size', '12px')
-        .appendTo($(`#${id}`));
-    let radioButton = $('<input/>')
-        .attr('id', 'rsSwitch')
-        .attr('type', 'checkbox')
-        .css('margin-left', '10px')
-        .appendTo(rsDiv);
-    $('<label/>')
-        .css('margin-left', '2px')
-        .css('padding-top', '2px')
-        .html('Use RS ID')
-        .appendTo(rsDiv);
-
-    panels.forEach((p, i)=>{
-        if ($(`#${p.id}`).length == 0) { // if it doesn't already exist in HTML document, then create it
-            let div = $('<div/>')
-                .attr('id', p.id)
-                .attr('class', p.class)
-                .css('font-size', p.fontSize)
-                .css('background-color', "#eeeeee")
-                .css('margin', '1px')
-                .css('padding-top', '2px')
-                .css('border', '1px solid #d1d1d1')
-                .appendTo($(`#${id}`));
-            div.addClass(p.class);
-
-            // add the search box
-            $('<label/>')
-                .html(p.search.label)
-                .appendTo(div);
-
-            let input = $('<input/>')
-                .attr('id', p.search.id)
-                .attr('value', p.search.value)
-                .attr('size', p.search.size)
-                .attr('placeholder', p.search.placeholder)
-                .css('margin-left', '10px')
-                .appendTo(div);
-
-            // add the slider if defined
-            if (p.slider !== undefined) {
-                $('<input/>')
-                .attr('id', p.slider.id)
-                .attr('value', p.slider.value)
-                .attr('type', p.slider.type)
-                .attr('min', p.slider.min)
-                .attr('max', p.slider.max)
-                .attr('step', p.slider.step)
-                .css('margin-left', '10px')
-                .appendTo(div);
-            }
-        } // add the new element to the dashboard
-    });
-
-    // definte the filter events
-    let minP = 0;
-    let minNes = 0;
-    let minLd = 0;
+    let focusG = bmapSvg.select("#focusG");
+    let miniG = bmapSvg.select("#miniG");
     const updateBubbles = ()=>{
         focusG.selectAll('.bubble-map-cell')
             .style('fill', (d)=>{
@@ -618,12 +339,6 @@ function renderDashboard(id, bmap, miniG, focusG, ldMap, ldG, ldCanvas, ldConfig
             });
     };
 
-    const updateLD = ()=>{
-        ldMap.filteredData = ldMap._filter(ldMap.data, minLd);
-        ldG.selectAll("*").remove();
-        ldMap.draw(ldCanvas, ldG, ldConfig, [0,1], false, undefined)
-    };
-
     //---- p-value filter events
     $('#pvalueLimit').keydown((e)=>{
         if(e.keyCode == 13){
@@ -652,22 +367,6 @@ function renderDashboard(id, bmap, miniG, focusG, ldMap, ldG, ldCanvas, ldConfig
         $('#nesLimit').val(v);
         minNes = v;
         updateBubbles();
-    });
-
-    //---- LD filter events
-    $('#ldLimit').keydown((e)=>{
-        if(e.keyCode == 13) {
-            let v = parseFloat($('#ldLimit').val());
-            minLd = v;
-            updateLD();
-        }
-    });
-
-    $('#ldSlider').on('change mousemove', ()=>{
-        let v = $('#ldSlider').val();
-        $('#ldLimit').val(v);
-        minLd = v;
-        updateLD();
     });
 
     // Variant locator
@@ -731,5 +430,104 @@ function renderDashboard(id, bmap, miniG, focusG, ldMap, ldG, ldCanvas, ldConfig
         }
 
     });
+}
 
+/**
+ * Render the LD related filters
+ * @param id {String} the <div> ID for rendering the filters
+ * @param ldMap {HalfMap} of the LD
+ * @param ldCanvas {D3} canvas object of the LD
+ * @param ldG {D3} the <g> of the LD
+ * @param ldConfig {Object} of the ld config
+ */
+function renderLDFilters(id, ldMap, ldCanvas, ldG, ldConfig){
+    checkDomId(id);
+    let panels = [
+        {
+            id: 'ldPanel',
+            class: 'col-xs-12 col-sm-6 col-lg-2',
+            fontSize: '12px',
+            search:  {
+                id: 'ldLimit',
+                size: 3,
+                value: 0,
+                label: 'LD cutoff R<sup>2</sup> >= '
+            },
+            slider: {
+                id: 'ldSlider',
+                type: 'range',
+                min: 0,
+                max: 1,
+                step: 0.1,
+                value: 0
+            },
+        }
+    ];
+    panelBuilder(panels, id);
+
+    // define the filter events:
+    let minLd = 0;
+
+    const updateLD = ()=>{
+        ldMap.filteredData = ldMap._filter(ldMap.data, minLd);
+        ldG.selectAll("*").remove();
+        ldMap.draw(ldCanvas, ldG, ldConfig, [0,1], false, undefined)
+    };
+     //---- LD filter events
+    $('#ldLimit').keydown((e)=>{
+        if(e.keyCode == 13) {
+            let v = parseFloat($('#ldLimit').val());
+            minLd = v;
+            updateLD();
+        }
+    });
+
+    $('#ldSlider').on('change mousemove', ()=>{
+        let v = $('#ldSlider').val();
+        $('#ldLimit').val(v);
+        minLd = v;
+        updateLD();
+    });
+}
+function panelBuilder(panels, id){
+    panels.forEach((p, i)=>{
+        if ($(`#${p.id}`).length == 0) { // if it doesn't already exist in HTML document, then create it
+            let div = $('<div/>')
+                .attr('id', p.id)
+                .attr('class', p.class)
+                .css('font-size', p.fontSize)
+                .css('background-color', "#eeeeee")
+                .css('margin', '1px')
+                .css('padding-top', '2px')
+                .css('border', '1px solid #d1d1d1')
+                .appendTo($(`#${id}`));
+            div.addClass(p.class);
+
+            // add the search box
+            $('<label/>')
+                .html(p.search.label)
+                .appendTo(div);
+
+            let input = $('<input/>')
+                .attr('id', p.search.id)
+                .attr('value', p.search.value)
+                .attr('size', p.search.size)
+                .attr('placeholder', p.search.placeholder)
+                .css('margin-left', '10px')
+                .appendTo(div);
+
+            // add the slider if defined
+            if (p.slider !== undefined) {
+                $('<input/>')
+                .attr('id', p.slider.id)
+                .attr('value', p.slider.value)
+                .attr('type', p.slider.type)
+                .attr('min', p.slider.min)
+                .attr('max', p.slider.max)
+                .attr('step', p.slider.step)
+                .css('margin-left', '10px')
+                .appendTo(div);
+            }
+        } // add the new element to the dashboard
+    });
 }
