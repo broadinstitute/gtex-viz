@@ -156,45 +156,15 @@ export default class BubbleMap {
             .style("fill", (d) => this.colorScale(d.value));
 
         if (addBrush) {
-            const brushed = () => {
-                let selection = event.selection;
-                let brushLeft = Math.round(selection[0] / this.xScaleMini.step());
-                let brushRight = Math.round(selection[1] / this.xScaleMini.step());
-                this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
-                let bubbleMax = this._setBubbleMax();
-                this.bubbleScale = this._setBubbleScale({max: bubbleMax, min: 2}); // TODO: change hard-coded min radius
 
-                // update the focus bubbles
-                focusDom.selectAll(".bubble-map-cell")
-                    .attr("cx", (d) => {
-                        let x = this.xScale(d.x);
-                        return x === undefined ? this.xScale.bandwidth() / 2 : x + this.xScale.bandwidth() / 2;
-
-                    })
-                    .attr("r", (d) => {
-                        let x = this.xScale(d.x);
-                        return x === undefined ? 0 : this.bubbleScale(d.r); // indicating that the bubble is not in focus zone, so set the radius to zero
-                    });
-
-                // update the column labels
-                focusDom.selectAll(".bubble-map-xlabel")
-                    .attr("transform", (d) => {
-                        let x = this.xScale(d) + 5 || 0; // TODO: remove hard-coded value
-                        let y = this.yScale.range()[1] + labelConfig.column.adjust;
-                        return `translate(${x}, ${y}) rotate(${labelConfig.column.angle})`;
-
-                    })
-                    .style("display", (d) => {
-                        let x = this.xScale(d); // TODO: remove hard-coded value
-                        return x === undefined ? "none" : "block";
-                    });
-            };
             let brush = brushX()
                 .extent([
                     [0, 0],
                     [dimensions.w, dimensions.h]
                 ])
-                .on("brush", brushed);
+                .on("brush", ()=>{
+                    this._brushed(focusDom, labelConfig);
+                });
             miniDom.append("g")
                 .attr("class", "brush")
                 .call(brush)
@@ -349,6 +319,42 @@ export default class BubbleMap {
     }
 
     // private methods
+    _brushed(focusDom, labelConfig){
+
+        let selection = event.selection;
+        let brushLeft = Math.round(selection[0] / this.xScaleMini.step());
+        let brushRight = Math.round(selection[1] / this.xScaleMini.step());
+        this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
+        let bubbleMax = this._setBubbleMax();
+        this.bubbleScale = this._setBubbleScale({max: bubbleMax, min: 2}); // TODO: change hard-coded min radius
+
+        // update the focus bubbles
+        focusDom.selectAll(".bubble-map-cell")
+            .attr("cx", (d) => {
+                let x = this.xScale(d.x);
+                return x === undefined ? this.xScale.bandwidth() / 2 : x + this.xScale.bandwidth() / 2;
+
+            })
+            .attr("r", (d) => {
+                let x = this.xScale(d.x);
+                return x === undefined ? 0 : this.bubbleScale(d.r); // indicating that the bubble is not in focus zone, so set the radius to zero
+            });
+
+        // update the column labels
+        focusDom.selectAll(".bubble-map-xlabel")
+            .attr("transform", (d) => {
+                let x = this.xScale(d) + 5 || 0; // TODO: remove hard-coded value
+                let y = this.yScale.range()[1] + labelConfig.column.adjust;
+                return `translate(${x}, ${y}) rotate(${labelConfig.column.angle})`;
+
+            })
+            .style("display", (d) => {
+                let x = this.xScale(d); // TODO: remove hard-coded value
+                return x === undefined ? "none" : "block";
+            });
+
+    }
+
     _setMiniScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
         if (this.xScaleMini === undefined) this.xScaleMini = this._setXScaleMini(dimensions);
         if (this.yScaleMini === undefined) this.yScaleMini = this._setYScaleMini(dimensions);
