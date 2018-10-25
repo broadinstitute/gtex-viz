@@ -10,6 +10,7 @@ export function getGtexUrls(){
         // gene-eqtl visualizer specific
         singleTissueEqtl: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v7&gencodeId=',
         ld: host + 'dataset/ld?format=json&datasetId=gtex_v7&gencodeId=',
+        tissueSummary: host + 'dataset/tissueSummary?datasetId=gtex_v7',
 
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
@@ -42,7 +43,6 @@ export function getGtexUrls(){
 
         // tissue menu specific
         tissue:  host + 'metadata/tissueSiteDetail?format=json',
-
         tissueSites: host + 'metadata/tissueSiteDetail?format=json',
 
         // local static files
@@ -136,6 +136,22 @@ export function parseTissues(json){
 }
 
 /**
+ * Parse the tissues sample counts, GTEx release specific
+ * @param json
+ */
+export function parseTissueSampleCounts(json){
+    const attr = 'tissueSummary';
+    if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attr is missing: ' + attr;
+    const tissues = json[attr];
+
+    // check json structure
+    const tissue = tissues[0];
+    if (!tissue.hasOwnProperty('tissueSiteDetailId')) throw 'Parsing Error: required attr is missing: tissueSiteDetailId';
+    if (!tissue.hasOwnProperty('rnaSeqAndGenotypeSampleCount')) throw 'Parsing Error: required attr is missing: rnaSeqAndGenotypeSampleCount';
+    return tissues;
+}
+
+/**
  * Parse the tissue groups
  * @param data {Json}
  * @param forEqtl {Boolean} restrict to eqtl tissues
@@ -176,9 +192,7 @@ export function parseTissueSites(data, forEqtl=false){
             tissueGroups[site.name] = [site]; // create a new group with the site's name
         }
     });
-
     return tissueGroups;
-
 }
 
 /**

@@ -14,32 +14,41 @@ import {
     getGtexUrls,
     parseGenes,
     parseSingleTissueEqtls,
-    parseLD
+    parseLD,
+    parseTissueSampleCounts
 } from "./modules/gtexDataParser";
 import BubbleMap from "./modules/BubbleMap";
 import HalfMap from "./modules/HalfMap";
 
 export function render(par, geneId, rootDivId, spinnerId, dashboardId, urls = getGtexUrls()){
     $(`#${spinnerId}`).show();
-    json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
-        .then(function(data){
-            let gene = parseGenes(data, true, geneId); // fetch the gene by user specified gene ID
-            json(urls.singleTissueEqtl + gene.gencodeId)
-                .then(function(data2){
-                    par.data = parseSingleTissueEqtls(data2);
-                    par = setDimensions(par); // calculate the required dimensions based on user inputs
-                    let bmap = renderBubbleMap(par, gene, dashboardId);
+    json(urls.tissueSummary) // retrieve tissue sample counts
+        .then((tissueData)=>{
 
-                    json(urls.ld + gene.gencodeId)
-                    .then(function(data) {
-                        let ld = parseLD(data);
-                        par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data
-                        renderLdMap(par, bmap, dashboardId);
-                        $(`#${spinnerId}`).hide();
-                    });
+            let tissues = parseTissueSampleCounts(tissueData);
+            json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
+                .then((data)=>{
 
-                })
-        })
+                    let gene = parseGenes(data, true, geneId);
+                    json(urls.singleTissueEqtl + gene.gencodeId) // get the gene's eQTLs
+                        .then((data2)=>{
+
+                            par.data = parseSingleTissueEqtls(data2);
+                            par = setDimensions(par); // calculate the required dimensions based on user inputs
+                            let bmap = renderBubbleMap(par, gene, dashboardId, tissues);
+
+                            json(urls.ld + gene.gencodeId)
+                            .then(function(data) {
+                                let ld = parseLD(data);
+                                par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data
+                                renderLdMap(par, bmap, dashboardId);
+                                $(`#${spinnerId}`).hide();
+                            });
+
+                        })
+                });
+        });
+
 }
 
 /**
@@ -137,7 +146,7 @@ function renderLdMap(par, bmap, dashboardId){
  * @param dashboardId {String} the DIV ID for the dashboard
  * @returns {BubbleMap}
  */
-function renderBubbleMap(par, gene, dashboardId){
+function renderBubbleMap(par, gene, dashboardId, tissues){
 
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
     let bmapSvg = createSvg(par.id, par.width, par.height, undefined);
@@ -181,6 +190,10 @@ function renderBubbleMap(par, gene, dashboardId){
 
     // filter events
     renderBmapFilters(dashboardId, bmap, bmapSvg);
+
+    // tissue badges that report the tissue sample counts
+    renderTissueBadges(tissues, bmap, bmapSvg);
+
     return bmap;
 
 }
@@ -232,6 +245,34 @@ function updateFocusView(par, bmap, bmapSvg){
             return x === undefined ? "none" : "block";
         });
     return focusDomain;
+}
+
+function renderTissueBadges(tissues, bmap, bmapSvg){
+    let badges = bmapSvg.select('#focusG').append('g')
+        .attr('id', 'tissueBadgeG')
+        .selectAll('.tissue-badge')
+        .data(tissues.filter((d)=>{
+                return bmap.yScale(d.tissueSiteDetailId) !== undefined;
+            }));
+
+    let g = badges.enter().append("g").classed('tissue-badge', true);
+
+    g.append('ellipse')
+        .attr('cx', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2-5)
+        .attr('cy', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2)
+        .attr('rx', bmap.xScale.bandwidth()*0.8)
+        .attr('ry', bmap.yScale.bandwidth()/2)
+        .attr('fill', '#748797');
+
+
+    g.append('text')
+        .text((d)=>d.rnaSeqAndGenotypeSampleCount)
+        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 12)
+        .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2 + 2)
+        .attr('fill', '#ffffff')
+        .style('font-size', 8)
+        .style('text-anchor', 'center')
+
 }
 
 /**
@@ -489,6 +530,12 @@ function renderLDFilters(id, ldMap, ldCanvas, ldG, ldConfig){
         updateLD();
     });
 }
+
+/**
+ * Build the html filter panels
+ * @param panels {List} of panels
+ * @param id {String} of the <div> to render the panels
+ */
 function panelBuilder(panels, id){
     panels.forEach((p, i)=>{
         if ($(`#${p.id}`).length == 0) { // if it doesn't already exist in HTML document, then create it

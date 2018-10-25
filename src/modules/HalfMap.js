@@ -112,8 +112,6 @@ export default class HalfMap{
                 .attr("transform", `rotate(-45)`)
                 .merge(cells)
                 .style("fill", (d)=>d.value==0?"#fff":this.useLog?this.colorScale(this._log(d.value)):this.colorScale(d.value))
-
-
         }
 
         if(showLabels){
