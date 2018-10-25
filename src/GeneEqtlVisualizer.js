@@ -2,6 +2,7 @@
  * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
+// TODO: consider creating a GEV class that stores bmap and LD objects...
 "use strict";
 import {json} from "d3-fetch";
 import {brushX} from "d3-brush";
@@ -169,11 +170,14 @@ function renderBubbleMap(par, gene, dashboardId, tissues){
         false, // do not use the default brush, use a custom brush defined below
         par.focusPanelLabels
     );
-    bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-20}, 3, "NES");
+    bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 3, "NES");
+
+
 
     // add a brush
     bmap.brushEvent = ()=>{
         let focusDomain = updateFocusView(par, bmap, bmapSvg);
+        if( (bmap.tss && bmap.xScale(bmap.tss)) || (bmap.tes && bmap.xScale(bmap.tes)) ) renderGeneStartEndMarkers(bmap, bmapSvg, false);
         return focusDomain;
     };
     bmap.brush = brushX()
@@ -191,8 +195,14 @@ function renderBubbleMap(par, gene, dashboardId, tissues){
     // filter events
     renderBmapFilters(dashboardId, bmap, bmapSvg);
 
-    // tissue badges that report the tissue sample counts
+    // additional custom visual add-ons
+    //-- tissue badges that report the tissue sample counts
     renderTissueBadges(tissues, bmap, bmapSvg);
+
+    //-- TSS and TES markers
+    findVariantsNearGeneStartEnd(gene, bmap);
+    renderGeneStartEndMarkers(bmap, bmapSvg, true); // render the markers on the mini map
+
 
     return bmap;
 
@@ -216,7 +226,7 @@ function updateFocusView(par, bmap, bmapSvg){
     let bubbleMax = bmap._setBubbleMax();
     bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
 
-    bmap.drawBubbleLegend(bmapSvg, {x: par.width/2, y:par.focusPanelMargin.top-20, title: "-log10(p-value)"}, 5, "-log10(p-value)");
+    bmap.drawBubbleLegend(bmapSvg, {x: par.width/2, y:par.focusPanelMargin.top-50, title: "-log10(p-value)"}, 5, "-log10(p-value)");
 
     // update the focus bubbles
     bmapSvg.select("#focusG").selectAll(".bubble-map-cell")
@@ -247,6 +257,12 @@ function updateFocusView(par, bmap, bmapSvg){
     return focusDomain;
 }
 
+/**
+ * Render tissue badges that report the number of samples with genotype
+ * @param tissues {List} of tissue objects
+ * @param bmap {BubbleMap}
+ * @param bmapSvg {D3} SVG object of the bubble map
+ */
 function renderTissueBadges(tissues, bmap, bmapSvg){
     let badges = bmapSvg.select('#focusG').append('g')
         .attr('id', 'tissueBadgeG')
@@ -264,7 +280,6 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
         .attr('ry', bmap.yScale.bandwidth()/2)
         .attr('fill', '#748797');
 
-
     g.append('text')
         .text((d)=>d.rnaSeqAndGenotypeSampleCount)
         .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 12)
@@ -272,6 +287,103 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
         .attr('fill', '#ffffff')
         .style('font-size', 8)
         .style('text-anchor', 'center')
+
+}
+
+/**
+ * Find the closest left-side variant of the gene start and end sites (tss and tes)
+ * @param gene {Object} that has attributes start and end
+ * @param bmap {BubbleMap}
+ * @returns {BubbleMap}
+ */
+function findVariantsNearGeneStartEnd(gene, bmap) {
+    let tss = gene.strand == '+' ? gene.start : gene.end;
+    let tes = gene.strand == '+' ? gene.end : gene.start;
+    let variants = bmap.xScaleMini.domain();
+    const findLeftSideNearestNeighborVariant = (site) => {
+        return variants.filter((d, i) => {
+            // if the variant position is the site position
+            let pos = parseFloat(d.split('_')[1]); // assumption: the variant ID has the genomic location
+            if (pos === site) return true;
+
+            // else find where the site is located
+            // first, get the neighbor variant
+            if (variants[i + 1] === undefined) return false;
+            let next = parseFloat(variants[i + 1].split('_')[1]) || undefined;
+            if ((pos - site) * (next - site) < 0) console.log(site, pos, next);
+            return (pos - site) * (next - site) < 0; // rationale: the value would be < 0 when the site is located between two variants.
+        })
+    };
+
+    let tssVariant = findLeftSideNearestNeighborVariant(tss);
+    let tesVariant = findLeftSideNearestNeighborVariant(tes);
+    bmap.tss = tssVariant[0]; // bmap.tss stores the closest left-side variant of the start site
+    bmap.tes = tesVariant[0]; // bmap.tes stores the closest left-side variant of the end site
+}
+
+/**
+ * Render the TSS and TES of the Gene if applicable
+ * @param bmap {BubbleMap}
+ * @param bmapSvg {D3} the SVG object of the bubble map
+ * @param mini {Boolean} render the markers on the mini map?
+ */
+function renderGeneStartEndMarkers(bmap, bmapSvg, mini=false){
+    // rendering TSS
+    if (mini){
+        let g = bmapSvg.select('#miniG').append('g')
+        .attr('id', 'miniSiteMarkers');
+        g.append('line')
+        .attr('x1', bmap.xScaleMini(bmap.tss) + bmap.xScaleMini.bandwidth())
+        .attr('x2', bmap.xScaleMini(bmap.tss) + bmap.xScaleMini.bandwidth())
+        .attr('y1', 0)
+        .attr('y2', bmap.yScaleMini.range()[1])
+        .style('stroke', '#94a8b8')
+        .style('stroke-width', 2);
+
+        g.append('line')
+        .attr('x1', bmap.xScaleMini(bmap.tes) + bmap.xScaleMini.bandwidth())
+        .attr('x2', bmap.xScaleMini(bmap.tes) + bmap.xScaleMini.bandwidth())
+        .attr('y1', 0)
+        .attr('y2', bmap.yScaleMini.range()[1])
+        .style('stroke', '#748797')
+        .style('stroke-width', 2);
+    } else {
+        bmapSvg.select('#siteMarkers').remove(); // clear previously rendered markers
+        let g = bmapSvg.select('#focusG').append('g')
+        .attr('id', 'siteMarkers');
+        if (bmap.tss && bmap.xScale(bmap.tss)){
+             g.append('line')
+            .attr('x1', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth())
+            .attr('x2', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth())
+            .attr('y1', 0)
+            .attr('y2', bmap.yScale.range()[1])
+            .style('stroke', '#94a8b8')
+            .style('stroke-width', 2);
+             g.append('text')
+                 .text('TSS')
+                 .attr('x', bmap.xScale(bmap.tss))
+                 .attr('y', -5)
+                 .attr('text-anchor', 'center')
+                 .style('font-size', "12px")
+        }
+
+        if (bmap.tes && bmap.xScale(bmap.tes)){
+            g.append('line')
+            .attr('x1', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth())
+            .attr('x2', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth())
+            .attr('y1', 0)
+            .attr('y2', bmap.yScale.range()[1])
+            .style('stroke', '#748797')
+            .style('stroke-width', 2);
+            g.append('text')
+                 .text('TES')
+                 .attr('x', bmap.xScale(bmap.tes))
+                 .attr('y', -5)
+                 .attr('text-anchor', 'center')
+                 .style('font-size', "12px")
+        }
+
+    }
 
 }
 
