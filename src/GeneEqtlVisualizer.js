@@ -9,6 +9,7 @@ import {brushX} from "d3-brush";
 import {select, selectAll, event} from "d3-selection";
 import {extent, max, min} from "d3-array";
 import {nest} from "d3-collection";
+import {scaleThreshold} from "d3-scale";
 
 import {checkDomId} from "./modules/utils";
 import {
@@ -148,7 +149,7 @@ function renderLdMap(par, bmap, dashboardId){
  * @returns {BubbleMap}
  */
 function renderBubbleMap(par, gene, dashboardId, tissues){
-
+    // TODO: in GEV, there are custom attributes created for bmap, perhaps a better way to do this is to define a GEV class
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
     let bmapSvg = createSvg(par.id, par.width, par.height, undefined);
 
@@ -172,12 +173,18 @@ function renderBubbleMap(par, gene, dashboardId, tissues){
     );
     bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 3, "NES");
 
-
-
     // add a brush
     bmap.brushEvent = ()=>{
+        // update all the variant related visual features
+
+        // -- focus view of the heat map
         let focusDomain = updateFocusView(par, bmap, bmapSvg);
+
+        // -- gene TSS and TES markers
         if( (bmap.tss && bmap.xScale(bmap.tss)) || (bmap.tes && bmap.xScale(bmap.tes)) ) renderGeneStartEndMarkers(bmap, bmapSvg, false);
+
+        // -- TSS distance track
+        renderTssDistanceTrack(gene, bmap, bmapSvg);
         return focusDomain;
     };
     bmap.brush = brushX()
@@ -192,10 +199,14 @@ function renderBubbleMap(par, gene, dashboardId, tissues){
         .call(bmap.brush)
         .call(bmap.brush.move, [0, bmap.xScaleMini.bandwidth()*100]);
 
+    // variant related data parsing
+    // Variant locator
+    buildVariantLookupTables(bmap);
+
     // filter events
     renderBmapFilters(dashboardId, bmap, bmapSvg);
 
-    // additional custom visual add-ons
+    // additional custom visual feature add-ons
     //-- tissue badges that report the tissue sample counts
     renderTissueBadges(tissues, bmap, bmapSvg);
 
@@ -203,7 +214,9 @@ function renderBubbleMap(par, gene, dashboardId, tissues){
     findVariantsNearGeneStartEnd(gene, bmap);
     renderGeneStartEndMarkers(bmap, bmapSvg, true); // render the markers on the mini map
 
-
+    //-- TSS distance track
+    //-- It's a 1D heatmap showing the distance of each variant to the TSS site.
+    renderTssDistanceTrack(gene, bmap, bmapSvg);
     return bmap;
 
 }
@@ -292,9 +305,9 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
 
 /**
  * Find the closest left-side variant of the gene start and end sites (tss and tes)
+ * This function creates two new attributes, tss and tes, for bmap
  * @param gene {Object} that has attributes start and end
  * @param bmap {BubbleMap}
- * @returns {BubbleMap}
  */
 function findVariantsNearGeneStartEnd(gene, bmap) {
     let tss = gene.strand == '+' ? gene.start : gene.end;
@@ -310,7 +323,6 @@ function findVariantsNearGeneStartEnd(gene, bmap) {
             // first, get the neighbor variant
             if (variants[i + 1] === undefined) return false;
             let next = parseFloat(variants[i + 1].split('_')[1]) || undefined;
-            if ((pos - site) * (next - site) < 0) console.log(site, pos, next);
             return (pos - site) * (next - site) < 0; // rationale: the value would be < 0 when the site is located between two variants.
         })
     };
@@ -384,6 +396,72 @@ function renderGeneStartEndMarkers(bmap, bmapSvg, mini=false){
         }
 
     }
+
+}
+
+/**
+ * Build two lookup tables
+ * rsLookup a lookup table for retrieving rs ID by variant ID
+ * varLookup is a lookup table for retrieving shorthand variantID by variant ID
+ * this function creates two new attributes, rsLookup and varLookUp for bmap
+ * @param bmap
+ */
+function buildVariantLookupTables(bmap){
+    bmap.rsLookUp = {};
+    bmap.varLookUp = {};
+    nest()
+        .key((d)=>d.x)
+        .entries(bmap.data)
+        .forEach((d)=> {
+            let v = d.values[0];
+            if(v.hasOwnProperty('snpId') === undefined) throw 'Input Error: RS ID lookup table is not built.';
+            if(v.hasOwnProperty('displayX') === undefined) throw 'Input Error: display label lookup table is not built.';
+
+            bmap.rsLookUp[d.key] = d.values[0].snpId;
+            bmap.varLookUp[d.key] = d.values[0].displayX;
+        });
+}
+/**
+ * Render the variant TSS distance track
+ * @param gene {Object} of the gene with attr start, end and strand
+ * @param bmap {BubbleMap}
+ * @param bmapSvg {D3} the SVG D3 object of the bubble map
+ */
+function renderTssDistanceTrack(gene, bmap, bmapSvg){
+    let tss = gene.strand == '+'?gene.start:gene.end;
+
+    // color scale for the TSS Distance
+    let range = ['#000', '#252525', '#525252', '#737373', '#969696', '#f0f0f0','#fff'];
+    const unit = 1e5; // 100000 bp
+    let domain = [0.000001,0.005, 0.01,0.1,0.5,2,3,4,5].map(function(d){return d*unit});
+
+    // scaleThreshold map arbitrary subsets (thresholds) of the domain to discrete values in the range.
+    // the input domain is still continuous and divided into slices based on the set of threshold values.
+    let colorScale = scaleThreshold()
+        .domain(domain)
+        .range(range);
+
+    bmapSvg.select('#tssDistG').remove(); // clear any previously rendered SVG DOM objects.
+    let g = bmapSvg.select('#focusG').append('g')
+        .attr('id', 'tssDistG');
+    g.selectAll('rect')
+        .data(bmap.xScale.domain())
+        .enter()
+        .append('rect')
+        .attr('x', (d)=>bmap.xScale(d))
+        .attr('y', bmap.yScale.range()[1] + bmap.yScale.bandwidth())
+        .attr('width', bmap.xScale.bandwidth())
+        .attr('height', bmap.yScale.bandwidth())
+        .attr('fill', (d)=>{
+            let dist = Math.abs(parseFloat(d.split('_')[1]) - tss);
+            return colorScale(dist);
+        })
+        .attr('stroke', '#748797')
+        .attr('stroke-width', '1px')
+        .on('mouseover', (d)=>{
+            let dist = Math.abs(parseFloat(d.split('_')[1]) - tss);
+            bmap.tooltip.show(`${d}<br/>${bmap.rsLookUp[d]}<br/>TSS Distance: ${dist} bp`);
+        })
 
 }
 
@@ -522,20 +600,7 @@ function renderBmapFilters(id, bmap, bmapSvg){
         updateBubbles();
     });
 
-    // Variant locator
-    let rsLookUp = {};
-    let varLookUp = {};
-    nest()
-        .key((d)=>d.x)
-        .entries(bmap.data)
-        .forEach((d)=> {
-            let v = d.values[0];
-            if(v.hasOwnProperty('snpId') === undefined) throw 'Input Error: RS ID lookup table is not built.';
-            if(v.hasOwnProperty('displayX') === undefined) throw 'Input Error: display label lookup table is not built.';
-
-            rsLookUp[d.key] = d.values[0].snpId;
-            varLookUp[d.key] = d.values[0].displayX;
-        });
+    // TODO: lookup tables
 
     miniG.selectAll('.mini-marker')
         .data(bmap.xScaleMini.domain())
@@ -572,14 +637,13 @@ function renderBmapFilters(id, bmap, bmapSvg){
     });
 
     // rsId
-
     $('#rsSwitch').change(()=>{
         if ( $('#rsSwitch').is(':checked') ) {
             focusG.selectAll('.bubble-map-xlabel')
-                .text((d)=>rsLookUp[d]);
+                .text((d)=>bmap.rsLookUp[d]);
         } else {
             focusG.selectAll('.bubble-map-xlabel')
-                .text((d)=>varLookUp[d]);
+                .text((d)=>bmap.varLookUp[d]);
         }
 
     });
