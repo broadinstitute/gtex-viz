@@ -73,7 +73,6 @@ export default class HalfMap{
         context.translate(dimensions.left , dimensions.top + (this.xScale.bandwidth()*Math.sqrt(2)/2)); // shift the radius distance...
         context.rotate(Math.PI*(-45/180)); // rotate counterclockwise (negative) 45 degrees
         context.clearRect(-dimensions.w,-dimensions.w,dimensions.w*2, dimensions.w*2);
-
         // LD canvas rendering from GEV old code
         this.filteredData.forEach((d)=>{
             let x = this.xScale(d.x);
@@ -113,8 +112,6 @@ export default class HalfMap{
                 .attr("transform", `rotate(-45)`)
                 .merge(cells)
                 .style("fill", (d)=>d.value==0?"#fff":this.useLog?this.colorScale(this._log(d.value)):this.colorScale(d.value))
-
-
         }
 
         if(showLabels){
@@ -246,8 +243,8 @@ export default class HalfMap{
     }
 
     _setScales(dimensions={w:600, top:20, left:20}, colorScaleDomain=[0,1], xScaleDomain, yScaleDomain){
-        if (this.xScale === undefined) this._setXScale(dimensions, xScaleDomain);
-        if (this.yScale === undefined) this._setYScale(dimensions, yScaleDomain);
+        if (xScaleDomain || this.xScale === undefined) this._setXScale(dimensions, xScaleDomain);
+        if (yScaleDomain || this.yScale === undefined) this._setYScale(dimensions, yScaleDomain);
         if (this.colorScale === undefined) this._setColorScale(colorScaleDomain);
     }
 

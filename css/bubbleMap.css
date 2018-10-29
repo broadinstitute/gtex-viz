@@ -64,5 +64,9 @@ div.bubblemap-tooltip {
    border-radius:5px;
 }
 
+rect.track.highlighted {
+    stroke: #D25C43;
+}
+
 
 

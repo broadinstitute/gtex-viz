@@ -44,7 +44,25 @@ export default class BubbleMap {
      * @param columnLabelAngle {Integer}
      * @param columnLabelPosAdjust {Integer}
      */
-    drawCanvas(canvas, dimensions={w:1000, h:600, top:20, left:20}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0){
+    drawCanvas(canvas,
+        dimensions={w:1000, h:600, top:20, left:20},
+        colorScaleDomain=undefined,
+        labelConfig = {
+            column: {
+                show: true,
+                angle: 30,
+                adjust: 0,
+                location: 'bottom',
+                textAlign: 'left'
+            },
+           row: {
+                show: true,
+                angle: 0,
+                adjust: 0,
+                location: 'left',
+                textAlign: 'right',
+           }
+    }){
         this._setScales(dimensions, colorScaleDomain);
 
         let context = canvas.node().getContext('2d');
@@ -63,23 +81,27 @@ export default class BubbleMap {
         });
 
         // text labels
-        if(showLabels){
+        let cl = labelConfig.column;
+        let rl = labelConfig.row;
+        if(rl.show) {
             context.save();
-            context.textAlign = 'right';
+            context.textAlign = cl.textAlign;
             context.fillStyle = 'black';
             context.font = '10px Open Sans';
-            this.yScale.domain().forEach((d)=>{
-                context.fillText(d, this.xScale.range()[0]-12, this.yScale(d)+2);
+            this.yScale.domain().forEach((d) => {
+                context.fillText(d, this.xScale.range()[0] - rl.adjust, this.yScale(d) + 2);
             });
             context.restore();
+        }
 
+        if(cl.show) {
             this.xScale.domain().forEach((d)=>{
                 context.save();
                 context.fillStyle = 'black';
                 context.font = '10px Open Sans';
-                context.textAlign = 'left';
-                context.translate(this.xScale(d)+this.xScale.bandwidth()/2 - 3, this.yScale.range()[1] + columnLabelPosAdjust);
-                context.rotate(Math.PI/2);
+                context.textAlign = cl.textAlign;
+                context.translate(this.xScale(d)+this.xScale.bandwidth()/2 - 3, this.yScale.range()[1] + cl.adjust);
+                context.rotate(cl.angle==0?0:Math.PI/(180/cl.angle));
                 context.fillText(d, 0, 0);
                 context.restore();
 
@@ -87,16 +109,40 @@ export default class BubbleMap {
         }
     }
 
-    drawCombo(miniDom, focusDom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=10, addBrush=true) {
-        this._setMiniScales(dimensions, colorScaleDomain);
-        this.drawSvg(focusDom, {
+    drawCombo(
+    miniDom,
+    focusDom,
+    dimensions={w:1000, h:600, top:0, left:0},
+    colorScaleDomain=undefined,
+    addBrush=true,
+    labelConfig = {
+        column: {
+            show: true,
+            angle: 30,
+            adjust: 0,
+            location: 'bottom',
+            textAlign: 'left'
+        },
+       row: {
+            show: true,
+            angle: 0,
+            adjust: 0,
+            location: 'left',
+            textAlign: 'right',
+       }
+    }) {
+
+        let svgDim = {
             w: dimensions.w,
             h: dimensions.h2,
             top: dimensions.top,
             left: dimensions.left
-        }, colorScaleDomain, showLabels, columnLabelAngle, columnLabelPosAdjust);
+        };
+        this.drawSvg(focusDom, svgDim, colorScaleDomain, 50, labelConfig);
+
         let bubbles = miniDom.append("g")
             .attr("clip-path", "url(#clip)");
+        this._setMiniScales(dimensions, colorScaleDomain);
         bubbles.selectAll(".mini-map-cell")
             .data(this.data, (d) => d.value)
             .enter()
@@ -109,47 +155,16 @@ export default class BubbleMap {
             .attr("r", (d) => this.bubbleScaleMini(d.r))
             .style("fill", (d) => this.colorScale(d.value));
 
-        let xList = this.xScaleMini.domain();
         if (addBrush) {
-            const brushed = () => {
-                let selection = event.selection;
-                let brushLeft = Math.round(selection[0] / this.xScaleMini.step());
-                let brushRight = Math.round(selection[1] / this.xScaleMini.step());
-                this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
-                let bubbleMax = this._setBubbleMax();
-                this.bubbleScale = this._setBubbleScale({max: bubbleMax, min: 2}); // TODO: change hard-coded min radius
 
-                // update the focus bubbles
-                focusDom.selectAll(".bubble-map-cell")
-                    .attr("cx", (d) => {
-                        let x = this.xScale(d.x);
-                        return x === undefined ? this.xScale.bandwidth() / 2 : x + this.xScale.bandwidth() / 2;
-
-                    })
-                    .attr("r", (d) => {
-                        let x = this.xScale(d.x);
-                        return x === undefined ? 0 : this.bubbleScale(d.r)
-                    });
-
-                // update the column labels
-                focusDom.selectAll(".bubble-map-xlabel")
-                    .attr("transform", (d) => {
-                        let x = this.xScale(d) + 5 || 0; // TODO: remove hard-coded value
-                        let y = this.yScale.range()[1] + columnLabelPosAdjust;
-                        return `translate(${x}, ${y}) rotate(${columnLabelAngle})`;
-
-                    })
-                    .style("display", (d) => {
-                        let x = this.xScale(d); // TODO: remove hard-coded value
-                        return x === undefined ? "none" : "block";
-                    });
-            };
             let brush = brushX()
                 .extent([
                     [0, 0],
                     [dimensions.w, dimensions.h]
                 ])
-                .on("brush", brushed);
+                .on("brush", ()=>{
+                    this._brushed(focusDom, labelConfig);
+                });
             miniDom.append("g")
                 .attr("class", "brush")
                 .call(brush)
@@ -159,7 +174,22 @@ export default class BubbleMap {
 
     }
 
-    drawSvg(dom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, showLabels=true, columnLabelAngle=30, columnLabelPosAdjust=0, brushSize=50){
+    drawSvg(dom, dimensions={w:1000, h:600, top:0, left:0}, colorScaleDomain=undefined, brushSize=50, labelConfig={
+            column: {
+                show: true,
+                angle: 30,
+                adjust: 0,
+                location: 'bottom',
+                textAlign: 'left'
+            },
+           row: {
+                show: true,
+                angle: 0,
+                adjust: 0,
+                location: 'left',
+                textAlign: 'right',
+           }
+        }){
         this._setScales(dimensions, colorScaleDomain, brushSize);
         let tooltip = this.tooltip;
         // bubbles
@@ -173,10 +203,10 @@ export default class BubbleMap {
             .attr("class", "bubble-map-cell")
             .attr("row", (d)=> `x${this.xScale.domain().indexOf(d.x)}`)
             .attr("col", (d)=> `y${this.yScale.domain().indexOf(d.y)}`)
-            .attr("cx", (d)=>this.xScale(d.x) + this.xScale.bandwidth()/2)
-            .attr("cy", (d)=>this.yScale(d.y) + this.yScale.bandwidth()/2)
-            .attr("r", (d)=>this.bubbleScale(d.r))
-            .style("fill", (d)=>this.colorScale(d.value))
+            .attr("cx", (d) => this.xScale(d.x) + this.xScale.bandwidth()/2)
+            .attr("cy", (d) => this.yScale(d.y) + this.yScale.bandwidth()/2)
+            .attr("r", (d) => this.bubbleScale(d.r))
+            .style("fill", (d) => this.colorScale(d.value))
             .on("mouseover", function(d){
                 let selected = select(this);
                 let rowClass = selected.attr("row");
@@ -187,7 +217,7 @@ export default class BubbleMap {
                     .classed('highlighted', true);
                 selected.classed('highlighted', true);
                 let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
-                let displaySize = d.r.toPrecision(4)
+                let displaySize = d.r.toPrecision(4);
                 tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`);
             })
             .on("mouseout", function(){
@@ -196,13 +226,15 @@ export default class BubbleMap {
             });
 
         // text labels
-        if(showLabels) {
+        let cl = labelConfig.column;
+        let rl = labelConfig.row;
+        if(cl.show) {
             // column labels
             let lookup = {};
             nest()
                 .key((d) => d.x) // group this.data by d.x
                 .entries(this.data)
-                .forEach((d)=>{
+                .forEach((d) => {
                     lookup[d.key] = d.values[0].displayX
                 });
             let xLabels = dom.selectAll('.bubble-map-xlabel').data(this.xScale.domain())
@@ -210,30 +242,36 @@ export default class BubbleMap {
                 .attr("class", (d, i) => `bubble-map-xlabel x${i}`)
                 .attr("x", 0)
                 .attr("y", 0)
-                .style("text-anchor", "start")
+                .style("text-anchor", cl.textAlign=='left'?'start':'end')
                 .style("cursor", "default")
-                .style("font-size", ()=>{
-                    let size = Math.floor(this.xScale.bandwidth())/2;
+                .style("font-size", () => {
+                    let size = Math.floor(this.xScale.bandwidth()) / 2;
                     return `${size}px`
                 })
                 .attr("transform", (d) => {
-                    let x = this.xScale(d) + this.xScale.bandwidth()/3;
-                    let y = this.yScale.range()[1] + columnLabelPosAdjust;
-                    return `translate(${x}, ${y}) rotate(${columnLabelAngle})`;
+                    let x = this.xScale(d) + this.xScale.bandwidth() / 3;
+                    let y = this.yScale.range()[1] + cl.adjust;
+                    return `translate(${x}, ${y}) rotate(${cl.angle})`;
                 })
-                .text((d) => lookup[d]);
-
+                .text((d) => lookup[d]?lookup[d]:d);
+        }
+        if (rl.show){
             // row labels
             let yLabels = dom.selectAll('.bubble-map-ylabel').data(this.yScale.domain())
                 .enter().append("text")
                 .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
-                .attr("x", this.xScale.range()[0] - 10)
-                .attr("y", (d) => this.yScale(d) + this.yScale.bandwidth()/1.5)
-                .style("text-anchor", "end")
+                .attr("x", 0)
+                .attr("y", 0)
+                .style("text-anchor", rl.textAlign=='left'?'start':'end')
                 .style("cursor", "default")
                 .style("font-size", ()=>{
                     let size = Math.floor(this.yScale.bandwidth()/1.5);
                     return `${size}px`
+                })
+                .attr("transform", (d) => {
+                    let x = this.xScale.range()[0] - rl.adjust;
+                    let y = this.yScale(d) + this.yScale.bandwidth()/1.5;
+                    return `translate(${x}, ${y}) rotate(${rl.angle})`;
                 })
                 .text((d) => d);
         }
@@ -281,6 +319,42 @@ export default class BubbleMap {
     }
 
     // private methods
+    _brushed(focusDom, labelConfig){
+
+        let selection = event.selection;
+        let brushLeft = Math.round(selection[0] / this.xScaleMini.step());
+        let brushRight = Math.round(selection[1] / this.xScaleMini.step());
+        this.xScale.domain(this.xScaleMini.domain().slice(brushLeft, brushRight)); // reset the xScale domain
+        let bubbleMax = this._setBubbleMax();
+        this.bubbleScale = this._setBubbleScale({max: bubbleMax, min: 2}); // TODO: change hard-coded min radius
+
+        // update the focus bubbles
+        focusDom.selectAll(".bubble-map-cell")
+            .attr("cx", (d) => {
+                let x = this.xScale(d.x);
+                return x === undefined ? this.xScale.bandwidth() / 2 : x + this.xScale.bandwidth() / 2;
+
+            })
+            .attr("r", (d) => {
+                let x = this.xScale(d.x);
+                return x === undefined ? 0 : this.bubbleScale(d.r); // indicating that the bubble is not in focus zone, so set the radius to zero
+            });
+
+        // update the column labels
+        focusDom.selectAll(".bubble-map-xlabel")
+            .attr("transform", (d) => {
+                let x = this.xScale(d) + 5 || 0; // TODO: remove hard-coded value
+                let y = this.yScale.range()[1] + labelConfig.column.adjust;
+                return `translate(${x}, ${y}) rotate(${labelConfig.column.angle})`;
+
+            })
+            .style("display", (d) => {
+                let x = this.xScale(d); // TODO: remove hard-coded value
+                return x === undefined ? "none" : "block";
+            });
+
+    }
+
     _setMiniScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
         if (this.xScaleMini === undefined) this.xScaleMini = this._setXScaleMini(dimensions);
         if (this.yScaleMini === undefined) this.yScaleMini = this._setYScaleMini(dimensions);
