@@ -7,8 +7,8 @@
 import {json} from 'd3-fetch';
 import {median} from 'd3-array';
 import {select} from 'd3-selection';
-import {getGtexUrls, parseTissues} from './modules/gtexDataParser';
-
+import {getGtexUrls, parseTissues, parseTissueSites} from './modules/gtexDataParser';
+import {createTissueGroupMenu} from './modules/gtexMenuBuilder';
 import GroupedViolin from './modules/GroupedViolin';
 
 export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
@@ -31,6 +31,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             descSort: `${rootId}-svg-desc-sort`,
             logScale: `${rootId}-svg-log-scale`,
             linearScale: `${rootId}-svg-linear-scale`,
+            filter: `${rootId}-svg-filter`
         }
 
     };
@@ -85,6 +86,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             // let showSize = false;
             violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
             _addToolbar(violinPlot, tooltip, ids);
+            _populateTissueFilter(args[0]);
         });
 }
 
@@ -162,6 +164,12 @@ function _addToolbar(vplot, tooltip, ids) {
     toolbar.createButton(ids.buttons.linearScale, 'fa-sliders-h');
     let linearScaleButton = select(`#${ids.buttons.linearScale}`)
         .on('mouseover', ()=>{toolbar.tooltip.show('Linear Scale');})
+        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+
+    // filter
+    toolbar.createButton(ids.buttons.filter, 'fa-filter');
+    let tissueFilterButton = select(`#${ids.buttons.filter}`)
+        .on('mouseover', ()=>{toolbar.tooltip.show('Filter Tissues');})
         .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
 
@@ -244,6 +252,10 @@ function _addToolbar(vplot, tooltip, ids) {
         }
     });
 
+    tissueFilterButton.on('click', (d, i, nodes)=>{
+        $('#gene-expr-vplot-filter-modal').modal('show');
+    });
+
 }
 
 function _calcViolinPlotValues(data, useLog=true) {
@@ -276,4 +288,9 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
     });
     _calcViolinPlotValues(data[attr], useLog);
     return data[attr];
+}
+
+function _populateTissueFilter(tissues) {
+    const tissueGroups = parseTissueSites(tissues);
+    createTissueGroupMenu(tissueGroups, 'gene-expr-vplot-filter-modal-body');
 }
