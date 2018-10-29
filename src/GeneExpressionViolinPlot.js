@@ -292,5 +292,5 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
 
 function _populateTissueFilter(tissues) {
     const tissueGroups = parseTissueSites(tissues);
-    createTissueGroupMenu(tissueGroups, 'gene-expr-vplot-filter-modal-body');
+    createTissueGroupMenu(tissueGroups, 'gene-expr-vplot-filter-modal-body', false, 3);
 }
