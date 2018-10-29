@@ -23,8 +23,8 @@ import {
 import BubbleMap from "./modules/BubbleMap";
 import HalfMap from "./modules/HalfMap";
 
-export function render(par, geneId, rootDivId, spinnerId, dashboardId, urls = getGtexUrls()){
-    $(`#${spinnerId}`).show();
+export function render(par, geneId, urls = getGtexUrls()){
+    $(`#${par.spinner}`).show();
 
     json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
         .then((data)=> {
@@ -41,15 +41,15 @@ export function render(par, geneId, rootDivId, spinnerId, dashboardId, urls = ge
                     let eqtls = parseSingleTissueEqtls(results[2]);
                     par.data = eqtls;
                     par = setDimensions(par);
-                    let bmap = renderBubbleMap(par, gene, dashboardId, tissues, exons);
+                    let bmap = renderBubbleMap(par, gene, tissues, exons);
 
                     // fetch LD data, this query is slow, so it's not included in the promises.
                     json(urls.ld + gene.gencodeId)
                         .then((ldJson) => {
                             let ld = parseLD(ldJson);
                             par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data
-                            renderLdMap(par, bmap, dashboardId);
-                            $(`#${spinnerId}`).hide();
+                            renderLdMap(par, bmap);
+                            $(`#${par.spinner}`).hide();
                         })
 
                 });
@@ -112,9 +112,8 @@ function createSvg(rootId, width, height, svgId=undefined){
  * Render the LD heat map
  * @param par {Object} the map's config object
  * @param bmap {BubbleMap} object of the bubble map because the LD rendering domain is based on the bubble map's focus domain.
- * @param dashboardId {String} a <div> ID of the dashboard, where the filters should be rendered.
  */
-function renderLdMap(par, bmap, dashboardId){
+function renderLdMap(par, bmap){
     let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip", [0,1]);
     let ldCanvas = select(`#${par.ldId}`).append("canvas")
         .attr("id", par.ldId + "-ld-canvas")
@@ -140,7 +139,7 @@ function renderLdMap(par, bmap, dashboardId){
     });
 
     // LD filters
-    renderLDFilters(dashboardId, ldMap, ldCanvas, ldG, ldConfig);
+    renderLDFilters(par.dashboard, ldMap, ldCanvas, ldG, ldConfig);
 }
 
 /**
@@ -151,7 +150,7 @@ function renderLdMap(par, bmap, dashboardId){
  * @param dashboardId {String} the DIV ID for the dashboard
  * @returns {BubbleMap}
  */
-function renderBubbleMap(par, gene, dashboardId, tissues, exons){
+function renderBubbleMap(par, gene, tissues, exons){
     // TODO: in GEV, there are custom attributes created for bmap, perhaps a better way to do this is to define a GEV class
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
     let bmapSvg = createSvg(par.id, par.width, par.height, undefined);
@@ -210,7 +209,7 @@ function renderBubbleMap(par, gene, dashboardId, tissues, exons){
     buildVariantLookupTables(bmap);
 
     // filter events
-    renderBmapFilters(dashboardId, bmap, bmapSvg);
+    renderBmapFilters(par.dashboard, bmap, bmapSvg);
 
     // additional custom visual feature add-ons
     //-- tissue badges that report the tissue sample counts
@@ -223,8 +222,11 @@ function renderBubbleMap(par, gene, dashboardId, tissues, exons){
     //-- TSS distance track
     //-- It's a 1D heatmap showing the distance of each variant to the TSS site.
     renderTssDistanceTrack(gene, bmap, bmapSvg);
-    return bmap;
 
+    //-- Add bubble click event
+    addBubbleClickEvent(bmap, bmapSvg, par);
+
+    return bmap;
 }
 
 /**
@@ -786,5 +788,40 @@ function panelBuilder(panels, id){
                 .appendTo(div);
             }
         } // add the new element to the dashboard
+    });
+}
+
+function addBubbleClickEvent(bmap, bmapSvg, par){
+    let dialogDivId = par.id+"violin-dialog";
+    _createDialog(par.dashboard, par.id+"violin-dialog", "eQTL Violin Plot");
+    bmapSvg.selectAll('.bubble-map-cell')
+        .on("click", (d)=>{
+            $(`#${dialogDivId}`).dialog('open');
+
+        })
+}
+
+/** Create a dialog for the eQTL violin plots */
+function _createDialog(parentDivId, dialogDivId, title){
+     // jquery UI dialog
+    checkDomId(parentDivId);
+    let parent = $(`#${parentDivId}`);
+    let dialog = $('<div/>')
+        .attr('id', dialogDivId)
+        .attr('title', title)
+        .appendTo(parent);
+    let clearDiv = $('<div/>')
+        .attr('class', 'bbMap-clear')
+        .html("Clear All")
+        .appendTo(dialog);
+    let contentDiv = $('<div/>')
+        .attr('class', 'bbMap-content')
+        .appendTo(dialog);
+    dialog.dialog({
+        title: title,
+        autoOpen: false
+    });
+    clearDiv.click(function(){
+        contentDiv.empty();
     });
 }

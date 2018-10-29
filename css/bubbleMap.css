@@ -35,10 +35,10 @@ text.bubble-map-ylabel.clicked, text.bubble-map-xlabel.clicked {
     fill: #D25C43;
 }
 
-rect.bubble-map-cell {
+circle.bubble-map-cell {
     stroke-width:0px;
 }
-rect.bubble-map-cell.highlighted {
+circle.bubble-map-cell.highlighted {
     stroke: #D25C43;
     stroke-width:2px;
 }
@@ -66,6 +66,58 @@ div.bubblemap-tooltip {
 
 rect.track.highlighted {
     stroke: #D25C43;
+}
+
+/* eQTL box plot stuff */
+.closePlot {
+   cursor:pointer;
+   float:right;
+}
+
+.bbMap-canvas {
+    margin-top: 30px;
+    margin-left: 250px;
+}
+
+#bbMap-dialog .title {
+   text-anchor: middle;
+   font-size: 12px;
+
+}
+
+#bbMap-dialog text.plotviz-label {
+   font-size: 12px;
+}
+
+#bbMap-dialog .plotviz-left-axis g.tick text {
+   font-size: 11px;
+}
+
+#bbMap-dialog tspan {
+   font-size: 11px;
+}
+
+.bbMap-clear {
+   color: #999;
+   font-size: 10px;
+   text-decoration: underline;
+   cursor: pointer;
+}
+
+/* jquery UI customization */
+.ui-dialog .ui-dialog-titlebar {
+   padding: 0.1em 0.2em;
+}
+
+.ui-dialog-content {
+   width: 100% !important; /* this is an important overwrite that ensures that the ui-dialog-content's width remains 100% of the ui-dialog after a resizing event */
+}
+
+.ui-widget-header {
+   border: 0px;
+}
+.ui-dialog {
+    z-index:2000;
 }
 
 

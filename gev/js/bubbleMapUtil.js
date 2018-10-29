@@ -345,7 +345,6 @@ var bubbleMapUtil = (function(){
        $('.bbMap-clear').click(function(){
             $('.bbMap-content').empty();
         });
-
     };
 
     var createCanvas = function(div, width, height, margin, className){
