@@ -8,7 +8,7 @@ import {json} from 'd3-fetch';
 import {median} from 'd3-array';
 import {select} from 'd3-selection';
 import {getGtexUrls, parseTissues, parseTissueSites} from './modules/gtexDataParser';
-import {createTissueGroupMenu} from './modules/gtexMenuBuilder';
+import {createTissueGroupMenu, parseTissueGroupMenu} from './modules/gtexMenuBuilder';
 import GroupedViolin from './modules/GroupedViolin';
 
 export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
@@ -32,7 +32,8 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             logScale: `${rootId}-svg-log-scale`,
             linearScale: `${rootId}-svg-linear-scale`,
             filter: `${rootId}-svg-filter`
-        }
+        },
+        tissueFilter: 'gene-expr-vplot-filter-modal'
 
     };
                                         // top, right, bottom, left
@@ -85,8 +86,8 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             let showLegend = false;
             // let showSize = false;
             violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
+            _populateTissueFilter(violinPlot, ids.tissueFilter, args[0]);
             _addToolbar(violinPlot, tooltip, ids);
-            _populateTissueFilter(args[0]);
         });
 }
 
@@ -290,7 +291,15 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
     return data[attr];
 }
 
-function _populateTissueFilter(tissues) {
+function _populateTissueFilter(vplot, domId, tissues) {
     const tissueGroups = parseTissueSites(tissues);
-    createTissueGroupMenu(tissueGroups, 'gene-expr-vplot-filter-modal-body', false, 3);
+    createTissueGroupMenu(tissueGroups, `${domId}-body`, false, 3);
+    _addTissueFilterEvent(vplot, domId, tissueGroups);
+}
+
+function _addTissueFilterEvent(vplot, domId, tissues) {
+    $(`#${domId}`).on('hidden.bs.modal', (e) => {
+        let checkedTissues = parseTissueGroupMenu(tissues, `${domId}-body`, true);
+        vplot.updateXScale(checkedTissues);
+    });
 }
