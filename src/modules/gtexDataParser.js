@@ -279,6 +279,17 @@ export function parseExons(json){
 }
 
 /**
+ * parse transcript isoforms from the GTEx web service: 'reference/transcript?release=v7&gencode_id='
+ * @param data {Json}
+ * returns a list of all Exons
+ */
+export function parseExonsToList(json){
+    const attr = 'exon';
+    if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attribute is missing: exon';
+    return json[attr];
+}
+
+/**
  * parse transcript isoforms
  * @param data {Json} from GTEx web service 'reference/transcript?release=v7&gencode_id='
  * returns a list of isoform objects sorted by length in descending order

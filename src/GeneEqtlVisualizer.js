@@ -17,6 +17,7 @@ import {
     parseGenes,
     parseSingleTissueEqtls,
     parseLD,
+    parseExonsToList,
     parseTissueSampleCounts
 } from "./modules/gtexDataParser";
 import BubbleMap from "./modules/BubbleMap";
@@ -24,33 +25,35 @@ import HalfMap from "./modules/HalfMap";
 
 export function render(par, geneId, rootDivId, spinnerId, dashboardId, urls = getGtexUrls()){
     $(`#${spinnerId}`).show();
-    json(urls.tissueSummary) // retrieve tissue sample counts
-        .then((tissueData)=>{
 
-            let tissues = parseTissueSampleCounts(tissueData);
-            json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
-                .then((data)=>{
+    json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
+        .then((data)=> {
+            let gene = parseGenes(data, true, geneId);
+            let promises = [
+                json(urls.tissueSummary),
+                json(urls.exon + gene.gencodeId),
+                json(urls.singleTissueEqtl + gene.gencodeId)
+            ];
+            Promise.all(promises)
+                .then(function(results){
+                    let tissues = parseTissueSampleCounts(results[0]);
+                    let exons = parseExonsToList(results[1]);
+                    let eqtls = parseSingleTissueEqtls(results[2]);
+                    par.data = eqtls;
+                    par = setDimensions(par);
+                    let bmap = renderBubbleMap(par, gene, dashboardId, tissues, exons);
 
-                    let gene = parseGenes(data, true, geneId);
-                    json(urls.singleTissueEqtl + gene.gencodeId) // get the gene's eQTLs
-                        .then((data2)=>{
-
-                            par.data = parseSingleTissueEqtls(data2);
-                            par = setDimensions(par); // calculate the required dimensions based on user inputs
-                            let bmap = renderBubbleMap(par, gene, dashboardId, tissues);
-
-                            json(urls.ld + gene.gencodeId)
-                            .then(function(data) {
-                                let ld = parseLD(data);
-                                par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data
-                                renderLdMap(par, bmap, dashboardId);
-                                $(`#${spinnerId}`).hide();
-                            });
-
+                    // fetch LD data, this query is slow, so it's not included in the promises.
+                    json(urls.ld + gene.gencodeId)
+                        .then((ldJson) => {
+                            let ld = parseLD(ldJson);
+                            par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data
+                            renderLdMap(par, bmap, dashboardId);
+                            $(`#${spinnerId}`).hide();
                         })
+
                 });
         });
-
 }
 
 /**
@@ -148,7 +151,7 @@ function renderLdMap(par, bmap, dashboardId){
  * @param dashboardId {String} the DIV ID for the dashboard
  * @returns {BubbleMap}
  */
-function renderBubbleMap(par, gene, dashboardId, tissues){
+function renderBubbleMap(par, gene, dashboardId, tissues, exons){
     // TODO: in GEV, there are custom attributes created for bmap, perhaps a better way to do this is to define a GEV class
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
     let bmapSvg = createSvg(par.id, par.width, par.height, undefined);
@@ -172,6 +175,9 @@ function renderBubbleMap(par, gene, dashboardId, tissues){
         par.focusPanelLabels
     );
     bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 3, "NES");
+
+    // identify variants that are in the exon regions
+    bmap.variantsInExons = findVariantsInExonRegions(bmap.xScale.domain(), exons);
 
     // add a brush
     bmap.brushEvent = ()=>{
@@ -421,6 +427,26 @@ function buildVariantLookupTables(bmap){
             bmap.varLookUp[d.key] = d.values[0].displayX;
         });
 }
+
+/**
+ * Identify variants that are in the exon regions
+ * @param variants
+ * @param exons
+ *
+ */
+function findVariantsInExonRegions(variants, exons){
+    let exonVariants = {} // indexed by variant ID
+    variants.forEach((v)=>{
+        let pos = parseFloat(v.split('_')[1]);
+        let filtered = exons.filter((ex)=>{
+            return ex.start<=pos && ex.end>=pos;
+        });
+        if(filtered.length > 0) exonVariants[v] = true;
+    });
+    return exonVariants;
+}
+
+
 /**
  * Render the variant TSS distance track
  * @param gene {Object} of the gene with attr start, end and strand
@@ -444,10 +470,11 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
     bmapSvg.select('#tssDistG').remove(); // clear any previously rendered SVG DOM objects.
     let g = bmapSvg.select('#focusG').append('g')
         .attr('id', 'tssDistG');
-    g.selectAll('rect')
+    g.selectAll('.track')
         .data(bmap.xScale.domain())
         .enter()
         .append('rect')
+        .classed('track', true)
         .attr('x', (d)=>bmap.xScale(d))
         .attr('y', bmap.yScale.range()[1] + bmap.yScale.bandwidth())
         .attr('width', bmap.xScale.bandwidth())
@@ -456,11 +483,18 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
             let dist = Math.abs(parseFloat(d.split('_')[1]) - tss);
             return colorScale(dist);
         })
-        .attr('stroke', '#748797')
-        .attr('stroke-width', '1px')
-        .on('mouseover', (d)=>{
+        .attr('stroke', (d)=>bmap.variantsInExons[d]?'#239db8':'#cacaca')
+        .attr('stroke-width', (d)=>bmap.variantsInExons[d]?'2px':'1px')
+        .on('mouseover', function(d){
             let dist = Math.abs(parseFloat(d.split('_')[1]) - tss);
-            bmap.tooltip.show(`${d}<br/>${bmap.rsLookUp[d]}<br/>TSS Distance: ${dist} bp`);
+            let ttContent = `${d}<br/>${bmap.rsLookUp[d]}<br/>TSS Distance: ${dist} bp</br>`;
+            ttContent = bmap.variantsInExons[d]?ttContent + "Exon Region": ttContent;
+            bmap.tooltip.show(ttContent);
+            select(this).classed('highlighted', true);
+        })
+        .on('mouseout', function(d){
+            bmap.tooltip.hide();
+            selectAll('.track').classed('highlighted', false);
         })
 
 }
