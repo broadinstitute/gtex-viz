@@ -81,9 +81,11 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
                 else if (a.group > b.group) return 1;
                 else return 0;
             });
-            violinPlot.allData = Object.assign(violinPlot.data);
-            let tooltip = violinPlot.createTooltip(ids.tooltip)
+            let tooltip = violinPlot.createTooltip(ids.tooltip);
 
+            // adding property to keep track of sorting and filtering specifically for this plot
+            violinPlot.genePlotSort = ids.plotSorts.ascAlphaSort;
+            violinPlot.allData = violinPlot.data.map(d=>d);
 
             let width = dim.width;
             let height = dim.height;
@@ -148,8 +150,6 @@ function _addToolbar(vplot, tooltip, ids) {
         .classed('active', true)
         .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Asc)');})
         .on('mouseout', ()=>{toolbar.tooltip.hide();});
-    // adding property to keep track of sort for the gene expression plot ONLY
-    vplot.genePlotSort = ids.plotSorts.ascAlphaSort;
 
     // descending alphabetical sort
     toolbar.createButton(ids.buttons.descAlphaSort, 'fa-sort-alpha-up');
