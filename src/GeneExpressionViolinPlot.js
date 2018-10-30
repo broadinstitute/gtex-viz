@@ -81,6 +81,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
                 else if (a.group > b.group) return 1;
                 else return 0;
             });
+            violinPlot.allData = Object.assign(violinPlot.data);
             let tooltip = violinPlot.createTooltip(ids.tooltip)
 
 
@@ -98,7 +99,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             let showLegend = false;
             // let showSize = false;
             violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
-            _populateTissueFilter(violinPlot, ids.tissueFilter, args[0]);
+            _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids);
         });
 }
@@ -295,19 +296,18 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
     return data[attr];
 }
 
-function _populateTissueFilter(vplot, domId, tissues) {
+function _populateTissueFilter(vplot, domId, ids, tissues) {
     const tissueGroups = parseTissueSites(tissues);
     createTissueGroupMenu(tissueGroups, `${domId}-body`, false, true, 3);
-    _addTissueFilterEvent(vplot, domId, tissueGroups);
+    _addTissueFilterEvent(vplot, domId, ids, tissueGroups);
 }
 
-function _addTissueFilterEvent(vplot, domId, tissues) {
+function _addTissueFilterEvent(vplot, domId, ids, tissues) {
     $(`#${domId}`).on('hidden.bs.modal', (e) => {
         let currSort = vplot.genePlotSort;
 
         let checkedTissues = parseTissueGroupMenu(tissues, `${domId}-body`, true);
-        _filterTissues(vplot, checkedTissues);
-        // vplot.updateXScale(checkedTissues);
+        _filterTissues(vplot, ids, checkedTissues);
     });
 }
 
@@ -340,8 +340,8 @@ function _sortAndUpdateData(vplot, ids) {
     vplot.updateXScale(xDomain);
 }
 
-function _filterTissues(vplot, tissues) {
-    let filteredData = vplot.data.filter(x => tissues.includes(x.group));
-    let xDomain = filteredData.map(x => x.group);
-    vplot.updateXScale(xDomain);
+function _filterTissues(vplot, ids, tissues) {
+    let filteredData = vplot.allData.filter(x => tissues.includes(x.group));
+    vplot.data = filteredData;
+    _sortAndUpdateData(vplot, ids);
 }
