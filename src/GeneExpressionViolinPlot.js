@@ -33,6 +33,12 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             linearScale: `${rootId}-svg-linear-scale`,
             filter: `${rootId}-svg-filter`
         },
+        plotSorts: {
+            ascAlphaSort: 'asc-alpha',
+            descAlphaSort: 'desc-alpha',
+            ascSort: 'asc-num',
+            descSort: 'desc-num'
+        },
         tissueFilter: 'gene-expr-vplot-filter-modal'
 
     };
@@ -67,15 +73,21 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
                 tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
             });
             const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, tissueIdColorMap);
-            const tissueGroups = violinPlotData.map((d) => d.group);
+            const tissueGroups = violinPlotData.map(d => d.group);
             let violinPlot = new GroupedViolin(violinPlotData);
+            // alphabetically sort by default
+            violinPlot.data.sort((a,b) => {
+                if (a.group < b.group) return -1;
+                else if (a.group > b.group) return 1;
+                else return 0;
+            });
             let tooltip = violinPlot.createTooltip(ids.tooltip)
 
 
             let width = dim.width;
             let height = dim.height;
             let xPadding = 0.1;
-            let xDomain = tissueGroups.sort(); // alphabetically sorting by tissue by default
+            let xDomain = violinPlot.data.map(d => d.group);
             let yDomain =[];
             let yLabel = 'log10(TPM)';
             let showX = true;
@@ -135,6 +147,8 @@ function _addToolbar(vplot, tooltip, ids) {
         .classed('active', true)
         .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Asc)');})
         .on('mouseout', ()=>{toolbar.tooltip.hide();});
+    // adding property to keep track of sort for the gene expression plot ONLY
+    vplot.genePlotSort = ids.plotSorts.ascAlphaSort;
 
     // descending alphabetical sort
     toolbar.createButton(ids.buttons.descAlphaSort, 'fa-sort-alpha-up');
@@ -181,9 +195,8 @@ function _addToolbar(vplot, tooltip, ids) {
             ascNumSortButton.classed('active', false);
             descNumSortButton.classed('active', false);
 
-            let tissueGroups = vplot.data.map((d) => d.group);
-            let xDomain = tissueGroups.sort();
-            vplot.updateXScale(xDomain);
+            vplot.genePlotSort = ids.plotSorts.ascAlphaSort;
+            _sortAndUpdateData(vplot, ids);
         }
 
     });
@@ -195,13 +208,8 @@ function _addToolbar(vplot, tooltip, ids) {
             ascNumSortButton.classed('active', false);
             descNumSortButton.classed('active', false);
 
-            let tissueGroups = vplot.data.map((d) => d.group);
-            let xDomain = tissueGroups.sort((a,b) => {
-                if (a < b) return 1;
-                else if (a > b) return -1;
-                else return 0;
-            });
-            vplot.updateXScale(xDomain);
+            vplot.genePlotSort = ids.plotSorts.descAlphaSort;
+            _sortAndUpdateData(vplot, ids);
         }
     });
 
@@ -212,10 +220,8 @@ function _addToolbar(vplot, tooltip, ids) {
             ascNumSortButton.classed('active', true);
             descNumSortButton.classed('active', false);
 
-            let sortedData = vplot.data.sort((a,b) => { return a.median - b.median;
-            });
-            let tissueGroups = vplot.data.map((d) => d.group);
-            vplot.updateXScale(tissueGroups);
+            vplot.genePlotSort = ids.plotSorts.ascSort;
+            _sortAndUpdateData(vplot, ids);
         }
     });
 
@@ -226,10 +232,8 @@ function _addToolbar(vplot, tooltip, ids) {
             ascNumSortButton.classed('active', false);
             descNumSortButton.classed('active', true);
 
-            let sortedData = vplot.data.sort((a,b) => { return b.median - a.median;
-            });
-            let tissueGroups = vplot.data.map((d) => d.group);
-            vplot.updateXScale(tissueGroups);
+            vplot.genePlotSort = ids.plotSorts.descSort;
+            _sortAndUpdateData(vplot, ids);
         }
     });
 
@@ -299,7 +303,45 @@ function _populateTissueFilter(vplot, domId, tissues) {
 
 function _addTissueFilterEvent(vplot, domId, tissues) {
     $(`#${domId}`).on('hidden.bs.modal', (e) => {
+        let currSort = vplot.genePlotSort;
+
         let checkedTissues = parseTissueGroupMenu(tissues, `${domId}-body`, true);
-        vplot.updateXScale(checkedTissues);
+        _filterTissues(vplot, checkedTissues);
+        // vplot.updateXScale(checkedTissues);
     });
+}
+
+function _sortAndUpdateData(vplot, ids) {
+    switch (vplot.genePlotSort) {
+        case ids.plotSorts.ascAlphaSort:
+            vplot.data.sort((a,b) => {
+                if (a.group < b.group) return -1;
+                else if (a.group > b.group) return 1;
+                else return 0;
+            });
+            break;
+        case ids.plotSorts.descAlphaSort:
+            vplot.data.sort((a,b) => {
+                if (a.group < b.group) return 1;
+                else if (a.group > b.group) return -1;
+                else return 0;
+            });
+            break;
+        case ids.plotSorts.ascSort:
+            vplot.data.sort((a,b) => { return b.median - a.median; });
+            break;
+        case ids.plotSorts.descSort:
+            vplot.data.sort((a,b) => { return a.median - b.median; });
+            break;
+        default:
+    }
+
+    let xDomain = vplot.data.map((d) => d.group);
+    vplot.updateXScale(xDomain);
+}
+
+function _filterTissues(vplot, tissues) {
+    let filteredData = vplot.data.filter(x => tissues.includes(x.group));
+    let xDomain = filteredData.map(x => x.group);
+    vplot.updateXScale(xDomain);
 }
