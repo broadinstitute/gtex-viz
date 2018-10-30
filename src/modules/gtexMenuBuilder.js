@@ -44,10 +44,12 @@ export function createTissueMenu(domId, url = getGtexUrls().tissue){
  * @param groups {Dictionary} of lists of tissues indexed by the group name, this is created by gtexDataParser:parseTissueSites()
  * @param domId {String} <div> ID
  * @param forEqtl {Boolean}
+ * @param checkAll {Boolean} Whether or not to start all options checked
+ * @param sections {Integer} Number of sections to split menu into
  * Dependencies: jQuery, Bootstrap, tissueGroup.css
  * todo: add reset and select all options
  */
-export function createTissueGroupMenu(groups, domId, forEqtl=false){
+export function createTissueGroupMenu(groups, domId, forEqtl=false, checkAll=false, sections=4){
     const mainClass="tissue-group-main-level";
     const subClass = "tissue-group-sub-level";
     const lastSiteClass = "last-site";
@@ -88,30 +90,48 @@ export function createTissueGroupMenu(groups, domId, forEqtl=false){
                 // do nothing
 
         }
-        // $(this).prop('checked', false);
     });
+
     // sort the tissue groups alphabetically
-    let groupNames = Object.keys(groups).sort();
-
-    // create four <div> sections for the tissue menu
-    // TODO: find a better way to organize tissues into sections
-    const $sections = range(0,4).map((d)=>{
-        return $(`<div id="section${d}" class="col-xs-12 col-md-3">`).appendTo($(`#${domId}`));
+    let groupNames = Object.keys(groups).sort((a, b) => {
+        // regular sorting, except that 'Brain' group will always be first
+        if (a == 'Brain') return -1;
+        else if (b == 'Brain') return 1;
+        else if (a < b) return -1;
+        else if (a > b) return 1;
     });
 
-    groupNames.forEach(function(gname){
+    // total number of rows that will be generated
+    let rows = Object.keys(groups).reduce((a,b)=>{
+        if (groups[b].length>1) return a+1+groups[b].length;
+        else return a+groups[b].length;
+    }, 0);
+    let rowsPerSection = Math.floor(rows/sections);
+    let rowsRemain = rows % sections;
+    let colSize = Math.floor(12/sections); // for bootstrap grid
+    const $sections = range(0, sections).map(d=>{
+        return $(`<div id="section${d}" class="col-xs-12 col-md-${colSize}">`).appendTo($(`#${domId}`));
+    });
+
+    let counter = 0;
+    let currSection = 0;
+    groupNames.forEach((gname)=>{
         let sites = groups[gname]; // a list of site objects with attr: name and id
         const gId = gname.replace(/ /g, "_"); // replace the spaces with dashes to create a group <DOM> id
         // figure out which dom section to append this tissue site
-        let $currentDom = $sections[3];
-        if("Brain" == gname) $currentDom = $sections[0];
-        else if (gname.match(/^[A-D]/)) $currentDom = $sections[1];
-        else if (gname.match(/^[E-P]/)) $currentDom = $sections[2];
+        let groupLen = groups[gname].length;
+        groupLen = groupLen == 1 ? groupLen : groupLen+1; // +1 to account for site name
+        // move to new section if enough rows are in the current section
+        if (counter != 0 && groupLen + counter > rowsPerSection + rowsRemain) {
+            counter = 0;
+            currSection += 1;
+        }
+        counter += groupLen;
+        let $currentDom = $sections[currSection];
 
         // create the <label> for the tissue group
         $(`<label class=${mainClass}>`+
             `<input type="checkbox" id="${gId}" class="tissueGroup"> ` +
-            '<span class="checkmark"></span>' +
             `<span>${gname}</span>` +
             '</label><br/>').appendTo($currentDom);
 
@@ -126,7 +146,6 @@ export function createTissueGroupMenu(groups, domId, forEqtl=false){
             .forEach(function(site, i){
                 let $siteDom = $(`<label class=${subClass}>`+
                                 `<input type="checkbox" id="${site.id}" class="tissueSubGroup"> ` +
-                                '<span class="checkmark"></span>' +
                                 `<span>${site.name}</span>` +
                                 '</label><br/>').appendTo($currentDom);
                 if (i == sites.length -1) $siteDom.addClass(lastSiteClass);
@@ -155,17 +174,22 @@ export function createTissueGroupMenu(groups, domId, forEqtl=false){
             }
         });
     });
-
+    if (checkAll) {
+        $('input[name="allTissues"][value="all"]').prop('checked', true);
+        $('.tissueGroup').prop('checked', true);
+        $('.tissueSubGroup').prop('checked', true);
+    }
 }
 
 /**
  * Parse the two-level checkbox-style tissue menu
  * @param groups {Dictionary} of lists of tissues indexed by the group name, this is created by gtexDataParser:parseTissueSites()
  * @param domId {String} <div> ID
+ * @param useNames {Boolean} Whether to return tissue ids or tissue names
  * Dependencies: jQuery
  */
-export function parseTissueGroupMenu(groups, domId){
-    let queryTissueIds = [];
+export function parseTissueGroupMenu(groups, domId, useNames=false){
+    let queryTissues = [];
     $(`#${domId}`).find(":input").each(function(){ // using jQuery to parse each input item
         if ( $(this).is(":checked")) { // the jQuery way to fetch a checked tissue
             const id = $(this).attr('id');
@@ -175,13 +199,13 @@ export function parseTissueGroupMenu(groups, domId){
                 // if so, add the single site to the query list
                 let groupName = id.replace(/_/g, " "); // first convert the ID back to group name
                 if (groups[groupName].length == 1) {
-                    queryTissueIds.push(groups[groupName][0].id);
+                    useNames?queryTissues.push(groups[groupName][0].name) : queryTissues.push(groups[groupName][0].id);
                 }
             }
             else{ // this input item is a tissue site
-                queryTissueIds.push(id);
+                useNames?queryTissues.push($($(this).siblings()[0]).text()):queryTissues.push(id);
             }
         }
     });
-    return queryTissueIds.filter((d)=>d!==undefined);
+    return queryTissues.filter((d)=>d!==undefined);
 }
