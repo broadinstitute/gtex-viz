@@ -444,38 +444,41 @@ export default class GroupedViolin {
                 .style("stroke", "#fff");
         }
 
-        // interquartile range
-        violinG.append("rect")
-            .attr("x", this.scale.z(-z))
-            .attr("y", this.scale.y(q3))
-            .attr("width", Math.abs(this.scale.z(-z)-this.scale.z(z)))
-            .attr("height", Math.abs(this.scale.y(q3) - this.scale.y(q1)))
-            .attr("class", "violin-ir");
+        // will only have a boxplot + mouseover if data is not all 0's; error checking with conditional
+        if (!isNaN(z)) {
+            // interquartile range
+            violinG.append("rect")
+                .attr("x", this.scale.z(-z))
+                .attr("y", this.scale.y(q3))
+                .attr("width", Math.abs(this.scale.z(-z)-this.scale.z(z)))
+                .attr("height", Math.abs(this.scale.y(q3) - this.scale.y(q1)))
+                .attr("class", "violin-ir");
 
-        // median
-        const med = median(entry.values);
-        violinG.append("line") // the median line
-            .attr("x1", this.scale.z(-z))
-            .attr("x2", this.scale.z(z))
-            .attr("y1", this.scale.y(med))
-            .attr("y2", this.scale.y(med))
-            .attr("class", "violin-median");
+            // median
+            const med = median(entry.values);
+            violinG.append("line") // the median line
+                .attr("x1", this.scale.z(-z))
+                .attr("x2", this.scale.z(z))
+                .attr("y1", this.scale.y(med))
+                .attr("y2", this.scale.y(med))
+                .attr("class", "violin-median");
 
-        // mouse events
-        violinG.on("mouseover", ()=>{
-            vPath.classed("highlighted", true);
-            // console.log(entry);
-            if(this.tooltip === undefined) console.warn("GroupViolin Warning: tooltip not defined");
-            else {
-                this.tooltip.show(
-                    entry.group + "<br/>" +
-                    entry.label + "<br/>" +
-                    "Median: " + med.toPrecision(4) + "<br/>");
-            }
-        });
-        violinG.on("mouseout", ()=>{
-            vPath.classed("highlighted", false);
-        });
+            // mouse events
+            violinG.on("mouseover", ()=>{
+                vPath.classed("highlighted", true);
+                // console.log(entry);
+                if(this.tooltip === undefined) console.warn("GroupViolin Warning: tooltip not defined");
+                else {
+                    this.tooltip.show(
+                        entry.group + "<br/>" +
+                        entry.label + "<br/>" +
+                        "Median: " + med.toPrecision(4) + "<br/>");
+                }
+            });
+            violinG.on("mouseout", ()=>{
+                vPath.classed("highlighted", false);
+            });
+        }
     }
 
     _sanityCheck(data){
