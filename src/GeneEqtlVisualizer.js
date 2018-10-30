@@ -18,13 +18,15 @@ import {
     parseSingleTissueEqtls,
     parseLD,
     parseExonsToList,
-    parseTissueSampleCounts
+    parseTissueSampleCounts,
+    parseDynEqtl
 } from "./modules/gtexDataParser";
 import BubbleMap from "./modules/BubbleMap";
 import HalfMap from "./modules/HalfMap";
+import {groupedViolinPlot} from "./GTExViz";
 
-export function render(par, geneId, rootDivId, spinnerId, dashboardId, urls = getGtexUrls()){
-    $(`#${spinnerId}`).show();
+export function render(par, geneId, urls = getGtexUrls()){
+    $(`#${par.spinner}`).show();
 
     json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
         .then((data)=> {
@@ -41,15 +43,15 @@ export function render(par, geneId, rootDivId, spinnerId, dashboardId, urls = ge
                     let eqtls = parseSingleTissueEqtls(results[2]);
                     par.data = eqtls;
                     par = setDimensions(par);
-                    let bmap = renderBubbleMap(par, gene, dashboardId, tissues, exons);
-
+                    let bmap = renderBubbleMap(par, gene, tissues, exons);
+                    bmap.urls = urls; // TODO: figure out a better way to store the web service URLs
                     // fetch LD data, this query is slow, so it's not included in the promises.
                     json(urls.ld + gene.gencodeId)
                         .then((ldJson) => {
                             let ld = parseLD(ldJson);
                             par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data
-                            renderLdMap(par, bmap, dashboardId);
-                            $(`#${spinnerId}`).hide();
+                            renderLdMap(par, bmap);
+                            $(`#${par.spinner}`).hide();
                         })
 
                 });
@@ -112,9 +114,8 @@ function createSvg(rootId, width, height, svgId=undefined){
  * Render the LD heat map
  * @param par {Object} the map's config object
  * @param bmap {BubbleMap} object of the bubble map because the LD rendering domain is based on the bubble map's focus domain.
- * @param dashboardId {String} a <div> ID of the dashboard, where the filters should be rendered.
  */
-function renderLdMap(par, bmap, dashboardId){
+function renderLdMap(par, bmap){
     let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip", [0,1]);
     let ldCanvas = select(`#${par.ldId}`).append("canvas")
         .attr("id", par.ldId + "-ld-canvas")
@@ -140,7 +141,7 @@ function renderLdMap(par, bmap, dashboardId){
     });
 
     // LD filters
-    renderLDFilters(dashboardId, ldMap, ldCanvas, ldG, ldConfig);
+    renderLDFilters(par.dashboard, ldMap, ldCanvas, ldG, ldConfig);
 }
 
 /**
@@ -151,8 +152,7 @@ function renderLdMap(par, bmap, dashboardId){
  * @param dashboardId {String} the DIV ID for the dashboard
  * @returns {BubbleMap}
  */
-function renderBubbleMap(par, gene, dashboardId, tissues, exons){
-    // TODO: in GEV, there are custom attributes created for bmap, perhaps a better way to do this is to define a GEV class
+function renderBubbleMap(par, gene, tissues, exons){
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
     let bmapSvg = createSvg(par.id, par.width, par.height, undefined);
 
@@ -176,10 +176,33 @@ function renderBubbleMap(par, gene, dashboardId, tissues, exons){
     );
     bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 3, "NES");
 
-    // identify variants that are in the exon regions
+    ///// Below are custom features and functionality
+
+    //-- filters for p-value, nes
+    renderBmapFilters(par.dashboard, bmap, bmapSvg);
+
+    // variant related data parsing
+    // Variant locator
+    buildVariantLookupTables(bmap);
+
+    //-- identify variants that are in the exon regions
     bmap.variantsInExons = findVariantsInExonRegions(bmap.xScale.domain(), exons);
 
-    // add a brush
+    //-- tissue badges, which report the tissue sample counts next to the tissue row labels
+    renderTissueBadges(tissues, bmap, bmapSvg);
+
+     //-- TSS and TES markers
+    findVariantsNearGeneStartEnd(gene, bmap);
+    renderGeneStartEndMarkers(bmap, bmapSvg, true); // render the markers on the mini map
+
+    //-- TSS distance track
+    //-- It's a 1D heatmap showing the distance of each variant to the TSS site.
+    renderTssDistanceTrack(gene, bmap, bmapSvg);
+
+    //-- Add the click event for the bubbles: pop a dialog window and render the eQTL violin plot
+    addBubbleClickEvent(bmap, bmapSvg, par);
+
+    //-- add the focus view brush and defint the brush event
     bmap.brushEvent = ()=>{
         // update all the variant related visual features
 
@@ -205,26 +228,7 @@ function renderBubbleMap(par, gene, dashboardId, tissues, exons){
         .call(bmap.brush)
         .call(bmap.brush.move, [0, bmap.xScaleMini.bandwidth()*100]);
 
-    // variant related data parsing
-    // Variant locator
-    buildVariantLookupTables(bmap);
-
-    // filter events
-    renderBmapFilters(dashboardId, bmap, bmapSvg);
-
-    // additional custom visual feature add-ons
-    //-- tissue badges that report the tissue sample counts
-    renderTissueBadges(tissues, bmap, bmapSvg);
-
-    //-- TSS and TES markers
-    findVariantsNearGeneStartEnd(gene, bmap);
-    renderGeneStartEndMarkers(bmap, bmapSvg, true); // render the markers on the mini map
-
-    //-- TSS distance track
-    //-- It's a 1D heatmap showing the distance of each variant to the TSS site.
-    renderTssDistanceTrack(gene, bmap, bmapSvg);
     return bmap;
-
 }
 
 /**
@@ -293,15 +297,15 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
     let g = badges.enter().append("g").classed('tissue-badge', true);
 
     g.append('ellipse')
-        .attr('cx', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2-5)
+        .attr('cx', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2-10)
         .attr('cy', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2)
-        .attr('rx', bmap.xScale.bandwidth()*0.8)
+        .attr('rx', 15) // Warning: hard-coded value
         .attr('ry', bmap.yScale.bandwidth()/2)
         .attr('fill', '#748797');
 
     g.append('text')
         .text((d)=>d.rnaSeqAndGenotypeSampleCount)
-        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 12)
+        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 17)
         .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2 + 2)
         .attr('fill', '#ffffff')
         .style('font-size', 8)
@@ -787,4 +791,137 @@ function panelBuilder(panels, id){
             }
         } // add the new element to the dashboard
     });
+}
+
+function addBubbleClickEvent(bmap, bmapSvg, par){
+    let dialogDivId = par.id+"violin-dialog";
+    createDialog(par.dashboard, par.id+"violin-dialog", "eQTL Violin Plot Dialog");
+    bmapSvg.selectAll('.bubble-map-cell')
+        .on("click", (d)=>{
+            $(`#${dialogDivId}`).dialog('open');
+            json(`${bmap.urls['dyneqtl']}?variantId=${d.variantId}&gencodeId=${d.gencodeId}&tissueSiteDetailId=${d.tissueSiteDetailId}`)
+                .then(function(json){
+                    let data = parseDynEqtl(json);
+
+                    // generate genotype text labels
+                    let ref = d.variantId.split(/_/)[2];
+                    let alt = d.variantId.split(/_/)[3];
+                    const het = ref + alt;
+                    ref = ref + ref;
+                    alt = alt + alt;
+
+                    // construct the dynEqtl data for the three genotypes: ref, het, alt
+                    let violinData = [
+                        {
+                            group: d.displayX,
+                            label: ref.length>2?"ref":ref,
+                            size: data.homoRefExp.length,
+                            values: data.homoRefExp
+                        },
+                        {
+                            group: d.displayX,
+                            label: het.length>2?"het":het,
+                            size: data.heteroExp.length,
+                            values: data.heteroExp
+                        },
+                        {
+                            group: d.displayX,
+                            label: alt.length>2?"alt":alt,
+                            size: data.homoAltExp.length,
+                            values: data.homoAltExp
+                        }
+                    ];
+                    // todo report p-value
+                    addViolinPlot(d, violinData);
+                    console.log(violinData)
+                })
+
+
+        })
+}
+
+/**
+ * Create a dialog popup window for the eQTL violin plots
+ * @param parentDivId {String} where to create the dialog
+ * @param dialogDivId {String}
+ * @param title {String} the title of the dialog window
+ */
+function createDialog(parentDivId, dialogDivId, title){
+     // jquery UI dialog
+    checkDomId(parentDivId);
+    let parent = $(`#${parentDivId}`);
+    let dialog = $('<div/>')
+        .attr('id', dialogDivId)
+        .attr('title', title)
+        .appendTo(parent);
+    let clearDiv = $('<div/>')
+        .attr('class', 'bbMap-clear')
+        .html("Clear All")
+        .appendTo(dialog);
+    let contentDiv = $('<div/>')
+        .attr('id', 'bbMap-content')
+        .attr('class', 'bbMap-content')
+        .appendTo(dialog);
+    dialog.dialog({
+        title: title,
+        autoOpen: false
+    });
+    clearDiv.click(function(){
+        contentDiv.empty();
+    });
+}
+
+/** Create the violin plot given a gene, variant and tissue
+ * * @param eQTL {Object} with attr: variantId, gencodeId, tissueSiteDetailId, displayX
+ * jQuery dependent
+ * a div with ID, bbMap-content, must exist
+ */
+function addViolinPlot(eqtl, data){
+    let plot = $('<div/>')
+        .attr('class', 'bbMap-dialog')
+        .css('float', 'left')
+        .css('margin', '20px')
+        .appendTo($(`#bbMap-content`));
+
+    // add a header section
+    let head = $('<div/>').appendTo(plot);
+    // add a window-close icon
+    $('<i/>').attr('class', 'fa fa-window-close')
+        .css('margin-right', '2px')
+        .click(function(){
+            plot.remove()
+        })
+        .appendTo(head);
+
+    $('<span/>')
+        .attr('class', 'title')
+        .html(`${eqtl.displayX}<br/>${eqtl.tissueSiteDetailId}`)
+        .appendTo(head);
+
+    // add the violin plot
+    let id = "dEqtl" + Date.now().toString(); // random ID generator
+    $('<div/>').attr('id', id).appendTo(plot);
+
+    let vConfig = {
+            id: id,
+            data: data,
+            width: 250,
+            height: 200,
+            marginLeft: 50,
+            marginRight: 20,
+            marginTop: 20,
+            marginBottom: 30,
+            showDivider: false,
+            xPadding: 0.3,
+            yLabel: "Norm. Expression",
+            showGroupX: false,
+            showX: true,
+            xAngle: 0,
+            showWhisker: true,
+            showLegend: false,
+            showSampleSize: true
+        };
+    groupedViolinPlot(vConfig);
+
+
 }

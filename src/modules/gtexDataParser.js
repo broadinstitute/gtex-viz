@@ -58,6 +58,37 @@ export function getGtexUrls(){
 }
 
 /**
+ * parse GTEx dyneqtl json
+ * @param data {JSON} from GTEx dyneqtl web service
+ * @returns data {JSON} modified data
+ * @private
+ */
+export function parseDynEqtl(json){
+    // check required json attributes
+    ['data', 'genotypes', 'pValue', 'pValueThreshold', 'tissueSiteDetailId'].forEach((d)=>{
+        if(!json.hasOwnProperty(d)){
+            console.error(json);
+            throw 'Parse Error: Required json attribute is missing: ' + d;
+        }
+    });
+
+    json.expression_values = json.data.map((d)=>parseFloat(d));
+    json.genotypes = json.genotypes.map((d)=>parseFloat(d));
+
+    json.homoRefExp = json.expression_values.filter((d,i) => {
+        return json.genotypes[i] == 0
+    });
+    json.homoAltExp = json.expression_values.filter((d,i) => {
+        return json.genotypes[i] == 2
+    });
+    json.heteroExp = json.expression_values.filter((d,i) => {
+        return json.genotypes[i] == 1
+    });
+    return json;
+}
+
+
+/**
  * Parse the single tissue eqtls from GTEx web service
  * @param data {Json}
  * @returns {List} of eqtls with attributes required for GEV rendering
