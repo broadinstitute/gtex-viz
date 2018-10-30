@@ -79,22 +79,26 @@ rect.track.highlighted {
     margin-left: 250px;
 }
 
-#bbMap-dialog .title {
+.bbMap-dialog .title {
    text-anchor: middle;
    font-size: 12px;
 
 }
 
-#bbMap-dialog text.plotviz-label {
-   font-size: 12px;
-}
+/*#bbMap-dialog text.plotviz-label {*/
+   /*font-size: 12px;*/
+/*}*/
 
-#bbMap-dialog .plotviz-left-axis g.tick text {
+/*#bbMap-dialog .plotviz-left-axis g.tick text {*/
+   /*font-size: 11px;*/
+/*}*/
+
+#bbMap-dialog {
    font-size: 11px;
 }
 
-#bbMap-dialog tspan {
-   font-size: 11px;
+.violin-axis-label {
+    font-size: 10px;
 }
 
 .bbMap-clear {

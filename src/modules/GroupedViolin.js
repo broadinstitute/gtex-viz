@@ -194,7 +194,7 @@ export default class GroupedViolin {
         // adds the text label for the y axis
         dom.append("text")
             .attr("y", -40) // todo: avoid hard-coded value
-            .attr("x", -40)
+            .attr("x", -100)
             .attr("class", "violin-axis-label")
             .attr("text-anchor", "start")
             .attr("transform", "rotate(-90)")

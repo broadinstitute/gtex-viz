@@ -8,7 +8,8 @@ import {select} from "d3-selection";
 import GroupedViolin from "./modules/GroupedViolin";
 import {
     getGtexUrls,
-    parseTissueSites
+    parseTissueSites,
+    parseDynEqtl
 } from "./modules/gtexDataParser";
 
 import {
@@ -328,7 +329,7 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i, url
                     ])
                 }
                 else {
-                    d = _parseEqtl(d); // reformat eQTL results d
+                    d = parseDynEqtl(d); // reformat eQTL results d
                     let group = tissueDict[d.tissueSiteDetailId]; // group is the tissue name, map tissue ID to tissue name
 
                     input = input.concat([
@@ -364,35 +365,35 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i, url
         .catch(function(err){console.error(err)});
 }
 
-/**
- * parse GTEx dyneqtl json
- * @param data {JSON} from GTEx dyneqtl web service
- * @returns data {JSON} modified data
- * @private
- */
-function _parseEqtl(json){
-    // check required json attributes
-    ['data', 'genotypes', 'pValue', 'pValueThreshold', 'tissueSiteDetailId'].forEach((d)=>{
-        if(!json.hasOwnProperty(d)){
-            console.error(json);
-            throw 'Parse Error: Required json attribute is missing: ' + d;
-        }
-    });
-
-    json.expression_values = json.data.map((d)=>parseFloat(d));
-    json.genotypes = json.genotypes.map((d)=>parseFloat(d));
-
-    json.homoRefExp = json.expression_values.filter((d,i) => {
-        return json.genotypes[i] == 0
-    });
-    json.homoAltExp = json.expression_values.filter((d,i) => {
-        return json.genotypes[i] == 2
-    });
-    json.heteroExp = json.expression_values.filter((d,i) => {
-        return json.genotypes[i] == 1
-    });
-    return json;
-}
+// /**
+//  * parse GTEx dyneqtl json
+//  * @param data {JSON} from GTEx dyneqtl web service
+//  * @returns data {JSON} modified data
+//  * @private
+//  */
+// function _parseEqtl(json){
+//     // check required json attributes
+//     ['data', 'genotypes', 'pValue', 'pValueThreshold', 'tissueSiteDetailId'].forEach((d)=>{
+//         if(!json.hasOwnProperty(d)){
+//             console.error(json);
+//             throw 'Parse Error: Required json attribute is missing: ' + d;
+//         }
+//     });
+//
+//     json.expression_values = json.data.map((d)=>parseFloat(d));
+//     json.genotypes = json.genotypes.map((d)=>parseFloat(d));
+//
+//     json.homoRefExp = json.expression_values.filter((d,i) => {
+//         return json.genotypes[i] == 0
+//     });
+//     json.homoAltExp = json.expression_values.filter((d,i) => {
+//         return json.genotypes[i] == 2
+//     });
+//     json.heteroExp = json.expression_values.filter((d,i) => {
+//         return json.genotypes[i] == 1
+//     });
+//     return json;
+// }
 
 function _apiCall(url, tissue){
     // reference: http://adampaxton.com/handling-multiple-javascript-promises-even-if-some-fail/
