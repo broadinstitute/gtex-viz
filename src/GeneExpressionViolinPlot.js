@@ -293,7 +293,7 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
 
 function _populateTissueFilter(vplot, domId, tissues) {
     const tissueGroups = parseTissueSites(tissues);
-    createTissueGroupMenu(tissueGroups, `${domId}-body`, false, 3);
+    createTissueGroupMenu(tissueGroups, `${domId}-body`, false, true, 3);
     _addTissueFilterEvent(vplot, domId, tissueGroups);
 }
 
