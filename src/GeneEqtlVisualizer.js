@@ -151,7 +151,6 @@ function renderLdMap(par, bmap){
  * @returns {BubbleMap}
  */
 function renderBubbleMap(par, gene, tissues, exons){
-    // TODO: in GEV, there are custom attributes created for bmap, perhaps a better way to do this is to define a GEV class
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
     let bmapSvg = createSvg(par.id, par.width, par.height, undefined);
 
@@ -175,10 +174,33 @@ function renderBubbleMap(par, gene, tissues, exons){
     );
     bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 3, "NES");
 
-    // identify variants that are in the exon regions
+    ///// Below are custom features and functionality
+
+    //-- filters for p-value, nes
+    renderBmapFilters(par.dashboard, bmap, bmapSvg);
+
+    // variant related data parsing
+    // Variant locator
+    buildVariantLookupTables(bmap);
+
+    //-- identify variants that are in the exon regions
     bmap.variantsInExons = findVariantsInExonRegions(bmap.xScale.domain(), exons);
 
-    // add a brush
+    //-- tissue badges, which report the tissue sample counts next to the tissue row labels
+    renderTissueBadges(tissues, bmap, bmapSvg);
+
+     //-- TSS and TES markers
+    findVariantsNearGeneStartEnd(gene, bmap);
+    renderGeneStartEndMarkers(bmap, bmapSvg, true); // render the markers on the mini map
+
+    //-- TSS distance track
+    //-- It's a 1D heatmap showing the distance of each variant to the TSS site.
+    renderTssDistanceTrack(gene, bmap, bmapSvg);
+
+    //-- Add the click event for the bubbles: pop a dialog window and render the eQTL violin plot
+    addBubbleClickEvent(bmap, bmapSvg, par);
+
+    //-- add the focus view brush and defint the brush event
     bmap.brushEvent = ()=>{
         // update all the variant related visual features
 
@@ -203,28 +225,6 @@ function renderBubbleMap(par, gene, tissues, exons){
         .attr("class", "brush")
         .call(bmap.brush)
         .call(bmap.brush.move, [0, bmap.xScaleMini.bandwidth()*100]);
-
-    // variant related data parsing
-    // Variant locator
-    buildVariantLookupTables(bmap);
-
-    // filter events
-    renderBmapFilters(par.dashboard, bmap, bmapSvg);
-
-    // additional custom visual feature add-ons
-    //-- tissue badges that report the tissue sample counts
-    renderTissueBadges(tissues, bmap, bmapSvg);
-
-    //-- TSS and TES markers
-    findVariantsNearGeneStartEnd(gene, bmap);
-    renderGeneStartEndMarkers(bmap, bmapSvg, true); // render the markers on the mini map
-
-    //-- TSS distance track
-    //-- It's a 1D heatmap showing the distance of each variant to the TSS site.
-    renderTssDistanceTrack(gene, bmap, bmapSvg);
-
-    //-- Add bubble click event
-    addBubbleClickEvent(bmap, bmapSvg, par);
 
     return bmap;
 }
@@ -295,15 +295,15 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
     let g = badges.enter().append("g").classed('tissue-badge', true);
 
     g.append('ellipse')
-        .attr('cx', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2-5)
+        .attr('cx', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2-10)
         .attr('cy', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2)
-        .attr('rx', bmap.xScale.bandwidth()*0.8)
+        .attr('rx', 15) // Warning: hard-coded value
         .attr('ry', bmap.yScale.bandwidth()/2)
         .attr('fill', '#748797');
 
     g.append('text')
         .text((d)=>d.rnaSeqAndGenotypeSampleCount)
-        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 12)
+        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 17)
         .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2 + 2)
         .attr('fill', '#ffffff')
         .style('font-size', 8)
@@ -793,10 +793,11 @@ function panelBuilder(panels, id){
 
 function addBubbleClickEvent(bmap, bmapSvg, par){
     let dialogDivId = par.id+"violin-dialog";
-    _createDialog(par.dashboard, par.id+"violin-dialog", "eQTL Violin Plot");
+    _createDialog(par.dashboard, par.id+"violin-dialog", "eQTL Violin Plot Dialog");
     bmapSvg.selectAll('.bubble-map-cell')
         .on("click", (d)=>{
             $(`#${dialogDivId}`).dialog('open');
+            console.log(d);
 
         })
 }
