@@ -19,6 +19,7 @@ import {
     parseLD,
     parseExonsToList,
     parseTissueSampleCounts,
+    parseTissueDict,
     parseDynEqtl
 } from "./modules/gtexDataParser";
 import BubbleMap from "./modules/BubbleMap";
@@ -33,18 +34,19 @@ export function render(par, geneId, urls = getGtexUrls()){
             let gene = parseGenes(data, true, geneId);
             let promises = [
                 json(urls.tissueSummary),
+                json(urls.tissueSites),
                 json(urls.exon + gene.gencodeId),
                 json(urls.singleTissueEqtl + gene.gencodeId)
             ];
             Promise.all(promises)
                 .then(function(results){
                     let tissues = parseTissueSampleCounts(results[0]);
-                    let exons = parseExonsToList(results[1]);
-                    let eqtls = parseSingleTissueEqtls(results[2]);
+                    let tissueSiteTable = parseTissueDict(results[1]);
+                    let exons = parseExonsToList(results[2]);
+                    let eqtls = parseSingleTissueEqtls(results[3], tissueSiteTable);
                     par.data = eqtls;
                     par = setDimensions(par);
-                    let bmap = renderBubbleMap(par, gene, tissues, exons);
-                    bmap.urls = urls; // TODO: figure out a better way to store the web service URLs
+                    let bmap = renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls);
                     // fetch LD data, this query is slow, so it's not included in the promises.
                     json(urls.ld + gene.gencodeId)
                         .then((ldJson) => {
@@ -52,6 +54,37 @@ export function render(par, geneId, urls = getGtexUrls()){
                             par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data
                             renderLdMap(par, bmap);
                             $(`#${par.spinner}`).hide();
+
+                            // define the tissue filtering event on tissue menu window close
+                            // Note: the tissue menu content in the modal is built by renderBmapFilters()
+                            const oriY = bmap.yScale.domain();
+                            const oriX = bmap.xScale.domain();
+
+                            $('#bbMap-modal').on('hidden.bs.modal', (e)=>{
+                                let checked = [];
+                                $('#bbMap-modal').find(":input").each(function(){
+                                    if($(this).prop("checked")) checked.push($(this).val());
+                                });
+                                console.log(checked)
+                                if (checked.length == oriY.length) return; // no change
+                                // filter eQTL data based on selected tissues
+                                par.data = eqtls.filter((d)=>{
+                                    return checked.indexOf(d.y) >= 0;
+                                });
+                                let newX = nest()
+                                    .key((d) => d.x) // group this.data by d.x
+                                    .entries(par.data)
+                                    .map((d) => d.key) // then return the unique list of d.x
+                                    .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
+
+                                // par.ldData = ld.filter((d)=>{
+                                //     return (d.value>=par.ldCutoff) && (newX.indexOf(d.x) >= 0 && newX.indexOf(d.y) >= 0)
+                                // });
+                                console.log(par.data);
+                                bmap = renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, true);
+                                renderLdMap(par, bmap);
+
+                            });
                         })
 
                 });
@@ -96,6 +129,9 @@ function setDimensions(par){
 function createSvg(rootId, width, height, svgId=undefined){
     checkDomId(rootId);
     if (svgId===undefined) svgId=`${rootId}-svg`;
+
+    select(`#${svgId}`).remove(); // remove previously rendered svg if found
+
     let svg = select("#"+rootId).append("svg")
         .attr("width", width)
         .attr("height", height)
@@ -117,6 +153,7 @@ function createSvg(rootId, width, height, svgId=undefined){
  */
 function renderLdMap(par, bmap){
     let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip", [0,1]);
+    $(`#${par.ldId}`).empty(); // jQuery syntax...
     let ldCanvas = select(`#${par.ldId}`).append("canvas")
         .attr("id", par.ldId + "-ld-canvas")
         .attr("width", par.width)
@@ -149,11 +186,21 @@ function renderLdMap(par, bmap){
  * @param par {Object} configure the visualizations
  * TODO: check required attributes in par
  * @param gene {Object} containing attr: gencodeId
- * @param dashboardId {String} the DIV ID for the dashboard
+ * @param tissues [List] of tisssues with sample counts, generated by parseTissueSampleCounts()
+ * @param exons {List} of exons from parseExonsToList()
+ * @param tissueSiteTable {Dictionary} of tissue objects indexed by tissueSiteDetailId
+ * @param urls {Dictionary} of the GTEx web service URLs from getGtexUrls(), must have the attribute dyneqtl
  * @returns {BubbleMap}
  */
-function renderBubbleMap(par, gene, tissues, exons){
+function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, update=false){
     let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
+
+    ////// Custom attributes added to bmap //////
+    bmap.urls = urls; // TODO: find a better way to store additional attributes
+    bmap.variantsInExons = {};
+    bmap.rsLookUp = {};
+    bmap.varLookUp = {};
+
     let bmapSvg = createSvg(par.id, par.width, par.height, undefined);
 
     let miniG = bmapSvg.append("g") // global bubble map <g>
@@ -174,12 +221,12 @@ function renderBubbleMap(par, gene, tissues, exons){
         false, // do not use the default brush, use a custom brush defined below
         par.focusPanelLabels
     );
-    bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 3, "NES");
+
 
     ///// Below are custom features and functionality
 
     //-- filters for p-value, nes
-    renderBmapFilters(par.dashboard, bmap, bmapSvg);
+    renderBmapFilters(par.dashboard, bmap, bmapSvg, tissueSiteTable);
 
     // variant related data parsing
     // Variant locator
@@ -222,6 +269,8 @@ function renderBubbleMap(par, gene, tissues, exons){
             [par.inWidth, par.miniPanelHeight]
         ])
         .on("brush", bmap.brushEvent);
+
+    bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 3, "NES");
 
     miniG.append("g")
         .attr("class", "brush")
@@ -508,9 +557,11 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
  * @param id {String} a <div> ID where the filters should be rendered.
  * @param bmap {BubbleMap} of the bubble map
  * @param bmapSvg {D3} of the bubble map's SVG
+ * @param tissueSiteTable {Dictionary} a hash of tissue objects (with the attr tissueSiteDetail) indexed by tissueSiteDetailId, used to map tissueSiteDetailID=>tissueSiteDetail
  */
-function renderBmapFilters(id, bmap, bmapSvg){
+function renderBmapFilters(id, bmap, bmapSvg, tissueSiteTable){
     checkDomId(id);
+    $(`#${id}`).empty();
     let panels = [
         {
             id: 'pvaluePanel',
@@ -520,7 +571,7 @@ function renderBmapFilters(id, bmap, bmapSvg){
                 id: 'pvalueLimit',
                 size: 3,
                 value: 0,
-                label: '-log<sub>10</sub>(p-value) >= '
+                label: 'eQTL -log<sub>10</sub>(pValue) >= '
             },
             slider: {
                 id: 'pvalueSlider',
@@ -539,7 +590,7 @@ function renderBmapFilters(id, bmap, bmapSvg){
                 id: 'nesLimit',
                 size: 3,
                 value: 0,
-                label: 'abs(NES) >= '
+                label: 'eQTL abs(NES) >= '
             },
             slider: {
                 id: 'nesSlider',
@@ -569,9 +620,12 @@ function renderBmapFilters(id, bmap, bmapSvg){
         .html('Apply Filters: ')
         .appendTo($(`#${id}`));
 
-    // Special case: add the RS ID option here
+    ////// Add custom DOMs that are not defined in the panels:
+    // -- add the RS ID option here
     let rsDiv = $('<div/>')
         .attr('class', 'col-xs-12 col-sm-6 col-md-1')
+        .css('padding-top', '2px')
+        .css('margin', '1px')
         .css('font-size', '12px')
         .appendTo($(`#${id}`));
     let radioButton = $('<input/>')
@@ -585,9 +639,49 @@ function renderBmapFilters(id, bmap, bmapSvg){
         .html('Use RS ID')
         .appendTo(rsDiv);
 
+    // -- add the link to the tissue filter menu here
+    let tiDiv = $('<div/>')
+        .attr('class', 'col-xs-12 col-sm-6 col-md-1')
+         .css('padding-top', '4px')
+        .css('margin', '1px')
+        .css('font-size', '12px')
+        .appendTo($(`#${id}`));
+    let tiMenuLink = $('<span/>')
+        .attr('data-toggle', 'modal')
+        .attr('data-target', '#bbMap-modal') // bbMap-modal must be defined on the html
+        .css('margin-left', '2px')
+        .css('padding-top', '2px')
+        .css('color', '#0868ac')
+        .css('cursor', 'pointer')
+        .html('Show tissue menu<br/>')
+        .appendTo(tiDiv);
+
+    ////// end adding custom DOMs
+
+    // build the tissue menu
+    let modalBody =  $('#bbMap-modal').find('.modal-body');
+    if($('#bbMap-modal').find(":input").length == 0){
+        // if the menu is empty
+        bmap.yScale.domain().forEach((y)=>{ // create a menu item for each tissue
+            $('<input/>')
+                .attr('value', y)
+                .attr('type', 'checkbox')
+                .prop('checked', true)
+                .appendTo(modalBody);
+            $('<label/>')
+                .css('font-size', '12px')
+                .css('margin-left', '2px')
+                .html(tissueSiteTable[y].tissueSiteDetail)
+                .appendTo(modalBody);
+            $('<br/>').appendTo(modalBody);
+        });
+    }
+
+
+    // Add all other eQTL filter panels
     panelBuilder(panels, id);
 
-    // definte the filter events
+    ////// definte the filter events
     let minP = 0;
     let minNes = 0;
     let minLd = 0;
@@ -638,8 +732,6 @@ function renderBmapFilters(id, bmap, bmapSvg){
         updateBubbles();
     });
 
-    // TODO: lookup tables
-
     miniG.selectAll('.mini-marker')
         .data(bmap.xScaleMini.domain())
         .enter()
@@ -659,7 +751,6 @@ function renderBmapFilters(id, bmap, bmapSvg){
                     return regex.test(d)||regex.test(rsLookUp[d])||regex.test(varLookUp[d]);
                 });
 
-            // TODO: mark the matched variants on the mini map
             miniG.selectAll('.mini-marker')
                 .classed('highlighted', (d)=>{
                     return regex.test(d)||regex.test(rsLookUp[d])||regex.test(varLookUp[d]);
@@ -751,6 +842,7 @@ function renderLDFilters(id, ldMap, ldCanvas, ldG, ldConfig){
  * @param id {String} of the <div> to render the panels
  */
 function panelBuilder(panels, id){
+
     panels.forEach((p, i)=>{
         if ($(`#${p.id}`).length == 0) { // if it doesn't already exist in HTML document, then create it
             let div = $('<div/>')
@@ -787,6 +879,7 @@ function panelBuilder(panels, id){
                 .attr('max', p.slider.max)
                 .attr('step', p.slider.step)
                 .css('margin-left', '10px')
+                .css('width', '100px')
                 .appendTo(div);
             }
         } // add the new element to the dashboard
