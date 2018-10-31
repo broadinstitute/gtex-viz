@@ -25,13 +25,21 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
         clone: `${rootId}-svg-clone`, // for user download
         buttons: {
             download: `${rootId}-svg-download`,
+            plotOptions: `${rootId}-svg-option-modal`,
+            filter: `${rootId}-svg-filter`,
+            // modal buttons
             ascAlphaSort: `${rootId}-svg-asc-alphasort`,
             descAlphaSort: `${rootId}-svg-desc-alphasort`,
             ascSort: `${rootId}-svg-asc-sort`,
             descSort: `${rootId}-svg-desc-sort`,
             logScale: `${rootId}-svg-log-scale`,
-            linearScale: `${rootId}-svg-linear-scale`,
-            filter: `${rootId}-svg-filter`
+            linearScale: `${rootId}-svg-linear-scale`
+        },
+        plotOptionsModal: 'gene-expr-vplot-option-modal',
+        plotOptionGroups: {
+            Scale: `${rootId}-svg-option-scale`,
+            Sort: `${rootId}-svg-option-sort`,
+            Differentiation: `${rootId}-svg-option-differentiation`
         },
         plotSorts: {
             ascAlphaSort: 'asc-alpha',
@@ -144,43 +152,52 @@ function _setViolinPlotDimensions(width=1200, height=250, margin=_setViolinPlotM
 function _addToolbar(vplot, tooltip, ids) {
     let toolbar = vplot.createToolbar(ids.toolbar, tooltip);
     toolbar.createDownloadSvgButton(ids.buttons.download, ids.svg, 'gtex-violin-plot.svg', ids.clone);
+
+    // plot options modal
+    toolbar.createButton(ids.buttons.plotOptions, 'fa-sliders-h');
+    let plotOptionsButton = select(`#${ids.buttons.plotOptions}`)
+        .on('mouseover', ()=>{toolbar.tooltip.show('Plot Options');})
+        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+    plotOptionsButton.on('click', (d, i, nodes)=>{
+        $(`#${ids.plotOptionsModal}`).modal('show');
+    });
+
     // ascending alphabetical sort
-    toolbar.createButton(ids.buttons.ascAlphaSort, 'fa-sort-alpha-down');
     let ascAlphaSortButton = select(`#${ids.buttons.ascAlphaSort}`)
-        .classed('active', true)
-        .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Asc)');})
-        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+        .classed('active', true);
+    //     .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Asc)');})
+    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
-    // descending alphabetical sort
-    toolbar.createButton(ids.buttons.descAlphaSort, 'fa-sort-alpha-up');
-    let descAlphaSortButton = select(`#${ids.buttons.descAlphaSort}`)
-        .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Desc)');})
-        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+    // // descending alphabetical sort
+    // toolbar.createButton(ids.buttons.descAlphaSort, 'fa-sort-alpha-up');
+    // let descAlphaSortButton = select(`#${ids.buttons.descAlphaSort}`)
+    //     .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Desc)');})
+    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
-    // ascending numerical sort
-    toolbar.createButton(ids.buttons.ascSort, 'fa-sort-numeric-down');
-    let ascNumSortButton = select(`#${ids.buttons.ascSort}`)
-        .on('mouseover', ()=>{toolbar.tooltip.show('Sort by Median (Asc)');})
-        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+    // // ascending numerical sort
+    // toolbar.createButton(ids.buttons.ascSort, 'fa-sort-numeric-down');
+    // let ascNumSortButton = select(`#${ids.buttons.ascSort}`)
+    //     .on('mouseover', ()=>{toolbar.tooltip.show('Sort by Median (Asc)');})
+    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
-    // descending numerical sort
-    toolbar.createButton(ids.buttons.descSort, 'fa-sort-numeric-up');
-    let descNumSortButton = select(`#${ids.buttons.descSort}`)
-        .on('mouseover', ()=>{toolbar.tooltip.show('Sort by Median (Desc)');})
-        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+    // // descending numerical sort
+    // toolbar.createButton(ids.buttons.descSort, 'fa-sort-numeric-up');
+    // let descNumSortButton = select(`#${ids.buttons.descSort}`)
+    //     .on('mouseover', ()=>{toolbar.tooltip.show('Sort by Median (Desc)');})
+    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
     // log scale
-    toolbar.createButton(ids.buttons.logScale, 'fa-sliders-h');
     let logScaleButton = select(`#${ids.buttons.logScale}`)
-        .classed('active', true)
-        .on('mouseover', ()=>{toolbar.tooltip.show('Log Scale');})
-        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+        .classed('active', true);
+    // toolbar.createButton(ids.buttons.logScale, 'fa-sliders-h');
+    //     .on('mouseover', ()=>{toolbar.tooltip.show('Log Scale');})
+    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
-    // linear scale
-    toolbar.createButton(ids.buttons.linearScale, 'fa-sliders-h');
-    let linearScaleButton = select(`#${ids.buttons.linearScale}`)
-        .on('mouseover', ()=>{toolbar.tooltip.show('Linear Scale');})
-        .on('mouseout', ()=>{toolbar.tooltip.hide();});
+    // // linear scale
+    // toolbar.createButton(ids.buttons.linearScale, 'fa-sliders-h');
+    // let linearScaleButton = select(`#${ids.buttons.linearScale}`)
+    //     .on('mouseover', ()=>{toolbar.tooltip.show('Linear Scale');})
+    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
     // filter
     toolbar.createButton(ids.buttons.filter, 'fa-filter');
@@ -189,76 +206,76 @@ function _addToolbar(vplot, tooltip, ids) {
         .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
 
-    ascAlphaSortButton.on('click', (d, i, nodes)=>{
-        if (!ascAlphaSortButton.classed('active')) {
-            ascAlphaSortButton.classed('active', true);
-            descAlphaSortButton.classed('active', false);
-            ascNumSortButton.classed('active', false);
-            descNumSortButton.classed('active', false);
+    // ascAlphaSortButton.on('click', (d, i, nodes)=>{
+    //     if (!ascAlphaSortButton.classed('active')) {
+    //         ascAlphaSortButton.classed('active', true);
+    //         descAlphaSortButton.classed('active', false);
+    //         ascNumSortButton.classed('active', false);
+    //         descNumSortButton.classed('active', false);
 
-            vplot.genePlotSort = ids.plotSorts.ascAlphaSort;
-            _sortAndUpdateData(vplot, ids);
-        }
+    //         vplot.genePlotSort = ids.plotSorts.ascAlphaSort;
+    //         _sortAndUpdateData(vplot, ids);
+    //     }
 
-    });
+    // });
 
-    descAlphaSortButton.on('click', (d, i, nodes)=>{
-        if (!descAlphaSortButton.classed('active')) {
-            ascAlphaSortButton.classed('active', false);
-            descAlphaSortButton.classed('active', true);
-            ascNumSortButton.classed('active', false);
-            descNumSortButton.classed('active', false);
+    // descAlphaSortButton.on('click', (d, i, nodes)=>{
+    //     if (!descAlphaSortButton.classed('active')) {
+    //         ascAlphaSortButton.classed('active', false);
+    //         descAlphaSortButton.classed('active', true);
+    //         ascNumSortButton.classed('active', false);
+    //         descNumSortButton.classed('active', false);
 
-            vplot.genePlotSort = ids.plotSorts.descAlphaSort;
-            _sortAndUpdateData(vplot, ids);
-        }
-    });
+    //         vplot.genePlotSort = ids.plotSorts.descAlphaSort;
+    //         _sortAndUpdateData(vplot, ids);
+    //     }
+    // });
 
-    ascNumSortButton.on('click', (d, i, nodes)=>{
-        if (!ascNumSortButton.classed('active')) {
-            descAlphaSortButton.classed('active', false);
-            ascAlphaSortButton.classed('active', false);
-            ascNumSortButton.classed('active', true);
-            descNumSortButton.classed('active', false);
+    // ascNumSortButton.on('click', (d, i, nodes)=>{
+    //     if (!ascNumSortButton.classed('active')) {
+    //         descAlphaSortButton.classed('active', false);
+    //         ascAlphaSortButton.classed('active', false);
+    //         ascNumSortButton.classed('active', true);
+    //         descNumSortButton.classed('active', false);
 
-            vplot.genePlotSort = ids.plotSorts.ascSort;
-            _sortAndUpdateData(vplot, ids);
-        }
-    });
+    //         vplot.genePlotSort = ids.plotSorts.ascSort;
+    //         _sortAndUpdateData(vplot, ids);
+    //     }
+    // });
 
-    descNumSortButton.on('click', (d, i, nodes)=>{
-        if (!descNumSortButton.classed('active')) {
-            descAlphaSortButton.classed('active', false);
-            ascAlphaSortButton.classed('active', false);
-            ascNumSortButton.classed('active', false);
-            descNumSortButton.classed('active', true);
+    // descNumSortButton.on('click', (d, i, nodes)=>{
+    //     if (!descNumSortButton.classed('active')) {
+    //         descAlphaSortButton.classed('active', false);
+    //         ascAlphaSortButton.classed('active', false);
+    //         ascNumSortButton.classed('active', false);
+    //         descNumSortButton.classed('active', true);
 
-            vplot.genePlotSort = ids.plotSorts.descSort;
-            _sortAndUpdateData(vplot, ids);
-        }
-    });
+    //         vplot.genePlotSort = ids.plotSorts.descSort;
+    //         _sortAndUpdateData(vplot, ids);
+    //     }
+    // });
 
-    linearScaleButton.on('click', (d, i, nodes)=>{
-        if (!linearScaleButton.classed('active')) {
-            logScaleButton.classed('active', false);
-            linearScaleButton.classed('active', true);
+    // linearScaleButton.on('click', (d, i, nodes)=>{
+    //     if (!linearScaleButton.classed('active')) {
+    //         logScaleButton.classed('active', false);
+    //         linearScaleButton.classed('active', true);
 
-            _calcViolinPlotValues(vplot.data, false);
-            _calcViolinPlotValues(vplot.allData, false);
-            vplot.updateYScale('TPM');
-        }
-    });
+    //         _calcViolinPlotValues(vplot.data, false);
+    //         _calcViolinPlotValues(vplot.allData, false);
+    //         vplot.updateYScale('TPM');
+    //     }
+    // });
 
-    logScaleButton.on('click', (d, i, nodes)=>{
-        if (!logScaleButton.classed('active')) {
-            logScaleButton.classed('active', true);
-            linearScaleButton.classed('active', false);
+    // logScaleButton.on('click', (d, i, nodes)=>{
+    //     if (!logScaleButton.classed('active')) {
+    //         logScaleButton.classed('active', true);
+    //         linearScaleButton.classed('active', false);
 
-            _calcViolinPlotValues(vplot.data, true);
-            _calcViolinPlotValues(vplot.allData, true);
-            vplot.updateYScale('log10(TPM)');
-        }
-    });
+    //         _calcViolinPlotValues(vplot.data, true);
+    //         _calcViolinPlotValues(vplot.allData, true);
+    //         vplot.updateYScale('log10(TPM)');
+    //     }
+    // });
 
     tissueFilterButton.on('click', (d, i, nodes)=>{
         $('#gene-expr-vplot-filter-modal').modal('show');
