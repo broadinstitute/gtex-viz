@@ -42,6 +42,7 @@ export function getGtexUrls(){
         geneId: host + 'reference/gene?format=json&gencodeVersion=v19&genomeBuild=GRCh37%2Fhg19&geneId=',
 
         // tissue menu specific
+        // TODO: remove redundant URLs
         tissue:  host + 'metadata/tissueSiteDetail?format=json',
         tissueSites: host + 'metadata/tissueSiteDetail?format=json',
 
@@ -91,9 +92,10 @@ export function parseDynEqtl(json){
 /**
  * Parse the single tissue eqtls from GTEx web service
  * @param data {Json}
+ * @param tissueSiteTable {Json} optional for mapping tissueSiteDetailId to tissueSiteDetail, a dictionary of tissueSite objects (with the attr tissueSiteDetail) indexed by tissueSiteDetailId, and
  * @returns {List} of eqtls with attributes required for GEV rendering
  */
-export function parseSingleTissueEqtls(data){
+export function parseSingleTissueEqtls(data, tissueSiteTable = undefined){
     const attr = 'singleTissueEqtl';
     if(!data.hasOwnProperty(attr)) throw "Parsing Error: required attribute is not found: " + attr;
     ['variantId', 'tissueSiteDetailId', 'nes', 'pValue'].forEach((k)=>{
@@ -105,6 +107,7 @@ export function parseSingleTissueEqtls(data){
         d.x = d.variantId;
         d.displayX = generateShortVariantId(d.variantId);
         d.y = d.tissueSiteDetailId;
+        if (tissueSiteTable) d.displayY = tissueSiteTable[d.tissueSiteDetailId].tissueSiteDetail;
         d.value = d.nes;
         d.displayValue = d.nes.toPrecision(3);
         d.r = -Math.log10(d.pValue); // set r to be the -log10(p-value)
@@ -167,8 +170,24 @@ export function parseTissues(json){
 }
 
 /**
+ * Parse the tissues and return a lookup table indexed by tissueSiteDetailId
+ * @param json from web service tissueSiteDetail
+ * @returns {*}
+ */
+export function parseTissueDict(json){
+    const attr = 'tissueSiteDetail';
+    if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attr is missing: ' + attr;
+    const tissues = json[attr];
+    // sanity check
+    ['tissueSiteDetailId', 'tissueSiteDetail', 'colorHex'].forEach((d)=>{
+        if (!tissues[0].hasOwnProperty(d)) throw 'Parsing Error: required json attr is missing: ' + d;
+    });
+    return tissues.reduce((arr, d)=>{arr[d.tissueSiteDetailId] = d; return arr;},{});
+}
+
+/**
  * Parse the tissues sample counts, GTEx release specific
- * @param json
+ * @param json from web service tissueSummary
  */
 export function parseTissueSampleCounts(json){
     const attr = 'tissueSummary';
@@ -311,7 +330,7 @@ export function parseExons(json){
 
 /**
  * parse transcript isoforms from the GTEx web service: 'reference/transcript?release=v7&gencode_id='
- * @param data {Json}
+ * @param data {Json} from web service exon
  * returns a list of all Exons
  */
 export function parseExonsToList(json){

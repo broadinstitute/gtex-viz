@@ -253,10 +253,17 @@ export default class BubbleMap {
                     let y = this.yScale.range()[1] + cl.adjust;
                     return `translate(${x}, ${y}) rotate(${cl.angle})`;
                 })
-                .text((d) => lookup[d]?lookup[d]:d);
+                .text((d) => lookup[d]||d);
         }
         if (rl.show){
             // row labels
+            let lookup = {};
+            nest()
+                .key((d) => d.y) // group this.data by d.y
+                .entries(this.data)
+                .forEach((d) => {
+                    lookup[d.key] = d.values[0].displayY
+                });
             let yLabels = dom.selectAll('.bubble-map-ylabel').data(this.yScale.domain())
                 .enter().append("text")
                 .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
@@ -273,7 +280,7 @@ export default class BubbleMap {
                     let y = this.yScale(d) + this.yScale.bandwidth()/1.5;
                     return `translate(${x}, ${y}) rotate(${rl.angle})`;
                 })
-                .text((d) => d);
+                .text((d) => lookup[d]||d);
         }
     }
 
