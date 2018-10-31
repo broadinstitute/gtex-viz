@@ -245,7 +245,7 @@ export default class BubbleMap {
                 .style("text-anchor", cl.textAlign=='left'?'start':'end')
                 .style("cursor", "default")
                 .style("font-size", () => {
-                    let size = Math.floor(this.xScale.bandwidth()) / 2;
+                    let size = Math.floor(this.xScale.bandwidth()/ 2)>12?12:Math.floor(this.xScale.bandwidth()/ 2);
                     return `${size}px`
                 })
                 .attr("transform", (d) => {
@@ -272,7 +272,7 @@ export default class BubbleMap {
                 .style("text-anchor", rl.textAlign=='left'?'start':'end')
                 .style("cursor", "default")
                 .style("font-size", ()=>{
-                    let size = Math.floor(this.yScale.bandwidth()/1.5);
+                    let size = Math.floor(this.yScale.bandwidth()/1.5)>10?10:Math.floor(this.yScale.bandwidth()/1.5);
                     return `${size}px`
                 })
                 .attr("transform", (d) => {
