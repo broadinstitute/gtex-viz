@@ -86,7 +86,7 @@ export default class GroupedViolin {
         this.updateXScale = function(xDomain=undefined) {
             if (xDomain === undefined) console.error('updateXScale called without new X domain');
             dom.selectAll("*").remove();
-            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
+            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
 
         };
 
@@ -399,53 +399,52 @@ export default class GroupedViolin {
         const eDomain = extent(entry.values); // get the max and min in entry.values
         const vertices = kde(entry.values).filter((d)=>d[0]>eDomain[0]&&d[0]<eDomain[1]); // filter the vertices that aren't in the entry.values
 
-        // define the z scale -- the violin width
-        let zMax = max(vertices, (d)=>Math.abs(d[1])); // find the abs(value) in entry.values
-        this.scale.z
-            .domain([-zMax, zMax])
-            .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
+        // violin plot and box can only be drawn when vertices exist and there are no NaN points
+        if (vertices.length && this._validVertices(vertices)) {
+            // define the z scale -- the violin width
+            let zMax = max(vertices, (d)=>Math.abs(d[1])); // find the abs(value) in entry.values
+            this.scale.z
+                .domain([-zMax, zMax])
+                .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
 
-        // visual rendering
-        const violinG = dom.append("g")
-            .attr('id', `violin${gIndex}-${entry.label}`);
+            // visual rendering
+            const violinG = dom.append("g")
+                .attr('id', `violin${gIndex}-${entry.label}`);
 
-        let violin = area()
-            .x0((d) => this.scale.z(d[1]))
-            .x1((d) => this.scale.z(-d[1]))
-            .y((d) => this.scale.y(d[0]));
+            let violin = area()
+                .x0((d) => this.scale.z(d[1]))
+                .x1((d) => this.scale.z(-d[1]))
+                .y((d) => this.scale.y(d[0]));
+            const vPath = violinG.append("path")
+                .datum(vertices)
+                .attr("d", violin)
+                .classed("violin", true)
+                .style("fill", ()=>{
+                    if (entry.color !== undefined) return entry.color;
+                    // alternate the odd and even colors, maybe we don't want this feature
+                    if(gIndex%2 == 0) return "#90c1c1";
+                    return "#94a8b8";
+                });
 
-        const vPath = violinG.append("path")
-            .datum(vertices)
-            .attr("d", violin)
-            .classed("violin", true)
-            .style("fill", ()=>{
-                if (entry.color !== undefined) return entry.color;
-                // alternate the odd and even colors, maybe we don't want this feature
-                if(gIndex%2 == 0) return "#90c1c1";
-                return "#94a8b8";
-            });
+            // boxplot
+            const q1 = quantile(entry.values, 0.25);
+            const q3 = quantile(entry.values, 0.75);
+            const z = this.scale.z.domain()[1]/3;
 
-        // boxplot
-        const q1 = quantile(entry.values, 0.25);
-        const q3 = quantile(entry.values, 0.75);
-        const z = this.scale.z.domain()[1]/3;
+            if(showWhisker){
+                // the upper and lower limits of entry.values
+                const iqr = Math.abs(q3-q1);
+                const upper = max(entry.values.filter((d)=>d<q3+(iqr*1.5)));
+                const lower = min(entry.values.filter((d)=>d>q1-(iqr*1.5)));
+                dom.append("line")
+                    .classed("whisker", true)
+                    .attr("x1", this.scale.z(0))
+                    .attr("x2", this.scale.z(0))
+                    .attr("y1", this.scale.y(upper))
+                    .attr("y2", this.scale.y(lower))
+                    .style("stroke", "#fff");
+            }
 
-        if(showWhisker){
-            // the upper and lower limits of entry.values
-            const iqr = Math.abs(q3-q1);
-            const upper = max(entry.values.filter((d)=>d<q3+(iqr*1.5)));
-            const lower = min(entry.values.filter((d)=>d>q1-(iqr*1.5)));
-            dom.append("line")
-                .classed("whisker", true)
-                .attr("x1", this.scale.z(0))
-                .attr("x2", this.scale.z(0))
-                .attr("y1", this.scale.y(upper))
-                .attr("y2", this.scale.y(lower))
-                .style("stroke", "#fff");
-        }
-
-        // will only have a boxplot + mouseover if data is not all 0's; error checking with conditional
-        if (!isNaN(z)) {
             // interquartile range
             violinG.append("rect")
                 .attr("x", this.scale.z(-z))
@@ -479,6 +478,7 @@ export default class GroupedViolin {
                 vPath.classed("highlighted", false);
             });
         }
+
     }
 
     _sanityCheck(data){
@@ -519,5 +519,10 @@ export default class GroupedViolin {
 
     }
 
+    _validVertices(vertices) {
+        let vals = vertices.reduce((a, b)=>a.concat(b), []);
+        let invalidVertices = vals.filter(d=>isNaN(d));
 
+        return !(invalidVertices.length);
+    }
 }
