@@ -244,6 +244,7 @@ function _addToolbar(vplot, tooltip, ids) {
             linearScaleButton.classed('active', true);
 
             _calcViolinPlotValues(vplot.data, false);
+            _calcViolinPlotValues(vplot.allData, false);
             vplot.updateYScale('TPM');
         }
     });
@@ -254,6 +255,7 @@ function _addToolbar(vplot, tooltip, ids) {
             linearScaleButton.classed('active', false);
 
             _calcViolinPlotValues(vplot.data, true);
+            _calcViolinPlotValues(vplot.allData, true);
             vplot.updateYScale('log10(TPM)');
         }
     });
@@ -269,7 +271,6 @@ function _calcViolinPlotValues(data, useLog=true) {
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
         d.median = useLog?Math.log(median(d.data)+1):median(d.data);
     });
-    return data;
 }
 
 /**
