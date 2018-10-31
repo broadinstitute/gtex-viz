@@ -43,7 +43,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
 
     };
                                         // top, right, bottom, left
-    const margin = _setViolinPlotMargins(35, 75, 250, 50);
+    const margin = _setViolinPlotMargins(35, 75, 250, 60);
                                         // height, width, margins
     const dim = _setViolinPlotDimensions(1200, 250, margin);
 
