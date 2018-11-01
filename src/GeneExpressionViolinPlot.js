@@ -6,15 +6,15 @@
 
 import {json} from 'd3-fetch';
 import {median} from 'd3-array';
-import {select} from 'd3-selection';
+import {select, selectAll} from 'd3-selection';
 import {getGtexUrls, parseTissues, parseTissueSites} from './modules/gtexDataParser';
 import {createTissueGroupMenu, parseTissueGroupMenu} from './modules/gtexMenuBuilder';
 import GroupedViolin from './modules/GroupedViolin';
 
-export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
+export function launch(rootId, tooltipRootId, gencodeId, differentiated=false, urls=getGtexUrls()) {
     const promises = [
         json(urls.tissue),
-        json(urls.geneExp + gencodeId)
+        differentiated?json(`${urls.geneExp}${gencodeId}&attributeSubset=sex`):json(urls.geneExp+gencodeId)
     ];
 
     const ids = {
@@ -33,7 +33,9 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             ascSort: `${rootId}-svg-asc-sort`,
             descSort: `${rootId}-svg-desc-sort`,
             logScale: `${rootId}-svg-log-scale`,
-            linearScale: `${rootId}-svg-linear-scale`
+            linearScale: `${rootId}-svg-linear-scale`,
+            noDiff: `${rootId}-svg-no-diff`,
+            sexDiff: `${rootId}-svg-sex-diff`
         },
         plotOptionsModal: 'gene-expr-vplot-option-modal',
         plotOptionGroups: {
@@ -76,10 +78,18 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             const tissues = parseTissues(args[0]);
             const tissueIdNameMap = {};
             const tissueIdColorMap = {};
+            const tissueDict = {};
             tissues.forEach(x => {
                 tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
                 tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
+                tissueDict[x.tissueSiteDetailId] = x;
             });
+
+            // TEMPORARY HACK
+            tissueIdColorMap.female='ff9f42';
+            tissueIdColorMap.male='3399cc';
+            // tissueIdColorMap.female='c36188';
+            // tissueIdColorMap.female='db7ed6';
             const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, tissueIdColorMap);
             const tissueGroups = violinPlotData.map(d => d.group);
             let violinPlot = new GroupedViolin(violinPlotData);
@@ -94,6 +104,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             // adding property to keep track of sorting and filtering specifically for this plot
             violinPlot.genePlotSort = ids.plotSorts.ascAlphaSort;
             violinPlot.allData = violinPlot.data.map(d=>d);
+            violinPlot.gencodeId = gencodeId;
 
             let width = dim.width;
             let height = dim.height;
@@ -107,11 +118,19 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             let showWhisker = false;
             let showDivider = false;
             let showLegend = false;
-            // let showSize = false;
-            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
+            let showSize = false;
+            let sortSubX = true;
+
+            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
             _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids);
+            // _addViolinTissueColorBand(violinPlot, svg, tissues, "bottom");
         });
+}
+
+
+function _clear(domId) {
+    $(`#${domId}`).empty();
 }
 
 /**
@@ -162,42 +181,16 @@ function _addToolbar(vplot, tooltip, ids) {
         $(`#${ids.plotOptionsModal}`).modal('show');
     });
 
+    // plot defaults
     // ascending alphabetical sort
-    let ascAlphaSortButton = select(`#${ids.buttons.ascAlphaSort}`)
+    select(`#${ids.buttons.ascAlphaSort}`)
         .classed('active', true);
-    //     .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Asc)');})
-    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
-
-    // // descending alphabetical sort
-    // toolbar.createButton(ids.buttons.descAlphaSort, 'fa-sort-alpha-up');
-    // let descAlphaSortButton = select(`#${ids.buttons.descAlphaSort}`)
-    //     .on('mouseover', ()=>{toolbar.tooltip.show('Sort Alphabetically (Desc)');})
-    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
-
-    // // ascending numerical sort
-    // toolbar.createButton(ids.buttons.ascSort, 'fa-sort-numeric-down');
-    // let ascNumSortButton = select(`#${ids.buttons.ascSort}`)
-    //     .on('mouseover', ()=>{toolbar.tooltip.show('Sort by Median (Asc)');})
-    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
-
-    // // descending numerical sort
-    // toolbar.createButton(ids.buttons.descSort, 'fa-sort-numeric-up');
-    // let descNumSortButton = select(`#${ids.buttons.descSort}`)
-    //     .on('mouseover', ()=>{toolbar.tooltip.show('Sort by Median (Desc)');})
-    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
-
     // log scale
-    let logScaleButton = select(`#${ids.buttons.logScale}`)
+    select(`#${ids.buttons.logScale}`)
         .classed('active', true);
-    // toolbar.createButton(ids.buttons.logScale, 'fa-sliders-h');
-    //     .on('mouseover', ()=>{toolbar.tooltip.show('Log Scale');})
-    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
-
-    // // linear scale
-    // toolbar.createButton(ids.buttons.linearScale, 'fa-sliders-h');
-    // let linearScaleButton = select(`#${ids.buttons.linearScale}`)
-    //     .on('mouseover', ()=>{toolbar.tooltip.show('Linear Scale');})
-    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
+    // differentation
+    select(`#${ids.buttons.noDiff}`)
+        .classed('active', true);
 
     // filter
     toolbar.createButton(ids.buttons.filter, 'fa-filter');
@@ -206,34 +199,42 @@ function _addToolbar(vplot, tooltip, ids) {
         .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
 
+    // sort changing events
     $(`#${ids.plotOptionGroups.sort} button`).on('click', (e)=>{
         vplot.genePlotSort = e.target.id.replace(`${ids.svg}-`, '');
-        $(`#${ids.plotOptionGroups.sort} button`).removeClass('active');
-        $(`button#${e.target.id}`).addClass('active');
+        selectAll(`#${ids.plotOptionGroups.sort} button`).classed('active', false);
+        select(`button#${e.target.id}`).classed('active', true);
         _sortAndUpdateData(vplot, ids);
     });
 
-    // linearScaleButton.on('click', (d, i, nodes)=>{
-    //     if (!linearScaleButton.classed('active')) {
-    //         logScaleButton.classed('active', false);
-    //         linearScaleButton.classed('active', true);
+    // scale changing events
+    $(`#${ids.plotOptionGroups.scale} button`).on('click', (e)=>{
+        selectAll(`#${ids.plotOptionGroups.scale} button`).classed('active', false);
+        select(`button#${e.target.id}`).classed('active', true);
+        if (e.target.id == ids.buttons.logScale) {
+            _calcViolinPlotValues(vplot.data, true);
+            _calcViolinPlotValues(vplot.allData, true);
+            vplot.updateYScale('log10(TPM)');
+        } else {
+            _calcViolinPlotValues(vplot.data, false);
+            _calcViolinPlotValues(vplot.allData, false);
+            vplot.updateYScale('TPM');
+        }
+    });
 
-    //         _calcViolinPlotValues(vplot.data, false);
-    //         _calcViolinPlotValues(vplot.allData, false);
-    //         vplot.updateYScale('TPM');
-    //     }
-    // });
+    // differentiation changing events
+    $(`#${ids.plotOptionGroups.differentiation} button`).on('click', (e)=>{
+        selectAll(`#${ids.plotOptionGroups.differentiation} button`).classed('active', false);
+        select(`button#${e.target.id}`).classed('active', true);
 
-    // logScaleButton.on('click', (d, i, nodes)=>{
-    //     if (!logScaleButton.classed('active')) {
-    //         logScaleButton.classed('active', true);
-    //         linearScaleButton.classed('active', false);
-
-    //         _calcViolinPlotValues(vplot.data, true);
-    //         _calcViolinPlotValues(vplot.allData, true);
-    //         vplot.updateYScale('log10(TPM)');
-    //     }
-    // });
+        if (e.target.id == ids.buttons.sexDiff) {
+            _clear(ids.root);
+            launch(ids.root, ids.tooltip, vplot.gencodeId, true);
+        } else {
+            _clear(ids.root);
+            launch(ids.root, ids.tooltip, vplot.gencodeId, false);
+        }
+    });
 
     tissueFilterButton.on('click', (d, i, nodes)=>{
         $('#gene-expr-vplot-filter-modal').modal('show');
@@ -266,7 +267,8 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
         });
         d.group = idNameMap===undefined?d.tissueSiteDetailId:idNameMap[d.tissueSiteDetailId];
         d.label = d.subsetGroup===undefined?d.geneSymbol:d.subsetGroup;
-        d.color = colors===undefined?'#90c1c1':colors[d.tissueSiteDetailId];
+        d.color = colors===undefined?'#90c1c1':d.subsetGroup===undefined?colors[d.tissueSiteDetailId]:colors[d.subsetGroup];
+        // d.color = colors===undefined?'#90c1c1':colors[d.tissueSiteDetailId];
     });
     _calcViolinPlotValues(data[attr], useLog);
     return data[attr];
@@ -320,4 +322,22 @@ function _filterTissues(vplot, ids, tissues) {
     let filteredData = vplot.allData.filter(x => tissues.includes(x.group));
     vplot.data = filteredData;
     _sortAndUpdateData(vplot, ids);
+}
+
+function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
+    console.log(tissueDict);
+     ///// add tissue colors
+    const tissueG = dom.append("g");
+
+    tissueG.selectAll(".tcolor").data(plot.scale.x.domain())
+        .enter()
+        .append("rect")
+        .classed("tcolor", true)
+        .attr("x", (g)=>plot.scale.x(g) )
+        .attr("y", (g)=>loc=="top"?plot.scale.y.range()[1]-5:plot.scale.y.range()[0]-5)
+        .attr("width", (g)=>plot.scale.x.bandwidth())
+        .attr("height", 5)
+        .style("stroke-width", 0)
+        .style("fill", (g)=>`#${tissueDict[g].colorHex}`)
+        .style("opacity", 0.7);
 }
