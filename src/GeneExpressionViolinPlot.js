@@ -37,15 +37,15 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
         },
         plotOptionsModal: 'gene-expr-vplot-option-modal',
         plotOptionGroups: {
-            Scale: `${rootId}-svg-option-scale`,
-            Sort: `${rootId}-svg-option-sort`,
-            Differentiation: `${rootId}-svg-option-differentiation`
+            scale: `${rootId}-svg-option-scale`,
+            sort: `${rootId}-svg-option-sort`,
+            differentiation: `${rootId}-svg-option-differentiation`
         },
         plotSorts: {
-            ascAlphaSort: 'asc-alpha',
-            descAlphaSort: 'desc-alpha',
-            ascSort: 'asc-num',
-            descSort: 'desc-num'
+            ascAlphaSort: 'asc-alphasort',
+            descAlphaSort: 'desc-alphasort',
+            ascSort: 'asc-sort',
+            descSort: 'desc-sort'
         },
         tissueFilter: 'gene-expr-vplot-filter-modal'
 
@@ -206,54 +206,12 @@ function _addToolbar(vplot, tooltip, ids) {
         .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
 
-    // ascAlphaSortButton.on('click', (d, i, nodes)=>{
-    //     if (!ascAlphaSortButton.classed('active')) {
-    //         ascAlphaSortButton.classed('active', true);
-    //         descAlphaSortButton.classed('active', false);
-    //         ascNumSortButton.classed('active', false);
-    //         descNumSortButton.classed('active', false);
-
-    //         vplot.genePlotSort = ids.plotSorts.ascAlphaSort;
-    //         _sortAndUpdateData(vplot, ids);
-    //     }
-
-    // });
-
-    // descAlphaSortButton.on('click', (d, i, nodes)=>{
-    //     if (!descAlphaSortButton.classed('active')) {
-    //         ascAlphaSortButton.classed('active', false);
-    //         descAlphaSortButton.classed('active', true);
-    //         ascNumSortButton.classed('active', false);
-    //         descNumSortButton.classed('active', false);
-
-    //         vplot.genePlotSort = ids.plotSorts.descAlphaSort;
-    //         _sortAndUpdateData(vplot, ids);
-    //     }
-    // });
-
-    // ascNumSortButton.on('click', (d, i, nodes)=>{
-    //     if (!ascNumSortButton.classed('active')) {
-    //         descAlphaSortButton.classed('active', false);
-    //         ascAlphaSortButton.classed('active', false);
-    //         ascNumSortButton.classed('active', true);
-    //         descNumSortButton.classed('active', false);
-
-    //         vplot.genePlotSort = ids.plotSorts.ascSort;
-    //         _sortAndUpdateData(vplot, ids);
-    //     }
-    // });
-
-    // descNumSortButton.on('click', (d, i, nodes)=>{
-    //     if (!descNumSortButton.classed('active')) {
-    //         descAlphaSortButton.classed('active', false);
-    //         ascAlphaSortButton.classed('active', false);
-    //         ascNumSortButton.classed('active', false);
-    //         descNumSortButton.classed('active', true);
-
-    //         vplot.genePlotSort = ids.plotSorts.descSort;
-    //         _sortAndUpdateData(vplot, ids);
-    //     }
-    // });
+    $(`#${ids.plotOptionGroups.sort} button`).on('click', (e)=>{
+        vplot.genePlotSort = e.target.id.replace(`${ids.svg}-`, '');
+        $(`#${ids.plotOptionGroups.sort} button`).removeClass('active');
+        $(`button#${e.target.id}`).addClass('active');
+        _sortAndUpdateData(vplot, ids);
+    });
 
     // linearScaleButton.on('click', (d, i, nodes)=>{
     //     if (!linearScaleButton.classed('active')) {
