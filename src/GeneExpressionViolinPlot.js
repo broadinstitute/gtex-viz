@@ -82,7 +82,7 @@ export function launch(rootId, tooltipRootId, gencodeId, differentiated=false, u
             tissues.forEach(x => {
                 tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
                 tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
-                tissueDict[x.tissueSiteDetailId] = x;
+                tissueDict[x.tissueSiteDetail] = x;
             });
 
             // TEMPORARY HACK
@@ -124,7 +124,7 @@ export function launch(rootId, tooltipRootId, gencodeId, differentiated=false, u
             violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
             _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids);
-            // _addViolinTissueColorBand(violinPlot, svg, tissues, "bottom");
+            if (differentiated) _addViolinTissueColorBand(violinPlot, svg, tissueDict, "bottom");
         });
 }
 
@@ -325,8 +325,10 @@ function _filterTissues(vplot, ids, tissues) {
 }
 
 function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
-    console.log(tissueDict);
-     ///// add tissue colors
+    // move x-axis down to make space for the color band
+    const xAxis = dom.select('.violin-x-axis');
+    console.log(xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 5)`));
+    // add tissue colors
     const tissueG = dom.append("g");
 
     tissueG.selectAll(".tcolor").data(plot.scale.x.domain())
@@ -334,7 +336,7 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .append("rect")
         .classed("tcolor", true)
         .attr("x", (g)=>plot.scale.x(g) )
-        .attr("y", (g)=>loc=="top"?plot.scale.y.range()[1]-5:plot.scale.y.range()[0]-5)
+        .attr("y", (g)=>loc=="top"?plot.scale.y.range()[1]-5:plot.scale.y.range()[0])
         .attr("width", (g)=>plot.scale.x.bandwidth())
         .attr("height", 5)
         .style("stroke-width", 0)
