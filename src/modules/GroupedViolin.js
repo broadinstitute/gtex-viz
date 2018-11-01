@@ -65,11 +65,12 @@ export default class GroupedViolin {
      * @param showDivider
      * @param showLegend
      * @param showSize
+     * @param sortSubX
      */
 
     render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis",
            showX=true, showSubX=true, subXAngle=0,
-           showWhisker=false, showDivider=false, showLegend=false, showSize=false){
+           showWhisker=false, showDivider=false, showLegend=false, showSize=false, sortSubX=false){
 
         // define the reset for this plot
         this.reset = () => {
@@ -143,6 +144,14 @@ export default class GroupedViolin {
             }
 
             // defines the this.scale.subx based on this.scale.x
+            if (sortSubX) {
+                entries.sort((a,b) => {
+                    if (a.label < b.label) return -1;
+                    else if (a.label > b.label) return 1;
+                    return 0;
+                });
+            }
+
             this.scale.subx
                 .domain(entries.map((d) => d.label))
                 .rangeRound([this.scale.x(group), this.scale.x(group) + this.scale.x.bandwidth()]);
