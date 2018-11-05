@@ -74,7 +74,7 @@ export default class GroupedViolin {
         // define the reset for this plot
         this.reset = () => {
             dom.selectAll("*").remove();
-            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
+            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize);
         };
 
 

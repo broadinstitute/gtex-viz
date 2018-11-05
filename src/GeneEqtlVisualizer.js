@@ -1003,18 +1003,16 @@ function addViolinPlot(eqtl, data){
             marginLeft: 50,
             marginRight: 20,
             marginTop: 20,
-            marginBottom: 30,
+            marginBottom: 50,
             showDivider: false,
             xPadding: 0.3,
             yLabel: "Norm. Expression",
             showGroupX: false,
             showX: true,
             xAngle: 0,
-            showWhisker: true,
+            showWhisker: false,
             showLegend: false,
             showSampleSize: true
         };
     groupedViolinPlot(vConfig);
-
-
 }
