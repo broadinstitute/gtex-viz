@@ -225,6 +225,21 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
 
     ///// Below are custom features and functionality
 
+    //-- override bubble mouseover tooltip
+    focusG.selectAll(".bubble-map-cell")
+         .on("mouseover", function(d){
+                let selected = select(this);
+                let rowClass = selected.attr("row");
+                let colClass = selected.attr("col");
+                focusG.selectAll(".bubble-map-xlabel").filter(`.${rowClass}`)
+                    .classed('highlighted', true);
+                focusG.selectAll(".bubble-map-ylabel").filter(`.${colClass}`)
+                    .classed('highlighted', true);
+                selected.classed('highlighted', true);
+                let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
+                let displaySize = d.rDisplayValue === undefined? d.r.toPrecision(4):d.rDisplayValue;
+                bmap.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> NES: ${displayValue}<br/> p-value: ${displaySize}`);
+            });
     //-- filters for p-value, nes
     renderBmapFilters(par.dashboard, bmap, bmapSvg, tissueSiteTable);
 
