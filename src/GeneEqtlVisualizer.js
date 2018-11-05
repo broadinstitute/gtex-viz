@@ -27,7 +27,7 @@ import HalfMap from "./modules/HalfMap";
 import {groupedViolinPlot} from "./GTExViz";
 
 export function render(par, geneId, urls = getGtexUrls()){
-    $(`#${par.spinner}`).show();
+    $(`#${par.divSpinner}`).show();
 
     json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
         .then((data)=> {
@@ -53,7 +53,7 @@ export function render(par, geneId, urls = getGtexUrls()){
                             let ld = parseLD(ldJson);
                             par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data
                             renderLdMap(par, bmap);
-                            $(`#${par.spinner}`).hide();
+                            $(`#${par.divSpinner}`).hide();
 
                             // define the tissue filtering event on tissue menu window close
                             // Note: the tissue menu content in the modal is built by renderBmapFilters()
@@ -178,7 +178,7 @@ function renderLdMap(par, bmap){
     });
 
     // LD filters
-    renderLDFilters(par.dashboard, ldMap, ldCanvas, ldG, ldConfig);
+    renderLDFilters(par.divDashboard, ldMap, ldCanvas, ldG, ldConfig);
 }
 
 /**
@@ -241,7 +241,7 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
                 bmap.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> NES: ${displayValue}<br/> p-value: ${displaySize}`);
             });
     //-- filters for p-value, nes
-    renderBmapFilters(par.dashboard, bmap, bmapSvg, tissueSiteTable);
+    renderBmapFilters(par.divDashboard, bmap, bmapSvg, tissueSiteTable);
 
     // variant related data parsing
     // Variant locator
@@ -903,7 +903,7 @@ function panelBuilder(panels, id){
 
 function addBubbleClickEvent(bmap, bmapSvg, par){
     let dialogDivId = par.id+"violin-dialog";
-    createDialog(par.dashboard, par.id+"violin-dialog", "eQTL Violin Plot Dialog");
+    createDialog(par.divDashboard, par.id+"violin-dialog", "eQTL Violin Plot Dialog");
     bmapSvg.selectAll('.bubble-map-cell')
         .on("click", (d)=>{
             $(`#${dialogDivId}`).dialog('open');

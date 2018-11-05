@@ -79,7 +79,6 @@
             let geneId = "ACTN3";
             let svgConfig = {
                 id: 'bmap',
-                divId: 'vizRoot',
                 width: 1800,
                 height: 600,
                 marginTop: 40,
@@ -121,10 +120,8 @@
                 logBase: undefined,
 
                 // div IDs
-                rootId: "vizRoot",
-                spinner: "spinner",
-                dashboard: "vizRoot-dashboard",
-                dialog: "vizRoot-dialog"
+                divSpinner: "spinner",
+                divDashboard: "vizRoot-dashboard",
             };
 
             GeneEqtlVisualizer.render(svgConfig, geneId);
