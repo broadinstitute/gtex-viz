@@ -217,7 +217,7 @@ export default class BubbleMap {
                     .classed('highlighted', true);
                 selected.classed('highlighted', true);
                 let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
-                let displaySize = d.r.toPrecision(4);
+                let displaySize = d.rDisplayValue === undefined? d.r.toPrecision(4):d.rDisplayValue;
                 tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`);
             })
             .on("mouseout", function(){
@@ -426,6 +426,7 @@ export default class BubbleMap {
         // use d3 nest data structure to find the unique list of y labels
         // reference: https://github.com/d3/d3-collection#nests
         yList = yList===undefined?this._parseYList():yList;
+
         return scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
             .domain(yList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
             .range([dim.top, dim.top+dim.h])
