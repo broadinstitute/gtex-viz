@@ -232,6 +232,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // differentiation changing events
     $(`#${ids.plotOptionGroups.differentiation} button`).on('click', (e)=>{
+        $(`#${ids.plotOptionsModal} .modal-body button`).prop('disabled', true);
+        $(`#${ids.plotOptionsModal} #spinner`).show();
         selectAll(`#${ids.plotOptionGroups.differentiation} button`).classed('active', false);
         select(`button#${e.target.id}`).classed('active', true);
 
@@ -264,6 +266,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     vplot.reset();
                     let svg = select(`#${ids.root} svg g`);
                     _addViolinTissueColorBand(vplot, svg, tissueDict, 'bottom');
+                    $(`#${ids.plotOptionsModal} .modal-body button`).prop('disabled', false);
+                    $(`#${ids.plotOptionsModal} #spinner`).hide();
             });
         } else {
             const promises = [ json(urls.geneExp + vplot.gencodeId) ];
@@ -285,6 +289,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     vplot.data = violinPlotData.filter(d=>filteredTissues.indexOf(d.group) != -1);
                     vplot.differentiated = false;
                     vplot.reset();
+                    $(`#${ids.plotOptionsModal} .modal-body button`).prop('disabled', false);
+                    $(`#${ids.plotOptionsModal} #spinner`).hide();
             });
         }
     });
