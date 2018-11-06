@@ -200,6 +200,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // sort changing events
     $(`#${ids.plotOptionGroups.sort} button`).on('click', (e)=>{
+        if ($(e.currentTarget).hasClass('active')) return;
         vplot.genePlotSort = e.target.id.replace(`${ids.svg}-`, '');
         selectAll(`#${ids.plotOptionGroups.sort} button`).classed('active', false);
         select(`button#${e.target.id}`).classed('active', true);
@@ -208,6 +209,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // scale changing events
     $(`#${ids.plotOptionGroups.scale} button`).on('click', (e)=>{
+        if ($(e.currentTarget).hasClass('active')) return;
         selectAll(`#${ids.plotOptionGroups.scale} button`).classed('active', false);
         select(`button#${e.target.id}`).classed('active', true);
         if (e.target.id == ids.buttons.logScale) {
@@ -232,6 +234,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // differentiation changing events
     $(`#${ids.plotOptionGroups.differentiation} button`).on('click', (e)=>{
+        if ($(e.currentTarget).hasClass('active')) return;
         $(`#${ids.plotOptionsModal} .modal-body button`).prop('disabled', true);
         $(`#${ids.plotOptionsModal} #spinner`).show();
         selectAll(`#${ids.plotOptionGroups.differentiation} button`).classed('active', false);
