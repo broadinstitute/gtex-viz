@@ -426,6 +426,7 @@ export default class BubbleMap {
         // use d3 nest data structure to find the unique list of y labels
         // reference: https://github.com/d3/d3-collection#nests
         yList = yList===undefined?this._parseYList():yList;
+
         return scaleBand() // reference: https://github.com/d3/d3-scale#scaleBand
             .domain(yList) // perhaps it isn't necessary to store xList, it could be retrieved by xScale.domain
             .range([dim.top, dim.top+dim.h])

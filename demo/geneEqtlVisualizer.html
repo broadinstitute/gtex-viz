@@ -76,12 +76,11 @@
     <script src="/build/js/gev.bundle.dev.js"></script>
     <script>
         $(document).ready(function(){
-            // let geneId = "EFCAB7";
-            let geneId = "ACTN3";
+
             let svgConfig = {
                 id: 'bmap',
                 width: 1800,
-                height: 600,
+                height: 500,
                 marginTop: 40,
                 marginRight: 20,
                 marginBottom: 20,
@@ -127,22 +126,20 @@
                 divModal: 'bmap-modal'
             };
 
-            GeneEqtlVisualizer.render(svgConfig, geneId);
-
-            // temporarily commented out the gene search functionality for now
-            // $('#gene').keypress(function(e){
-            //     if(e.keyCode == 13){
-            //         // bind the enter key
-            //         e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
-            //         const geneId = $('#gene').val();
-            //         reset();
-            //         $('#spinner').show();
-            //         GeneEqtlVisualizer.render(geneId, "vizRoot", "spinner");
-            //     }
-            // });
+            $('#gene').keypress(function(e){
+                if(e.keyCode == 13){
+                    // bind the enter key
+                    e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
+                    const geneId = $('#gene').val();
+                    reset(svgConfig.id);
+                    reset(svgConfig.ldId);
+                    $('#spinner').show();
+                    GeneEqtlVisualizer.render(svgConfig, geneId);
+                }
+            });
         });
-        function reset(){
-            $("#bmap-root").empty();
+        function reset(id){
+            $(`#${id}`).empty();
         }
     </script>
 

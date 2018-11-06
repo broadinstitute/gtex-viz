@@ -95,14 +95,26 @@ export function render(par, geneId, urls = getGtexUrls()){
  * @returns {*}
  */
 function setDimensions(par){
-    par.margin = {
+     par.margin = {
         left: par.marginLeft + par.focusPanelLabels.row.width + par.focusPanelLabels.row.adjust,
         top: par.marginTop,
         right: par.marginRight,
         bottom: par.marginBottom + par.focusPanelLabels.column.height
     };
+
+     // auto-adjust the height when there is not enough space to render the eQTL tissues or when there's too much space
+
+    let yList = nest()
+            .key((d) => d.y) // group this.data by d.x
+            .entries(par.data)
+            .map((d) => d.key) // then return the unique list of d.x
+            .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
+    let h = (par.height-(par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight))/yList.length;
+    par.height = h>10&&h<15?par.height:10*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
+
     par.inWidth = par.width - (par.margin.left + par.margin.right);
     par.inHeight = par.height - (par.margin.top + par.margin.bottom);
+
     par.focusPanelHeight = par.inHeight - (par.legendHeight + par.miniPanelHeight);
     if (par.focusPanelHeight < 0) throw "Config error: focus panel height is negative.";
     par.focusPanelMargin = {
