@@ -178,6 +178,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         $(`#${ids.plotOptionsModal}`).modal('show');
     });
 
+    selectAll(`#${ids.plotOptionsModal} .modal-body button`).classed('active', false);
+
     // plot defaults
     // ascending alphabetical sort
     select(`#${ids.buttons.ascAlphaSort}`)
