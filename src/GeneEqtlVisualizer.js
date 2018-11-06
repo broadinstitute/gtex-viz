@@ -60,9 +60,10 @@ export function render(par, geneId, urls = getGtexUrls()){
                             const oriY = bmap.yScale.domain();
                             const oriX = bmap.xScale.domain();
 
-                            $('#bbMap-modal').on('hidden.bs.modal', (e)=>{
+                            // execute the tissue filtering when the modal window closes
+                            $(`#${par.divModal}`).on('hidden.bs.modal', (e)=>{
                                 let checked = [];
-                                $('#bbMap-modal').find(":input").each(function(){
+                                $(`#${par.divModal}`).find(":input").each(function(){
                                     if($(this).prop("checked")) checked.push($(this).val());
                                 });
                                 console.log(checked)
@@ -77,10 +78,7 @@ export function render(par, geneId, urls = getGtexUrls()){
                                     .map((d) => d.key) // then return the unique list of d.x
                                     .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
 
-                                // par.ldData = ld.filter((d)=>{
-                                //     return (d.value>=par.ldCutoff) && (newX.indexOf(d.x) >= 0 && newX.indexOf(d.y) >= 0)
-                                // });
-                                console.log(par.data);
+                                // re-rendering
                                 bmap = renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, true);
                                 renderLdMap(par, bmap);
 
@@ -222,6 +220,8 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
         par.focusPanelLabels
     );
 
+    $(`#${par.divInfo}`).text('Total eQTL counts: ' + par.data.length)
+
 
     ///// Below are custom features and functionality
 
@@ -240,8 +240,9 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
                 let displaySize = d.rDisplayValue === undefined? d.r.toPrecision(4):d.rDisplayValue;
                 bmap.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> NES: ${displayValue}<br/> p-value: ${displaySize}`);
             });
+
     //-- filters for p-value, nes
-    renderBmapFilters(par.divDashboard, bmap, bmapSvg, tissueSiteTable);
+    renderBmapFilters(par.divDashboard, par.divInfo, par.divModal, bmap, bmapSvg, tissueSiteTable);
 
     // variant related data parsing
     // Variant locator
@@ -570,11 +571,12 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
 /**
  * Render bubble map related filters
  * @param id {String} a <div> ID where the filters should be rendered.
+ * @param infoId {String} a <div> ID where the filtering status should be reported to.
  * @param bmap {BubbleMap} of the bubble map
  * @param bmapSvg {D3} of the bubble map's SVG
  * @param tissueSiteTable {Dictionary} a hash of tissue objects (with the attr tissueSiteDetail) indexed by tissueSiteDetailId, used to map tissueSiteDetailID=>tissueSiteDetail
  */
-function renderBmapFilters(id, bmap, bmapSvg, tissueSiteTable){
+function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
     checkDomId(id);
     $(`#${id}`).empty();
     let panels = [
@@ -663,7 +665,7 @@ function renderBmapFilters(id, bmap, bmapSvg, tissueSiteTable){
         .appendTo($(`#${id}`));
     let tiMenuLink = $('<span/>')
         .attr('data-toggle', 'modal')
-        .attr('data-target', '#bbMap-modal') // bbMap-modal must be defined on the html
+        .attr('data-target', `#${modalId}`) // bMap-modal must be defined on the html
         .css('margin-left', '2px')
         .css('padding-top', '2px')
         .css('color', '#0868ac')
@@ -674,8 +676,8 @@ function renderBmapFilters(id, bmap, bmapSvg, tissueSiteTable){
     ////// end adding custom DOMs
 
     // build the tissue menu
-    let modalBody =  $('#bbMap-modal').find('.modal-body');
-    if($('#bbMap-modal').find(":input").length == 0){
+    let modalBody =  $(`#${modalId}`).find('.modal-body');
+    if($(`#${modalId}`).find(":input").length == 0){
         // if the menu is empty
         bmap.yScale.domain().forEach((y)=>{ // create a menu item for each tissue
             $('<input/>')
@@ -709,18 +711,22 @@ function renderBmapFilters(id, bmap, bmapSvg, tissueSiteTable){
                 if (Math.abs(d.value) < minNes) return "#fff";
                 return bmap.colorScale(d.value);
             });
+        let counts = 0;
         miniG.selectAll('.mini-map-cell')
             .style('fill', (d)=>{
                 if (d.r < minP) return "#fff";
                 if (Math.abs(d.value) < minNes) return "#fff";
+                counts += 1;
                 return bmap.colorScale(d.value);
             });
+        $(`#${infoId}`).text(`Total eQTL counts: ${counts}`)
     };
 
     //---- p-value filter events
     $('#pvalueLimit').keydown((e)=>{
         if(e.keyCode == 13){
             minP = parseFloat($('#pvalueLimit').val());
+            console.log("updated")
             updateBubbles();
         }
     });
@@ -963,12 +969,12 @@ function createDialog(parentDivId, dialogDivId, title){
         .attr('title', title)
         .appendTo(parent);
     let clearDiv = $('<div/>')
-        .attr('class', 'bbMap-clear')
+        .attr('class', 'bMap-clear')
         .html("Clear All")
         .appendTo(dialog);
     let contentDiv = $('<div/>')
-        .attr('id', 'bbMap-content')
-        .attr('class', 'bbMap-content')
+        .attr('id', 'bMap-content')
+        .attr('class', 'bMap-content')
         .appendTo(dialog);
     dialog.dialog({
         title: title,
@@ -982,14 +988,14 @@ function createDialog(parentDivId, dialogDivId, title){
 /** Create the violin plot given a gene, variant and tissue
  * * @param eQTL {Object} with attr: variantId, gencodeId, tissueSiteDetailId, displayX
  * jQuery dependent
- * a div with ID, bbMap-content, must exist
+ * a div with ID, bMap-content, must exist
  */
 function addViolinPlot(eqtl, data){
     let plot = $('<div/>')
-        .attr('class', 'bbMap-dialog')
+        .attr('class', 'bMap-dialog')
         .css('float', 'left')
         .css('margin', '20px')
-        .appendTo($(`#bbMap-content`));
+        .appendTo($(`#bMap-content`));
 
     // add a header section
     let head = $('<div/>').appendTo(plot);

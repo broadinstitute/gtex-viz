@@ -27,11 +27,12 @@
             </div>
             <div id="bmap-info-box" class="col-xs-12 col-sm-10">
                 <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none; "></i></div>
-                <div style="font-size:12px;">
+                <div id="bmap-gene-info" style="font-size:12px;">
                     <p>
                         GTEx Gene-eQTL Visualizer (GEV) is for exploring genetic variations associated with tissue-specific gene expression.
                     </p>
                 </div>
+                <div id="bmap-filter-info"></div>
             </div>
         </div>
         <div id="bmap-dashboard" class="row" style="border-bottom: 2px solid #e2e2e2; border-top: 1px solid #e2e2e2;">
@@ -122,7 +123,8 @@
                 // div IDs
                 divSpinner: "spinner",
                 divDashboard: "bmap-dashboard",
-                divInfo: "bmap-info-box"
+                divInfo: "bmap-filter-info",
+                divModal: 'bmap-modal'
             };
 
             GeneEqtlVisualizer.render(svgConfig, geneId);
