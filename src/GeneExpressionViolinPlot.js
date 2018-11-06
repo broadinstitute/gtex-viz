@@ -102,7 +102,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             violinPlot.gencodeId = gencodeId;
             violinPlot.differentiated = false;
             violinPlot.tissues = tissues;
-            violinPlot.scale = 'log';
+            violinPlot.scaleView = 'log';
 
             let width = dim.width;
             let height = dim.height;
