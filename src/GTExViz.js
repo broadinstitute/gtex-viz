@@ -331,11 +331,24 @@ const bubblemapDemoConfig = {
     marginRight: 100,
     marginBottom: 30,
     marginLeft: 30,
-    showLabels: true,
-    rowLabelWidth: 150,
-    columnLabelHeight: 100,
-    columnLabelAngle: 90,
-    columnLabelPosAdjust: 10,
+    labels: {
+        column: {
+            show: true,
+            height: 100,
+            angle: 90,
+            adjust: 10,
+            location: 'bottom',
+            textAlign: 'left'
+        },
+        row: {
+            show: true,
+            width: 150,
+            angle: 0,
+            adjust: 0,
+            location: 'left',
+            textAlign: 'right'
+        }
+    },
     useLog: false,
     logBase: 10,
     colorScheme: "RdBu", // a diverging color scheme
@@ -349,17 +362,22 @@ export function bubblemap(par=bubblemapDemoConfig){
         right: par.marginRight,
         bottom: par.showLabels?par.marginBottom + par.columnLabelHeight:par.marginBottom
     };
-    let inWidth = par.width - (par.rowLabelWidth + par.marginLeft + par.marginRight);
-    let inHeight = par.height - (par.columnLabelHeight + par.marginTop + par.marginBottom);
+    let inWidth = par.width - (par.labels.row.width + par.marginLeft + par.marginRight);
+    let inHeight = par.height - (par.labels.column.height + par.marginTop + par.marginBottom);
     if(par.useCanvas) {
         let bmapCanvas = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, canvasId+"-tooltip");
         let canvas = createCanvas(par.id, par.width, par.height, margin);
-        bmapCanvas.drawCanvas(canvas, {w:inWidth, h:inHeight, top: margin.top, left: margin.left}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust)
+        bmapCanvas.drawCanvas(
+            canvas,
+            {w:inWidth, h:inHeight, top: margin.top, left: margin.left},
+            par.colorScaleDomain,
+            par.labels
+        )
     }
     else {
         let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
         let svg = createSvg(par.id, par.width, par.height, margin);
-        bmap.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, par.showLabels, par.columnLabelAngle, par.columnLabelPosAdjust);
+        bmap.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, 0, par.labels);
         bmap.drawColorLegend(svg, {x: 0, y: -40}, 3, "NES");
         bmap.drawBubbleLegend(svg, {x: 500, y:-40, title: "-log10(p-value)"}, 5, "-log10(p-value)");
     }
@@ -499,9 +517,11 @@ export function groupedViolinPlot(par=violinDemoConfig){
     let svg = createSvg(par.id, par.width, par.height, margin);
 
     const gViolin = new GroupedViolin(par.data);
-    gViolin.render(svg, inWidth, inHeight, par.xPadding, undefined, [], par.yLabel, par.showGroupX, par.ShowX, par.xAngle, par.showWhisker, par.showDivider, par.showLegend);
-    const tooltip = gViolin.createTooltip(tooltipId);
+    gViolin.render(svg, inWidth, inHeight, par.xPadding, undefined, [], par.yLabel, par.showGroupX, par.ShowX, par.xAngle, par.showWhisker, par.showDivider, par.showLegend, par.showSampleSize);
+    svg.selectAll(".violin-size-axis").classed("violin-size-axis-hide", true).classed("violin-size-axis", false);
 
+    gViolin.createTooltip(tooltipId);
+    return svg;
 
 }
 

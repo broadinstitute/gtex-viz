@@ -8,11 +8,13 @@
               crossorigin="anonymous">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Franklin:300,400" >
         <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css">
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
         <link rel="stylesheet" type="text/css" href="/css/bubbleMap.css">
+        <link rel="stylesheet" type="text/css" href="/css/halfMap.css">
+        <link rel="stylesheet" type="text/css" href="/css/violin.css">
     </head>
-
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
-    <h3>GTEx Gene-Eqtl Visualizer</h3>
+    <h3>GTEx Gene-EQTL Visualizer</h3>
     <hr>
         <div class="row">
             <div class="col-xs-12 col-sm-2">
@@ -23,18 +25,37 @@
                      </div>
                 </form>
             </div>
-            <div id="InfoBox" class="col-xs-12 col-sm-10">
-                <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i></div>
-                <div style="font-size:12px;">
+            <div id="bmap-info-box" class="col-xs-12 col-sm-10">
+                <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none; "></i></div>
+                <div id="bmap-gene-info" style="font-size:12px;">
                     <p>
-                        GTEx Transcript Browser is for exploring genetic variations associated with tissue-specific gene expression.
+                        GTEx Gene-eQTL Visualizer (GEV) is for exploring genetic variations associated with tissue-specific gene expression.
                     </p>
                 </div>
+                <div id="bmap-filter-info"></div>
             </div>
         </div>
-        <div id="searchResult" class="col-xs-12">
+        <div id="bmap-dashboard" class="row" style="border-bottom: 2px solid #e2e2e2; border-top: 1px solid #e2e2e2;">
+        </div>
+        <div id="bmap-root">
             <div id="messageBox" style="color: #CB181D;"></div> <!-- for displaying message of input errors-->
-            <div id="vizRoot" style="width:80%;"></div> <!-- the bubble map root div -->
+            <div id="bmap"></div>
+            <div id="ldMap"></div>
+        </div>
+
+        <!-- bbMap tissue modal -->
+        <div id="bmap-modal" class="modal fade" aria-hidden='true' role='dialog'>
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <span class="modal-title" id="myModalLabel">GTEx Gene EQTL Visualizer Tissue Filter</span>
+                        <i class="close fa fa-window-close" data-dismiss="modal" aria-label="Close"></i>
+
+                    </div>
+                    <div class="modal-body"></div>
+                    <div class="modal-footer"></div>
+                </div>
+            </div>
         </div>
 
     </body>
@@ -46,27 +67,79 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.full.min.js"></script>
-
+    <script
+      src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+      integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+      crossorigin="anonymous">
+    </script>
     <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
     <script src="/build/js/gev.bundle.dev.js"></script>
     <script>
         $(document).ready(function(){
-            let geneId = "actn1";
-            GeneEqtlVisualizer.render(geneId, "vizRoot", "spinner");
 
-            // $('#gene').keypress(function(e){
-            //     if(e.keyCode == 13){
-            //         // bind the enter key
-            //         e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
-            //         const geneId = $('#gene').val();
-            //         reset();
-            //         $('#spinner').show();
-            //         GeneEqtlVisualizer.render(geneId, "vizRoot", "spinner");
-            //     }
-            // });
+            let svgConfig = {
+                id: 'bmap',
+                width: 1800,
+                height: 500,
+                marginTop: 40,
+                marginRight: 20,
+                marginBottom: 20,
+                marginLeft: 50,
+                legendHeight: 100, // assuming the color legends appear at the top of the focus panel
+
+                miniPanelHeight: 100,
+
+                focusPanelLabels: {
+                    column: {
+                        show: true,
+                        height: 100,
+                        angle: 90,
+                        adjust: 30,
+                        location: 'bottom',
+                        textAlign: 'left'
+                    },
+                    row: {
+                        show: true,
+                        width: 100,
+                        angle: 0,
+                        adjust: 30,
+                        location: 'left',
+                        textAlign: 'right'
+                    }
+                },
+
+                ldId: "ldMap",
+                ldCutoff: 0.0,
+                ldColorScheme: "Greys",
+                ldLegendSpace: 50,
+
+                colorScheme: "RdBu",
+                colorScaleDomain: [-0.75, 0.75],
+
+                useLog: false,
+                logBase: undefined,
+
+                // div IDs
+                divSpinner: "spinner",
+                divDashboard: "bmap-dashboard",
+                divInfo: "bmap-filter-info",
+                divModal: 'bmap-modal'
+            };
+
+            $('#gene').keypress(function(e){
+                if(e.keyCode == 13){
+                    // bind the enter key
+                    e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
+                    const geneId = $('#gene').val();
+                    reset(svgConfig.id);
+                    reset(svgConfig.ldId);
+                    $('#spinner').show();
+                    GeneEqtlVisualizer.render(svgConfig, geneId);
+                }
+            });
         });
-        function reset(){
-            $("#vizRoot").empty();
+        function reset(id){
+            $(`#${id}`).empty();
         }
     </script>
 

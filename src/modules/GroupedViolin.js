@@ -74,7 +74,7 @@ export default class GroupedViolin {
         // define the reset for this plot
         this.reset = () => {
             dom.selectAll("*").remove();
-            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend);
+            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize);
         };
 
 
@@ -194,7 +194,7 @@ export default class GroupedViolin {
         // adds the text label for the y axis
         dom.append("text")
             .attr("y", -40) // todo: avoid hard-coded value
-            .attr("x", -40)
+            .attr("x", -100)
             .attr("class", "violin-axis-label")
             .attr("text-anchor", "start")
             .attr("transform", "rotate(-90)")

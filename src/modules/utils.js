@@ -14,7 +14,6 @@
 import {select} from "d3-selection";
 import {range} from "d3-array";
 
-
 export function checkDomId(id){
     // test input params
     if ($(`#${id}`).length == 0) {
@@ -60,7 +59,7 @@ export function createSvg(id, width, height, margin, svgId=undefined, position="
         .attr("width", width)
         .attr("height", height)
         .attr("id", svgId)
-        .style("position", position)
+        // .style("position", position)
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
 }
