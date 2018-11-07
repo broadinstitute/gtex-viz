@@ -169,14 +169,67 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     let toolbar = vplot.createToolbar(ids.toolbar, tooltip);
     toolbar.createDownloadSvgButton(ids.buttons.download, ids.svg, 'gtex-violin-plot.svg', ids.clone);
 
+    let plotOptions = $(`#${ids.toolbar}`).append('<div>')
+        .attr('class', 'btn-group btn-group-sm')
+        .attr('id', `${ids.toolbar}-plot-options`);
+    plotOptions.append('<div>Options</div>');
+    // sort options
+    $('<div/>').appendTo(plotOptions)
+        .attr('id', ids.plotOptionGroups.sort)
+        .html('Sort');
+    // tissue name sorts
+    $('<div/>').appendTo(`#${ids.plotOptionGroups.sort}`)
+        .attr('class', 'btn-group btn-group-sm')
+        .attr('id', `${ids.plotOptionGroups.sort}-alpha`);
+    let alphaSortButtonGroup = $(`#${ids.plotOptionGroups.sort}-alpha.btn-group`);
+    $(`<button class="btn btn-outline-secondary fa fa-sort-alpha-down" id="${ids.buttons.ascAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
+    $(`<button class="btn btn-outline-secondary fa fa-sort-alpha-up" id="${ids.buttons.descAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
+    // median sorts
+    $('<div/>').appendTo(`#${ids.plotOptionGroups.sort}`)
+        .attr('class', 'btn-group btn-group-sm')
+        .attr('id', `#${ids.plotOptionGroups.sort}-num`);
+    let numSortButtonGroup = $(`${ids.plotOptionGroups.sort}-num.btn-group`);
+    $(`<button class="btn btn-outline-secondary fa fa-sort-numeric-down" id="${ids.buttons.ascSort}"></button>`).appendTo(numSortButtonGroup);
+    $(`<button class="btn btn-outline-secondary fa fa-sort-numeric-up" id="${ids.buttons.descSort}"></button>`).appendTo(numSortButtonGroup);
+
+    // scale options
+    $('<div/>').appendTo(plotOptions)
+        .attr('id', ids.plotOptionGroups.scale)
+        .html('Scale');
+    $('<div/>').appendTo(`#${ids.plotOptionGroups.scale}`)
+        .attr('class', 'btn-group btn-group-sm');
+    let scaleButtonGroup = $(`#${ids.plotOptionGroups.scale} .btn-group`);
+    $(`<button class="btn btn-outline-secondary" id="${ids.buttons.logScale}">Log</button>`).appendTo(scaleButtonGroup);
+    $(`<button class="btn btn-outline-secondary" id="${ids.buttons.linearScale}">Linear</button>`).appendTo(scaleButtonGroup);
+
+    // subsetting options
+    $('<div/>').appendTo(plotOptions)
+        .attr('id', ids.plotOptionGroups.differentiation)
+        .html('Subset');
+    $('<div/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
+        .attr('class', 'btn-group btn-group-sm');
+    let subsetButtonGroup = $(`#${ids.plotOptionGroups.differentiation} .btn-group`);
+    $(`<button class="btn btn-outline-secondary" id="${ids.buttons.noDiff}">None</button>`).appendTo(subsetButtonGroup);
+    $(`<button class="btn btn-outline-secondary" id="${ids.buttons.sexDiff}">Sex</button>`).appendTo(subsetButtonGroup);
+
+
+    // <button type="button" class="btn btn-outline-secondary" id="violin-plot-root-svg-asc-alphasort">ABC</button>
+
+    // plotOptions.append(`<div id="${ids.plotOptionGroups.sort}">Sort</div>`);
+    // let sortOptions = $(`#${ids.plotOptionGroups.sort}`);
+    // sortOptions.append('<div class="btn-group btn-group-sm"></div>');
+
+    // Object.values(ids.plotOptionGroups).forEach(x=>plotOptions.append('<div>').attr('id', `${x}`));
+
+
     // plot options modal
-    toolbar.createButton(ids.buttons.plotOptions, 'fa-sliders-h');
-    let plotOptionsButton = select(`#${ids.buttons.plotOptions}`)
-        .on('mouseover', ()=>{toolbar.tooltip.show('Plot Options');})
-        .on('mouseout', ()=>{toolbar.tooltip.hide();});
-    plotOptionsButton.on('click', (d, i, nodes)=>{
-        $(`#${ids.plotOptionsModal}`).modal('show');
-    });
+    // toolbar.createButton(ids.buttons.plotOptions, 'fa-sliders-h');
+    // let plotOptionsButton = select(`#${ids.buttons.plotOptions}`)
+    //     .on('mouseover', ()=>{toolbar.tooltip.show('Plot Options');})
+    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
+    // plotOptionsButton.on('click', (d, i, nodes)=>{
+    //     $(`#${ids.plotOptionsModal}`).modal('show');
+    // });
 
     selectAll(`#${ids.plotOptionsModal} .modal-body button`).classed('active', false);
 

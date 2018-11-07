@@ -57,7 +57,7 @@
             </div>
 
             <!-- plot option modal -->
-            <div class="modal fade" id="gene-expr-vplot-option-modal" tabindex="-1" role="dialog" aria-labelledby="Gene Expr Violin Plot Tissue Filter Modal" aria-hidden="true">
+<!--             <div class="modal fade" id="gene-expr-vplot-option-modal" tabindex="-1" role="dialog" aria-labelledby="Gene Expr Violin Plot Tissue Filter Modal" aria-hidden="true">
                 <div class="modal-dialog modal-sm" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -66,31 +66,41 @@
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
-                        <div class="modal-body" id="violin-plot-root-option-modal-body">
-                            <h6>Scale</h6>
-                            <div class="btn-group" role="group" aria-label="violin plot scale selector" id="violin-plot-root-svg-option-scale">
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="violin-plot-root-svg-log-scale">Log</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="violin-plot-root-svg-linear-scale">Linear</button>
+                        <div class="modal-body container-fluid" id="violin-plot-root-option-modal-body">
+                            <div class="row">
+                                <h6>Scale</h6>
+                            </div>
+                            <div class="row">
+                                <div class="btn-group btn-group-sm" role="group" aria-label="violin plot scale selector" id="violin-plot-root-svg-option-scale">
+                                    <button type="button" class="btn btn-outline-secondary" id="violin-plot-root-svg-log-scale">Log</button>
+                                    <button type="button" class="btn btn-outline-secondary" id="violin-plot-root-svg-linear-scale">Linear</button>
+                                </div>
                             </div>
                             <hr/>
-                            <div>Sort</div>
-                            <div class="btn-group" role="group" aria-label="violin plot sort methodology" id="violin-plot-root-svg-option-sort">
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="violin-plot-root-svg-asc-alphasort">ABC</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="violin-plot-root-svg-desc-alphasort">CBA</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="violin-plot-root-svg-asc-sort">123</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="violin-plot-root-svg-desc-sort">321</button>
+                            <h6>Sort</h6>
+                            <div id="violin-plot-root-svg-option-sort">
+                                    <label>Tissue Names</label>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-secondary" id="violin-plot-root-svg-asc-alphasort">ABC</button>
+                                        <button type="button" class="btn btn-outline-secondary" id="violin-plot-root-svg-desc-alphasort">CBA</button>
+                                    </div>
+                                    <label>Medians</label>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-secondary" id="violin-plot-root-svg-asc-sort">123</button>
+                                        <button type="button" class="btn btn-outline-secondary" id="violin-plot-root-svg-desc-sort">321</button>
+                                    </div>
                             </div>
                             <hr/>
-                            <div>Differentiation <span><i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i></span>
-                            </div>
-                            <div class="btn-group" role="group" aria-label="violin plot differentiation selector" id="violin-plot-root-svg-option-differentiation">
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="violin-plot-root-svg-no-diff">None</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="violin-plot-root-svg-sex-diff">Sex</button>
+                            <h6>Subset <span><i id="spinner" class="fas fa-sync fa-spin" style="display:none;"></i></span>
+                            </h6>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="violin plot differentiation selector" id="violin-plot-root-svg-option-differentiation">
+                                <button type="button" class="btn btn-outline-secondary" id="violin-plot-root-svg-no-diff">None</button>
+                                <button type="button" class="btn btn-outline-secondary" id="violin-plot-root-svg-sex-diff">Sex</button>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
     </body>
     <script>
         $(document).ready(function(){
@@ -98,6 +108,7 @@
         });
         $('.test-gene').click(function(e) {
             $('#violin-plot-root').empty();
+            $('#violin-plot-root-option-modal-body button').unbind('click');
             GeneExpressionViolinPlot.launch('violin-plot-root', 'violin-plot-tooltip', e.target.id);
         });
 
