@@ -69,7 +69,6 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
                 .append('g')
                     .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-
     Promise.all(promises)
         .then(function(args) {
             const tissues = parseTissues(args[0]);
@@ -162,6 +161,13 @@ function _setViolinPlotDimensions(width=1200, height=250, margin=_setViolinPlotM
     }
 }
 
+/**
+ * Adds toolbar allowing the user to control different plot options
+ * @param vplot {GroupedViolin} Violin plot object to add toolbar to
+ * @param tooltip {Tooltip} Violin plot tooltip
+ * @param ids {Dictionary} Dictionary of IDs relevant to the plot
+ * @param urls {Dictionary} Dictionary of URLs to use when making AJAX calls
+ */
 function _addToolbar(vplot, tooltip, ids, urls) {
     let toolbar = vplot.createToolbar(ids.toolbar, tooltip);
     toolbar.createDownloadSvgButton(ids.buttons.download, ids.svg, 'gtex-violin-plot.svg', ids.clone);
@@ -343,6 +349,7 @@ function _calcViolinPlotValues(data, useLog=true) {
  * @param data {JSON} from GTEx gene expression web service
  * @param colors {Dictionary} the violin color for genes
  * @param IdNameMap {Dictionary} mapping of tissueIds to tissue names
+ * @param useLog {Boolean} whether or not to calculate values in log
  */
 function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefined, useLog=true){
     const attr = 'geneExpression';
@@ -362,21 +369,39 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
     return data[attr];
 }
 
+/**
+ * populates tissue filter modal with tissues
+ * @param  vplot {GroupedViolin} violin plot object being modified
+ * @param  domId {String} ID of modal whose body is to be populated
+ * @param  ids {Dictionary} Dictionary of IDs relevant to plot
+ * @param  tissues {Array} Array of tissues returned from GTEx tissueSiteDetail API
+ */
 function _populateTissueFilter(vplot, domId, ids, tissues) {
     const tissueGroups = parseTissueSites(tissues);
     createTissueGroupMenu(tissueGroups, `${domId}-body`, false, true, 3);
     _addTissueFilterEvent(vplot, domId, ids, tissueGroups);
 }
 
+/**
+ * filters tissues displayed in the plot
+ * @param vplot {GroupedViolin} violin plot object being modified
+ * @param domId {String} modal ID
+ * @param ids {Dictionary} Dictionary of IDs relevant to plot
+ * @param tissues {Dictionary} Dictionary of tissue groups
+ */
 function _addTissueFilterEvent(vplot, domId, ids, tissues) {
     $(`#${domId}`).on('hidden.bs.modal', (e) => {
         let currSort = vplot.genePlotSort;
-
         let checkedTissues = parseTissueGroupMenu(tissues, `${domId}-body`, true);
         _filterTissues(vplot, ids, checkedTissues);
     });
 }
 
+/**
+ * Determines plot sort and updates plot view
+ * @param  vplot {GroupedViolin} violin plot object to be modified
+ * @param  ids {Dictionary} Dictionary of IDs relevant to plot
+ */
 function _sortAndUpdateData(vplot, ids) {
     switch (vplot.genePlotSort) {
         case ids.plotSorts.ascAlphaSort:
@@ -408,12 +433,25 @@ function _sortAndUpdateData(vplot, ids) {
     _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
 }
 
+/**
+ * Filters view to only specified tissues
+ * @param vplot {GroupedViolin} violin plot object to be modified
+ * @param ids {Dictionary} Dictionary of IDs relevant to plot
+ * @param tissues {Array} List of tissues to filter down to
+ */
 function _filterTissues(vplot, ids, tissues) {
     let filteredData = vplot.allData.filter(x => tissues.includes(x.group));
     vplot.data = filteredData;
     _sortAndUpdateData(vplot, ids);
 }
 
+/**
+ * Adds tissue color to the plot
+ * @param plot {GroupedViolin} violin plot object to be modified
+ * @param dom {d3 Selection} d3 selection of the svg to modify
+ * @param tissueDict {Dictionary} Dictionary of tissues containing color info
+ * @param loc {String} "top" || "bottom"; specified where to display the colors
+ */
 function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
     // move x-axis down to make space for the color band
     const xAxis = dom.select('.violin-x-axis');
