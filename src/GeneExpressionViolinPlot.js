@@ -84,6 +84,9 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
                 tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
                 tissueDict[x.tissueSiteDetail] = x;
             });
+            // TEMPORARY HACK
+            tissueIdColorMap.male='90a6c1';
+            tissueIdColorMap.female='efc94c';
 
             const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, tissueIdColorMap);
             const tissueGroups = violinPlotData.map(d => d.group);
@@ -100,7 +103,9 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             violinPlot.genePlotSort = ids.plotSorts.ascAlphaSort;
             violinPlot.allData = violinPlot.data.map(d=>d);
             violinPlot.gencodeId = gencodeId;
-            violinPlot.tissues = tissues;
+            violinPlot.tIdNameMap = tissueIdNameMap;
+            violinPlot.tIdColorMap = tissueIdColorMap;
+            violinPlot.tissueDict = tissueDict;
             violinPlot.scaleView = 'log';
 
             let width = dim.width;
@@ -282,9 +287,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         }
 
         let svg = select(`#${ids.root} svg g`);
-        let tissueDict = {};
-        Object.values(vplot.tissues).map(x=>{tissueDict[x.tissueSiteDetail] = x;});
-        _addViolinTissueColorBand(vplot, svg, tissueDict, 'bottom');
+        _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
     });
 
     // differentiation changing events
@@ -300,22 +303,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
             Promise.all(promises)
                 .then(function(args) {
-                    const tissueIdNameMap = {};
-                    const tissueIdColorMap = {};
-                    const tissueDict = {};
-                    vplot.tissues.forEach(x => {
-                        tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
-                        tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
-                        tissueDict[x.tissueSiteDetail] = x;
-                    });
-
-                    // TEMPORARY HACK
-                    tissueIdColorMap.female='efc94c';
-                    tissueIdColorMap.male='90a6c1';
-                    // tissueIdColorMap.male='3399cc';
-                    // tissueIdColorMap.female='c36188';
-                    // tissueIdColorMap.female='db7ed6';
-                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], tissueIdNameMap, tissueIdColorMap) : _parseGeneExpressionForViolin(args[0], tissueIdNameMap, tissueIdColorMap, false);
+                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.tIdColorMap) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.tIdColorMap, false);
                     const filteredTissues = vplot.data.map(d => d.group);
 
                     vplot.allData = violinPlotData.map(d=>d);
@@ -323,7 +311,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
                     vplot.reset();
                     let svg = select(`#${ids.root} svg g`);
-                    _addViolinTissueColorBand(vplot, svg, tissueDict, 'bottom');
+                    _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
                     $(`#${ids.toolbar}-plot-options button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
             });
@@ -332,22 +320,13 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
             Promise.all(promises)
                 .then(function(args) {
-                    const tissueIdNameMap = {};
-                    const tissueIdColorMap = {};
-                    const tissueDict = {};
-                    vplot.tissues.forEach(x => {
-                        tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
-                        tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
-                        tissueDict[x.tissueSiteDetail] = x;
-                    });
-                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], tissueIdNameMap, tissueIdColorMap) : _parseGeneExpressionForViolin(args[0], tissueIdNameMap, tissueIdColorMap, false);
+                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.tIdColorMap) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.tIdColorMap, false);
                     const filteredTissues = vplot.data.map(d => d.group);
-
                     vplot.allData = violinPlotData.map(d=>d);
                     vplot.data = violinPlotData.filter(d=>filteredTissues.indexOf(d.group) != -1);
                     vplot.reset();
                     let svg = select(`#${ids.root} svg g`);
-                    _addViolinTissueColorBand(vplot, svg, tissueDict, 'bottom');
+                    _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
                     $(`#${ids.toolbar} button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
             });
@@ -434,9 +413,7 @@ function _sortAndUpdateData(vplot, ids) {
     let xDomain = vplot.data.map((d) => d.group);
     vplot.updateXScale(xDomain);
     let svg = select(`#${ids.root} svg g`);
-    let tissueDict = {};
-    Object.values(vplot.tissues).map(x=>{tissueDict[x.tissueSiteDetail] = x;});
-    _addViolinTissueColorBand(vplot, svg, tissueDict, 'bottom');
+    _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
 }
 
 function _filterTissues(vplot, ids, tissues) {
