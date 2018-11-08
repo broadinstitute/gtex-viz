@@ -232,6 +232,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     let subsetButtonGroup = $(`#${ids.plotOptionGroups.differentiation} .btn-group`);
     $(`<button class="btn btn-outline-secondary" id="${ids.buttons.noDiff}">None</button>`).appendTo(subsetButtonGroup);
     $(`<button class="btn btn-outline-secondary" id="${ids.buttons.sexDiff}">Sex</button>`).appendTo(subsetButtonGroup);
+    // adding spinner
+    $(`<span><i id="spinner" class="fas fa-sync fa-spin" style="margin-left: 5px; display: none;"></i></span>`).appendTo(`#${ids.plotOptionGroups.differentiation}`);
 
     selectAll(`#${ids.plotOptionsModal} .modal-body button`).classed('active', false);
 
@@ -290,8 +292,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     // differentiation changing events
     $(`#${ids.plotOptionGroups.differentiation} button`).on('click', (e)=>{
         if ($(e.currentTarget).hasClass('active')) return;
-        $(`#${ids.plotOptionsModal} .modal-body button`).prop('disabled', true);
-        $(`#${ids.plotOptionsModal} #spinner`).show();
+        $(`#${ids.toolbar}-plot-options button`).prop('disabled', true);
+        $(`#${ids.toolbar} #spinner`).show();
         selectAll(`#${ids.plotOptionGroups.differentiation} button`).classed('active', false);
         select(`button#${e.target.id}`).classed('active', true);
 
@@ -324,8 +326,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     vplot.reset();
                     let svg = select(`#${ids.root} svg g`);
                     _addViolinTissueColorBand(vplot, svg, tissueDict, 'bottom');
-                    $(`#${ids.plotOptionsModal} .modal-body button`).prop('disabled', false);
-                    $(`#${ids.plotOptionsModal} #spinner`).hide();
+                    $(`#${ids.toolbar}-plot-options button`).prop('disabled', false);
+                    $(`#${ids.toolbar} #spinner`).hide();
             });
         } else {
             const promises = [ json(urls.geneExp + vplot.gencodeId) ];
@@ -347,8 +349,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     vplot.data = violinPlotData.filter(d=>filteredTissues.indexOf(d.group) != -1);
                     vplot.differentiated = false;
                     vplot.reset();
-                    $(`#${ids.plotOptionsModal} .modal-body button`).prop('disabled', false);
-                    $(`#${ids.plotOptionsModal} #spinner`).hide();
+                    $(`#${ids.toolbar} button`).prop('disabled', false);
+                    $(`#${ids.toolbar} #spinner`).hide();
             });
         }
     });
