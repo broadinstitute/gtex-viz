@@ -169,26 +169,38 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     let toolbar = vplot.createToolbar(ids.toolbar, tooltip);
     toolbar.createDownloadSvgButton(ids.buttons.download, ids.svg, 'gtex-violin-plot.svg', ids.clone);
 
-    let plotOptions = $(`#${ids.toolbar}`).append('<div>')
-        .attr('class', 'btn-group btn-group-sm')
-        .attr('id', `${ids.toolbar}-plot-options`);
-    plotOptions.append('<div>Options</div>');
-    // sort options
+    // adding bootstrap classes to toolbar
+    $(`#${ids.toolbar}`).addClass('row');
+    $(`#${ids.toolbar} .btn-group`).addClass('col-xs-12 col-lg-1');
+
+    $('<div></div>').appendTo(`#${ids.toolbar}`)
+        .attr('id', `${ids.toolbar}-plot-options`)
+        .attr('class', 'col-lg-11');
+    let plotOptions = $(`#${ids.toolbar}-plot-options`);
+
+    // sort options -- tissue name sorts
     $('<div/>').appendTo(plotOptions)
-        .attr('id', ids.plotOptionGroups.sort);
-    // tissue name sorts
-    $('<label/>').appendTo(`#${ids.plotOptionGroups.sort}`)
+        .attr('class', `${ids.plotOptionGroups.sort} col-xs-12 col-lg-3 col-xl-2`)
+        .attr('id', `vplot-alpha-sorts`);
+    $('<span/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-alpha-sorts`)
+        .attr('class', 'vplot-option-label')
         .html('Tissue Sort');
-    $('<div/>').appendTo(`#${ids.plotOptionGroups.sort}`)
+    $('<div/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-alpha-sorts`)
         .attr('class', 'btn-group btn-group-sm')
         .attr('id', `${ids.plotOptionGroups.sort}-alpha`);
     let alphaSortButtonGroup = $(`#${ids.plotOptionGroups.sort}-alpha.btn-group`);
     $(`<button class="btn btn-outline-secondary fa fa-sort-alpha-down" id="${ids.buttons.ascAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
     $(`<button class="btn btn-outline-secondary fa fa-sort-alpha-up" id="${ids.buttons.descAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
-    // median sorts
-    $('<label/>').appendTo(`#${ids.plotOptionGroups.sort}`)
+
+
+    // sort options -- median sorts
+    $('<div/>').appendTo(plotOptions)
+        .attr('class', `${ids.plotOptionGroups.sort} col-xs-12 col-lg-3 col-xl-2`)
+        .attr('id', `vplot-num-sorts`);
+    $('<span/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-num-sorts`)
+        .attr('class', 'vplot-option-label')
         .html('Median Sort');
-    $('<div/>').appendTo(`#${ids.plotOptionGroups.sort}`)
+    $('<div/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-num-sorts`)
         .attr('class', 'btn-group btn-group-sm')
         .attr('id', `${ids.plotOptionGroups.sort}-num`);
     let numSortButtonGroup = $(`#${ids.plotOptionGroups.sort}-num.btn-group`);
@@ -198,6 +210,9 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     // scale options
     $('<div/>').appendTo(plotOptions)
         .attr('id', ids.plotOptionGroups.scale)
+        .attr('class', 'col-xs-12 col-lg-3 col-xl-2');
+    $('<span/>').appendTo(`#${ids.plotOptionGroups.scale}`)
+        .attr('class', 'vplot-option-label')
         .html('Scale');
     $('<div/>').appendTo(`#${ids.plotOptionGroups.scale}`)
         .attr('class', 'btn-group btn-group-sm');
@@ -208,31 +223,15 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     // subsetting options
     $('<div/>').appendTo(plotOptions)
         .attr('id', ids.plotOptionGroups.differentiation)
+        .attr('class', 'col-xs-12 col-lg-3 col-xl-5')
+    $('<span/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
+        .attr('class', 'vplot-option-label')
         .html('Subset');
     $('<div/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
         .attr('class', 'btn-group btn-group-sm');
     let subsetButtonGroup = $(`#${ids.plotOptionGroups.differentiation} .btn-group`);
     $(`<button class="btn btn-outline-secondary" id="${ids.buttons.noDiff}">None</button>`).appendTo(subsetButtonGroup);
     $(`<button class="btn btn-outline-secondary" id="${ids.buttons.sexDiff}">Sex</button>`).appendTo(subsetButtonGroup);
-
-
-    // <button type="button" class="btn btn-outline-secondary" id="violin-plot-root-svg-asc-alphasort">ABC</button>
-
-    // plotOptions.append(`<div id="${ids.plotOptionGroups.sort}">Sort</div>`);
-    // let sortOptions = $(`#${ids.plotOptionGroups.sort}`);
-    // sortOptions.append('<div class="btn-group btn-group-sm"></div>');
-
-    // Object.values(ids.plotOptionGroups).forEach(x=>plotOptions.append('<div>').attr('id', `${x}`));
-
-
-    // plot options modal
-    // toolbar.createButton(ids.buttons.plotOptions, 'fa-sliders-h');
-    // let plotOptionsButton = select(`#${ids.buttons.plotOptions}`)
-    //     .on('mouseover', ()=>{toolbar.tooltip.show('Plot Options');})
-    //     .on('mouseout', ()=>{toolbar.tooltip.hide();});
-    // plotOptionsButton.on('click', (d, i, nodes)=>{
-    //     $(`#${ids.plotOptionsModal}`).modal('show');
-    // });
 
     selectAll(`#${ids.plotOptionsModal} .modal-body button`).classed('active', false);
 
@@ -255,10 +254,10 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
 
     // sort changing events
-    $(`#${ids.plotOptionGroups.sort} button`).on('click', (e)=>{
+    $(`.${ids.plotOptionGroups.sort} button`).on('click', (e)=>{
         if ($(e.currentTarget).hasClass('active')) return;
         vplot.genePlotSort = e.target.id.replace(`${ids.svg}-`, '');
-        selectAll(`#${ids.plotOptionGroups.sort} button`).classed('active', false);
+        selectAll(`.${ids.plotOptionGroups.sort} button`).classed('active', false);
         select(`button#${e.target.id}`).classed('active', true);
         _sortAndUpdateData(vplot, ids);
     });
