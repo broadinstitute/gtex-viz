@@ -26,25 +26,25 @@
             color: #0056b3;
         }
 
-        #violin-plot-root-toolbar-plot-options {
+        #gene-expr-vplot-toolbar-plot-options {
             display: inline-flex;
         }
 
-        #violin-plot-root-toolbar-plot-options .btn-group.btn-group-sm button {
+        #gene-expr-vplot-toolbar-plot-options .btn-group.btn-group-sm button {
             font-size: 11px;
         }
 
-        #violin-plot-root-toolbar-plot-options label {
+        #gene-expr-vplot-toolbar-plot-options label {
             margin-bottom: 0;
         }
 
-        #violin-plot-root-toolbar {
+        #gene-expr-vplot-toolbar {
             border-bottom: 1px solid #e2e2e2;
             border-top: 1px solid #e2e2e2;
             padding: 5 0 5 0;
         }
 
-        .vplot-option-label {
+        .gene-expr-vplot-option-label {
             padding-right: 5;
             font-size: 13px;
             font-variant: all-small-caps;
@@ -61,7 +61,7 @@
         </span>
 
         <!-- expression boxplot div -->
-            <div id="violin-plot-root"></div>
+            <div id="gene-expr-vplot"></div>
 
             <!-- tissue filter modal -->
             <div class="modal fade" id="gene-expr-vplot-filter-modal" tabindex="-1" role="dialog" aria-labelledby="Gene Expr Violin Plot Tissue Filter Modal" aria-hidden="true">
@@ -82,12 +82,11 @@
     </body>
     <script>
         $(document).ready(function(){
-          GeneExpressionViolinPlot.launch('violin-plot-root', 'violin-plot-tooltip', 'ENSG00000248746.1');
+          GeneExpressionViolinPlot.launch('gene-expr-vplot', 'gene-expr-vplot-tooltip', 'ENSG00000248746.1');
         });
         $('.test-gene').click(function(e) {
-            $('#violin-plot-root').empty();
-            $('#violin-plot-root-option-modal-body button').unbind('click');
-            GeneExpressionViolinPlot.launch('violin-plot-root', 'violin-plot-tooltip', e.target.id);
+            $('#gene-expr-vplot').empty();
+            GeneExpressionViolinPlot.launch('gene-expr-vplot', 'gene-expr-vplot-tooltip', e.target.id);
         });
 
     </script>

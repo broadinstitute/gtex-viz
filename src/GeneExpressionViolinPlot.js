@@ -24,24 +24,23 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
         toolbar: `${rootId}-toolbar`,
         clone: `${rootId}-svg-clone`, // for user download
         buttons: {
-            download: `${rootId}-svg-download`,
-            plotOptions: `${rootId}-svg-option-modal`,
-            filter: `${rootId}-svg-filter`,
-            // modal buttons
-            ascAlphaSort: `${rootId}-svg-asc-alphasort`,
-            descAlphaSort: `${rootId}-svg-desc-alphasort`,
-            ascSort: `${rootId}-svg-asc-sort`,
-            descSort: `${rootId}-svg-desc-sort`,
-            logScale: `${rootId}-svg-log-scale`,
-            linearScale: `${rootId}-svg-linear-scale`,
-            noDiff: `${rootId}-svg-no-diff`,
-            sexDiff: `${rootId}-svg-sex-diff`
+            download: `${rootId}-download`,
+            plotOptions: `${rootId}-option-modal`,
+            filter: `${rootId}-filter`,
+            // plot option buttons
+            ascAlphaSort: `${rootId}-asc-alphasort`,
+            descAlphaSort: `${rootId}-desc-alphasort`,
+            ascSort: `${rootId}-asc-sort`,
+            descSort: `${rootId}-desc-sort`,
+            logScale: `${rootId}-log-scale`,
+            linearScale: `${rootId}-linear-scale`,
+            noDiff: `${rootId}-no-diff`,
+            sexDiff: `${rootId}-sex-diff`
         },
-        plotOptionsModal: 'gene-expr-vplot-option-modal',
         plotOptionGroups: {
-            scale: `${rootId}-svg-option-scale`,
-            sort: `${rootId}-svg-option-sort`,
-            differentiation: `${rootId}-svg-option-differentiation`
+            scale: `${rootId}-option-scale`,
+            sort: `${rootId}-option-sort`,
+            differentiation: `${rootId}-option-differentiation`
         },
         plotSorts: {
             ascAlphaSort: 'asc-alphasort',
@@ -49,7 +48,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls()) {
             ascSort: 'asc-sort',
             descSort: 'desc-sort'
         },
-        tissueFilter: 'gene-expr-vplot-filter-modal'
+        tissueFilter: `${rootId}-filter-modal`
 
     };
                                         // top, right, bottom, left
@@ -188,7 +187,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .attr('class', `${ids.plotOptionGroups.sort} col-xs-12 col-lg-3 col-xl-2`)
         .attr('id', `vplot-alpha-sorts`);
     $('<span/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-alpha-sorts`)
-        .attr('class', 'vplot-option-label')
+        .attr('class', `${ids.root}-option-label`)
         .html('Tissue Sort');
     $('<div/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-alpha-sorts`)
         .attr('class', 'btn-group btn-group-sm')
@@ -203,7 +202,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .attr('class', `${ids.plotOptionGroups.sort} col-xs-12 col-lg-3 col-xl-2`)
         .attr('id', `vplot-num-sorts`);
     $('<span/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-num-sorts`)
-        .attr('class', 'vplot-option-label')
+        .attr('class', `${ids.root}-option-label`)
         .html('Median Sort');
     $('<div/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-num-sorts`)
         .attr('class', 'btn-group btn-group-sm')
@@ -217,7 +216,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .attr('id', ids.plotOptionGroups.scale)
         .attr('class', 'col-xs-12 col-lg-3 col-xl-2');
     $('<span/>').appendTo(`#${ids.plotOptionGroups.scale}`)
-        .attr('class', 'vplot-option-label')
+        .attr('class', `${ids.root}-option-label`)
         .html('Scale');
     $('<div/>').appendTo(`#${ids.plotOptionGroups.scale}`)
         .attr('class', 'btn-group btn-group-sm');
@@ -230,7 +229,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .attr('id', ids.plotOptionGroups.differentiation)
         .attr('class', 'col-xs-12 col-lg-3 col-xl-5')
     $('<span/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
-        .attr('class', 'vplot-option-label')
+        .attr('class', `${ids.root}-option-label`)
         .html('Subset');
     $('<div/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
         .attr('class', 'btn-group btn-group-sm');
@@ -263,7 +262,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     // sort changing events
     $(`.${ids.plotOptionGroups.sort} button`).on('click', (e)=>{
         if ($(e.currentTarget).hasClass('active')) return;
-        vplot.genePlotSort = e.target.id.replace(`${ids.svg}-`, '');
+        vplot.genePlotSort = e.target.id.replace(`${ids.root}-`, '');
         selectAll(`.${ids.plotOptionGroups.sort} button`).classed('active', false);
         select(`button#${e.target.id}`).classed('active', true);
         _sortAndUpdateData(vplot, ids);
