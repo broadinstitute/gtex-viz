@@ -94,7 +94,8 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             });
             let tooltip = violinPlot.createTooltip(ids.tooltip);
 
-            // adding property to keep track of sorting and filtering specifically for this plot
+            // adding properties to keep track of sorting and filtering specifically for this plot
+            violinPlot.sortData = violinPlot.data.map(d=>d); // sort any differentiated data by the aggregate data, too
             violinPlot.genePlotSort = ids.plotSorts.ascAlphaSort;
             violinPlot.allData = violinPlot.data.map(d=>d);
             violinPlot.gencodeId = gencodeId;
@@ -402,31 +403,34 @@ function _addTissueFilterEvent(vplot, domId, ids, tissues) {
  * @param  ids {Dictionary} Dictionary of IDs relevant to plot
  */
 function _sortAndUpdateData(vplot, ids) {
+    let filteredTissues = vplot.data.map((d)=>d.group);
+    let sortData = vplot.sortData.filter((d) => filteredTissues.includes(d.group));
+
     switch (vplot.genePlotSort) {
         case ids.plotSorts.ascAlphaSort:
-            vplot.data.sort((a,b) => {
+            sortData.sort((a,b) => {
                 if (a.group < b.group) return -1;
                 else if (a.group > b.group) return 1;
                 else return 0;
             });
             break;
         case ids.plotSorts.descAlphaSort:
-            vplot.data.sort((a,b) => {
+            sortData.sort((a,b) => {
                 if (a.group < b.group) return 1;
                 else if (a.group > b.group) return -1;
                 else return 0;
             });
             break;
         case ids.plotSorts.ascSort:
-            vplot.data.sort((a,b) => { return a.median - b.median; });
+            sortData.sort((a,b) => { return a.median - b.median; });
             break;
         case ids.plotSorts.descSort:
-            vplot.data.sort((a,b) => { return b.median - a.median; });
+            sortData.sort((a,b) => { return b.median - a.median; });
             break;
         default:
     }
 
-    let xDomain = vplot.data.map((d) => d.group);
+    let xDomain = sortData.map((d) => d.group);
     vplot.updateXScale(xDomain);
     let svg = select(`#${ids.root} svg g`);
     _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
@@ -455,9 +459,9 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
     // move x-axis down to make space for the color band
     const xAxis = dom.select('.violin-x-axis');
     xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 5)`);
+
     // add tissue colors
     const tissueG = dom.append("g");
-
     tissueG.selectAll(".tcolor").data(plot.scale.x.domain())
         .enter()
         .append("rect")
@@ -468,5 +472,5 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .attr("height", 5)
         .style("stroke-width", 0)
         .style("fill", (g)=>`#${tissueDict[g].colorHex}`)
-        .style("opacity", 0.5);
+        .style("opacity", 0.6);
 }
