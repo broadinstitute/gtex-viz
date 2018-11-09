@@ -274,7 +274,8 @@ export function ldPlot(par=ldPlotDemoConfig){
     let inWidth = par.width - (par.marginLeft + par.marginRight);
     let inHeight = par.width - (par.marginTop + par.marginBottom);
     inWidth = inWidth>inHeight?inHeight:inWidth; // adjust the dimensions based on the minimum required space
-    let ldCanvas = new HalfMap(par.data, par.cutoff, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
+    let ldCanvas = new HalfMap(par.data, par.cutoff, par.useLog, par.logBase, par.colorScheme);
+    ldCanvas.addTooltip(par.id);
     let canvas = createCanvas(par.id, par.width, par.width, margin);
     let svg = createSvg(par.id, par.width, par.width, margin, undefined, "absolute");
     ldCanvas.draw(canvas, svg, {w:inWidth, top: margin.top, left: margin.left}, [0, 1], par.showLabels, par.labelAngle);
@@ -365,7 +366,8 @@ export function bubblemap(par=bubblemapDemoConfig){
     let inWidth = par.width - (par.labels.row.width + par.marginLeft + par.marginRight);
     let inHeight = par.height - (par.labels.column.height + par.marginTop + par.marginBottom);
     if(par.useCanvas) {
-        let bmapCanvas = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, canvasId+"-tooltip");
+        let bmapCanvas = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme);
+        bmapCanvas.addTooltip(canvasId);
         let canvas = createCanvas(par.id, par.width, par.height, margin);
         bmapCanvas.drawCanvas(
             canvas,
@@ -375,7 +377,8 @@ export function bubblemap(par=bubblemapDemoConfig){
         )
     }
     else {
-        let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-tooltip");
+        let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme);
+        bmap.addTooltip(par.id);
         let svg = createSvg(par.id, par.width, par.height, margin);
         bmap.drawSvg(svg, {w:inWidth, h:inHeight, top:0, left:0}, par.colorScaleDomain, 0, par.labels);
         bmap.drawColorLegend(svg, {x: 0, y: -40}, 3, "NES");

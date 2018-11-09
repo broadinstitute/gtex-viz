@@ -14,7 +14,7 @@ import Tooltip from "./Tooltip";
 import {setColorScale, drawColorLegend} from "./colors";
 
 export default class BubbleMap {
-    constructor(data, useLog=true, logBase=10, colorScheme="Reds", tooltipId = "tooltip"){
+    constructor(data, useLog=true, logBase=10, colorScheme="Reds"){
         this.data = data;
         this.useLog = useLog;
         this.logBase = logBase;
@@ -26,13 +26,16 @@ export default class BubbleMap {
         this.colorScale = undefined;
         this.bubbleScale = undefined;
 
-        // peripheral features
-        // Tooltip
-        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
+        this.toolbar = undefined;
+        this.tooltip = undefined;
+    }
+
+    addTooltip(parentId){
+        let parent = $(`#${parentId}`);
+        let tooltipId = parentId + '-tooltip';
+        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo(parent);
         this.tooltip = new Tooltip(tooltipId);
         select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
-
-        this.toolbar = undefined;
     }
 
     /**

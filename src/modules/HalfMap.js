@@ -21,7 +21,7 @@ export default class HalfMap{
      * @param colorScheme
      * @param tooltipId
      */
-    constructor(data, cutoff = 0.0, useLog=true, logBase=10, colorScheme="Greys", tooltipId="tooltip", colorScaleDomain=[0,1]){
+    constructor(data, cutoff = 0.0, useLog=true, logBase=10, colorScheme="Greys", colorScaleDomain=[0,1]){
         this.data= this._unique(data); // remove redundancy
         this.dataDict = {};
         this.cutoff = cutoff;
@@ -42,8 +42,12 @@ export default class HalfMap{
         this.labelScale = undefined;
 
         // peripheral features
-        //// the tooltip
-        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
+        this.tooltip = undefined;
+    }
+
+    addTooltip(parentId){
+        let tooltipId = parentId + '-tooltip';
+        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($(`#${parentId}`));
         this.tooltip = new Tooltip(tooltipId, false, 40, 0);
         select(`#${tooltipId}`).classed('half-map-tooltip', true);
     }
