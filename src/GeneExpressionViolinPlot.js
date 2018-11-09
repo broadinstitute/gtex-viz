@@ -73,18 +73,17 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
         .then(function(args) {
             const tissues = parseTissues(args[0]);
             const tissueIdNameMap = {};
-            const tissueIdColorMap = {};
+            const subsetGroupColorMap = {
+                female: 'e67f7b',
+                male: '70bcd2'
+            };
             const tissueDict = {};
             tissues.forEach(x => {
                 tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
-                tissueIdColorMap[x.tissueSiteDetailId] = x.colorHex;
                 tissueDict[x.tissueSiteDetail] = x;
             });
-            // TEMPORARY HACK
-            tissueIdColorMap.male='90a6c1';
-            tissueIdColorMap.female='efc94c';
 
-            const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, tissueIdColorMap);
+            const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, subsetGroupColorMap);
             const tissueGroups = violinPlotData.map(d => d.group);
             let violinPlot = new GroupedViolin(violinPlotData);
             // alphabetically sort by default
@@ -100,13 +99,13 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             violinPlot.allData = violinPlot.data.map(d=>d);
             violinPlot.gencodeId = gencodeId;
             violinPlot.tIdNameMap = tissueIdNameMap;
-            violinPlot.tIdColorMap = tissueIdColorMap;
+            violinPlot.subsetGroupColorMap = subsetGroupColorMap;
             violinPlot.tissueDict = tissueDict;
             violinPlot.scaleView = 'log';
 
             let width = dim.width;
             let height = dim.height;
-            let xPadding = 0.1;
+            let xPadding = 0.2;
             let xDomain = violinPlot.data.map(d => d.group);
             let yDomain =[];
             let yLabel = 'log10(TPM)';
@@ -301,7 +300,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
             Promise.all(promises)
                 .then(function(args) {
-                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.tIdColorMap) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.tIdColorMap, false);
+                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.subsetGroupColorMap) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.subsetGroupColorMap, false);
                     const filteredTissues = vplot.data.map(d => d.group);
 
                     vplot.allData = violinPlotData.map(d=>d);
@@ -318,7 +317,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
             Promise.all(promises)
                 .then(function(args) {
-                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.tIdColorMap) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.tIdColorMap, false);
+                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.subsetGroupColorMap) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.subsetGroupColorMap, false);
                     const filteredTissues = vplot.data.map(d => d.group);
                     vplot.allData = violinPlotData.map(d=>d);
                     vplot.data = violinPlotData.filter(d=>filteredTissues.indexOf(d.group) != -1);
@@ -469,5 +468,5 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .attr("height", 5)
         .style("stroke-width", 0)
         .style("fill", (g)=>`#${tissueDict[g].colorHex}`)
-        .style("opacity", 0.7);
+        .style("opacity", 0.5);
 }
