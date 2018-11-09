@@ -387,7 +387,7 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
         .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 17)
         .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2 + 2)
         .attr('fill', '#ffffff')
-        .style('font-size', 8)
+        .style('font-size', `${bmap.yScale.bandwidth()*0.9}px`)
         .style('text-anchor', 'center')
 
 }
