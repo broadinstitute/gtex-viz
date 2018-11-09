@@ -1,0 +1,70 @@
+<head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=EB+Garamond|Libre+Franklin|Open+Sans|Roboto|Zilla+Slab" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/css/buttons.css">
+    <link rel="stylesheet" type="text/css" href="/css/violin.css">
+
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
+    <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
+    <script src="/build/js/gene-expression-violin-plot.bundle.dev.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="/css/tissueGroup.css">
+    <link rel="stylesheet" type="text/css" href="/css/geneExpViolin.css">
+    <style>
+        .test-gene {
+            font-size: 12px;
+            color: #007bff;
+        }
+
+        .test-gene:hover {
+            cursor: pointer;
+            text-decoration: underline;
+            color: #0056b3;
+        }
+    </style>
+
+    <body class="container-fluid" style="margin-top:20px;">
+        <h3>GTEx Expression Violin Plot</h3>
+        <hr>
+        <span>
+            <span class="test-gene" id="ENSG00000248746.1">ACTN3</span> |
+            <span class="test-gene" id="ENSG00000171862.5">PTEN</span> |
+            <span class="test-gene" id="ENSG00000137675.4">MMP27</span>
+        </span>
+
+        <!-- expression boxplot div -->
+            <div id="gene-expr-vplot"></div>
+
+            <!-- tissue filter modal -->
+            <div class="modal fade" id="gene-expr-vplot-filter-modal" tabindex="-1" role="dialog" aria-labelledby="Gene Expr Violin Plot Tissue Filter Modal" aria-hidden="true">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Tissue Filter</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row" id="gene-expr-vplot-filter-modal-body"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </body>
+    <script>
+        $(document).ready(function(){
+          GeneExpressionViolinPlot.launch('gene-expr-vplot', 'gene-expr-vplot-tooltip', 'ENSG00000248746.1');
+        });
+        $('.test-gene').click(function(e) {
+            $('#gene-expr-vplot').empty();
+            GeneExpressionViolinPlot.launch('gene-expr-vplot', 'gene-expr-vplot-tooltip', e.target.id);
+        });
+
+    </script>
+</head>

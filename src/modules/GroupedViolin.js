@@ -56,7 +56,7 @@ export default class GroupedViolin {
      * @param height {Float}
      * @param xPadding {Float} padding of the x axis
      * @param xDomain {List} the order of X groups
-     * @param yDomain  {List} the min and max values of the y domain
+     * @param yDomain  {List} the min and max values of the y domain. Set to empty array or undefined to auto-calculate.
      * @param yLabel {String}
      * @param showX
      * @param showSubX
@@ -65,18 +65,31 @@ export default class GroupedViolin {
      * @param showDivider
      * @param showLegend
      * @param showSize
+     * @param sortSubX
      */
 
     render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis",
            showX=true, showSubX=true, subXAngle=0,
-           showWhisker=false, showDivider=false, showLegend=false, showSize=false){
+           showWhisker=false, showDivider=false, showLegend=false, showSize=false, sortSubX=false){
 
         // define the reset for this plot
         this.reset = () => {
             dom.selectAll("*").remove();
-            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize);
+            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
         };
 
+        this.updateYScale = function(yLabel=undefined, yScale=undefined) {
+            dom.selectAll("*").remove();
+            if (yScale === undefined) yScale = [];
+            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
+        };
+
+        this.updateXScale = function(xDomain=undefined) {
+            if (xDomain === undefined) console.error('updateXScale called without new X domain');
+            dom.selectAll("*").remove();
+            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
+
+        };
 
         // defines the X, subX, Y, Z scales
         if (yDomain===undefined || 0 == yDomain.length){
@@ -131,6 +144,14 @@ export default class GroupedViolin {
             }
 
             // defines the this.scale.subx based on this.scale.x
+            if (sortSubX) {
+                entries.sort((a,b) => {
+                    if (a.label < b.label) return -1;
+                    else if (a.label > b.label) return 1;
+                    return 0;
+                });
+            }
+
             this.scale.subx
                 .domain(entries.map((d) => d.label))
                 .rangeRound([this.scale.x(group), this.scale.x(group) + this.scale.x.bandwidth()]);
@@ -193,11 +214,9 @@ export default class GroupedViolin {
 
         // adds the text label for the y axis
         dom.append("text")
-            .attr("y", -40) // todo: avoid hard-coded value
-            .attr("x", -100)
             .attr("class", "violin-axis-label")
-            .attr("text-anchor", "start")
-            .attr("transform", "rotate(-90)")
+            .attr("text-anchor", "center")
+            .attr("transform", `translate(-${buffer * 2 + select('.violin-y-axis').node().getBBox().width}, ${height/2}) rotate(-90)`)
             .text(yLabel);
 
         // plot mouse events
@@ -389,83 +408,86 @@ export default class GroupedViolin {
         const eDomain = extent(entry.values); // get the max and min in entry.values
         const vertices = kde(entry.values).filter((d)=>d[0]>eDomain[0]&&d[0]<eDomain[1]); // filter the vertices that aren't in the entry.values
 
-        // define the z scale -- the violin width
-        let zMax = max(vertices, (d)=>Math.abs(d[1])); // find the abs(value) in entry.values
-        this.scale.z
-            .domain([-zMax, zMax])
-            .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
+        // violin plot and box can only be drawn when vertices exist and there are no NaN points
+        if (vertices.length && this._validVertices(vertices)) {
+            // define the z scale -- the violin width
+            let zMax = max(vertices, (d)=>Math.abs(d[1])); // find the abs(value) in entry.values
+            this.scale.z
+                .domain([-zMax, zMax])
+                .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
 
-        // visual rendering
-        const violinG = dom.append("g")
-            .attr('id', `violin${gIndex}-${entry.label}`);
+            // visual rendering
+            const violinG = dom.append("g")
+                .attr('id', `violin${gIndex}-${entry.label}`);
 
-        let violin = area()
-            .x0((d) => this.scale.z(d[1]))
-            .x1((d) => this.scale.z(-d[1]))
-            .y((d) => this.scale.y(d[0]));
+            let violin = area()
+                .x0((d) => this.scale.z(d[1]))
+                .x1((d) => this.scale.z(-d[1]))
+                .y((d) => this.scale.y(d[0]));
+            const vPath = violinG.append("path")
+                .datum(vertices)
+                .attr("d", violin)
+                .classed("violin", true)
+                .style("fill", ()=>{
+                    if (entry.color !== undefined) return entry.color;
+                    // alternate the odd and even colors, maybe we don't want this feature
+                    if(gIndex%2 == 0) return "#90c1c1";
+                    return "#94a8b8";
+                });
 
-        const vPath = violinG.append("path")
-            .datum(vertices)
-            .attr("d", violin)
-            .classed("violin", true)
-            .style("fill", ()=>{
-                if (entry.color !== undefined) return entry.color;
-                // alternate the odd and even colors, maybe we don't want this feature
-                if(gIndex%2 == 0) return "#90c1c1";
-                return "#94a8b8";
+            // boxplot
+            const q1 = quantile(entry.values, 0.25);
+            const q3 = quantile(entry.values, 0.75);
+            const z = this.scale.z.domain()[1]/3;
+
+            if(showWhisker){
+                // the upper and lower limits of entry.values
+                const iqr = Math.abs(q3-q1);
+                const upper = max(entry.values.filter((d)=>d<q3+(iqr*1.5)));
+                const lower = min(entry.values.filter((d)=>d>q1-(iqr*1.5)));
+                dom.append("line")
+                    .classed("whisker", true)
+                    .attr("x1", this.scale.z(0))
+                    .attr("x2", this.scale.z(0))
+                    .attr("y1", this.scale.y(upper))
+                    .attr("y2", this.scale.y(lower))
+                    .style("stroke", "#fff");
+            }
+
+            // interquartile range
+            violinG.append("rect")
+                .attr("x", this.scale.z(-z))
+                .attr("y", this.scale.y(q3))
+                .attr("width", Math.abs(this.scale.z(-z)-this.scale.z(z)))
+                .attr("height", Math.abs(this.scale.y(q3) - this.scale.y(q1)))
+                .attr("class", "violin-ir");
+
+            // median
+            const med = median(entry.values);
+            violinG.append("line") // the median line
+                .attr("x1", this.scale.z(-z))
+                .attr("x2", this.scale.z(z))
+                .attr("y1", this.scale.y(med))
+                .attr("y2", this.scale.y(med))
+                .attr("class", "violin-median");
+
+            // mouse events
+            violinG.on("mouseover", ()=>{
+                vPath.classed("highlighted", true);
+                // console.log(entry);
+                if(this.tooltip === undefined) console.warn("GroupViolin Warning: tooltip not defined");
+                else {
+                    this.tooltip.show(
+                        entry.group + "<br/>" +
+                        entry.label + "<br/>" +
+                        "Median: " + med.toPrecision(4) + "<br/>");
+                }
             });
-
-        // boxplot
-        const q1 = quantile(entry.values, 0.25);
-        const q3 = quantile(entry.values, 0.75);
-        const z = this.scale.z.domain()[1]/3;
-
-        if(showWhisker){
-            // the upper and lower limits of entry.values
-            const iqr = Math.abs(q3-q1);
-            const upper = max(entry.values.filter((d)=>d<q3+(iqr*1.5)));
-            const lower = min(entry.values.filter((d)=>d>q1-(iqr*1.5)));
-            dom.append("line")
-                .classed("whisker", true)
-                .attr("x1", this.scale.z(0))
-                .attr("x2", this.scale.z(0))
-                .attr("y1", this.scale.y(upper))
-                .attr("y2", this.scale.y(lower))
-                .style("stroke", "#fff");
+            violinG.on("mouseout", ()=>{
+                vPath.classed("highlighted", false);
+            });
         }
 
-        // interquartile range
-        violinG.append("rect")
-            .attr("x", this.scale.z(-z))
-            .attr("y", this.scale.y(q3))
-            .attr("width", Math.abs(this.scale.z(-z)-this.scale.z(z)))
-            .attr("height", Math.abs(this.scale.y(q3) - this.scale.y(q1)))
-            .attr("class", "violin-ir");
-
-        // median
-        const med = median(entry.values);
-        violinG.append("line") // the median line
-            .attr("x1", this.scale.z(-z))
-            .attr("x2", this.scale.z(z))
-            .attr("y1", this.scale.y(med))
-            .attr("y2", this.scale.y(med))
-            .attr("class", "violin-median");
-
-        // mouse events
-        violinG.on("mouseover", ()=>{
-            vPath.classed("highlighted", true);
-            // console.log(entry);
-            if(this.tooltip === undefined) console.warn("GroupViolin Warning: tooltip not defined");
-            else {
-                this.tooltip.show(
-                    entry.group + "<br/>" +
-                    entry.label + "<br/>" +
-                    "Median: " + med.toPrecision(4) + "<br/>");
-            }
-        });
-        violinG.on("mouseout", ()=>{
-            vPath.classed("highlighted", false);
-        });
     }
 
     _sanityCheck(data){
@@ -506,5 +528,10 @@ export default class GroupedViolin {
 
     }
 
+    _validVertices(vertices) {
+        let vals = vertices.reduce((a, b)=>a.concat(b), []);
+        let invalidVertices = vals.filter(d=>isNaN(d));
 
+        return !(invalidVertices.length);
+    }
 }
