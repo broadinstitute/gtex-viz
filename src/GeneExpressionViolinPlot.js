@@ -125,6 +125,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             let sortSubX = true;
 
             violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
+            select(`#${ids.svg} #violinLegend`).remove();
             // _addViolinTissueColorBand(violinPlot, svg, tissueDict, 'bottom');
             _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids, urls);
@@ -291,6 +292,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
         let svg = select(`#${ids.root} svg g`);
         if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
+        else select(`#${ids.svg} #violinLegend`).remove();
     });
 
     // differentiation changing events
@@ -331,6 +333,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     vplot.reset();
                     vplot.subset = false;
                     let svg = select(`#${ids.root} svg g`);
+                    select(`#${ids.svg} #violinLegend`).remove();
                     // _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
                     $(`#${ids.toolbar} button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
@@ -441,6 +444,7 @@ function _sortAndUpdateData(vplot, ids) {
     vplot.updateXScale(xDomain);
     let svg = select(`#${ids.root} svg g`);
     if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
+    else select(`#${ids.svg} #violinLegend`).remove();
 }
 
 /**
