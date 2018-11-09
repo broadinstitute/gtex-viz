@@ -56,7 +56,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
 
     if ($(`#${ids.root}`).length == 0) throw 'Violin Plot Error: rootId does not exist.';
     // create DOM components if not already present
-    if ($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($(`#${ids.root}`));
+    if ($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($('body'));
     if ($(`#${ids.toolbar}`).length == 0) $('<div/>').attr('id', ids.toolbar).appendTo($(`#${ids.root}`));
     if ($(`#${ids.clone}`).length == 0) $('<div/>').attr('id', ids.clone).appendTo($(`#${ids.root}`));
 
