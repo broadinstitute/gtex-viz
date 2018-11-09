@@ -162,8 +162,9 @@ function createSvg(rootId, width, height, svgId=undefined){
  * @param bmap {BubbleMap} object of the bubble map because the LD rendering domain is based on the bubble map's focus domain.
  */
 function renderLdMap(par, bmap){
-    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip", [0,1]);
+    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, [0,1]);
     $(`#${par.ldId}`).empty(); // jQuery syntax...
+    ldMap.addTooltip(par.ldId);
     let ldCanvas = select(`#${par.ldId}`).append("canvas")
         .attr("id", par.ldId + "-ld-canvas")
         .attr("width", par.width)
@@ -203,7 +204,8 @@ function renderLdMap(par, bmap){
  * @returns {BubbleMap}
  */
 function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, update=false){
-    let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
+    let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme);
+    bmap.addTooltip(par.id);
 
     ////// Custom attributes added to bmap //////
     bmap.urls = urls; // TODO: find a better way to store additional attributes
@@ -595,12 +597,12 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         {
             id: 'pvaluePanel',
             class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '12px',
+            fontSize: '10px',
             search: {
                 id: 'pvalueLimit',
                 size: 3,
                 value: 0,
-                label: 'eQTL -log<sub>10</sub>(pValue) >= '
+                label: '-log<sub>10</sub>(pValue)>='
             },
             slider: {
                 id: 'pvalueSlider',
@@ -614,12 +616,12 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         {
             id: 'nesPanel',
             class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '12px',
+            fontSize: '10px',
             search:  {
                 id: 'nesLimit',
                 size: 3,
                 value: 0,
-                label: 'eQTL abs(NES) >= '
+                label: 'abs(NES)>='
             },
             slider: {
                 id: 'nesSlider',
@@ -632,57 +634,37 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         },
         {
             id: 'variantPanel',
-            fontSize: '12px',
+            fontSize: '10px',
             class: 'col-xs-12 col-sm-6 col-lg-2',
             search: {
                 id: 'varLocator',
                 size: 20,
-                label: 'Variant locator ',
+                label: 'Variant locator  ',
                 placeholder: '  Variant or RS ID... '
             },
         }
     ];
      // create each search section
-    $('<label/>')
-        .attr('font-size', '12px')
-        .attr('class', 'col-xs-12 col-md-12 col-lg-1')
-        .html('Apply Filters: ')
-        .appendTo($(`#${id}`));
-
     ////// Add custom DOMs that are not defined in the panels:
-    // -- add the RS ID option here
-    let rsDiv = $('<div/>')
-        .attr('class', 'col-xs-12 col-sm-6 col-md-1')
-        .css('padding-top', '2px')
-        .css('margin', '1px')
-        .css('font-size', '12px')
-        .appendTo($(`#${id}`));
-    let radioButton = $('<input/>')
-        .attr('id', 'rsSwitch')
-        .attr('type', 'checkbox')
-        .css('margin-left', '10px')
-        .appendTo(rsDiv);
-    $('<label/>')
-        .css('margin-left', '2px')
-        .css('padding-top', '2px')
-        .html('Use RS ID')
-        .appendTo(rsDiv);
+
+
 
     // -- add the link to the tissue filter menu here
     let tiDiv = $('<div/>')
-        .attr('class', 'col-xs-12 col-sm-6 col-md-1')
+        .attr('class', 'col-xs-12 col-sm-6 col-lg-1')
          .css('padding-top', '4px')
         .css('margin', '1px')
         .css('font-size', '12px')
         .appendTo($(`#${id}`));
-    let tiMenuLink = $('<span/>')
+
+    $('<span/>')
         .attr('data-toggle', 'modal')
         .attr('data-target', `#${modalId}`) // bMap-modal must be defined on the html
         .css('margin-left', '2px')
         .css('padding-top', '2px')
         .css('color', '#0868ac')
         .css('cursor', 'pointer')
-        .html('Show tissue menu<br/>')
+        .html('Filter Tissue<br/>')
         .appendTo(tiDiv);
 
     ////// end adding custom DOMs
@@ -710,7 +692,26 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
     // Add all other eQTL filter panels
     panelBuilder(panels, id);
 
-    ////// definte the filter events
+    // -- add the RS ID option here
+    let rsDiv = $('<div/>')
+        .attr('class', 'col-xs-12 col-sm-6 col-lg-1')
+        .css('padding-top', '2px')
+        .css('margin', '1px')
+        .css('font-size', '12px')
+        .appendTo($(`#${id}`));
+    let radioButton = $('<input/>')
+        .attr('id', 'rsSwitch')
+        .attr('type', 'checkbox')
+        .css('margin-left', '10px')
+        .appendTo(rsDiv);
+    $('<label/>')
+        .css('margin-left', '2px')
+        .css('padding-top', '2px')
+        .css('font-size', '10px')
+        .html('Use RS ID')
+        .appendTo(rsDiv);
+
+    ////// define the filter events
     let minP = 0;
     let minNes = 0;
     let minLd = 0;
@@ -825,12 +826,12 @@ function renderLDFilters(id, ldMap, ldCanvas, ldG, ldConfig){
         {
             id: 'ldPanel',
             class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '12px',
+            fontSize: '10px',
             search:  {
                 id: 'ldLimit',
                 size: 3,
                 value: 0,
-                label: 'LD cutoff R<sup>2</sup> >= '
+                label: 'LD cutoff R<sup>2</sup>>='
             },
             slider: {
                 id: 'ldSlider',
@@ -882,15 +883,16 @@ function panelBuilder(panels, id){
                 .attr('id', p.id)
                 .attr('class', p.class)
                 .css('font-size', p.fontSize)
-                .css('background-color', "#eeeeee")
+                // .css('background-color', "#eeeeee")
                 .css('margin', '1px')
                 .css('padding-top', '2px')
-                .css('border', '1px solid #d1d1d1')
+                // .css('border', '1px solid #d1d1d1')
                 .appendTo($(`#${id}`));
             div.addClass(p.class);
 
             // add the search box
             $('<label/>')
+                .css('font-weight', 'normal')
                 .html(p.search.label)
                 .appendTo(div);
 
@@ -899,7 +901,7 @@ function panelBuilder(panels, id){
                 .attr('value', p.search.value)
                 .attr('size', p.search.size)
                 .attr('placeholder', p.search.placeholder)
-                .css('margin-left', '10px')
+                // .css('margin-left', '10px')
                 .appendTo(div);
 
             // add the slider if defined
@@ -911,8 +913,8 @@ function panelBuilder(panels, id){
                 .attr('min', p.slider.min)
                 .attr('max', p.slider.max)
                 .attr('step', p.slider.step)
-                .css('margin-left', '10px')
-                .css('width', '100px')
+                // .css('margin-left', '10px')
+                // .css('width', '60px')
                 .appendTo(div);
             }
         } // add the new element to the dashboard
