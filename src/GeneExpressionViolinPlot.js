@@ -74,8 +74,8 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             const tissues = parseTissues(args[0]);
             const tissueIdNameMap = {};
             const subsetGroupColorMap = {
-                female: 'e67f7b',
-                male: '70bcd2'
+                female: '#e67f7b',
+                male: '#70bcd2'
             };
             const tissueDict = {};
             tissues.forEach(x => {
@@ -174,16 +174,16 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // adding bootstrap classes to toolbar
     $(`#${ids.toolbar}`).addClass('row');
-    $(`#${ids.toolbar} .btn-group`).addClass('col-xs-12 col-lg-1');
+    $(`#${ids.toolbar} .btn-group`).addClass('col-xs-12 col-lg-2 text-nowrap');
 
     $('<div></div>').appendTo(`#${ids.toolbar}`)
         .attr('id', `${ids.toolbar}-plot-options`)
-        .attr('class', 'col-lg-11');
+        .attr('class', 'col-lg-10 text-nowrap');
     let plotOptions = $(`#${ids.toolbar}-plot-options`);
 
     // sort options -- tissue name sorts
     $('<div/>').appendTo(plotOptions)
-        .attr('class', `${ids.plotOptionGroups.sort} col-xs-12 col-lg-3 col-xl-2`)
+        .attr('class', `${ids.plotOptionGroups.sort} col-lg-3 col-xl-2`)
         .attr('id', `vplot-alpha-sorts`);
     $('<span/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-alpha-sorts`)
         .attr('class', `${ids.root}-option-label`)
@@ -198,7 +198,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // sort options -- median sorts
     $('<div/>').appendTo(plotOptions)
-        .attr('class', `${ids.plotOptionGroups.sort} col-xs-12 col-lg-3 col-xl-2`)
+        .attr('class', `${ids.plotOptionGroups.sort} col-lg-3 col-xl-2`)
         .attr('id', `vplot-num-sorts`);
     $('<span/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-num-sorts`)
         .attr('class', `${ids.root}-option-label`)
@@ -213,7 +213,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     // scale options
     $('<div/>').appendTo(plotOptions)
         .attr('id', ids.plotOptionGroups.scale)
-        .attr('class', 'col-xs-12 col-lg-3 col-xl-2');
+        .attr('class', 'col-lg-3 col-xl-2');
     $('<span/>').appendTo(`#${ids.plotOptionGroups.scale}`)
         .attr('class', `${ids.root}-option-label`)
         .html('Scale');
@@ -226,7 +226,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     // subsetting options
     $('<div/>').appendTo(plotOptions)
         .attr('id', ids.plotOptionGroups.differentiation)
-        .attr('class', 'col-xs-12 col-lg-3 col-xl-5')
+        .attr('class', 'col-lg-3 col-xl-5')
     $('<span/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
         .attr('class', `${ids.root}-option-label`)
         .html('Subset');
