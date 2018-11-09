@@ -24,7 +24,7 @@ import {
 } from "./modules/gtexDataParser";
 import BubbleMap from "./modules/BubbleMap";
 import HalfMap from "./modules/HalfMap";
-import {groupedViolinPlot} from "./GTExViz";
+import {render as eqtlViolinPlotRender} from "./EqtlViolinPlot";
 
 export function render(par, geneId, urls = getGtexUrls()){
     $(`#${par.divSpinner}`).show();
@@ -919,51 +919,60 @@ function panelBuilder(panels, id){
     });
 }
 
-function addBubbleClickEvent(bmap, bmapSvg, par){
-    let dialogDivId = par.id+"violin-dialog";
-    createDialog(par.divDashboard, par.id+"violin-dialog", "eQTL Violin Plot Dialog");
+ // todo report p-value
+function addBubbleClickEvent(bmap, bmapSvg, par) {
+    let dialogDivId = par.id + "violin-dialog";
+    createDialog(par.divDashboard, par.id + "violin-dialog", "eQTL Violin Plot Dialog");
     bmapSvg.selectAll('.bubble-map-cell')
-        .on("click", (d)=>{
+        .on("click", (d) => {
             $(`#${dialogDivId}`).dialog('open');
-            json(`${bmap.urls['dyneqtl']}?variantId=${d.variantId}&gencodeId=${d.gencodeId}&tissueSiteDetailId=${d.tissueSiteDetailId}`)
-                .then(function(json){
-                    let data = parseDynEqtl(json);
+            let plot = $('<div/>')
+                .attr('class', 'bMap-dialog')
+                .css('float', 'left')
+                .css('margin', '20px')
+                .appendTo($(`#bMap-content`));
 
-                    // generate genotype text labels
-                    let ref = d.variantId.split(/_/)[2];
-                    let alt = d.variantId.split(/_/)[3];
-                    const het = ref + alt;
-                    ref = ref + ref;
-                    alt = alt + alt;
-
-                    // construct the dynEqtl data for the three genotypes: ref, het, alt
-                    let violinData = [
-                        {
-                            group: d.displayX,
-                            label: ref.length>2?"ref":ref,
-                            size: data.homoRefExp.length,
-                            values: data.homoRefExp
-                        },
-                        {
-                            group: d.displayX,
-                            label: het.length>2?"het":het,
-                            size: data.heteroExp.length,
-                            values: data.heteroExp
-                        },
-                        {
-                            group: d.displayX,
-                            label: alt.length>2?"alt":alt,
-                            size: data.homoAltExp.length,
-                            values: data.homoAltExp
-                        }
-                    ];
-                    // todo report p-value
-                    addViolinPlot(d, violinData);
-                    console.log(violinData)
+            // add a header section
+            let head = $('<div/>').appendTo(plot);
+            // add a window-close icon
+            $('<i/>').attr('class', 'fa fa-window-close')
+                .css('margin-right', '2px')
+                .click(function () {
+                    plot.remove()
                 })
+                .appendTo(head);
 
+            $('<span/>')
+                .attr('class', 'title')
+                .html(`${d.displayX}<br/>${d.tissueSiteDetailId}`)
+                .appendTo(head);
 
-        })
+            // add the violin plot
+            let id = "dEqtl" + Date.now().toString(); // random ID generator
+            $('<div/>').attr('id', id).appendTo(plot);
+
+            let vConfig = {
+                id: id,
+                data: undefined, // this would be assigned by the eqtl violin function
+                width: 250,
+                height: 200,
+                marginLeft: 50,
+                marginRight: 20,
+                marginTop: 20,
+                marginBottom: 50,
+                showDivider: false,
+                xPadding: 0.3,
+                yLabel: "Norm. Expression",
+                showGroupX: false,
+                showX: true,
+                xAngle: 0,
+                showWhisker: false,
+                showLegend: false,
+                showSampleSize: true
+            };
+            eqtlViolinPlotRender(vConfig, d.gencodeId, d.variantId, d.tissueSiteDetailId, bmap.urls)
+
+        });
 }
 
 /**
@@ -997,55 +1006,4 @@ function createDialog(parentDivId, dialogDivId, title){
     });
 }
 
-/** Create the violin plot given a gene, variant and tissue
- * * @param eQTL {Object} with attr: variantId, gencodeId, tissueSiteDetailId, displayX
- * jQuery dependent
- * a div with ID, bMap-content, must exist
- */
-function addViolinPlot(eqtl, data){
-    let plot = $('<div/>')
-        .attr('class', 'bMap-dialog')
-        .css('float', 'left')
-        .css('margin', '20px')
-        .appendTo($(`#bMap-content`));
 
-    // add a header section
-    let head = $('<div/>').appendTo(plot);
-    // add a window-close icon
-    $('<i/>').attr('class', 'fa fa-window-close')
-        .css('margin-right', '2px')
-        .click(function(){
-            plot.remove()
-        })
-        .appendTo(head);
-
-    $('<span/>')
-        .attr('class', 'title')
-        .html(`${eqtl.displayX}<br/>${eqtl.tissueSiteDetailId}`)
-        .appendTo(head);
-
-    // add the violin plot
-    let id = "dEqtl" + Date.now().toString(); // random ID generator
-    $('<div/>').attr('id', id).appendTo(plot);
-
-    let vConfig = {
-            id: id,
-            data: data,
-            width: 250,
-            height: 200,
-            marginLeft: 50,
-            marginRight: 20,
-            marginTop: 20,
-            marginBottom: 50,
-            showDivider: false,
-            xPadding: 0.3,
-            yLabel: "Norm. Expression",
-            showGroupX: false,
-            showX: true,
-            xAngle: 0,
-            showWhisker: false,
-            showLegend: false,
-            showSampleSize: true
-        };
-    groupedViolinPlot(vConfig);
-}
