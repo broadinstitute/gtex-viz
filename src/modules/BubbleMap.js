@@ -221,7 +221,9 @@ export default class BubbleMap {
                 selected.classed('highlighted', true);
                 let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
                 let displaySize = d.rDisplayValue === undefined? d.r.toPrecision(4):d.rDisplayValue;
-                tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`);
+                let displayX = d.displayX === undefined? d.x:d.displayX;
+                let displayY = d.displayY === undefined? d.y:d.displayY;
+                tooltip.show(`Column: ${displayX} <br/> Row: ${displayY}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`);
             })
             .on("mouseout", function(){
                 dom.selectAll("*").classed('highlighted', false);

@@ -252,7 +252,9 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
                 selected.classed('highlighted', true);
                 let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
                 let displaySize = d.rDisplayValue === undefined? d.r.toPrecision(4):d.rDisplayValue;
-                bmap.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> NES: ${displayValue}<br/> p-value: ${displaySize}`);
+                let displayX = d.displayX === undefined? d.x:d.displayX;
+                let displayY = d.displayY === undefined? d.y:d.displayY;
+                bmap.tooltip.show(`Column: ${displayX} <br/> Row: ${displayY}<br/> NES: ${displayValue}<br/> p-value: ${displaySize}`);
             });
 
     //-- filters for p-value, nes
