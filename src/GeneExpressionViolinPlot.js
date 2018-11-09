@@ -373,7 +373,7 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
         });
         d.group = idNameMap===undefined?d.tissueSiteDetailId:idNameMap[d.tissueSiteDetailId];
         d.label = d.subsetGroup===undefined?d.geneSymbol:d.subsetGroup;
-        d.color = colors===undefined?'#90c1c1':d.subsetGroup===undefined?colors[d.tissueSiteDetailId]:colors[d.subsetGroup];
+        d.color = colors===undefined?'#90c1c1':d.subsetGroup===undefined?`#${colors[d.tissueSiteDetailId]}`:colors[d.subsetGroup];
     });
     _calcViolinPlotValues(data[attr], useLog);
     return data[attr];
