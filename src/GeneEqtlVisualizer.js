@@ -944,7 +944,7 @@ function addBubbleClickEvent(bmap, bmapSvg, par) {
 
             $('<span/>')
                 .attr('class', 'title')
-                .html(`${d.displayX}<br/>${d.tissueSiteDetailId}`)
+                .html(`${d.displayX}<br/>${d.displayY}`)
                 .appendTo(head);
 
             // add the violin plot
@@ -970,7 +970,7 @@ function addBubbleClickEvent(bmap, bmapSvg, par) {
                 showLegend: false,
                 showSampleSize: true
             };
-            eqtlViolinPlotRender(vConfig, d.gencodeId, d.variantId, d.tissueSiteDetailId, bmap.urls)
+            eqtlViolinPlotRender(vConfig, d.gencodeId, d.variantId, d.tissueSiteDetailId, d.displayY, bmap.urls)
 
         });
 }

@@ -35,6 +35,7 @@
         $(document).ready(function(){
             let gencodeId = 'ENSG00000248746.1'; // ACTN3
             let tissueId = 'Muscle_Skeletal';
+            let group = "Muscle - Skeletal";
             let variantId = '11_66329732_A_G_b37';
             let config = {
                 id: "violinRoot",
@@ -55,7 +56,7 @@
                 showLegend: false,
                 showSampleSize: true
             };
-            EqtlViolinPlot.render(config, gencodeId, variantId, tissueId);
+            EqtlViolinPlot.render(config, gencodeId, variantId, tissueId, group);
         });
 
     </script>
