@@ -11,7 +11,7 @@ import {getGtexUrls, parseTissues, parseTissueSites} from './modules/gtexDataPar
 import {createTissueGroupMenu, parseTissueGroupMenu} from './modules/gtexMenuBuilder';
 import GroupedViolin from './modules/GroupedViolin';
 
-export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), margins=_setViolinPlotMargins(50,75,250,60), dimensions={h: 1200, w:250}) {
+export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), margins=_setViolinPlotMargins(50,75,250,60), dimensions={w: 1200, h:250}) {
     const promises = [
         json(urls.tissue),
         json(urls.geneExp + gencodeId)
@@ -52,7 +52,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
 
     };
     const margin = margins;
-    const dim = _setViolinPlotDimensions(dimensions.h, dimensions.w, margin);
+    const dim = _setViolinPlotDimensions(dimensions.w, dimensions.h, margin);
 
     if ($(`#${ids.root}`).length == 0) throw 'Violin Plot Error: rootId does not exist.';
     // create DOM components if not already present
