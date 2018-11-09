@@ -192,8 +192,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .attr('class', 'btn-group btn-group-sm')
         .attr('id', `${ids.plotOptionGroups.sort}-alpha`);
     let alphaSortButtonGroup = $(`#${ids.plotOptionGroups.sort}-alpha.btn-group`);
-    $(`<button class="btn btn-outline-secondary fa fa-sort-alpha-down" id="${ids.buttons.ascAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
-    $(`<button class="btn btn-outline-secondary fa fa-sort-alpha-up" id="${ids.buttons.descAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-sort-alpha-down" id="${ids.buttons.ascAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-sort-alpha-up" id="${ids.buttons.descAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
 
 
     // sort options -- median sorts
@@ -207,8 +207,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .attr('class', 'btn-group btn-group-sm')
         .attr('id', `${ids.plotOptionGroups.sort}-num`);
     let numSortButtonGroup = $(`#${ids.plotOptionGroups.sort}-num.btn-group`);
-    $(`<button class="btn btn-outline-secondary fa fa-sort-numeric-down" id="${ids.buttons.ascSort}"></button>`).appendTo(numSortButtonGroup);
-    $(`<button class="btn btn-outline-secondary fa fa-sort-numeric-up" id="${ids.buttons.descSort}"></button>`).appendTo(numSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-sort-numeric-down" id="${ids.buttons.ascSort}"></button>`).appendTo(numSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-sort-numeric-up" id="${ids.buttons.descSort}"></button>`).appendTo(numSortButtonGroup);
 
     // scale options
     $('<div/>').appendTo(plotOptions)
@@ -220,8 +220,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     $('<div/>').appendTo(`#${ids.plotOptionGroups.scale}`)
         .attr('class', 'btn-group btn-group-sm');
     let scaleButtonGroup = $(`#${ids.plotOptionGroups.scale} .btn-group`);
-    $(`<button class="btn btn-outline-secondary" id="${ids.buttons.logScale}">Log</button>`).appendTo(scaleButtonGroup);
-    $(`<button class="btn btn-outline-secondary" id="${ids.buttons.linearScale}">Linear</button>`).appendTo(scaleButtonGroup);
+    $(`<button class="btn btn-default" id="${ids.buttons.logScale}">Log</button>`).appendTo(scaleButtonGroup);
+    $(`<button class="btn btn-default" id="${ids.buttons.linearScale}">Linear</button>`).appendTo(scaleButtonGroup);
 
     // subsetting options
     $('<div/>').appendTo(plotOptions)
@@ -233,8 +233,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     $('<div/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
         .attr('class', 'btn-group btn-group-sm');
     let subsetButtonGroup = $(`#${ids.plotOptionGroups.differentiation} .btn-group`);
-    $(`<button class="btn btn-outline-secondary" id="${ids.buttons.noDiff}">None</button>`).appendTo(subsetButtonGroup);
-    $(`<button class="btn btn-outline-secondary" id="${ids.buttons.sexDiff}">Sex</button>`).appendTo(subsetButtonGroup);
+    $(`<button class="btn btn-default" id="${ids.buttons.noDiff}">None</button>`).appendTo(subsetButtonGroup);
+    $(`<button class="btn btn-default" id="${ids.buttons.sexDiff}">Sex</button>`).appendTo(subsetButtonGroup);
     // adding spinner
     $(`<span><i id="spinner" class="fas fa-sync fa-spin" style="margin-left: 5px; display: none;"></i></span>`).appendTo(`#${ids.plotOptionGroups.differentiation}`);
 
