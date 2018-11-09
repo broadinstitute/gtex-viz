@@ -85,6 +85,14 @@ export function parseDynEqtl(json){
     json.heteroExp = json.expression_values.filter((d,i) => {
         return json.genotypes[i] == 1
     });
+
+    // generate genotype text labels
+    let ref = json.variantId.split(/_/)[2];
+    let alt = json.variantId.split(/_/)[3];
+    json.het = ref + alt;
+    json.ref = ref + ref;
+    json.alt = alt + alt;
+
     return json;
 }
 
