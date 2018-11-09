@@ -80,7 +80,7 @@ rect.track.highlighted {
 }
 
 .bbMap-dialog .title {
-   text-anchor: middle;
+   text-align: center;
    font-size: 12px;
 
 }

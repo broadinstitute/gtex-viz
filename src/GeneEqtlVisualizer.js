@@ -390,7 +390,7 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
         .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2 + 2)
         .attr('fill', '#ffffff')
         .style('font-size', `${bmap.yScale.bandwidth()*0.9}px`)
-        .style('text-anchor', 'center')
+        .attr('text-anchor', 'center')
 
 }
 
@@ -575,6 +575,7 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
             let ttContent = `${d}<br/>${bmap.rsLookUp[d]}<br/>TSS Distance: ${dist} bp</br>`;
             ttContent = bmap.variantsInExons[d]?ttContent + "Exon Region": ttContent;
             bmap.tooltip.show(ttContent);
+            console.log(ttContent);
             select(this).classed('highlighted', true);
         })
         .on('mouseout', function(d){

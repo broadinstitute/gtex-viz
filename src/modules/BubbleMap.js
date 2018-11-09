@@ -247,7 +247,7 @@ export default class BubbleMap {
                 .attr("class", (d, i) => `bubble-map-xlabel x${i}`)
                 .attr("x", 0)
                 .attr("y", 0)
-                .style("text-anchor", cl.textAlign=='left'?'start':'end')
+                .attr("text-anchor", cl.textAlign=='left'?'start':'end')
                 .style("cursor", "default")
                 .style("font-size", () => {
                     let size = Math.floor(this.xScale.bandwidth()/ 2)>12?12:Math.floor(this.xScale.bandwidth()/ 2);
@@ -274,7 +274,7 @@ export default class BubbleMap {
                 .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
                 .attr("x", 0)
                 .attr("y", 0)
-                .style("text-anchor", rl.textAlign=='left'?'start':'end')
+                .attr("text-anchor", rl.textAlign=='left'?'start':'end')
                 .style("cursor", "default")
                 .style("font-size", ()=>{
                     let size = Math.floor(this.yScale.bandwidth()/1.5)>10?10:Math.floor(this.yScale.bandwidth()/1.5);

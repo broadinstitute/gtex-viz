@@ -115,7 +115,7 @@ export default class Heatmap {
             .attr("class", (d, i) => `exp-map-xlabel x${i}`)
             .attr("x", 0)
             .attr("y", 0)
-            .style("text-anchor", "start")
+            .attr("text-anchor", "start")
             .style("cursor", "default")
             .attr("transform", (d) => {
                 let x = this.xScale(d) + adjust;
@@ -135,7 +135,7 @@ export default class Heatmap {
             .attr("x", this.xScale.range()[1] + 5)
             .attr("y", (d) => this.yScale(d) + 10)
             .attr("class", (d, i) => `exp-map-ylabel y${i}`)
-            .style("text-anchor", "start")
+            .attr("text-anchor", "start")
             .style("cursor", "default")
             .on('click', (d) => {
                 alert(`${d} is clicked. To be implemented`)

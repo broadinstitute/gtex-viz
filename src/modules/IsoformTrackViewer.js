@@ -86,7 +86,7 @@ export default class IsoformTrackViewer {
             .attr("id", "lolliLabel")
             .attr("x", 0)
             .attr("y", -40)
-            .style("text-anchor", "end")
+            .attr("text-anchor", "end")
             .style("font-size", 9)
             .text("log10(TPM)"); // TODO: this should be a user-defined text
 
@@ -105,7 +105,7 @@ export default class IsoformTrackViewer {
             .attr("y", -20)
 
             .text(`Transcript Expression in ${dataLabel}`)
-            .style("text-anchor", "start")
+            .attr("text-anchor", "start")
             .style("font-size", "12px");
 
 

@@ -126,7 +126,7 @@ export default class HalfMap{
                 .attr("class", (d, i) => `half-map-label l${i}`)
                 .attr("x", 0)
                 .attr("y", 0)
-                .style("text-anchor", "start")
+                .attr("text-anchor", "start")
                 .style("cursor", "none")
                 .attr("transform", (d) => {
                     let x = this.labelScale(d) + this.labelScale.step()/2;
