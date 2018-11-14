@@ -575,7 +575,6 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
             let ttContent = `${d}<br/>${bmap.rsLookUp[d]}<br/>TSS Distance: ${dist} bp</br>`;
             ttContent = bmap.variantsInExons[d]?ttContent + "Exon Region": ttContent;
             bmap.tooltip.show(ttContent);
-            console.log(ttContent);
             select(this).classed('highlighted', true);
         })
         .on('mouseout', function(d){

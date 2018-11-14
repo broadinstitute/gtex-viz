@@ -143,17 +143,17 @@ export default class HalfMap{
             .attr("width", this.xScale.bandwidth())
             .attr("height", this.yScale.bandwidth())
             .style("stroke", "#d2111b")
-            .style("stroke-width", 1)
+            .style("stroke-width", "1px")
             .style("fill", "none")
             .style("display", "none");
 
-        svg.on('mouseout', ()=>{
-            cursor.style("display", "none");
-            this.tooltip.hide();
-            svg.selectAll('.half-map-label').classed('highlighted', false);
-        });
+        // svg.on('mouseout', ()=>{
+        //     // cursor.style("display", "none");
+        //     // this.tooltip.hide();
+        //     // svg.selectAll('.half-map-label').classed('highlighted', false);
+        // });
         select(svg.node().parentNode)
-            // .style("cursor", "none")
+            .style("cursor", "none")
             .style("position", "absolute")
             .on('mousemove', () => {
                 let pos = mouse(svg.node()); // retrieve the mouse position relative to the SVG element
@@ -177,7 +177,6 @@ export default class HalfMap{
                 let cell = this.dataDict[col+row];
                 // console.log([x, y, x2, y2, col, row]); // debugging
                 if (cell !== undefined) {
-
                     cursor.attr('transform', `translate(${x},${y}) rotate(-45)`);
                     cursor.style("display", "block");
 
@@ -190,8 +189,8 @@ export default class HalfMap{
                 }
             })
             .on('mouseout', () => {
-                cursor.style("display", "none");
-                this.tooltip.hide();
+                // cursor.style("display", "none");
+                // this.tooltip.hide();
                 svg.selectAll('.half-map-label').classed('highlighted', false);
             })
     }
