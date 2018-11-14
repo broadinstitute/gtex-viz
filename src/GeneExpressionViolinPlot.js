@@ -73,17 +73,21 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
         .then(function(args) {
             const tissues = parseTissues(args[0]);
             const tissueIdNameMap = {};
-            const subsetGroupColorMap = {
-                female: '#e67f7b',
-                male: '#70bcd2'
+            const groupColorDict = {
+                // female: '#e67f7b',
+                // male: '#70bcd2',
+                // female: '#eaaa78',
+                male: '#72aae0',
+                female: '#eca670'
             };
             const tissueDict = {};
             tissues.forEach(x => {
                 tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
                 tissueDict[x.tissueSiteDetail] = x;
+                groupColorDict[x.tissueSiteDetailId] = x.colorHex;
             });
 
-            const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, subsetGroupColorMap);
+            const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, groupColorDict);
             const tissueGroups = violinPlotData.map(d => d.group);
             let violinPlot = new GroupedViolin(violinPlotData);
             // alphabetically sort by default
@@ -100,9 +104,10 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             violinPlot.allData = violinPlot.data.map(d=>d);
             violinPlot.gencodeId = gencodeId;
             violinPlot.tIdNameMap = tissueIdNameMap;
-            violinPlot.subsetGroupColorMap = subsetGroupColorMap;
+            violinPlot.groupColorDict = groupColorDict;
             violinPlot.tissueDict = tissueDict;
             violinPlot.scaleView = 'log';
+            violinPlot.subset = false;
 
             let width = dim.width;
             let height = dim.height;
@@ -120,7 +125,8 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             let sortSubX = true;
 
             violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
-            _addViolinTissueColorBand(violinPlot, svg, tissueDict, 'bottom');
+            select(`#${ids.svg} #violinLegend`).remove();
+            // _addViolinTissueColorBand(violinPlot, svg, tissueDict, 'bottom');
             _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids, urls);
         });
@@ -285,7 +291,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         }
 
         let svg = select(`#${ids.root} svg g`);
-        _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
+        if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
+        else select(`#${ids.svg} #violinLegend`).remove();
     });
 
     // differentiation changing events
@@ -301,13 +308,14 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
             Promise.all(promises)
                 .then(function(args) {
-                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.subsetGroupColorMap) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.subsetGroupColorMap, false);
+                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.groupColorDict) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.groupColorDict, false);
                     const filteredTissues = vplot.data.map(d => d.group);
 
                     vplot.allData = violinPlotData.map(d=>d);
                     vplot.data = violinPlotData.filter(d=>filteredTissues.indexOf(d.group) != -1);
 
                     vplot.reset();
+                    vplot.subset = true;
                     let svg = select(`#${ids.root} svg g`);
                     _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
                     $(`#${ids.toolbar}-plot-options button`).prop('disabled', false);
@@ -318,13 +326,15 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
             Promise.all(promises)
                 .then(function(args) {
-                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.subsetGroupColorMap) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.subsetGroupColorMap, false);
+                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.groupColorDict) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.groupColorDict, false);
                     const filteredTissues = vplot.data.map(d => d.group);
                     vplot.allData = violinPlotData.map(d=>d);
                     vplot.data = violinPlotData.filter(d=>filteredTissues.indexOf(d.group) != -1);
                     vplot.reset();
+                    vplot.subset = false;
                     let svg = select(`#${ids.root} svg g`);
-                    _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
+                    select(`#${ids.svg} #violinLegend`).remove();
+                    // _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
                     $(`#${ids.toolbar} button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
             });
@@ -363,7 +373,7 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
         });
         d.group = idNameMap===undefined?d.tissueSiteDetailId:idNameMap[d.tissueSiteDetailId];
         d.label = d.subsetGroup===undefined?d.geneSymbol:d.subsetGroup;
-        d.color = colors===undefined?'#90c1c1':d.subsetGroup===undefined?'#90c1c1':colors[d.subsetGroup];
+        d.color = colors===undefined?'#90c1c1':d.subsetGroup===undefined?`#${colors[d.tissueSiteDetailId]}`:colors[d.subsetGroup];
     });
     _calcViolinPlotValues(data[attr], useLog);
     return data[attr];
@@ -433,7 +443,8 @@ function _sortAndUpdateData(vplot, ids) {
     let xDomain = sortData.map((d) => d.group);
     vplot.updateXScale(xDomain);
     let svg = select(`#${ids.root} svg g`);
-    _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
+    if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
+    else select(`#${ids.svg} #violinLegend`).remove();
 }
 
 /**
