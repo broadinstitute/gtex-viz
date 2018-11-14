@@ -386,10 +386,10 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
 
     g.append('text')
         .text((d)=>d.rnaSeqAndGenotypeSampleCount)
-        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 17)
-        .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2 + 2)
+        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 19)
+        .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2+4)
         .attr('fill', '#ffffff')
-        .style('font-size', `${bmap.yScale.bandwidth()*0.9}px`)
+        .style('font-size', `${bmap.yScale.bandwidth()*0.8>12?12:bmap.yScale.bandwidth()*0.9}px`)
         .attr('text-anchor', 'center')
 
 }
