@@ -2,10 +2,6 @@
     display: inline-flex;
 }
 
-#gene-expr-vplot-toolbar-plot-options .btn-group.btn-group-sm button {
-    font-size: 11px;
-}
-
 #gene-expr-vplot-toolbar-plot-options label {
     margin-bottom: 0;
 }
@@ -18,7 +14,7 @@
 
 .gene-expr-vplot-option-label {
     padding-right: 5px;
-    font-size: 13px;
+    font-size: 15px;
     font-variant: all-small-caps;
 }
 
