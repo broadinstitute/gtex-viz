@@ -252,7 +252,9 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
                 selected.classed('highlighted', true);
                 let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
                 let displaySize = d.rDisplayValue === undefined? d.r.toPrecision(4):d.rDisplayValue;
-                bmap.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> NES: ${displayValue}<br/> p-value: ${displaySize}`);
+                let displayX = d.displayX === undefined? d.x:d.displayX;
+                let displayY = d.displayY === undefined? d.y:d.displayY;
+                bmap.tooltip.show(`Column: ${displayX} <br/> Row: ${displayY}<br/> NES: ${displayValue}<br/> p-value: ${displaySize}`);
             });
 
     //-- filters for p-value, nes
@@ -384,11 +386,11 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
 
     g.append('text')
         .text((d)=>d.rnaSeqAndGenotypeSampleCount)
-        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 17)
-        .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2 + 2)
+        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 19)
+        .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2+4)
         .attr('fill', '#ffffff')
-        .style('font-size', 8)
-        .style('text-anchor', 'center')
+        .style('font-size', `${bmap.yScale.bandwidth()*0.8>12?12:bmap.yScale.bandwidth()*0.9}px`)
+        .attr('text-anchor', 'center')
 
 }
 
@@ -782,12 +784,13 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
             const regex = new RegExp(v);
             focusG.selectAll('.bubble-map-xlabel')
                 .classed('query', (d)=>{
-                    return regex.test(d)||regex.test(rsLookUp[d])||regex.test(varLookUp[d]);
+                    var bool = regex.test(d)||regex.test(bmap.rsLookUp[d])||regex.test(bmap.varLookUp[d]);
+                    return bool;
                 });
 
             miniG.selectAll('.mini-marker')
                 .classed('highlighted', (d)=>{
-                    return regex.test(d)||regex.test(rsLookUp[d])||regex.test(varLookUp[d]);
+                    return regex.test(d)||regex.test(bmap.rsLookUp[d])||regex.test(bmap.varLookUp[d]);
                 });
 
         } else {

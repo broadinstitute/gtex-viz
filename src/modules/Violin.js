@@ -115,7 +115,7 @@ export default class Violin {
             .attr("transform", `translate(0, ${height + buffer})`)
             .call(this.xAxis)
             .selectAll("text")
-            .style("text-anchor", "start")
+            .attr("text-anchor", "start")
             .attr("transform", "rotate(30, -10, 10)");
 
         // add the y axis

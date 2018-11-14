@@ -126,7 +126,7 @@ export default class HalfMap{
                 .attr("class", (d, i) => `half-map-label l${i}`)
                 .attr("x", 0)
                 .attr("y", 0)
-                .style("text-anchor", "start")
+                .attr("text-anchor", "start")
                 .style("cursor", "none")
                 .attr("transform", (d) => {
                     let x = this.labelScale(d) + this.labelScale.step()/2;
@@ -143,7 +143,7 @@ export default class HalfMap{
             .attr("width", this.xScale.bandwidth())
             .attr("height", this.yScale.bandwidth())
             .style("stroke", "#d2111b")
-            .style("stroke-width", 1)
+            .style("stroke-width", "1px")
             .style("fill", "none")
             .style("display", "none");
 
@@ -153,7 +153,7 @@ export default class HalfMap{
             svg.selectAll('.half-map-label').classed('highlighted', false);
         });
         select(svg.node().parentNode)
-            // .style("cursor", "none")
+            .style("cursor", "none")
             .style("position", "absolute")
             .on('mousemove', () => {
                 let pos = mouse(svg.node()); // retrieve the mouse position relative to the SVG element
@@ -177,7 +177,6 @@ export default class HalfMap{
                 let cell = this.dataDict[col+row];
                 // console.log([x, y, x2, y2, col, row]); // debugging
                 if (cell !== undefined) {
-
                     cursor.attr('transform', `translate(${x},${y}) rotate(-45)`);
                     cursor.style("display", "block");
 
@@ -187,13 +186,16 @@ export default class HalfMap{
                         svg.select(`.l${i}`).classed('highlighted', true);
                         svg.select(`.l${j}`).classed('highlighted', true);
                     }
+                } else {
+                    this.tooltip.hide();
+                    cursor.style("display", "none");
                 }
             })
-            .on('mouseout', () => {
-                cursor.style("display", "none");
-                this.tooltip.hide();
-                svg.selectAll('.half-map-label').classed('highlighted', false);
-            })
+            // .on('mouseout', () => {
+            //     // cursor.style("display", "none");
+            //     // this.tooltip.hide();
+            //     // svg.selectAll('.half-map-label').classed('highlighted', false);
+            // })
     }
 
     _unique(data){
