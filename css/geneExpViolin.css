@@ -21,3 +21,17 @@
     font-size: 13px;
     font-variant: all-small-caps;
 }
+
+#gene-expr-vplot-svg .violin-x-axis line, .violin-y-axis line, .violin-x-axis path, .violin-y-axis path{
+    stroke: #7d7d7d;
+}
+
+#gene-expr-vplot-svg .violin-x-axis text, .violin-y-axis text, .violin-axis-label {
+    fill: #5a6674;
+    font-size: 11px;
+}
+
+#gene-expr-vplot text.violin-legend-text {
+    font-size: 10px;
+    fill: #5a6674;
+}
