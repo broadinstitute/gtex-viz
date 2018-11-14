@@ -784,12 +784,13 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
             const regex = new RegExp(v);
             focusG.selectAll('.bubble-map-xlabel')
                 .classed('query', (d)=>{
-                    return regex.test(d)||regex.test(rsLookUp[d])||regex.test(varLookUp[d]);
+                    var bool = regex.test(d)||regex.test(bmap.rsLookUp[d])||regex.test(bmap.varLookUp[d]);
+                    return bool;
                 });
 
             miniG.selectAll('.mini-marker')
                 .classed('highlighted', (d)=>{
-                    return regex.test(d)||regex.test(rsLookUp[d])||regex.test(varLookUp[d]);
+                    return regex.test(d)||regex.test(bmap.rsLookUp[d])||regex.test(bmap.varLookUp[d]);
                 });
 
         } else {
