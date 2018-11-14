@@ -147,11 +147,11 @@ export default class HalfMap{
             .style("fill", "none")
             .style("display", "none");
 
-        // svg.on('mouseout', ()=>{
-        //     // cursor.style("display", "none");
-        //     // this.tooltip.hide();
-        //     // svg.selectAll('.half-map-label').classed('highlighted', false);
-        // });
+        svg.on('mouseout', ()=>{
+            cursor.style("display", "none");
+            this.tooltip.hide();
+            svg.selectAll('.half-map-label').classed('highlighted', false);
+        });
         select(svg.node().parentNode)
             .style("cursor", "none")
             .style("position", "absolute")
@@ -191,11 +191,11 @@ export default class HalfMap{
                     cursor.style("display", "none");
                 }
             })
-            .on('mouseout', () => {
-                // cursor.style("display", "none");
-                // this.tooltip.hide();
-                svg.selectAll('.half-map-label').classed('highlighted', false);
-            })
+            // .on('mouseout', () => {
+            //     // cursor.style("display", "none");
+            //     // this.tooltip.hide();
+            //     // svg.selectAll('.half-map-label').classed('highlighted', false);
+            // })
     }
 
     _unique(data){
