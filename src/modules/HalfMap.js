@@ -186,6 +186,9 @@ export default class HalfMap{
                         svg.select(`.l${i}`).classed('highlighted', true);
                         svg.select(`.l${j}`).classed('highlighted', true);
                     }
+                } else {
+                    this.tooltip.hide();
+                    cursor.style("display", "none");
                 }
             })
             .on('mouseout', () => {
