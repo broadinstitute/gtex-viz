@@ -26,11 +26,21 @@
     fill: #48525e;
     font-size: 11px;
     font-weight: 500;
-
 }
 
 #gene-expr-vplot text.violin-legend-text {
     font-size: 11px;
     fill: #48525e;
     font-weight: 500;
+}
+
+#gene-expr-vplot path.violin {
+    stroke-width: 0.5px;
+    stroke: rgba(170, 170, 170, 0.9);
+}
+
+#gene-expr-vplot path.violin.highlighted {
+    stroke-width: 2px;
+    stroke: rgba(33, 37, 40, 1);
+    stroke: #555f66;
 }
