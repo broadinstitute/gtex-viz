@@ -469,7 +469,7 @@ function _filterTissues(vplot, ids, tissues) {
 function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
     // move x-axis down to make space for the color band
     const xAxis = dom.select('.violin-x-axis');
-    xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 5)`);
+    xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 7)`);
 
     // add tissue colors
     const tissueG = dom.append("g");
@@ -479,6 +479,7 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .classed("tcolor", true)
         .attr("x", (g)=>plot.scale.x(g))
         .attr("y", (g)=>loc=="top"?plot.scale.y.range()[1]:plot.scale.y.range()[0])
+        .attr('transform', 'translate(0, 2)')
         .attr("width", (g)=>plot.scale.x.bandwidth())
         .attr("height", 5)
         .style("stroke-width", 0)
