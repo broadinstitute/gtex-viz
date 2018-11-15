@@ -2,10 +2,6 @@
     display: inline-flex;
 }
 
-#gene-expr-vplot-toolbar-plot-options .btn-group.btn-group-sm button {
-    font-size: 11px;
-}
-
 #gene-expr-vplot-toolbar-plot-options label {
     margin-bottom: 0;
 }
@@ -18,6 +14,33 @@
 
 .gene-expr-vplot-option-label {
     padding-right: 5px;
-    font-size: 13px;
+    font-size: 15px;
     font-variant: all-small-caps;
+}
+
+#gene-expr-vplot-svg .violin-x-axis line, .violin-y-axis line, .violin-x-axis path, .violin-y-axis path{
+    stroke: #6d6d6d;
+}
+
+#gene-expr-vplot-svg .violin-x-axis text, .violin-y-axis text, .violin-axis-label {
+    fill: #48525e;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+#gene-expr-vplot text.violin-legend-text {
+    font-size: 11px;
+    fill: #48525e;
+    font-weight: 500;
+}
+
+#gene-expr-vplot path.violin {
+    stroke-width: 0.5px;
+    stroke: rgba(170, 170, 170, 0.9);
+}
+
+#gene-expr-vplot path.violin.highlighted {
+    stroke-width: 2px;
+    stroke: rgba(33, 37, 40, 1);
+    stroke: #555f66;
 }
