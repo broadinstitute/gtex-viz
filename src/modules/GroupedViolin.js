@@ -131,6 +131,7 @@ export default class GroupedViolin {
                     .attr("x", 0)
                     .attr("y", 0)
                     .attr("class", "violin-group-label")
+                    .attr("text-anchor", "center")
                     .attr("fill", (d) => {
                         // console.log(info['pvalueThreshold']);
                         return d=='pvalue'&&parseFloat(info[d])<=parseFloat(info['pvalueThreshold'])?"orangered":"SlateGray"
@@ -200,7 +201,6 @@ export default class GroupedViolin {
             .attr("transform", `translate(0, ${height + buffer})`)
             .call(this.xAxis) // set tickFormat("") to show tick marks without text labels
             .selectAll("text")
-            .attr("text-anchor", "start")
             .attr("transform", "rotate(30, -10, 10)");
 
         // adds the y Axis
@@ -216,7 +216,7 @@ export default class GroupedViolin {
         dom.append("text")
             .attr("class", "violin-axis-label")
             .attr("text-anchor", "end")
-            .attr("transform", `translate(-${buffer * 2 + select('.violin-y-axis').node().getBBox().width}, 0) rotate(-90)`)
+            .attr("transform", `translate(-${buffer * 2 + select('.violin-y-axis').node().getBBox().width}, ${this.scale.y.range()[1]}) rotate(-90)`)
             .text(yLabel);
 
         // plot mouse events
