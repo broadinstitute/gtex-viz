@@ -110,8 +110,8 @@ function setDimensions(par){
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
     let h = (par.height-(par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight))/yList.length;
-    par.height = h>10&&h<15?par.height:10*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
-
+    par.height = h>10?par.height:10*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
+    console.log(par.height)
     par.inWidth = par.width - (par.margin.left + par.margin.right);
     par.inHeight = par.height - (par.margin.top + par.margin.bottom);
 
@@ -302,7 +302,7 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
         ])
         .on("brush", bmap.brushEvent);
 
-    bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 3, "NES");
+    bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 4, "NES");
 
     miniG.append("g")
         .attr("class", "brush")
@@ -380,16 +380,16 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
     g.append('ellipse')
         .attr('cx', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2-10)
         .attr('cy', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2)
-        .attr('rx', 15) // Warning: hard-coded value
+        .attr('rx', 11) // Warning: hard-coded value
         .attr('ry', bmap.yScale.bandwidth()/2)
         .attr('fill', '#748797');
 
     g.append('text')
         .text((d)=>d.rnaSeqAndGenotypeSampleCount)
-        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 19)
-        .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2+4)
+        .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 17)
+        .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2+3)
         .attr('fill', '#ffffff')
-        .style('font-size', `${bmap.yScale.bandwidth()*0.8>12?12:bmap.yScale.bandwidth()*0.9}px`)
+        .style('font-size', "8px")
         .attr('text-anchor', 'center')
 
 }
@@ -580,7 +580,14 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
         .on('mouseout', function(d){
             bmap.tooltip.hide();
             selectAll('.track').classed('highlighted', false);
-        })
+        });
+
+    g.append("text")
+        .text("TSS Proximity")
+        .attr("x", bmap.xScale.range()[0])
+        .attr("y", bmap.yScale.range()[1] + bmap.yScale.bandwidth())
+        .attr("text-anchor", "end")
+        .style("font-size", "8px")
 
 }
 
