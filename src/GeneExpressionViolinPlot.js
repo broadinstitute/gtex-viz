@@ -477,11 +477,11 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .enter()
         .append("rect")
         .classed("tcolor", true)
-        .attr("x", (g)=>plot.scale.x(g) )
+        .attr("x", (g)=>plot.scale.x(g))
         .attr("y", (g)=>loc=="top"?plot.scale.y.range()[1]:plot.scale.y.range()[0])
         .attr("width", (g)=>plot.scale.x.bandwidth())
         .attr("height", 5)
         .style("stroke-width", 0)
         .style("fill", (g)=>`#${tissueDict[g].colorHex}`)
-        .style("opacity", 0.6);
+        .style("opacity", 0.9);
 }
