@@ -407,7 +407,7 @@ export default class GroupedViolin {
             kernelBandwidth.nrd(entry.values) // estimate the bandwidth based on the data
         );
         const eDomain = extent(entry.values); // get the max and min in entry.values
-        const vertices = kde(entry.values).filter((d)=>d[0]>eDomain[0]&&d[0]<eDomain[1]); // filter the vertices that aren't in the entry.values
+        const vertices = kde(entry.values).filter((d)=>d[0]>=eDomain[0]&&d[0]<=eDomain[1]); // filter the vertices that aren't in the entry.values
 
         // violin plot and box can only be drawn when vertices exist and there are no NaN points
         if (vertices.length && this._validVertices(vertices)) {
