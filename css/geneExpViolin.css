@@ -19,15 +19,18 @@
 }
 
 #gene-expr-vplot-svg .violin-x-axis line, .violin-y-axis line, .violin-x-axis path, .violin-y-axis path{
-    stroke: #7d7d7d;
+    stroke: #6d6d6d;
 }
 
 #gene-expr-vplot-svg .violin-x-axis text, .violin-y-axis text, .violin-axis-label {
-    fill: #5a6674;
+    fill: #48525e;
     font-size: 11px;
+    font-weight: 500;
+
 }
 
 #gene-expr-vplot text.violin-legend-text {
-    font-size: 10px;
-    fill: #5a6674;
+    font-size: 11px;
+    fill: #48525e;
+    font-weight: 500;
 }
