@@ -16,6 +16,7 @@
     padding-right: 5px;
     font-size: 15px;
     font-variant: all-small-caps;
+    font-weight: 500;
 }
 
 #gene-expr-vplot-svg .violin-x-axis line, .violin-y-axis line, .violin-x-axis path, .violin-y-axis path{
