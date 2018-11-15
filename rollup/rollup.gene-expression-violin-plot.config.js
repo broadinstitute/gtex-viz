@@ -12,16 +12,13 @@ const name= 'GeneExpressionViolinPlot';
 export default {
     input: 'src/' + name + '.js',
     output: {
-        file: process.env.NODE_ENV=='prod'?'build/js/gene-expression-violin-plot.bundle.min.js':'build/js/gene-expression-violin-plot.bundle.dev.js',
+        file: 'build/js/gene-expression-violin-plot.bundle.min.js',
         format: 'iife',
         name: name,
         sourcemap: 'inline'
     },
     plugins: [
         nodeResolve({jsnext: true, main: true}),
-        replace({
-          ENV: JSON.stringify(process.env.NODE_ENV || 'dev'),
-        }),
-        (process.env.NODE_ENV === 'prod' && uglify({}, minify)) // uglify for production: NODE_ENV=production rollup -c
+        uglify({}, minify) // uglify for production: NODE_ENV=production rollup -c
     ]
 }
