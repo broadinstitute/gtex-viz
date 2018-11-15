@@ -648,7 +648,7 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
             search: {
                 id: 'varLocator',
                 size: 20,
-                label: 'Variant locator  ',
+                label: 'Variant locator',
                 placeholder: '  Variant or RS ID... '
             },
         }
@@ -893,10 +893,9 @@ function panelBuilder(panels, id){
                 .attr('id', p.id)
                 .attr('class', p.class)
                 .css('font-size', p.fontSize)
-                // .css('background-color', "#eeeeee")
                 .css('margin', '1px')
                 .css('padding-top', '2px')
-                // .css('border', '1px solid #d1d1d1')
+                // .css("white-space", "nowrap")
                 .appendTo($(`#${id}`));
             div.addClass(p.class);
 
@@ -911,7 +910,7 @@ function panelBuilder(panels, id){
                 .attr('value', p.search.value)
                 .attr('size', p.search.size)
                 .attr('placeholder', p.search.placeholder)
-                // .css('margin-left', '10px')
+                .css('margin-left', '2px')
                 .appendTo(div);
 
             // add the slider if defined
@@ -923,8 +922,7 @@ function panelBuilder(panels, id){
                 .attr('min', p.slider.min)
                 .attr('max', p.slider.max)
                 .attr('step', p.slider.step)
-                // .css('margin-left', '10px')
-                // .css('width', '60px')
+                .css('margin-left', '10px')
                 .appendTo(div);
             }
         } // add the new element to the dashboard
