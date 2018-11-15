@@ -67,7 +67,7 @@
 }
 .violin-group-label {
     font-size: 9px;
-    text-align: center;
+    text-anchor: middle;
 }
 
 div.violin-tooltip {
