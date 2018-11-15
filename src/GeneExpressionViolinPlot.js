@@ -74,11 +74,11 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             const tissues = parseTissues(args[0]);
             const tissueIdNameMap = {};
             const groupColorDict = {
-                // female: '#e67f7b',
-                // male: '#70bcd2',
+                female: '#e67f7b',
+                male: '#70bcd2'
                 // female: '#eaaa78',
-                male: '#72aae0',
-                female: '#eca670'
+                // male: '#72aae0',
+                // female: '#eca670'
             };
             const tissueDict = {};
             tissues.forEach(x => {
