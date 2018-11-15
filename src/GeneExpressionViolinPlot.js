@@ -114,7 +114,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             let xPadding = 0.2;
             let xDomain = violinPlot.data.map(d => d.group);
             let yDomain =[];
-            let yLabel = 'log10(TPM)';
+            let yLabel = 'log10(TPM+1)';
             let showX = true;
             let showSubX = false;
             let subXAngle = 0;
@@ -281,7 +281,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         if (e.target.id == ids.buttons.logScale) {
             _calcViolinPlotValues(vplot.data, true);
             _calcViolinPlotValues(vplot.allData, true);
-            vplot.updateYScale('log10(TPM)');
+            vplot.updateYScale('log10(TPM+1)');
             vplot.scaleView = 'log';
         } else {
             _calcViolinPlotValues(vplot.data, false);
