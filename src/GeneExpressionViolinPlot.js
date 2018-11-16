@@ -109,22 +109,23 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             violinPlot.scaleView = 'log';
             violinPlot.subset = false;
 
-            let width = dim.width;
-            let height = dim.height;
-            let xPadding = 0.2;
-            let xDomain = violinPlot.data.map(d => d.group);
-            let yDomain =[];
-            let yLabel = 'log10(TPM+1)';
-            let showX = true;
-            let showSubX = false;
-            let subXAngle = 0;
-            let showWhisker = false;
-            let showDivider = false;
-            let showLegend = true;
-            let showSize = false;
-            let sortSubX = true;
+            const width = dim.width;
+            const height = dim.height;
+            const xPadding = 0.2;
+            const xDomain = violinPlot.data.map(d => d.group);
+            const yDomain =[];
+            const yLabel = 'log10(TPM+1)';
+            const showX = true;
+            const showSubX = false;
+            const subXAngle = 0;
+            const showWhisker = false;
+            const showDivider = false;
+            const showLegend = true;
+            const showSize = false;
+            const sortSubX = true;
+            const showOutliers = true;
 
-            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
+            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
             select(`#${ids.svg} #violinLegend`).remove();
             // _addViolinTissueColorBand(violinPlot, svg, tissueDict, 'bottom');
             _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
