@@ -133,7 +133,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
             select(`#${ids.svg} #violinLegend`).remove();
 
-            // _addViolinTissueColorBand(violinPlot, svg, tissueDict, 'bottom');
+            _moveXAxis(svg);
             _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids, urls);
         });
@@ -315,7 +315,10 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
         let svg = select(`#${ids.root} svg g`);
         if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
-        else select(`#${ids.svg} #violinLegend`).remove();
+        else {
+            select(`#${ids.svg} #violinLegend`).remove();
+            _moveXAxis(svg);
+        }
         if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
         else $(`#${ids.svg} .violin-outliers`).hide();
     });
@@ -379,7 +382,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     select(`#${ids.svg} #violinLegend`).remove();
                     if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
                     else $(`#${ids.svg} .violin-outliers`).hide();
-                    // _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
+                    _moveXAxis(svg);
                     $(`#${ids.toolbar} button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
             });
@@ -490,7 +493,10 @@ function _sortAndUpdateData(vplot, ids) {
     let svg = select(`#${ids.root} svg g`);
 
     if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
-    else select(`#${ids.svg} #violinLegend`).remove();
+    else {
+        select(`#${ids.svg} #violinLegend`).remove();
+        _moveXAxis(svg);
+    }
 
     if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
     else $(`#${ids.svg} .violin-outliers`).hide();
@@ -508,6 +514,12 @@ function _filterTissues(vplot, ids, tissues) {
     _sortAndUpdateData(vplot, ids);
 }
 
+function _moveXAxis(dom) {
+    // moving x-axis down a bit for space
+    const xAxis = dom.select('.violin-x-axis');
+    xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 3)`);
+}
+
 /**
  * Adds tissue color to the plot
  * @param plot {GroupedViolin} violin plot object to be modified
@@ -516,9 +528,7 @@ function _filterTissues(vplot, ids, tissues) {
  * @param loc {String} "top" || "bottom"; specified where to display the colors
  */
 function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
-    // moving x-axis down a bit for space
-    const xAxis = dom.select('.violin-x-axis');
-    xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 3)`);
+    _moveXAxis(dom);
 
     // moving x-axis text down to make space for color band
     const xAxisText = dom.selectAll('.violin-x-axis text');
