@@ -79,9 +79,6 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             const groupColorDict = {
                 female: '#e67f7b',
                 male: '#70bcd2'
-                // female: '#eaaa78',
-                // male: '#72aae0',
-                // female: '#eca670'
             };
             const tissueDict = {};
             tissues.forEach(x => {
@@ -91,7 +88,6 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             });
 
             const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, groupColorDict);
-            const tissueGroups = violinPlotData.map(d => d.group);
             let violinPlot = new GroupedViolin(violinPlotData);
             // alphabetically sort by default
             violinPlot.data.sort((a,b) => {
@@ -449,7 +445,6 @@ function _populateTissueFilter(vplot, domId, ids, tissues) {
  */
 function _addTissueFilterEvent(vplot, domId, ids, tissues) {
     $(`#${domId}`).on('hidden.bs.modal', (e) => {
-        let currSort = vplot.genePlotSort;
         let checkedTissues = parseTissueGroupMenu(tissues, `${domId}-body`, true);
         _filterTissues(vplot, ids, checkedTissues);
     });
