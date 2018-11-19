@@ -317,7 +317,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
         else select(`#${ids.svg} #violinLegend`).remove();
         if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
-        else $(`#${ids.svg} .violin-outlier`).hide();
+        else $(`#${ids.svg} .violin-outliers`).hide();
     });
 
     // outlier display events
@@ -325,11 +325,11 @@ function _addToolbar(vplot, tooltip, ids, urls) {
        if ($(e.currentTarget).hasClass('active')) return;
        selectAll(`#${ids.plotOptionGroups.outliers} button`).classed('active', false);
        if (e.target.id == ids.buttons.outliersOn) {
-           $(`#${ids.svg} .violin-outlier`).show();
+           $(`#${ids.svg} .violin-outliers`).show();
            $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
            vplot.showOutliers = true;
        } else {
-           $(`#${ids.svg} .violin-outlier`).hide();
+           $(`#${ids.svg} .violin-outliers`).hide();
            $(`#${ids.svg} path.violin`).attr('stroke-width', '0.7px');
            vplot.showOutliers = false;
        }
@@ -360,7 +360,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     let svg = select(`#${ids.root} svg g`);
                     _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
                     if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
-                    else $(`#${ids.svg} .violin-outlier`).hide();
+                    else $(`#${ids.svg} .violin-outliers`).hide();
                     $(`#${ids.toolbar}-plot-options button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
             });
@@ -378,7 +378,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     let svg = select(`#${ids.root} svg g`);
                     select(`#${ids.svg} #violinLegend`).remove();
                     if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
-                    else $(`#${ids.svg} .violin-outlier`).hide();
+                    else $(`#${ids.svg} .violin-outliers`).hide();
                     // _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
                     $(`#${ids.toolbar} button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
@@ -493,7 +493,7 @@ function _sortAndUpdateData(vplot, ids) {
     else select(`#${ids.svg} #violinLegend`).remove();
 
     if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
-    else $(`#${ids.svg} .violin-outlier`).hide();
+    else $(`#${ids.svg} .violin-outliers`).hide();
 }
 
 /**

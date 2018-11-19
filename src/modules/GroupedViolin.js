@@ -479,16 +479,14 @@ export default class GroupedViolin {
                 const lower = min(entry.values.filter((d)=>d>=q1-(iqr*1.5)));
                 const outliers = entry.values.filter((d)=>d<lower||d>upper);
                 violinG.append("g")
-                    .attr("class", "violin-outlier")
+                    .attr("class", "violin-outliers")
                     .selectAll("circle")
                     .data(outliers)
                     .enter()
                     .append("circle")
                     .attr("cx", ()=>this.scale.z(0))
                     .attr("cy", (d)=>this.scale.y(d))
-                    .attr("r", 2)
-                    .attr("stroke", "#aaa")
-                    .attr("fill", "none");
+                    .attr("r", 2);
             }
 
             // mouse events
