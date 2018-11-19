@@ -69,25 +69,25 @@ export default class GroupedViolin {
      */
 
     render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis",
-           showX=true, showSubX=true, subXAngle=0,
+           showX=true, xAngle=30, showSubX=true, subXAngle=0,
            showWhisker=false, showDivider=false, showLegend=false, showSize=false, sortSubX=false, showOutliers=false){
 
         // define the reset for this plot
         this.reset = () => {
             dom.selectAll("*").remove();
-            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
+            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, xAngle, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
         };
 
         this.updateYScale = function(yLabel=undefined, yScale=undefined) {
             dom.selectAll("*").remove();
             if (yScale === undefined) yScale = [];
-            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
+            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, xAngle, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
         };
 
         this.updateXScale = function(xDomain=undefined) {
             if (xDomain === undefined) console.error('updateXScale called without new X domain');
             dom.selectAll("*").remove();
-            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
+            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, xAngle, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
 
         };
 
@@ -202,7 +202,7 @@ export default class GroupedViolin {
             .call(this.xAxis) // set tickFormat("") to show tick marks without text labels
             .selectAll("text")
             .attr("text-anchor", "start")
-            .attr("transform", "rotate(30, -10, 10)");
+            .attr("transform", `rotate(${xAngle}, -10, 10)`);
 
         // adds the y Axis
         buffer = 5;

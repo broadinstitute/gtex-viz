@@ -116,6 +116,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             const yDomain =[];
             const yLabel = 'log10(TPM+1)';
             const showX = true;
+            const xAngle = 35;
             const showSubX = false;
             const subXAngle = 0;
             const showWhisker = false;
@@ -125,7 +126,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             const sortSubX = true;
             const showOutliers = true;
 
-            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
+            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, xAngle, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
             $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
             select(`#${ids.svg} #violinLegend`).remove();
 
