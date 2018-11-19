@@ -11,7 +11,7 @@ import {getGtexUrls, parseTissues, parseTissueSites} from './modules/gtexDataPar
 import {createTissueGroupMenu, parseTissueGroupMenu} from './modules/gtexMenuBuilder';
 import GroupedViolin from './modules/GroupedViolin';
 
-export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), margins=_setViolinPlotMargins(50,75,250,60), dimensions={w: 1200, h:250}) {
+export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), margins=_setViolinPlotMargins(50,75,250,60), dimensions={w: window.innerWidth*0.8, h:250}) {
     const promises = [
         json(urls.tissue),
         json(urls.geneExp + gencodeId)
@@ -184,16 +184,45 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // adding bootstrap classes to toolbar
     $(`#${ids.toolbar}`).addClass('row');
-    $(`#${ids.toolbar} .btn-group`).addClass('col-xs-12 col-lg-2 text-nowrap');
+    $(`#${ids.toolbar} .btn-group`).addClass('col-xs-12 col-lg-1 text-nowrap');
 
     $('<div></div>').appendTo(`#${ids.toolbar}`)
         .attr('id', `${ids.toolbar}-plot-options`)
-        .attr('class', 'col-lg-10 text-nowrap');
+        .attr('class', 'col-lg-11 text-nowrap');
     let plotOptions = $(`#${ids.toolbar}-plot-options`);
+
+    // subsetting options
+    $('<div/>').appendTo(plotOptions)
+        .attr('id', ids.plotOptionGroups.differentiation)
+        .attr('class', 'col-lg-2 col-xl-2')
+        .css('margin-right', '11px');
+    $('<span/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
+        .attr('class', `${ids.root}-option-label`)
+        .html('Subset');
+    $('<div/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
+        .attr('class', 'btn-group btn-group-sm');
+    let subsetButtonGroup = $(`#${ids.plotOptionGroups.differentiation} .btn-group`);
+    $(`<button class="btn btn-default" id="${ids.buttons.noDiff}">None</button>`).appendTo(subsetButtonGroup);
+    $(`<button class="btn btn-default" id="${ids.buttons.sexDiff}">Sex</button>`).appendTo(subsetButtonGroup);
+    // adding spinner
+    $(`<span><i id="spinner" class="fas fa-sync fa-spin" style="margin-left: 5px; display:none;"></i></span>`).appendTo(`#${ids.plotOptionGroups.differentiation}`);
+
+    // scale options
+    $('<div/>').appendTo(plotOptions)
+        .attr('id', ids.plotOptionGroups.scale)
+        .attr('class', 'col-lg-2 col-xl-2');
+    $('<span/>').appendTo(`#${ids.plotOptionGroups.scale}`)
+        .attr('class', `${ids.root}-option-label`)
+        .html('Scale');
+    $('<div/>').appendTo(`#${ids.plotOptionGroups.scale}`)
+        .attr('class', 'btn-group btn-group-sm');
+    let scaleButtonGroup = $(`#${ids.plotOptionGroups.scale} .btn-group`);
+    $(`<button class="btn btn-default" id="${ids.buttons.logScale}">Log</button>`).appendTo(scaleButtonGroup);
+    $(`<button class="btn btn-default" id="${ids.buttons.linearScale}">Linear</button>`).appendTo(scaleButtonGroup);
 
     // sort options -- tissue name sorts
     $('<div/>').appendTo(plotOptions)
-        .attr('class', `${ids.plotOptionGroups.sort} col-lg-3 col-xl-2`)
+        .attr('class', `${ids.plotOptionGroups.sort} col-lg-2 col-xl-2`)
         .attr('id', `vplot-alpha-sorts`);
     $('<span/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-alpha-sorts`)
         .attr('class', `${ids.root}-option-label`)
@@ -208,7 +237,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // sort options -- median sorts
     $('<div/>').appendTo(plotOptions)
-        .attr('class', `${ids.plotOptionGroups.sort} col-lg-3 col-xl-2`)
+        .attr('class', `${ids.plotOptionGroups.sort} col-lg-2 col-xl-2`)
         .attr('id', `vplot-num-sorts`);
     $('<span/>').appendTo(`.${ids.plotOptionGroups.sort}#vplot-num-sorts`)
         .attr('class', `${ids.root}-option-label`)
@@ -220,23 +249,10 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     $(`<button class="btn btn-default fa fa-sort-numeric-down" id="${ids.buttons.ascSort}"></button>`).appendTo(numSortButtonGroup);
     $(`<button class="btn btn-default fa fa-sort-numeric-up" id="${ids.buttons.descSort}"></button>`).appendTo(numSortButtonGroup);
 
-    // scale options
-    $('<div/>').appendTo(plotOptions)
-        .attr('id', ids.plotOptionGroups.scale)
-        .attr('class', 'col-lg-3 col-xl-2');
-    $('<span/>').appendTo(`#${ids.plotOptionGroups.scale}`)
-        .attr('class', `${ids.root}-option-label`)
-        .html('Scale');
-    $('<div/>').appendTo(`#${ids.plotOptionGroups.scale}`)
-        .attr('class', 'btn-group btn-group-sm');
-    let scaleButtonGroup = $(`#${ids.plotOptionGroups.scale} .btn-group`);
-    $(`<button class="btn btn-default" id="${ids.buttons.logScale}">Log</button>`).appendTo(scaleButtonGroup);
-    $(`<button class="btn btn-default" id="${ids.buttons.linearScale}">Linear</button>`).appendTo(scaleButtonGroup);
-
     // outlier display options
     $('<div/>').appendTo(plotOptions)
         .attr('id', ids.plotOptionGroups.outliers)
-        .attr('class', 'col-lg-3 col-xl-2');
+        .attr('class', 'col-lg-2 col-xl-2');
     $('<span/>').appendTo(`#${ids.plotOptionGroups.outliers}`)
         .attr('class', `${ids.root}-option-label`)
         .html('Outliers');
@@ -245,21 +261,6 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     let outliersButtonGroup = $(`#${ids.plotOptionGroups.outliers} .btn-group`);
     $(`<button class="btn btn-default" id="${ids.buttons.outliersOn}">On</button>`).appendTo(outliersButtonGroup);
     $(`<button class="btn btn-default" id="${ids.buttons.outliersOff}">Off</button>`).appendTo(outliersButtonGroup);
-
-    // subsetting options
-    $('<div/>').appendTo(plotOptions)
-        .attr('id', ids.plotOptionGroups.differentiation)
-        .attr('class', 'col-lg-3 col-xl-3');
-    $('<span/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
-        .attr('class', `${ids.root}-option-label`)
-        .html('Subset');
-    $('<div/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
-        .attr('class', 'btn-group btn-group-sm');
-    let subsetButtonGroup = $(`#${ids.plotOptionGroups.differentiation} .btn-group`);
-    $(`<button class="btn btn-default" id="${ids.buttons.noDiff}">None</button>`).appendTo(subsetButtonGroup);
-    $(`<button class="btn btn-default" id="${ids.buttons.sexDiff}">Sex</button>`).appendTo(subsetButtonGroup);
-    // adding spinner
-    $(`<span><i id="spinner" class="fas fa-sync fa-spin" style="margin-left: 5px; display: none;"></i></span>`).appendTo(`#${ids.plotOptionGroups.differentiation}`);
 
     selectAll(`#${ids.plotOptionsModal} .modal-body button`).classed('active', false);
 
