@@ -516,12 +516,13 @@ function _filterTissues(vplot, ids, tissues) {
  * @param loc {String} "top" || "bottom"; specified where to display the colors
  */
 function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
-    // move x-axis down to make space for the color band
+    // moving x-axis down a bit for space
     const xAxis = dom.select('.violin-x-axis');
-    xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 2)`);
+    xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 3)`);
 
-    const xAxisText = dom.select('.violin-x-axis text');
-    xAxisText.attr('transform', `translate(0, 5) ${xAxis.attr('transform')}`);
+    // moving x-axis text down to make space for color band
+    const xAxisText = dom.selectAll('.violin-x-axis text');
+    xAxisText.attr('transform', `translate(0, 8) ${xAxisText.attr('transform')}`);
 
     // add tissue colors
     const tissueG = dom.append("g");
@@ -531,9 +532,9 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .classed("tcolor", true)
         .attr("x", (g)=>plot.scale.x(g))
         .attr("y", (g)=>loc=="top"?plot.scale.y.range()[1]:plot.scale.y.range()[0])
-        .attr('transform', 'translate(0, 10)')
+        .attr('transform', 'translate(0, 14)')
         .attr("width", (g)=>plot.scale.x.bandwidth())
-        .attr("height", 3.5)
+        .attr("height", 5)
         .style("stroke-width", 0)
         .style("fill", (g)=>`#${tissueDict[g].colorHex}`)
         .style("opacity", 0.9);
