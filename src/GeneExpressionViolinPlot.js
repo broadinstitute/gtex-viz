@@ -35,12 +35,15 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             logScale: `${rootId}-log-scale`,
             linearScale: `${rootId}-linear-scale`,
             noDiff: `${rootId}-no-diff`,
-            sexDiff: `${rootId}-sex-diff`
+            sexDiff: `${rootId}-sex-diff`,
+            outliersOn: `${rootId}-outliers-on`,
+            outliersOff: `${rootId}-outliers-off`
         },
         plotOptionGroups: {
             scale: `${rootId}-option-scale`,
             sort: `${rootId}-option-sort`,
-            differentiation: `${rootId}-option-differentiation`
+            differentiation: `${rootId}-option-differentiation`,
+            outliers: `${rootId}-option-outlier`
         },
         plotSorts: {
             ascAlphaSort: 'asc-alphasort',
@@ -108,6 +111,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             violinPlot.tissueDict = tissueDict;
             violinPlot.scaleView = 'log';
             violinPlot.subset = false;
+            violinPlot.showOutliers = true;
 
             const width = dim.width;
             const height = dim.height;
@@ -126,7 +130,9 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             const showOutliers = true;
 
             violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
+            $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
             select(`#${ids.svg} #violinLegend`).remove();
+
             // _addViolinTissueColorBand(violinPlot, svg, tissueDict, 'bottom');
             _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids, urls);
@@ -230,10 +236,23 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     $(`<button class="btn btn-default" id="${ids.buttons.logScale}">Log</button>`).appendTo(scaleButtonGroup);
     $(`<button class="btn btn-default" id="${ids.buttons.linearScale}">Linear</button>`).appendTo(scaleButtonGroup);
 
+    // outlier display options
+    $('<div/>').appendTo(plotOptions)
+        .attr('id', ids.plotOptionGroups.outliers)
+        .attr('class', 'col-lg-3 col-xl-2');
+    $('<span/>').appendTo(`#${ids.plotOptionGroups.outliers}`)
+        .attr('class', `${ids.root}-option-label`)
+        .html('Outliers');
+    $('<div/>').appendTo(`#${ids.plotOptionGroups.outliers}`)
+        .attr('class', 'btn-group btn-group-sm');
+    let outliersButtonGroup = $(`#${ids.plotOptionGroups.outliers} .btn-group`);
+    $(`<button class="btn btn-default" id="${ids.buttons.outliersOn}">On</button>`).appendTo(outliersButtonGroup);
+    $(`<button class="btn btn-default" id="${ids.buttons.outliersOff}">Off</button>`).appendTo(outliersButtonGroup);
+
     // subsetting options
     $('<div/>').appendTo(plotOptions)
         .attr('id', ids.plotOptionGroups.differentiation)
-        .attr('class', 'col-lg-3 col-xl-5')
+        .attr('class', 'col-lg-3 col-xl-3');
     $('<span/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
         .attr('class', `${ids.root}-option-label`)
         .html('Subset');
@@ -257,6 +276,9 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     // differentation
     select(`#${ids.buttons.noDiff}`)
         .classed('active', true);
+    // outliers
+    select(`#${ids.buttons.outliersOn}`)
+        .classed('active', true);
 
     // filter
     toolbar.createButton(ids.buttons.filter, 'fa-filter');
@@ -265,7 +287,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .on('mouseout', ()=>{toolbar.tooltip.hide();});
 
 
-    // sort changing events
+    // sort events
     $(`.${ids.plotOptionGroups.sort} button`).on('click', (e)=>{
         if ($(e.currentTarget).hasClass('active')) return;
         vplot.genePlotSort = e.target.id.replace(`${ids.root}-`, '');
@@ -274,7 +296,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         _sortAndUpdateData(vplot, ids);
     });
 
-    // scale changing events
+    // scale events
     $(`#${ids.plotOptionGroups.scale} button`).on('click', (e)=>{
         if ($(e.currentTarget).hasClass('active')) return;
         selectAll(`#${ids.plotOptionGroups.scale} button`).classed('active', false);
@@ -294,9 +316,27 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         let svg = select(`#${ids.root} svg g`);
         if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
         else select(`#${ids.svg} #violinLegend`).remove();
+        if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
+        else $(`#${ids.svg} .violin-outlier`).hide();
     });
 
-    // differentiation changing events
+    // outlier display events
+    $(`#${ids.plotOptionGroups.outliers} button`).on('click', (e)=>{
+       if ($(e.currentTarget).hasClass('active')) return;
+       selectAll(`#${ids.plotOptionGroups.outliers} button`).classed('active', false);
+       if (e.target.id == ids.buttons.outliersOn) {
+           $(`#${ids.svg} .violin-outlier`).show();
+           $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
+           vplot.showOutliers = true;
+       } else {
+           $(`#${ids.svg} .violin-outlier`).hide();
+           $(`#${ids.svg} path.violin`).attr('stroke-width', '0.7px');
+           vplot.showOutliers = false;
+       }
+       select(e.currentTarget).classed('active', true);
+    });
+
+    // differentiation events
     $(`#${ids.plotOptionGroups.differentiation} button`).on('click', (e)=>{
         if ($(e.currentTarget).hasClass('active')) return;
         $(`#${ids.toolbar}-plot-options button`).prop('disabled', true);
@@ -319,6 +359,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     vplot.subset = true;
                     let svg = select(`#${ids.root} svg g`);
                     _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
+                    if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
+                    else $(`#${ids.svg} .violin-outlier`).hide();
                     $(`#${ids.toolbar}-plot-options button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
             });
@@ -335,6 +377,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     vplot.subset = false;
                     let svg = select(`#${ids.root} svg g`);
                     select(`#${ids.svg} #violinLegend`).remove();
+                    if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
+                    else $(`#${ids.svg} .violin-outlier`).hide();
                     // _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
                     $(`#${ids.toolbar} button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
@@ -444,8 +488,12 @@ function _sortAndUpdateData(vplot, ids) {
     let xDomain = sortData.map((d) => d.group);
     vplot.updateXScale(xDomain);
     let svg = select(`#${ids.root} svg g`);
+
     if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
     else select(`#${ids.svg} #violinLegend`).remove();
+
+    if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
+    else $(`#${ids.svg} .violin-outlier`).hide();
 }
 
 /**
@@ -470,7 +518,10 @@ function _filterTissues(vplot, ids, tissues) {
 function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
     // move x-axis down to make space for the color band
     const xAxis = dom.select('.violin-x-axis');
-    xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 8)`);
+    xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 2)`);
+
+    const xAxisText = dom.select('.violin-x-axis text');
+    xAxisText.attr('transform', `translate(0, 5) ${xAxis.attr('transform')}`);
 
     // add tissue colors
     const tissueG = dom.append("g");
@@ -480,9 +531,9 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .classed("tcolor", true)
         .attr("x", (g)=>plot.scale.x(g))
         .attr("y", (g)=>loc=="top"?plot.scale.y.range()[1]:plot.scale.y.range()[0])
-        .attr('transform', 'translate(0, 3)')
+        .attr('transform', 'translate(0, 10)')
         .attr("width", (g)=>plot.scale.x.bandwidth())
-        .attr("height", 5)
+        .attr("height", 3.5)
         .style("stroke-width", 0)
         .style("fill", (g)=>`#${tissueDict[g].colorHex}`)
         .style("opacity", 0.9);
