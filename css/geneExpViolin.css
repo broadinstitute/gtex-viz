@@ -33,23 +33,23 @@
     font-size: 12px;
 }
 
-#gene-expr-vplot text.violin-legend-text {
+#gene-expr-vplot-svg text.violin-legend-text {
     font-size: 11.5px;
     fill: Black;
     font-weight: 500;
 }
 
-#gene-expr-vplot path.violin.outlined {
+#gene-expr-vplot-svg path.violin.outlined {
     stroke-width: 1.2px;
     stroke: rgba(130, 130, 130, 0.9);
 }
 
-#gene-expr-vplot path.violin.highlighted {
+#gene-expr-vplot-svg path.violin.highlighted {
     stroke-width: 2px;
     stroke: rgba(85, 95, 102, 1);
 }
 
-#gene-expr-vplot path.violin.highlighted.outlined {
+#gene-expr-vplot-svg path.violin.highlighted.outlined {
     stroke-width: 2px;
     stroke: rgba(85, 95, 102, 1);
 }
