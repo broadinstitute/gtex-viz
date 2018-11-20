@@ -69,25 +69,25 @@ export default class GroupedViolin {
      */
 
     render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis",
-           showX=true, showSubX=true, subXAngle=0,
-           showWhisker=false, showDivider=false, showLegend=false, showSize=false, sortSubX=false){
+           showX=true, xAngle=30, showSubX=true, subXAngle=0,
+           showWhisker=false, showDivider=false, showLegend=false, showSize=false, sortSubX=false, showOutliers=false){
 
         // define the reset for this plot
         this.reset = () => {
             dom.selectAll("*").remove();
-            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
+            this.render(dom, width, height, xPadding, xDomain, yDomain, yLabel, showX, xAngle, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
         };
 
         this.updateYScale = function(yLabel=undefined, yScale=undefined) {
             dom.selectAll("*").remove();
             if (yScale === undefined) yScale = [];
-            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
+            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, xAngle, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
         };
 
         this.updateXScale = function(xDomain=undefined) {
             if (xDomain === undefined) console.error('updateXScale called without new X domain');
             dom.selectAll("*").remove();
-            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX);
+            this.render(dom, width, height, xPadding, xDomain, [], yLabel, showX, xAngle, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
 
         };
 
@@ -161,7 +161,7 @@ export default class GroupedViolin {
 
                 if (0 == entry.values.length) return; // no further rendering if this group has no entries
                 entry.values = entry.values.sort(ascending);
-                this._drawViolin(dom, entry, showWhisker, g.index);
+                this._drawViolin(dom, entry, showWhisker, g.index, showOutliers);
             });
 
             // adds the sub-x axis if there are more than one entries
@@ -202,7 +202,7 @@ export default class GroupedViolin {
             .call(this.xAxis) // set tickFormat("") to show tick marks without text labels
             .selectAll("text")
             .attr("text-anchor", "start")
-            .attr("transform", "rotate(30, -10, 10)");
+            .attr("transform", `rotate(${xAngle}, -10, 10)`);
 
         // adds the y Axis
         buffer = 5;
@@ -398,7 +398,7 @@ export default class GroupedViolin {
      * @param showWhisker {Boolean}
      * @private
      */
-    _drawViolin(dom, entry, showWhisker, gIndex){
+    _drawViolin(dom, entry, showWhisker, gIndex, showOutliers){
 
         // generate the vertices for the violin path use a kde
         let kde = kernelDensityEstimator(
@@ -444,8 +444,8 @@ export default class GroupedViolin {
             if(showWhisker){
                 // the upper and lower limits of entry.values
                 const iqr = Math.abs(q3-q1);
-                const upper = max(entry.values.filter((d)=>d<q3+(iqr*1.5)));
-                const lower = min(entry.values.filter((d)=>d>q1-(iqr*1.5)));
+                const upper = max(entry.values.filter((d)=>d<=q3+(iqr*1.5)));
+                const lower = min(entry.values.filter((d)=>d>=q1-(iqr*1.5)));
                 dom.append("line")
                     .classed("whisker", true)
                     .attr("x1", this.scale.z(0))
@@ -471,6 +471,23 @@ export default class GroupedViolin {
                 .attr("y1", this.scale.y(med))
                 .attr("y2", this.scale.y(med))
                 .attr("class", "violin-median");
+
+            // outliers
+            if (showOutliers) {
+                const iqr = Math.abs(q3-q1);
+                const upper = max(entry.values.filter((d)=>d<=q3+(iqr*1.5)));
+                const lower = min(entry.values.filter((d)=>d>=q1-(iqr*1.5)));
+                const outliers = entry.values.filter((d)=>d<lower||d>upper);
+                violinG.append("g")
+                    .attr("class", "violin-outliers")
+                    .selectAll("circle")
+                    .data(outliers)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", ()=>this.scale.z(0))
+                    .attr("cy", (d)=>this.scale.y(d))
+                    .attr("r", 2);
+            }
 
             // mouse events
             violinG.on("mouseover", ()=>{

@@ -25,7 +25,7 @@
 
 #gene-expr-vplot-svg .violin-x-axis text, .violin-y-axis text, .violin-axis-label {
     fill: Black;
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 500;
 }
 
@@ -34,13 +34,12 @@
 }
 
 #gene-expr-vplot text.violin-legend-text {
-    font-size: 11px;
+    font-size: 11.5px;
     fill: Black;
     font-weight: 500;
 }
 
 #gene-expr-vplot path.violin {
-    stroke-width: 0.7px;
     stroke: rgba(170, 170, 170, 0.9);
 }
 

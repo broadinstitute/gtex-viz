@@ -105,6 +105,11 @@ text.violin-legend-text {
 
 }
 
+.violin-outliers circle {
+    stroke: #aaaaaa;
+    fill: none;
+}
+
 
 
 
