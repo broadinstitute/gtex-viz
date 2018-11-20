@@ -114,7 +114,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             let xPadding = 0.2;
             let xDomain = violinPlot.data.map(d => d.group);
             let yDomain =[];
-            let yLabel = 'log10(TPM)';
+            let yLabel = 'log10(TPM+1)';
             let showX = true;
             let showSubX = false;
             let subXAngle = 0;
@@ -281,7 +281,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         if (e.target.id == ids.buttons.logScale) {
             _calcViolinPlotValues(vplot.data, true);
             _calcViolinPlotValues(vplot.allData, true);
-            vplot.updateYScale('log10(TPM)');
+            vplot.updateYScale('log10(TPM+1)');
             vplot.scaleView = 'log';
         } else {
             _calcViolinPlotValues(vplot.data, false);
@@ -469,7 +469,7 @@ function _filterTissues(vplot, ids, tissues) {
 function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
     // move x-axis down to make space for the color band
     const xAxis = dom.select('.violin-x-axis');
-    xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 7)`);
+    xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 8)`);
 
     // add tissue colors
     const tissueG = dom.append("g");
@@ -479,7 +479,7 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .classed("tcolor", true)
         .attr("x", (g)=>plot.scale.x(g))
         .attr("y", (g)=>loc=="top"?plot.scale.y.range()[1]:plot.scale.y.range()[0])
-        .attr('transform', 'translate(0, 2)')
+        .attr('transform', 'translate(0, 3)')
         .attr("width", (g)=>plot.scale.x.bandwidth())
         .attr("height", 5)
         .style("stroke-width", 0)
