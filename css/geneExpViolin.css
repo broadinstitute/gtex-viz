@@ -39,11 +39,17 @@
     font-weight: 500;
 }
 
-#gene-expr-vplot path.violin {
-    stroke: rgba(170, 170, 170, 0.9);
+#gene-expr-vplot path.violin.outlined {
+    stroke-width: 1.2px;
+    stroke: rgba(130, 130, 130, 0.9);
 }
 
 #gene-expr-vplot path.violin.highlighted {
+    stroke-width: 2px;
+    stroke: rgba(85, 95, 102, 1);
+}
+
+#gene-expr-vplot path.violin.highlighted.outlined {
     stroke-width: 2px;
     stroke: rgba(85, 95, 102, 1);
 }
