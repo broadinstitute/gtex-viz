@@ -109,7 +109,10 @@ function setDimensions(par){
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
     let h = (par.height-(par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight))/yList.length;
-    par.height = h>10?par.height:10*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
+    let hMax = 18;
+    let hMin = 10;
+    if (h < hMin) par.height = hMin*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
+    else if (h > hMax) par.height = hMax*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
     console.log(par.height)
     par.inWidth = par.width - (par.margin.left + par.margin.right);
     par.inHeight = par.height - (par.margin.top + par.margin.bottom);
@@ -560,7 +563,7 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
         .append('rect')
         .classed('track', true)
         .attr('x', (d)=>bmap.xScale(d))
-        .attr('y', bmap.yScale.range()[1] + bmap.yScale.bandwidth())
+        .attr('y', bmap.yScale.range()[1])
         .attr('width', bmap.xScale.bandwidth())
         .attr('height', bmap.yScale.bandwidth())
         .attr('fill', (d)=>{
