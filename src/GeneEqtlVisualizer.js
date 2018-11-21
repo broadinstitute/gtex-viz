@@ -66,7 +66,6 @@ export function render(par, geneId, urls = getGtexUrls()){
                                 $(`#${par.divModal}`).find(":input").each(function(){
                                     if($(this).prop("checked")) checked.push($(this).val());
                                 });
-                                console.log(checked)
                                 if (checked.length == oriY.length) return; // no change
                                 // filter eQTL data based on selected tissues
                                 par.data = eqtls.filter((d)=>{
@@ -110,7 +109,10 @@ function setDimensions(par){
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
     let h = (par.height-(par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight))/yList.length;
-    par.height = h>10?par.height:10*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
+    let hMax = 18;
+    let hMin = 10;
+    if (h < hMin) par.height = hMin*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
+    else if (h > hMax) par.height = hMax*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
     console.log(par.height)
     par.inWidth = par.width - (par.margin.left + par.margin.right);
     par.inHeight = par.height - (par.margin.top + par.margin.bottom);
@@ -298,7 +300,7 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
     bmap.brush = brushX()
         .extent([
             [0,0],
-            [par.inWidth, par.miniPanelHeight]
+            [par.inWidth, par.miniPanelHeight + 5]
         ])
         .on("brush", bmap.brushEvent);
 
@@ -307,7 +309,10 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
     miniG.append("g")
         .attr("class", "brush")
         .call(bmap.brush)
-        .call(bmap.brush.move, [0, bmap.xScaleMini.bandwidth()*100]);
+        .call(bmap.brush.move, [0, bmap.xScaleMini.bandwidth()*80]); // set the brush size to 60 columns
+
+    // hide the mini map when the focus map includes all eQTLs
+    if (bmap.xScaleMini.domain().length == bmap.xScale.domain().length) miniG.style("display", "none");
 
     return bmap;
 }
@@ -353,7 +358,10 @@ function updateFocusView(par, bmap, bmapSvg){
             return `translate(${x}, ${y}) rotate(${cl.angle})`;
 
         })
-        .style("font-size", `${Math.floor(bmap.xScale.bandwidth())/2}px`)
+        .style("font-size", () => {
+            let size = Math.floor(bmap.xScale.bandwidth()/ 2)>10?10:Math.floor(bmap.xScale.bandwidth()/ 2);
+            return `${size}px`
+        })
         .style("display", (d) => {
             let x = bmap.xScale(d);
             return x === undefined ? "none" : "block";
@@ -561,7 +569,7 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
         .append('rect')
         .classed('track', true)
         .attr('x', (d)=>bmap.xScale(d))
-        .attr('y', bmap.yScale.range()[1] + bmap.yScale.bandwidth())
+        .attr('y', bmap.yScale.range()[1])
         .attr('width', bmap.xScale.bandwidth())
         .attr('height', bmap.yScale.bandwidth())
         .attr('fill', (d)=>{
@@ -656,8 +664,6 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
      // create each search section
     ////// Add custom DOMs that are not defined in the panels:
 
-
-
     // -- add the link to the tissue filter menu here
     let tiDiv = $('<div/>')
         .attr('class', 'col-xs-12 col-sm-6 col-lg-1')
@@ -673,7 +679,7 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         .css('padding-top', '2px')
         .css('color', '#0868ac')
         .css('cursor', 'pointer')
-        .html('Filter Tissue<br/>')
+        .html('<i class="fas fa-filter"></i>Filter Tissues<br/>')
         .appendTo(tiDiv);
 
     ////// end adding custom DOMs
@@ -748,7 +754,6 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
     $('#pvalueLimit').keydown((e)=>{
         if(e.keyCode == 13){
             minP = parseFloat($('#pvalueLimit').val());
-            console.log("updated")
             updateBubbles();
         }
     });
@@ -991,7 +996,7 @@ function addBubbleClickEvent(bmap, bmapSvg, par) {
  * @param dialogDivId {String}
  * @param title {String} the title of the dialog window
  */
-function createDialog(parentDivId, dialogDivId, title){
+function  createDialog(parentDivId, dialogDivId, title){
      // jquery UI dialog
     checkDomId(parentDivId);
     let parent = $(`#${parentDivId}`);
@@ -1000,12 +1005,12 @@ function createDialog(parentDivId, dialogDivId, title){
         .attr('title', title)
         .appendTo(parent);
     let clearDiv = $('<div/>')
-        .attr('class', 'bMap-clear')
+        // .attr('class', 'bMap-clear')
         .html("Clear All")
         .appendTo(dialog);
     let contentDiv = $('<div/>')
         .attr('id', 'bMap-content')
-        .attr('class', 'bMap-content')
+        // .attr('class', 'bMap-content')
         .appendTo(dialog);
     dialog.dialog({
         title: title,
