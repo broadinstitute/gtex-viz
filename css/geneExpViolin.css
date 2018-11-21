@@ -41,7 +41,7 @@
 
 #gene-expr-vplot-svg path.violin.outlined {
     stroke-width: 1.2px;
-    stroke: rgba(150, 150, 150, 0.9);
+    stroke: rgba(170, 170, 170, 0.9);
 }
 
 #gene-expr-vplot-svg path.violin.highlighted {
