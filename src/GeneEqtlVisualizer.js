@@ -66,7 +66,6 @@ export function render(par, geneId, urls = getGtexUrls()){
                                 $(`#${par.divModal}`).find(":input").each(function(){
                                     if($(this).prop("checked")) checked.push($(this).val());
                                 });
-                                console.log(checked)
                                 if (checked.length == oriY.length) return; // no change
                                 // filter eQTL data based on selected tissues
                                 par.data = eqtls.filter((d)=>{
@@ -746,7 +745,6 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
     $('#pvalueLimit').keydown((e)=>{
         if(e.keyCode == 13){
             minP = parseFloat($('#pvalueLimit').val());
-            console.log("updated")
             updateBubbles();
         }
     });
