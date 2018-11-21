@@ -355,7 +355,10 @@ function updateFocusView(par, bmap, bmapSvg){
             return `translate(${x}, ${y}) rotate(${cl.angle})`;
 
         })
-        .style("font-size", `${Math.floor(bmap.xScale.bandwidth())/2}px`)
+        .style("font-size", () => {
+            let size = Math.floor(bmap.xScale.bandwidth()/ 2)>12?12:Math.floor(bmap.xScale.bandwidth()/ 2);
+            return `${size}px`
+        })
         .style("display", (d) => {
             let x = bmap.xScale(d);
             return x === undefined ? "none" : "block";
