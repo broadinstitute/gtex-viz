@@ -300,7 +300,7 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
     bmap.brush = brushX()
         .extent([
             [0,0],
-            [par.inWidth, par.miniPanelHeight]
+            [par.inWidth, par.miniPanelHeight + 5]
         ])
         .on("brush", bmap.brushEvent);
 
@@ -309,7 +309,10 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
     miniG.append("g")
         .attr("class", "brush")
         .call(bmap.brush)
-        .call(bmap.brush.move, [0, bmap.xScaleMini.bandwidth()*100]);
+        .call(bmap.brush.move, [0, bmap.xScaleMini.bandwidth()*80]); // set the brush size to 60 columns
+
+    // hide the mini map when the focus map includes all eQTLs
+    if (bmap.xScaleMini.domain().length == bmap.xScale.domain().length) miniG.style("display", "none");
 
     return bmap;
 }
@@ -356,7 +359,7 @@ function updateFocusView(par, bmap, bmapSvg){
 
         })
         .style("font-size", () => {
-            let size = Math.floor(bmap.xScale.bandwidth()/ 2)>12?12:Math.floor(bmap.xScale.bandwidth()/ 2);
+            let size = Math.floor(bmap.xScale.bandwidth()/ 2)>10?10:Math.floor(bmap.xScale.bandwidth()/ 2);
             return `${size}px`
         })
         .style("display", (d) => {
