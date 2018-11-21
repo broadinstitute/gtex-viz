@@ -107,7 +107,7 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             violinPlot.tissueDict = tissueDict;
             violinPlot.scaleView = 'log';
             violinPlot.subset = false;
-            violinPlot.showOutliers = true;
+            violinPlot.showOutliers = false;
 
             const width = dim.width;
             const height = dim.height;
@@ -127,7 +127,8 @@ export function launch(rootId, tooltipRootId, gencodeId, urls=getGtexUrls(), mar
             const showOutliers = true;
 
             violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, xAngle, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
-            $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
+            $(`#${ids.svg} .violin-outliers`).hide();
+            selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
             select(`#${ids.svg} #violinLegend`).remove();
 
             _moveXAxis(svg);
@@ -184,7 +185,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // adding bootstrap classes to toolbar
     $(`#${ids.toolbar}`).addClass('row');
-    $(`#${ids.toolbar} .btn-group`).addClass('col-xs-12 col-lg-1 text-nowrap');
+    $(`#${ids.toolbar} .btn-group`).addClass('col-xs-12 col-lg-1 text-nowrap').css('display', 'flex');
 
     $('<div></div>').appendTo(`#${ids.toolbar}`)
         .attr('id', `${ids.toolbar}-plot-options`)
@@ -275,7 +276,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     select(`#${ids.buttons.noDiff}`)
         .classed('active', true);
     // outliers
-    select(`#${ids.buttons.outliersOn}`)
+    select(`#${ids.buttons.outliersOff}`)
         .classed('active', true);
 
     // filter
@@ -317,8 +318,11 @@ function _addToolbar(vplot, tooltip, ids, urls) {
             select(`#${ids.svg} #violinLegend`).remove();
             _moveXAxis(svg);
         }
-        if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
-        else $(`#${ids.svg} .violin-outliers`).hide();
+        if (vplot.showOutliers) selectAll(`#${ids.svg} path.violin`).classed('outlined', false);
+        else {
+            $(`#${ids.svg} .violin-outliers`).hide();
+            selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
+        };
     });
 
     // outlier display events
@@ -326,13 +330,13 @@ function _addToolbar(vplot, tooltip, ids, urls) {
        if ($(e.currentTarget).hasClass('active')) return;
        selectAll(`#${ids.plotOptionGroups.outliers} button`).classed('active', false);
        if (e.target.id == ids.buttons.outliersOn) {
-           $(`#${ids.svg} .violin-outliers`).show();
-           $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
-           vplot.showOutliers = true;
+            $(`#${ids.svg} .violin-outliers`).show();
+            selectAll(`#${ids.svg} path.violin`).classed('outlined', false);
+            vplot.showOutliers = true;
        } else {
-           $(`#${ids.svg} .violin-outliers`).hide();
-           $(`#${ids.svg} path.violin`).attr('stroke-width', '0.7px');
-           vplot.showOutliers = false;
+            $(`#${ids.svg} .violin-outliers`).hide();
+            selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
+            vplot.showOutliers = false;
        }
        select(e.currentTarget).classed('active', true);
     });
@@ -360,8 +364,10 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     vplot.subset = true;
                     let svg = select(`#${ids.root} svg g`);
                     _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
-                    if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
-                    else $(`#${ids.svg} .violin-outliers`).hide();
+                    if (!vplot.showOutliers) {
+                        $(`#${ids.svg} .violin-outliers`).hide();
+                        selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
+                    }
                     $(`#${ids.toolbar}-plot-options button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
             });
@@ -378,8 +384,10 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                     vplot.subset = false;
                     let svg = select(`#${ids.root} svg g`);
                     select(`#${ids.svg} #violinLegend`).remove();
-                    if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
-                    else $(`#${ids.svg} .violin-outliers`).hide();
+                    if (!vplot.showOutliers) {
+                        $(`#${ids.svg} .violin-outliers`).hide();
+                        selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
+                    }
                     _moveXAxis(svg);
                     $(`#${ids.toolbar} button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
@@ -495,8 +503,10 @@ function _sortAndUpdateData(vplot, ids) {
         _moveXAxis(svg);
     }
 
-    if (vplot.showOutliers) $(`#${ids.svg} path.violin`).attr('stroke-width', '0px');
-    else $(`#${ids.svg} .violin-outliers`).hide();
+    if (!vplot.showOutliers) {
+        selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
+        $(`#${ids.svg} .violin-outliers`).hide();
+    }
 }
 
 /**
