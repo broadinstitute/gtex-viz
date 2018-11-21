@@ -185,7 +185,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // adding bootstrap classes to toolbar
     $(`#${ids.toolbar}`).addClass('row');
-    $(`#${ids.toolbar} .btn-group`).addClass('col-xs-12 col-lg-1 text-nowrap');
+    $(`#${ids.toolbar} .btn-group`).addClass('col-xs-12 col-lg-1 text-nowrap').css('display', 'flex');
 
     $('<div></div>').appendTo(`#${ids.toolbar}`)
         .attr('id', `${ids.toolbar}-plot-options`)
