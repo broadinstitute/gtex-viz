@@ -656,8 +656,6 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
      // create each search section
     ////// Add custom DOMs that are not defined in the panels:
 
-
-
     // -- add the link to the tissue filter menu here
     let tiDiv = $('<div/>')
         .attr('class', 'col-xs-12 col-sm-6 col-lg-1')
@@ -673,7 +671,7 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         .css('padding-top', '2px')
         .css('color', '#0868ac')
         .css('cursor', 'pointer')
-        .html('Filter Tissue<br/>')
+        .html('<i class="fas fa-filter"></i>Filter Tissues<br/>')
         .appendTo(tiDiv);
 
     ////// end adding custom DOMs
@@ -991,7 +989,7 @@ function addBubbleClickEvent(bmap, bmapSvg, par) {
  * @param dialogDivId {String}
  * @param title {String} the title of the dialog window
  */
-function createDialog(parentDivId, dialogDivId, title){
+function  createDialog(parentDivId, dialogDivId, title){
      // jquery UI dialog
     checkDomId(parentDivId);
     let parent = $(`#${parentDivId}`);
@@ -1000,12 +998,12 @@ function createDialog(parentDivId, dialogDivId, title){
         .attr('title', title)
         .appendTo(parent);
     let clearDiv = $('<div/>')
-        .attr('class', 'bMap-clear')
+        // .attr('class', 'bMap-clear')
         .html("Clear All")
         .appendTo(dialog);
     let contentDiv = $('<div/>')
         .attr('id', 'bMap-content')
-        .attr('class', 'bMap-content')
+        // .attr('class', 'bMap-content')
         .appendTo(dialog);
     dialog.dialog({
         title: title,
