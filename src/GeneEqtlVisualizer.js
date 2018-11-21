@@ -66,7 +66,7 @@ export function render(par, geneId, urls = getGtexUrls()){
                                 $(`#${par.divModal}`).find(":input").each(function(){
                                     if($(this).prop("checked")) checked.push($(this).val());
                                 });
-                                if (checked.length == oriY.length) return; // no change
+                                // if (checked.length == oriY.length) return; // no change
                                 // filter eQTL data based on selected tissues
                                 par.data = eqtls.filter((d)=>{
                                     return checked.indexOf(d.y) >= 0;
