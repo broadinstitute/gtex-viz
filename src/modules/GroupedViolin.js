@@ -262,8 +262,16 @@ export default class GroupedViolin {
                 .attr("x", (d, i) => 17 + 60*(i) + this.scale.x.range()[0])
                 .attr("y", -20);
         }
+    }
 
-
+    addPlotTitle(dom, title){
+        let x = (this.scale.x.range()[1]-this.scale.x.range()[0] + 1) /2;
+        let y = (this.scale.y.range()[1] - 10);
+        dom.append("text")
+            .attr("class", "violin-title")
+            .attr("text-anchor", "middle")
+            .attr("transform", `translate(${x}, ${y})`)
+            .text(title);
     }
 
     /**
