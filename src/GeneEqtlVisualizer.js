@@ -32,6 +32,11 @@ export function render(par, geneId, urls = getGtexUrls()){
     json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
         .then((data)=> {
             let gene = parseGenes(data, true, geneId);
+            // report the gene info
+            $("<span/>")
+                .html(`<span>${gene.geneSymbol} (${gene.gencodeId}), Chr${gene.chromosome}:${gene.start} - ${gene.end} (${gene.strand}), ${gene.description}`)
+                .appendTo($(`#${par.divGeneInfo}`));
+
             let promises = [
                 json(urls.tissueSummary),
                 json(urls.tissueSites),
@@ -614,7 +619,7 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         {
             id: 'pvaluePanel',
             class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '10px',
+            fontSize: '11px',
             search: {
                 id: 'pvalueLimit',
                 size: 3,
@@ -633,7 +638,7 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         {
             id: 'nesPanel',
             class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '10px',
+            fontSize: '11px',
             search:  {
                 id: 'nesLimit',
                 size: 3,
@@ -651,7 +656,7 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         },
         {
             id: 'variantPanel',
-            fontSize: '10px',
+            fontSize: '11px',
             class: 'col-xs-12 col-sm-6 col-lg-2',
             search: {
                 id: 'varLocator',
@@ -722,7 +727,7 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
     $('<label/>')
         .css('margin-left', '2px')
         .css('padding-top', '2px')
-        .css('font-size', '10px')
+        .css('font-size', '11px')
         .html('Use RS ID')
         .appendTo(rsDiv);
 
@@ -841,7 +846,7 @@ function renderLDFilters(id, ldMap, ldCanvas, ldG, ldConfig){
         {
             id: 'ldPanel',
             class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '10px',
+            fontSize: '11px',
             search:  {
                 id: 'ldLimit',
                 size: 3,
@@ -927,7 +932,8 @@ function panelBuilder(panels, id){
                 .attr('min', p.slider.min)
                 .attr('max', p.slider.max)
                 .attr('step', p.slider.step)
-                .css('margin-left', '10px')
+                .css('margin-left', '0px')
+                .css('width', '100px')
                 .appendTo(div);
             }
         } // add the new element to the dashboard

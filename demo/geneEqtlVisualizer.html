@@ -27,10 +27,7 @@
             </div>
             <div id="bmap-info-box" class="col-xs-12 col-sm-10">
                 <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none; "></i></div>
-                <div id="bmap-gene-info" style="font-size:12px;">
-                    <p>
-                        GTEx Gene-eQTL Visualizer (GEV) is for exploring genetic variations associated with tissue-specific gene expression.
-                    </p>
+                <div id="bmap-gene-info" style="font-size:12px;">GTEx Gene-eQTL Visualizer (GEV) is for exploring genetic variations associated with tissue-specific gene expression. <br/>
                 </div>
                 <div id="bmap-filter-info"></div>
             </div>
@@ -79,7 +76,7 @@
 
             let svgConfig = {
                 id: 'bmap',
-                width: 1800,
+                width: window.innerWidth * 0.9,
                 height: 650,
                 marginTop: 40,
                 marginRight: 20,
@@ -123,6 +120,7 @@
                 divSpinner: "spinner",
                 divDashboard: "bmap-dashboard",
                 divInfo: "bmap-filter-info",
+                divGeneInfo: "bmap-gene-info",
                 divModal: 'bmap-modal'
             };
 
