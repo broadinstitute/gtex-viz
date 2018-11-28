@@ -32,6 +32,11 @@ export function render(par, geneId, urls = getGtexUrls()){
     json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
         .then((data)=> {
             let gene = parseGenes(data, true, geneId);
+            // report the gene info
+            $("<span/>")
+                .html(`<span>${gene.geneSymbol} (${gene.gencodeId}), Chr${gene.chromosome}:${gene.start} - ${gene.end} (${gene.strand}), ${gene.description}`)
+                .appendTo($(`#${par.divGeneInfo}`));
+
             let promises = [
                 json(urls.tissueSummary),
                 json(urls.tissueSites),
@@ -927,8 +932,8 @@ function panelBuilder(panels, id){
                 .attr('min', p.slider.min)
                 .attr('max', p.slider.max)
                 .attr('step', p.slider.step)
-                .css('margin-left', '10px')
-                .css('width', '80px')
+                .css('margin-left', '0px')
+                .css('width', '100px')
                 .appendTo(div);
             }
         } // add the new element to the dashboard

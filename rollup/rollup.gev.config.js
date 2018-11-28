@@ -1,6 +1,6 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
-import replace from 'rollup-plugin-replace';
+// import replace from 'rollup-plugin-replace';
 import {minify} from 'uglify-es';
 
 /* to set the NODE_ENV
@@ -12,16 +12,13 @@ const name= 'GeneEqtlVisualizer';
 export default {
     input: 'src/' + name + '.js',
     output: {
-        file: process.env.NODE_ENV=='prod'?'build/js/gev.bundle.min.js':'build/js/gev.bundle.dev.js',
+        file: 'build/js/gev.bundle.min.js',
         format: 'iife'
     },
     sourcemap: 'inline',
     name: name,
     plugins: [
         nodeResolve({jsnext: true, main: true}),
-        replace({
-          ENV: JSON.stringify(process.env.NODE_ENV || 'dev'),
-        }),
-        (process.env.NODE_ENV === 'prod' && uglify({}, minify)) // uglify for production: NODE_ENV=production rollup -c
+        uglify({}, minify) // uglify for production: NODE_ENV=production rollup -c
     ]
 }
