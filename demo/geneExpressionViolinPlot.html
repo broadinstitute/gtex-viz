@@ -61,11 +61,12 @@
     </body>
     <script>
         $(document).ready(function(){
-          GeneExpressionViolinPlot.launch('gene-expr-vplot', 'gene-expr-vplot-tooltip', 'ENSG00000248746.1');
+            let plotTitle = "ACTN3 (ENSG00000248746.1)";
+            GeneExpressionViolinPlot.launch('gene-expr-vplot', 'gene-expr-vplot-tooltip', 'ENSG00000248746.1', plotTitle);
         });
         $('.test-gene').click(function(e) {
             $('#gene-expr-vplot').empty();
-            GeneExpressionViolinPlot.launch('gene-expr-vplot', 'gene-expr-vplot-tooltip', e.target.id);
+            GeneExpressionViolinPlot.launch('gene-expr-vplot', 'gene-expr-vplot-tooltip', e.target.id, e.target.id);
         });
 
     </script>
