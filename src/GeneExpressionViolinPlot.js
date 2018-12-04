@@ -108,6 +108,7 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
             violinPlot.scaleView = 'log';
             violinPlot.subset = false;
             violinPlot.showOutliers = false;
+            violinPlot.plotTitle = plotTitle;
 
             const width = dim.width;
             const height = dim.height;
@@ -314,6 +315,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         }
 
         let svg = select(`#${ids.root} svg g`);
+        if(vplot.plotTitle !== undefined) vplot.addPlotTitle(svg, vplot.plotTitle);
         if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
         else {
             select(`#${ids.svg} #violinLegend`).remove();
@@ -369,6 +371,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                         $(`#${ids.svg} .violin-outliers`).hide();
                         selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
                     }
+                    if(vplot.plotTitle !== undefined) vplot.addPlotTitle(svg, vplot.plotTitle);
                     $(`#${ids.toolbar}-plot-options button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
             });
@@ -389,6 +392,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
                         $(`#${ids.svg} .violin-outliers`).hide();
                         selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
                     }
+                    if(vplot.plotTitle !== undefined) vplot.addPlotTitle(svg, vplot.plotTitle);
                     _moveXAxis(svg);
                     $(`#${ids.toolbar} button`).prop('disabled', false);
                     $(`#${ids.toolbar} #spinner`).hide();
@@ -508,6 +512,7 @@ function _sortAndUpdateData(vplot, ids) {
         selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
         $(`#${ids.svg} .violin-outliers`).hide();
     }
+    if(vplot.plotTitle !== undefined) vplot.addPlotTitle(svg, vplot.plotTitle);
 }
 
 /**
