@@ -20,6 +20,7 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
 
     const ids = {
         root: rootId,
+        spinner: 'spinner',
         svg: `${rootId}-svg`,
         tooltip: tooltipRootId,
         toolbar: `${rootId}-toolbar`,
@@ -60,6 +61,7 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
 
     if ($(`#${ids.root}`).length == 0) throw 'Violin Plot Error: rootId does not exist.';
     // create DOM components if not already present
+    if ($(`#${ids.root} #${ids.spinner}`).length == 0) $(`<span><i id="spinner" class="fas fa-sync fa-spin"></i></span>`).appendTo($(`#${ids.root}`)); else $(`#${ids.root} #${ids.spinner}`).show();
     if ($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($('body'));
     if ($(`#${ids.toolbar}`).length == 0) $('<div/>').attr('id', ids.toolbar).appendTo($(`#${ids.root}`));
     if ($(`#${ids.clone}`).length == 0) $('<div/>').attr('id', ids.clone).appendTo($(`#${ids.root}`));
@@ -142,6 +144,7 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
             _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids, urls);
             _updateTooltip(violinPlot);
+            $(`#${ids.root} #${ids.spinner}`).hide();
         });
 }
 
