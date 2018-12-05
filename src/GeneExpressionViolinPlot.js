@@ -183,7 +183,7 @@ function _setViolinPlotDimensions(width=1200, height=250, margin=_setViolinPlotM
  */
 function _addToolbar(vplot, tooltip, ids, urls) {
     let toolbar = vplot.createToolbar(ids.toolbar, tooltip);
-    toolbar.createDownloadSvgButton(ids.buttons.download, ids.svg, 'gtex-violin-plot.svg', ids.clone);
+    toolbar.createDownloadSvgButton(ids.buttons.download, ids.svg, 'gene-exp-plot.svg', ids.clone);
 
     // adding bootstrap classes to toolbar
     $(`#${ids.toolbar}`).addClass('row');
