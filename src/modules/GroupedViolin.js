@@ -427,7 +427,9 @@ export default class GroupedViolin {
 
             // visual rendering
             const violinG = dom.append("g")
-                .attr('id', `violin${gIndex}-${entry.label}`);
+                .attr('id', `violin${gIndex}-${entry.label}`)
+                .attr('class', 'violin-g')
+                .datum(entry);
 
             let violin = area()
                 .x0((d) => this.scale.z(d[1]))
