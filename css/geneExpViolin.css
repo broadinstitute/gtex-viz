@@ -19,11 +19,11 @@
     font-weight: 500;
 }
 
-#gene-expr-vplot-svg .violin-x-axis line, .violin-y-axis line, .violin-x-axis path, .violin-y-axis path{
+#gene-expr-vplot-svg .violin-x-axis line, #gene-expr-vplot-svg .violin-y-axis line, #gene-expr-vplot-svg  .violin-x-axis path, #gene-expr-vplot-svg  .violin-y-axis path{
     stroke: Black;
 }
 
-#gene-expr-vplot-svg .violin-x-axis text, .violin-y-axis text, .violin-axis-label {
+#gene-expr-vplot-svg .violin-x-axis text, #gene-expr-vplot-svg  .violin-y-axis text, #gene-expr-vplot-svg  .violin-axis-label {
     fill: Black;
     font-size: 11.5px;
     font-weight: 500;
