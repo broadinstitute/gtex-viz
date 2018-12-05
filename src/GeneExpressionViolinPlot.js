@@ -203,8 +203,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     // subsetting options
     $('<div/>').appendTo(plotOptions)
         .attr('id', ids.plotOptionGroups.differentiation)
-        .attr('class', 'col-lg-2 col-xl-2')
-        .css('margin-right', '11px');
+        .attr('class', 'col-lg-2 col-xl-2');
     $('<span/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
         .attr('class', `${ids.root}-option-label`)
         .html('Subset');
@@ -213,8 +212,6 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     let subsetButtonGroup = $(`#${ids.plotOptionGroups.differentiation} .btn-group`);
     $(`<button class="btn btn-default" id="${ids.buttons.noDiff}">None</button>`).appendTo(subsetButtonGroup);
     $(`<button class="btn btn-default" id="${ids.buttons.sexDiff}">Sex</button>`).appendTo(subsetButtonGroup);
-    // adding spinner
-    $(`<span><i id="spinner" class="fas fa-sync fa-spin" style="margin-left: 5px; display:none;"></i></span>`).appendTo(`#${ids.plotOptionGroups.differentiation}`);
 
     // scale options
     $('<div/>').appendTo(plotOptions)
