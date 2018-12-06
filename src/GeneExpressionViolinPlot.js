@@ -5,7 +5,7 @@
 'use strict';
 
 import {json} from 'd3-fetch';
-import {median} from 'd3-array';
+import {median, ascending} from 'd3-array';
 import {select, selectAll} from 'd3-selection';
 import {getGtexUrls, parseTissues, parseTissueSites} from './modules/gtexDataParser';
 import {createTissueGroupMenu, parseTissueGroupMenu} from './modules/gtexMenuBuilder';
@@ -14,11 +14,13 @@ import GroupedViolin from './modules/GroupedViolin';
 export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Expression Violin Plot", urls=getGtexUrls(), margins=_setViolinPlotMargins(50,75,250,60), dimensions={w: window.innerWidth*0.8, h:250}) {
     const promises = [
         json(urls.tissue),
-        json(urls.geneExp + gencodeId)
+        json(urls.geneExp + gencodeId),
+        json(urls.geneExp + gencodeId + '&attributeSubset=sex')
     ];
 
     const ids = {
         root: rootId,
+        spinner: 'spinner',
         svg: `${rootId}-svg`,
         tooltip: tooltipRootId,
         toolbar: `${rootId}-toolbar`,
@@ -59,6 +61,7 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
 
     if ($(`#${ids.root}`).length == 0) throw 'Violin Plot Error: rootId does not exist.';
     // create DOM components if not already present
+    if ($(`#${ids.root} #${ids.spinner}`).length == 0) $(`<span><i id="spinner" class="fas fa-sync fa-spin"></i></span>`).appendTo($(`#${ids.root}`)); else $(`#${ids.root} #${ids.spinner}`).show();
     if ($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($('body'));
     if ($(`#${ids.toolbar}`).length == 0) $('<div/>').attr('id', ids.toolbar).appendTo($(`#${ids.root}`));
     if ($(`#${ids.clone}`).length == 0) $('<div/>').attr('id', ids.clone).appendTo($(`#${ids.root}`));
@@ -108,6 +111,11 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
             violinPlot.scaleView = 'log';
             violinPlot.subset = false;
             violinPlot.showOutliers = false;
+            violinPlot.plotTitle = plotTitle;
+            violinPlot.geneJson = {
+                allData: args[1],
+                subsetData: args[2]
+            };
 
             const width = dim.width;
             const height = dim.height;
@@ -135,6 +143,8 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
             _moveXAxis(svg);
             _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids, urls);
+            _updateTooltip(violinPlot);
+            $(`#${ids.root} #${ids.spinner}`).hide();
         });
 }
 
@@ -182,7 +192,7 @@ function _setViolinPlotDimensions(width=1200, height=250, margin=_setViolinPlotM
  */
 function _addToolbar(vplot, tooltip, ids, urls) {
     let toolbar = vplot.createToolbar(ids.toolbar, tooltip);
-    toolbar.createDownloadSvgButton(ids.buttons.download, ids.svg, 'gtex-violin-plot.svg', ids.clone);
+    toolbar.createDownloadSvgButton(ids.buttons.download, ids.svg, 'gene-exp-plot.svg', ids.clone);
 
     // adding bootstrap classes to toolbar
     $(`#${ids.toolbar}`).addClass('row');
@@ -196,8 +206,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     // subsetting options
     $('<div/>').appendTo(plotOptions)
         .attr('id', ids.plotOptionGroups.differentiation)
-        .attr('class', 'col-lg-2 col-xl-2')
-        .css('margin-right', '11px');
+        .attr('class', 'col-lg-2 col-xl-2');
     $('<span/>').appendTo(`#${ids.plotOptionGroups.differentiation}`)
         .attr('class', `${ids.root}-option-label`)
         .html('Subset');
@@ -206,8 +215,6 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     let subsetButtonGroup = $(`#${ids.plotOptionGroups.differentiation} .btn-group`);
     $(`<button class="btn btn-default" id="${ids.buttons.noDiff}">None</button>`).appendTo(subsetButtonGroup);
     $(`<button class="btn btn-default" id="${ids.buttons.sexDiff}">Sex</button>`).appendTo(subsetButtonGroup);
-    // adding spinner
-    $(`<span><i id="spinner" class="fas fa-sync fa-spin" style="margin-left: 5px; display:none;"></i></span>`).appendTo(`#${ids.plotOptionGroups.differentiation}`);
 
     // scale options
     $('<div/>').appendTo(plotOptions)
@@ -313,7 +320,9 @@ function _addToolbar(vplot, tooltip, ids, urls) {
             vplot.scaleView = 'linear';
         }
 
+        _updateTooltip(vplot);
         let svg = select(`#${ids.root} svg g`);
+        if(vplot.plotTitle !== undefined) vplot.addPlotTitle(svg, vplot.plotTitle);
         if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
         else {
             select(`#${ids.svg} #violinLegend`).remove();
@@ -345,55 +354,29 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     // differentiation events
     $(`#${ids.plotOptionGroups.differentiation} button`).on('click', (e)=>{
         if ($(e.currentTarget).hasClass('active')) return;
-        $(`#${ids.toolbar}-plot-options button`).prop('disabled', true);
-        $(`#${ids.toolbar} #spinner`).show();
         selectAll(`#${ids.plotOptionGroups.differentiation} button`).classed('active', false);
         select(`button#${e.target.id}`).classed('active', true);
-
+        let newData = e.target.id == ids.buttons.sexDiff ? vplot.geneJson.subsetData : vplot.geneJson.allData;
+        const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(newData, vplot.tIdNameMap, vplot.groupColorDict) : _parseGeneExpressionForViolin(newData, vplot.tIdNameMap, vplot.groupColorDict, false);
+        const filteredTissues = vplot.data.map(d => d.group);
+        vplot.allData = violinPlotData.map(d=>d);
+        vplot.data = violinPlotData.filter(d=>filteredTissues.indexOf(d.group) != -1);
+        vplot.reset();
+        let svg = select(`#${ids.root} svg g`);
+        if (!vplot.showOutliers) {
+                $(`#${ids.svg} .violin-outliers`).hide();
+                selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
+            }
+        if(vplot.plotTitle !== undefined) vplot.addPlotTitle(svg, vplot.plotTitle);
         if (e.target.id == ids.buttons.sexDiff) {
-            const promises = [ json(urls.geneExp + vplot.gencodeId + '&attributeSubset=sex') ];
-
-            Promise.all(promises)
-                .then(function(args) {
-                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.groupColorDict) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.groupColorDict, false);
-                    const filteredTissues = vplot.data.map(d => d.group);
-
-                    vplot.allData = violinPlotData.map(d=>d);
-                    vplot.data = violinPlotData.filter(d=>filteredTissues.indexOf(d.group) != -1);
-
-                    vplot.reset();
-                    vplot.subset = true;
-                    let svg = select(`#${ids.root} svg g`);
-                    _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
-                    if (!vplot.showOutliers) {
-                        $(`#${ids.svg} .violin-outliers`).hide();
-                        selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
-                    }
-                    $(`#${ids.toolbar}-plot-options button`).prop('disabled', false);
-                    $(`#${ids.toolbar} #spinner`).hide();
-            });
+            vplot.subset = true;
+            _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
         } else {
-            const promises = [ json(urls.geneExp + vplot.gencodeId) ];
-
-            Promise.all(promises)
-                .then(function(args) {
-                    const violinPlotData = vplot.scaleView == 'log'? _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.groupColorDict) : _parseGeneExpressionForViolin(args[0], vplot.tIdNameMap, vplot.groupColorDict, false);
-                    const filteredTissues = vplot.data.map(d => d.group);
-                    vplot.allData = violinPlotData.map(d=>d);
-                    vplot.data = violinPlotData.filter(d=>filteredTissues.indexOf(d.group) != -1);
-                    vplot.reset();
-                    vplot.subset = false;
-                    let svg = select(`#${ids.root} svg g`);
-                    select(`#${ids.svg} #violinLegend`).remove();
-                    if (!vplot.showOutliers) {
-                        $(`#${ids.svg} .violin-outliers`).hide();
-                        selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
-                    }
-                    _moveXAxis(svg);
-                    $(`#${ids.toolbar} button`).prop('disabled', false);
-                    $(`#${ids.toolbar} #spinner`).hide();
-            });
+            select(`#${ids.svg} #violinLegend`).remove();
+            vplot.subset = false;
+            _moveXAxis(svg);
         }
+        _updateTooltip(vplot);
     });
 
     tissueFilterButton.on('click', (d, i, nodes)=>{
@@ -405,7 +388,9 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 function _calcViolinPlotValues(data, useLog=true) {
     data.forEach((d)=>{
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
-        d.median = useLog?Math.log(median(d.data)+1):median(d.data);
+        d.values.sort(ascending);
+        // median needed for sorting
+        d.median = median(d.values);
     });
 }
 
@@ -496,6 +481,7 @@ function _sortAndUpdateData(vplot, ids) {
 
     let xDomain = sortData.map((d) => d.group);
     vplot.updateXScale(xDomain);
+    _updateTooltip(vplot);
     let svg = select(`#${ids.root} svg g`);
 
     if (vplot.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
@@ -508,6 +494,7 @@ function _sortAndUpdateData(vplot, ids) {
         selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
         $(`#${ids.svg} .violin-outliers`).hide();
     }
+    if(vplot.plotTitle !== undefined) vplot.addPlotTitle(svg, vplot.plotTitle);
 }
 
 /**
@@ -556,4 +543,25 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .style("stroke-width", 0)
         .style("fill", (g)=>`#${tissueDict[g].colorHex}`)
         .style("opacity", 0.9);
+}
+
+function _updateTooltip(plot){
+    let violinGs = selectAll('.violin-g');
+    violinGs.on('mouseover', (d, i, nodes)=>{
+        let med = plot.scaleView=='log'?Math.pow(10, d.median) - 1:d.median;
+        let vPath = select(nodes[i]).select('path');
+        vPath.classed('highlighted', true);
+        if (!plot.subset) {
+            plot.tooltip.show(
+                d.group + "<br/>" +
+                `n = ${d.values.length}` + "<br/>" +
+                `Median: ${med.toPrecision(4)}` + "<br/>");
+        } else {
+            plot.tooltip.show(
+                d.group + "<br/>" +
+                d.label + "<br/>" +
+                `n = ${d.values.length}` + "<br/>" +
+                `Median: ${med.toPrecision(4)}` + "<br/>");
+        }
+    });
 }

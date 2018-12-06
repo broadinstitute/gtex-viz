@@ -108,9 +108,11 @@ export function parseCssStyles (dom) {
                 var rule = rules[j];
                 if (typeof(rule.style) != "undefined") {
                     var elems;
+                    // removing any selector text including svg element ID -- dom already selects for that
+                    var selector = rule.selectorText === undefined? rule.selectorText : rule.selectorText.replace(`#${dom[0].id} `, '');
                     //Some selectors won't work, and most of these don't matter.
                     try {
-                        elems = $(dom).find(rule.selectorText);
+                        elems = $(dom).find(selector);
                     } catch (e) {
                         elems = [];
                     }
