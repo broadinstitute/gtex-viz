@@ -303,11 +303,12 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
 
     // sort events
-    $(`.${ids.plotOptionGroups.sort} button`).on('click', (e)=>{
-        if ($(e.currentTarget).hasClass('active')) return;
-        vplot.genePlotSort = e.target.id.replace(`${ids.root}-`, '');
+    $(`.${ids.plotOptionGroups.sort} button`).on('click', function(e){
+        let btn = select(this);
+        if (btn.classed('active')) return;
+        vplot.gpConfig.sort = e.target.id.replace(`${ids.root}-`, '');
         selectAll(`.${ids.plotOptionGroups.sort} button`).classed('active', false);
-        select(`button#${e.target.id}`).classed('active', true);
+        btn.classed('active', true);
         _sortAndUpdateData(vplot, ids);
     });
 
@@ -349,8 +350,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         if (btn.classed('active')) return;
         selectAll(`#${ids.plotOptionGroups.outliers} button`).classed('active', false);
         btn.classed('active', true);
-        vplot.gpConfig.outliers = btn.attr('id') == ids.buttons.outliersOn;
-        selectAll(`#${ids.svg} path.violin`).classed('outlined', vplot.gpConfig.showOutliers);
+        vplot.gpConfig.showOutliers = e.target.id == ids.buttons.outliersOn;
+        selectAll(`#${ids.svg} path.violin`).classed('outlined', !vplot.gpConfig.showOutliers);
         $(`#${ids.svg} .violin-outliers`).toggle(btn.attr('id') == ids.buttons.outliersOn);
     });
 
@@ -458,7 +459,7 @@ function _sortAndUpdateData(vplot, ids) {
     let filteredTissues = vplot.data.map((d)=>d.group);
     let sortData = vplot.sortData.filter((d) => filteredTissues.includes(d.group));
 
-    switch (vplot.genePlotSort) {
+    switch (vplot.gpConfig.sort) {
         case ids.plotSorts.ascAlphaSort:
             sortData.sort((a,b) => {
                 if (a.group < b.group) return -1;
