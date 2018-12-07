@@ -56,8 +56,6 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
         tissueFilter: `${rootId}-filter-modal`
 
     };
-    const margin = margins;
-    const dim = _setViolinPlotDimensions(dimensions.w, dimensions.h, margin);
 
     if ($(`#${ids.root}`).length == 0) throw 'Violin Plot Error: rootId does not exist.';
     // create DOM components if not already present
@@ -66,14 +64,6 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
     if ($(`#${ids.root} #${ids.spinner}`).length == 0) $(`<span><i id="spinner" class="fas fa-sync fa-spin"></i></span>`).appendTo($(`#${ids.root}`)); else $(`#${ids.root} #${ids.spinner}`).show();
     if ($(`#${ids.clone}`).length == 0) $('<div/>').attr('id', ids.clone).appendTo($(`#${ids.root}`));
 
-
-    let svg = select(`#${ids.root}`)
-                .append('svg')
-                .attr('id', ids.svg)
-                .attr('width', dim.outerWidth)
-                .attr('height', dim.outerHeight)
-                .append('g')
-                    .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
     Promise.all(promises)
         .then(function(args) {
@@ -107,47 +97,23 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
             violinPlot.tIdNameMap = tissueIdNameMap;
             violinPlot.groupColorDict = groupColorDict;
             violinPlot.tissueDict = tissueDict;
-            violinPlot.plotTitle = plotTitle;
             violinPlot.geneJson = {
                 allData: args[1],
                 subsetData: args[2]
             };
             violinPlot.unit = violinPlotData.length > 0 ? ` ${violinPlotData[0].unit}` : '';
+            // default plot options
             violinPlot.gpConfig = {
                 subset: false,
                 scale: 'log',
                 sort: ids.plotSorts.ascAlphaSort,
-                showOutliers: false
+                showOutliers: false,
+                title: plotTitle
             };
 
-
-            const width = dim.width;
-            const height = dim.height;
-            const xPadding = 0.2;
-            const xDomain = violinPlot.data.map(d => d.group);
-            const yDomain =[];
-            const yLabel = 'log10(TPM+1)';
-            const showX = true;
-            const xAngle = 35;
-            const showSubX = false;
-            const subXAngle = 0;
-            const showWhisker = false;
-            const showDivider = false;
-            const showLegend = true;
-            const showSize = false;
-            const sortSubX = true;
-            const showOutliers = true;
-
-            violinPlot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, xAngle, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
-            if(plotTitle !== undefined) violinPlot.addPlotTitle(svg, plotTitle);
-            $(`#${ids.svg} .violin-outliers`).hide();
-            selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
-            select(`#${ids.svg} #violinLegend`).remove();
-
-            _moveXAxis(svg);
+            _drawViolinPlot(violinPlot, margins, dimensions, ids);
             _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids, urls);
-            _updateTooltip(violinPlot);
             $(`#${ids.root} #${ids.spinner}`).hide();
         });
 }
@@ -278,18 +244,10 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     selectAll(`#${ids.plotOptionsModal} .modal-body button`).classed('active', false);
 
     // plot defaults
-    // ascending alphabetical sort
-    select(`#${ids.buttons.ascAlphaSort}`)
-        .classed('active', true);
-    // log scale
-    select(`#${ids.buttons.logScale}`)
-        .classed('active', true);
-    // differentation
-    select(`#${ids.buttons.noDiff}`)
-        .classed('active', true);
-    // outliers
-    select(`#${ids.buttons.outliersOff}`)
-        .classed('active', true);
+    selectAll(`#${ids.buttons.ascAlphaSort},
+               #${ids.buttons.logScale},
+               #${ids.buttons.noDiff},
+               #${ids.buttons.outliersOff}`).classed('active', true);
 
     // filter
     toolbar.createButton(ids.buttons.filter, 'fa-filter');
@@ -327,7 +285,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
             vplot.gpConfig.scale = 'linear';
         }
 
-        _updateTooltip(vplot);
+        _customizeTooltip(vplot);
         let svg = select(`#${ids.svg} g`);
         if(vplot.plotTitle !== undefined) vplot.addPlotTitle(svg, vplot.plotTitle);
         if (vplot.gpConfig.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
@@ -349,8 +307,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         selectAll(`#${ids.plotOptionGroups.outliers} button`).classed('active', false);
         btn.classed('active', true);
         vplot.gpConfig.showOutliers = e.target.id == ids.buttons.outliersOn;
-        selectAll(`#${ids.svg} path.violin`).classed('outlined', !vplot.gpConfig.showOutliers);
-        $(`#${ids.svg} .violin-outliers`).toggle(btn.attr('id') == ids.buttons.outliersOn);
+        _updateOutlierDisplay(vplot, ids);
     });
 
     // differentiation events
@@ -379,7 +336,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
             vplot.gpConfig.subset = false;
             _moveXAxis(svg);
         }
-        _updateTooltip(vplot);
+        _customizeTooltip(vplot);
     });
 
     tissueFilterButton.on('click', (d, i, nodes)=>{
@@ -484,7 +441,7 @@ function _sortAndUpdateData(vplot, ids) {
 
     let xDomain = sortData.map((d) => d.group);
     vplot.updateXScale(xDomain);
-    _updateTooltip(vplot);
+    _customizeTooltip(vplot);
     let svg = select(`#${ids.root} svg g`);
 
     if (vplot.gpConfig.subset) _addViolinTissueColorBand(vplot, svg, vplot.tissueDict, 'bottom');
@@ -548,7 +505,7 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .style("opacity", 0.9);
 }
 
-function _updateTooltip(plot){
+function _customizeTooltip(plot){
     let violinGs = selectAll('.violin-g');
     violinGs.on('mouseover', (d, i, nodes)=>{
         let med = plot.gpConfig.scale=='log'?Math.pow(10, d.median) - 1:d.median;
@@ -566,4 +523,59 @@ function _updateTooltip(plot){
                 `Median${plot.unit}: ${med.toPrecision(4)}` + "<br/>");
         }
     });
+}
+
+function _drawViolinPlot(vplot, margins, dimensions, ids) {
+    const margin = margins;
+    const dim = _setViolinPlotDimensions(dimensions.w, dimensions.h, margin);
+    const svg = select(`#${ids.root}`)
+            .append('svg')
+            .attr('id', ids.svg)
+            .attr('width', dim.outerWidth)
+            .attr('height', dim.outerHeight)
+            .append('g')
+                .attr('transform', `translate(${margin.left}, ${margin.top})`);
+    const width = dim.width;
+    const height = dim.height;
+    const xPadding = 0.2;
+    const xDomain = vplot.data.map(d => d.group);
+    const yDomain =[];
+    const yLabel = 'log10(TPM+1)';
+    const showX = true;
+    const xAngle = 35;
+    const showSubX = false;
+    const subXAngle = 0;
+    const showWhisker = false;
+    const showDivider = false;
+    const showLegend = true;
+    const showSize = false;
+    const sortSubX = true;
+    const showOutliers = true;
+
+    vplot.render(svg, width, height, xPadding, xDomain, yDomain, yLabel, showX, xAngle, showSubX, subXAngle, showWhisker, showDivider, showLegend, showSize, sortSubX, showOutliers);
+    _customizePlot(vplot, ids);
+}
+
+function _customizePlot(vplot, ids) {
+    let svg = select(`#${ids.svg} g`);
+    if(vplot.gpConfig.title !== undefined) vplot.addPlotTitle(svg, vplot.gpConfig.title);
+    _updateOutlierDisplay(vplot, ids);
+    if (!vplot.gpConfig.subset) {
+        select(`#${ids.svg} #violinLegend`).remove();
+        _moveXAxis(svg);
+    }
+    _customizeTooltip(vplot);
+}
+
+function _updateOutlierDisplay(vplot, ids) {
+    selectAll(`#${ids.svg} path.violin`).classed('outlined', !vplot.gpConfig.showOutliers);
+    $(`#${ids.svg} .violin-outliers`).toggle(vplot.gpConfig.showOutliers);
+}
+
+function _redrawViolinPlot(vplot, ids) {
+    // sorting
+    // scaling
+    // subsetting
+
+    _customizePlot(vplot, ids);
 }
