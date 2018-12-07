@@ -61,9 +61,9 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
 
     if ($(`#${ids.root}`).length == 0) throw 'Violin Plot Error: rootId does not exist.';
     // create DOM components if not already present
-    if ($(`#${ids.root} #${ids.spinner}`).length == 0) $(`<span><i id="spinner" class="fas fa-sync fa-spin"></i></span>`).appendTo($(`#${ids.root}`)); else $(`#${ids.root} #${ids.spinner}`).show();
     if ($(`#${ids.tooltip}`).length == 0) $('<div/>').attr('id', ids.tooltip).appendTo($('body'));
     if ($(`#${ids.toolbar}`).length == 0) $('<div/>').attr('id', ids.toolbar).appendTo($(`#${ids.root}`));
+    if ($(`#${ids.root} #${ids.spinner}`).length == 0) $(`<span><i id="spinner" class="fas fa-sync fa-spin"></i></span>`).appendTo($(`#${ids.root}`)); else $(`#${ids.root} #${ids.spinner}`).show();
     if ($(`#${ids.clone}`).length == 0) $('<div/>').attr('id', ids.clone).appendTo($(`#${ids.root}`));
 
 
@@ -116,6 +116,8 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
                 allData: args[1],
                 subsetData: args[2]
             };
+            violinPlot.unit = violinPlotData.length > 0 ? ` ${violinPlotData[0].unit}` : '';
+
 
             const width = dim.width;
             const height = dim.height;
@@ -555,13 +557,12 @@ function _updateTooltip(plot){
             plot.tooltip.show(
                 d.group + "<br/>" +
                 `n = ${d.values.length}` + "<br/>" +
-                `Median: ${med.toPrecision(4)}` + "<br/>");
+                `Median${plot.unit}: ${med.toPrecision(4)}` + "<br/>");
         } else {
             plot.tooltip.show(
                 d.group + "<br/>" +
-                d.label + "<br/>" +
-                `n = ${d.values.length}` + "<br/>" +
-                `Median: ${med.toPrecision(4)}` + "<br/>");
+                d.label + ` (n = ${d.values.length})` + "<br/>" +
+                `Median${plot.unit}: ${med.toPrecision(4)}` + "<br/>");
         }
     });
 }
