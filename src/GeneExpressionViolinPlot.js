@@ -263,7 +263,7 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         vplot.gpConfig.sort = e.target.id.replace(`${ids.root}-`, '');
         selectAll(`.${ids.plotOptionGroups.sort} button`).classed('active', false);
         btn.classed('active', true);
-        _sortAndUpdateData(vplot, ids);
+        _redrawViolinPlot(vplot, ids);
     });
 
     // scale events
@@ -272,18 +272,9 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         if (btn.classed('active')) return;
         selectAll(`#${ids.plotOptionGroups.scale} button`).classed('active', false);
         btn.classed('active', true);
+        vplot.gpConfig.scale = e.target.id == ids.buttons.logScale ? 'log' : 'linear';
 
-        if (e.target.id == ids.buttons.logScale) {
-            _calcViolinPlotValues(vplot.data, true);
-            _calcViolinPlotValues(vplot.allData, true);
-            vplot.updateYScale('log10(TPM+1)');
-            vplot.gpConfig.scale = 'log';
-        } else {
-            _calcViolinPlotValues(vplot.data, false);
-            _calcViolinPlotValues(vplot.allData, false);
-            vplot.updateYScale('TPM');
-            vplot.gpConfig.scale = 'linear';
-        }
+        _redrawViolinPlot(vplot, ids);
 
         _customizeTooltip(vplot);
         let svg = select(`#${ids.svg} g`);
@@ -574,8 +565,41 @@ function _updateOutlierDisplay(vplot, ids) {
 
 function _redrawViolinPlot(vplot, ids) {
     // sorting
+    let filteredTissues = vplot.data.map((d)=>d.group);
+    let sortData = vplot.sortData.filter((d) => filteredTissues.includes(d.group));
+
+    switch (vplot.gpConfig.sort) {
+        case ids.plotSorts.ascAlphaSort:
+            sortData.sort((a,b) => {
+                if (a.group < b.group) return -1;
+                else if (a.group > b.group) return 1;
+                else return 0;
+            });
+            break;
+        case ids.plotSorts.descAlphaSort:
+            sortData.sort((a,b) => {
+                if (a.group < b.group) return 1;
+                else if (a.group > b.group) return -1;
+                else return 0;
+            });
+            break;
+        case ids.plotSorts.ascSort:
+            sortData.sort((a,b) => { return a.median - b.median; });
+            break;
+        case ids.plotSorts.descSort:
+            sortData.sort((a,b) => { return b.median - a.median; });
+            break;
+        default:
+    }
+    let xDomain = sortData.map((d) => d.group);
+
     // scaling
+    _calcViolinPlotValues(vplot.data, vplot.gpConfig.scale == 'log');
+    _calcViolinPlotValues(vplot.allData, vplot.gpConfig.scale == 'log');
+    let yScaleLabel = vplot.gpConfig.scale == 'log' ? 'log10(TPM+1)' : 'TPM';
     // subsetting
 
+    vplot.updateXScale(xDomain);
+    vplot.updateYScale(yScaleLabel);
     _customizePlot(vplot, ids);
 }
