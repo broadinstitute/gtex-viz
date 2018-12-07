@@ -117,6 +117,12 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
                 subsetData: args[2]
             };
             violinPlot.unit = violinPlotData.length > 0 ? ` ${violinPlotData[0].unit}` : '';
+            violinPlot.gpConfig = {
+                subset: false,
+                scale: 'log',
+                sort: ids.plotSorts.ascAlphaSort,
+                showOutliers: false
+            };
 
 
             const width = dim.width;
@@ -338,19 +344,14 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     });
 
     // outlier display events
-    $(`#${ids.plotOptionGroups.outliers} button`).on('click', (e)=>{
-       if ($(e.currentTarget).hasClass('active')) return;
-       selectAll(`#${ids.plotOptionGroups.outliers} button`).classed('active', false);
-       if (e.target.id == ids.buttons.outliersOn) {
-            $(`#${ids.svg} .violin-outliers`).show();
-            selectAll(`#${ids.svg} path.violin`).classed('outlined', false);
-            vplot.showOutliers = true;
-       } else {
-            $(`#${ids.svg} .violin-outliers`).hide();
-            selectAll(`#${ids.svg} path.violin`).classed('outlined', true);
-            vplot.showOutliers = false;
-       }
-       select(e.currentTarget).classed('active', true);
+    $(`#${ids.plotOptionGroups.outliers} button`).on('click', function(e) {
+        let btn = select(this);
+        if (btn.classed('active')) return;
+        selectAll(`#${ids.plotOptionGroups.outliers} button`).classed('active', false);
+        btn.classed('active', true);
+        vplot.gpConfig.outliers = btn.attr('id') == ids.buttons.outliersOn;
+        selectAll(`#${ids.svg} path.violin`).classed('outlined', vplot.gpConfig.showOutliers);
+        $(`#${ids.svg} .violin-outliers`).toggle(btn.attr('id') == ids.buttons.outliersOn);
     });
 
     // differentiation events
