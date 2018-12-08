@@ -68,9 +68,23 @@ export default class GroupedViolin {
      * @param sortSubX
      */
 
-    render(dom, width=500, height=357, xPadding=0.05, xDomain=undefined, yDomain=[-3,3], yLabel="Y axis",
-           showX=true, xAngle=30, showSubX=true, subXAngle=0,
-           showWhisker=false, showDivider=false, showLegend=false, showSize=false, sortSubX=false, showOutliers=false){
+    render(dom,
+           width=500,
+           height=357,
+           xPadding=0.05,
+           xDomain=undefined,
+           yDomain=[-3,3],
+           yLabel="Y axis",
+           showX=true,
+           xAngle=30,
+           showSubX=true,
+           subXAngle=0,
+           showWhisker=false,
+           showDivider=false,
+           showLegend=false,
+           showSize=false,
+           sortSubX=false,
+           showOutliers=false){
 
         // define the reset for this plot
         this.reset = () => {
@@ -165,7 +179,7 @@ export default class GroupedViolin {
             });
 
             // adds the sub-x axis if there are more than one entries
-            var buffer = 15;
+            var buffer = 18;
             if (showSize){
                  const sizeScale = scaleBand()
                     .domain(entries.map((d) => {return d.size==undefined?'(0)':`(${d.size||0})`}))
