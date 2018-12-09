@@ -492,9 +492,10 @@ const violinDemoConfig = {
     showDivider: true,
     xPadding: 0.3,
     yLabel: "Random Value",
-    showGroupX: true,
+    showSubX: true,
     showX: true,
     xAngle: 0,
+    subXAngle: 0,
     showWhisker: false,
     showLegend: false,
     showSampleSize: true
@@ -520,7 +521,22 @@ export function groupedViolinPlot(par=violinDemoConfig){
     let svg = createSvg(par.id, par.width, par.height, margin);
 
     const gViolin = new GroupedViolin(par.data);
-    gViolin.render(svg, inWidth, inHeight, par.xPadding, undefined, [], par.yLabel, par.showGroupX, par.ShowX, par.xAngle, par.showWhisker, par.showDivider, par.showLegend, par.showSampleSize);
+    gViolin.render(
+        svg,
+        inWidth,
+        inHeight,
+        par.xPadding,
+        undefined,
+        [],
+        par.yLabel,
+        par.showX,
+        par.xAngle,
+        par.showSubX,
+        par.subXAngle,
+        par.showWhisker,
+        par.showDivider,
+        par.showLegend,
+        par.showSampleSize);
     svg.selectAll(".violin-size-axis").classed("violin-size-axis-hide", true).classed("violin-size-axis", false);
 
     gViolin.createTooltip(tooltipId);

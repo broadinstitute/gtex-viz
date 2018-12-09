@@ -30,7 +30,7 @@
       crossorigin="anonymous">
     </script>
     <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
-    <script src="/build/js/eqtl-violin.bundle.dev.js"></script>
+    <script src="/build/js/eqtl-violin.bundle.min.js"></script>
     <script>
         $(document).ready(function(){
             let gencodeId = 'ENSG00000248746.1'; // ACTN3
@@ -49,9 +49,10 @@
                 showDivider: false,
                 xPadding: 0.3,
                 yLabel: "Norm. Expression",
-                showGroupX: false,
-                showX: true,
+                showSubX: true,
+                showX: false,
                 xAngle: 0,
+                subXAngle: 0,
                 showWhisker: false,
                 showLegend: false,
                 showSampleSize: true

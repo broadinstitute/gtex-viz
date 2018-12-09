@@ -490,7 +490,21 @@ function _renderViolinHelper(data, dmap, tissueDict){
     toolbar.createDownloadSvgButton(id.buttons.save, id.svg, `${id.root}-save.svg`, id.clone);
 
     const showDivider = gCounts == 1? false: true;
-    violin.render(dom, dim.width, dim.height, 0.30, tissueOrder.map((d)=>d.id), [], "log10(TPM)", true, false, 0, false, showDivider, true);
+    violin.render(
+        dom,
+        dim.width,
+        dim.height,
+        0.30,
+        tissueOrder.map((d)=>d.id),
+        [],
+        "log10(TPM)",
+        true,
+        30,
+        false,
+        0,
+        false,
+        showDivider,
+        true);
 
     // check and adjust the svg width
     const violinLegendW = Number(dom.select('#violinLegend').select('rect').attr('width'));
