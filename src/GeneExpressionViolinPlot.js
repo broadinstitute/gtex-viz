@@ -68,12 +68,12 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
     Promise.all(promises)
         .then(function(args) {
             const tissues = parseTissues(args[0]);
+            const tissueDict = {};
             const tissueIdNameMap = {};
             const groupColorDict = {
                 female: '#e67f7b',
                 male: '#70bcd2'
             };
-            const tissueDict = {};
             tissues.forEach(x => {
                 tissueIdNameMap[x.tissueSiteDetailId] = x.tissueSiteDetail;
                 tissueDict[x.tissueSiteDetail] = x;
@@ -82,12 +82,6 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
 
             const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, groupColorDict);
             let violinPlot = new GroupedViolin(violinPlotData);
-            // alphabetically sort by default
-            violinPlot.data.sort((a,b) => {
-                if (a.group < b.group) return -1;
-                else if (a.group > b.group) return 1;
-                else return 0;
-            });
             let tooltip = violinPlot.createTooltip(ids.tooltip);
 
             // adding properties to keep track of sorting and filtering specifically for this plot
@@ -112,7 +106,7 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
             };
 
             _drawViolinPlot(violinPlot, margins, dimensions, ids);
-            _populateTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
+            _createTissueFilter(violinPlot, ids.tissueFilter, ids, args[0]);
             _addToolbar(violinPlot, tooltip, ids, urls);
             $(`#${ids.root} #${ids.spinner}`).hide();
         });
@@ -143,6 +137,7 @@ function _setViolinPlotMargins(top=50, right=50, bottom=50, left=50){
  * @param margin {Object} with attr: top, right, bottom, left
  * @returns {{width: number, height: number, outerWidth: number, outerHeight: number}}
  * @private
+
  */
 function _setViolinPlotDimensions(width=1200, height=250, margin=_setViolinPlotMargins()){
     return {
@@ -159,6 +154,7 @@ function _setViolinPlotDimensions(width=1200, height=250, margin=_setViolinPlotM
  * @param tooltip {Tooltip} Violin plot tooltip
  * @param ids {Dictionary} Dictionary of IDs relevant to the plot
  * @param urls {Dictionary} Dictionary of URLs to use when making AJAX calls
+ * @private
  */
 function _addToolbar(vplot, tooltip, ids, urls) {
     let toolbar = vplot.createToolbar(ids.toolbar, tooltip);
@@ -276,7 +272,6 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         selectAll(`#${ids.plotOptionGroups.scale} button`).classed('active', false);
         btn.classed('active', true);
         vplot.gpConfig.scale = e.target.id == ids.buttons.logScale ? 'log' : 'linear';
-
         _redrawViolinPlot(vplot, ids);
     });
 
@@ -301,6 +296,12 @@ function _addToolbar(vplot, tooltip, ids, urls) {
     });
 }
 
+/**
+ * Calculates values for violin plot in specified scale
+ * @param data
+ * @param useLog {Boolean}
+ * @private
+ */
 function _calcViolinPlotValues(data, useLog=true) {
     data.forEach((d)=>{
         d.values = useLog?d.data.map((dd)=>{return Math.log10(+dd+1)}):d.data;
@@ -316,6 +317,7 @@ function _calcViolinPlotValues(data, useLog=true) {
  * @param colors {Dictionary} the violin color for genes
  * @param IdNameMap {Dictionary} mapping of tissueIds to tissue names
  * @param useLog {Boolean} whether or not to calculate values in log
+ * @private
  */
 function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefined, useLog=true){
     const attr = 'geneExpression';
@@ -341,8 +343,9 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
  * @param  domId {String} ID of modal whose body is to be populated
  * @param  ids {Dictionary} Dictionary of IDs relevant to plot
  * @param  tissues {Array} Array of tissues returned from GTEx tissueSiteDetail API
+ * @private
  */
-function _populateTissueFilter(vplot, domId, ids, tissues) {
+function _createTissueFilter(vplot, domId, ids, tissues) {
     const tissueGroups = parseTissueSites(tissues);
     createTissueGroupMenu(tissueGroups, `${domId}-body`, false, true, 3);
     _addTissueFilterEvent(vplot, domId, ids, tissueGroups);
@@ -354,6 +357,7 @@ function _populateTissueFilter(vplot, domId, ids, tissues) {
  * @param domId {String} modal ID
  * @param ids {Dictionary} Dictionary of IDs relevant to plot
  * @param tissues {Dictionary} Dictionary of tissue groups
+ * @private
  */
 function _addTissueFilterEvent(vplot, domId, ids, tissues) {
     $(`#${domId}`).on('hidden.bs.modal', (e) => {
@@ -367,6 +371,7 @@ function _addTissueFilterEvent(vplot, domId, ids, tissues) {
  * @param vplot {GroupedViolin} violin plot object to be modified
  * @param ids {Dictionary} Dictionary of IDs relevant to plot
  * @param tissues {Array} List of tissues to filter down to
+ * @private
  */
 function _filterTissues(vplot, ids, tissues) {
     let filteredData = vplot.allData.filter(x => tissues.includes(x.group));
@@ -374,8 +379,12 @@ function _filterTissues(vplot, ids, tissues) {
     _redrawViolinPlot(vplot, ids);
 }
 
+/**
+ * Moves the x-axis down
+ * @param dom {svg} SVG to be modified
+ * @private
+ */
 function _moveXAxis(dom) {
-    // moving x-axis down a bit for space
     const xAxis = dom.select('.violin-x-axis');
     xAxis.attr('transform', `${xAxis.attr('transform')} translate(0, 3)`);
 }
@@ -386,6 +395,7 @@ function _moveXAxis(dom) {
  * @param dom {d3 Selection} d3 selection of the svg to modify
  * @param tissueDict {Dictionary} Dictionary of tissues containing color info
  * @param loc {String} "top" || "bottom"; specified where to display the colors
+ * @private
  */
 function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
     _moveXAxis(dom);
@@ -410,26 +420,39 @@ function _addViolinTissueColorBand(plot, dom, tissueDict, loc="top"){
         .style("opacity", 0.9);
 }
 
-function _customizeTooltip(plot){
+/**
+ * Customizes the tooltip specifically for this plot
+ * @param vplot {GroupedViolin}
+ * @private
+ */
+function _customizeTooltip(vplot){
     let violinGs = selectAll('.violin-g');
     violinGs.on('mouseover', (d, i, nodes)=>{
-        let med = plot.gpConfig.scale=='log'?Math.pow(10, d.median) - 1:d.median;
+        let med = vplot.gpConfig.scale=='log'?Math.pow(10, d.median) - 1:d.median;
         let vPath = select(nodes[i]).select('path');
         vPath.classed('highlighted', true);
-        if (!plot.gpConfig.subset) {
-            plot.tooltip.show(
+        if (!vplot.gpConfig.subset) {
+            vplot.tooltip.show(
                 d.group + "<br/>" +
                 `n = ${d.values.length}` + "<br/>" +
-                `Median${plot.unit}: ${med.toPrecision(4)}` + "<br/>");
+                `Median${vplot.unit}: ${med.toPrecision(4)}` + "<br/>");
         } else {
-            plot.tooltip.show(
+            vplot.tooltip.show(
                 d.group + "<br/>" +
                 d.label + ` (n = ${d.values.length})` + "<br/>" +
-                `Median${plot.unit}: ${med.toPrecision(4)}` + "<br/>");
+                `Median${vplot.unit}: ${med.toPrecision(4)}` + "<br/>");
         }
     });
 }
 
+/**
+ * Draws the initial rendering of the violin plot
+ * @param vplot {GroupedViolin}
+ * @param margins {Object} Contains plot top, right, bottom and left margin information
+ * @param dimensions {Object} Contains plot width and height information
+ * @param ids {Dictionary} Dictionary of IDs relevant to plot
+ * @private
+ */
 function _drawViolinPlot(vplot, margins, dimensions, ids) {
     const margin = margins;
     const dim = _setViolinPlotDimensions(dimensions.w, dimensions.h, margin);
@@ -443,7 +466,7 @@ function _drawViolinPlot(vplot, margins, dimensions, ids) {
     const width = dim.width;
     const height = dim.height;
     const xPadding = 0.2;
-    const xDomain = vplot.data.map(d => d.group);
+    const xDomain = _sortData(vplot.gpConfig.sort, vplot.sortData, ids);
     const yDomain =[];
     const yLabel = 'log10(TPM+1)';
     const showX = true;
@@ -461,6 +484,12 @@ function _drawViolinPlot(vplot, margins, dimensions, ids) {
     _customizePlot(vplot, ids);
 }
 
+/**
+ * Adds peripheral details to violin plot post-initial rendering.
+ * @param vplot {GroupedViolin}
+ * @param ids {Dictionary} Dictionary of IDs relevant to plot
+ * @private
+ */
 function _customizePlot(vplot, ids) {
     let svg = select(`#${ids.svg} g`);
     if(vplot.gpConfig.title !== undefined) vplot.addPlotTitle(svg, vplot.gpConfig.title);
@@ -474,11 +503,58 @@ function _customizePlot(vplot, ids) {
     _customizeTooltip(vplot);
 }
 
+/**
+ * Determines whether or not to display outliers on the plot
+ * @param vplot {GroupedViolin}
+ * @param ids {Dictionary} Dictionary of IDs relevant to plot
+ * @private
+ */
 function _updateOutlierDisplay(vplot, ids) {
     selectAll(`#${ids.svg} path.violin`).classed('outlined', !vplot.gpConfig.showOutliers);
     $(`#${ids.svg} .violin-outliers`).toggle(vplot.gpConfig.showOutliers);
 }
 
+/**
+ *
+ * @param sortMethod {String} asc-alphasort' || 'desc-alphasort' || 'asc-sort' || 'desc-sort'
+ * @param data {Object} data to be sorted
+ * @param ids {Dictionary} dictionary of IDs relevant to plot
+ * @private
+ */
+function _sortData(sortMethod, data, ids) {
+    switch (sortMethod) {
+        case ids.plotSorts.ascAlphaSort:
+            data.sort((a,b) => {
+                if (a.group < b.group) return -1;
+                else if (a.group > b.group) return 1;
+                else return 0;
+            });
+            break;
+        case ids.plotSorts.descAlphaSort:
+            data.sort((a,b) => {
+                if (a.group < b.group) return 1;
+                else if (a.group > b.group) return -1;
+                else return 0;
+            });
+            break;
+        case ids.plotSorts.ascSort:
+            data.sort((a,b) => { return a.median - b.median; });
+            break;
+        case ids.plotSorts.descSort:
+            data.sort((a,b) => { return b.median - a.median; });
+            break;
+        default:
+    }
+    let xDomain = data.map((d) => d.group);
+    return xDomain;
+}
+
+/**
+ * Redraws plot after a display option has been updated
+ * @param vplot {GroupedViolin} Contains plot display configurations in vplot.gpConfig
+ * @param ids {Dictionary} dictionary of IDs relevant to plot
+ * @private
+ */
 function _redrawViolinPlot(vplot, ids) {
     // subsetting and sorting
     let newData = vplot.gpConfig.subset ? vplot.geneJson.subsetData : vplot.geneJson.allData;
@@ -487,31 +563,7 @@ function _redrawViolinPlot(vplot, ids) {
     vplot.allData = violinPlotData.map(d=>d);
     vplot.data = violinPlotData.filter(d=>filteredTissues.indexOf(d.group) != -1);
     let sortData = vplot.sortData.filter((d) => filteredTissues.includes(d.group));
-
-    switch (vplot.gpConfig.sort) {
-        case ids.plotSorts.ascAlphaSort:
-            sortData.sort((a,b) => {
-                if (a.group < b.group) return -1;
-                else if (a.group > b.group) return 1;
-                else return 0;
-            });
-            break;
-        case ids.plotSorts.descAlphaSort:
-            sortData.sort((a,b) => {
-                if (a.group < b.group) return 1;
-                else if (a.group > b.group) return -1;
-                else return 0;
-            });
-            break;
-        case ids.plotSorts.ascSort:
-            sortData.sort((a,b) => { return a.median - b.median; });
-            break;
-        case ids.plotSorts.descSort:
-            sortData.sort((a,b) => { return b.median - a.median; });
-            break;
-        default:
-    }
-    let xDomain = sortData.map((d) => d.group);
+    let xDomain = _sortData(vplot.gpConfig.sort, sortData, ids);
 
     // scaling
     _calcViolinPlotValues(vplot.data, vplot.gpConfig.scale == 'log');
