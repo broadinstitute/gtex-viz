@@ -536,7 +536,10 @@ export function groupedViolinPlot(par=violinDemoConfig){
         par.showWhisker,
         par.showDivider,
         par.showLegend,
-        par.showSampleSize);
+        par.showSampleSize,
+        par.sortSubX,
+        par.showOutliers,
+        par.showPoints);
     svg.selectAll(".violin-size-axis").classed("violin-size-axis-hide", true).classed("violin-size-axis", false);
 
     gViolin.createTooltip(tooltipId);

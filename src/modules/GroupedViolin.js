@@ -66,6 +66,8 @@ export default class GroupedViolin {
      * @param showLegend
      * @param showSize
      * @param sortSubX
+     * @param showOutliers
+     * @param showPoints {Boolean} display individual points on top of violin plot. ignores showOutliers param if true.
      */
 
     render(dom,
@@ -84,7 +86,8 @@ export default class GroupedViolin {
            showLegend=false,
            showSize=false,
            sortSubX=false,
-           showOutliers=false){
+           showOutliers=false,
+           showPoints=false){
 
         // define the reset for this plot
         this.reset = () => {
@@ -175,7 +178,7 @@ export default class GroupedViolin {
 
                 if (0 == entry.values.length) return; // no further rendering if this group has no entries
                 entry.values = entry.values.sort(ascending);
-                this._drawViolin(dom, entry, showWhisker, g.index, showOutliers);
+                this._drawViolin(dom, entry, showWhisker, g.index, showOutliers, showPoints);
             });
 
             // adds the sub-x axis if there are more than one entries
@@ -418,9 +421,12 @@ export default class GroupedViolin {
      * @param dom {D3 DOM}
      * @param entry {Object} with attrs: values, label
      * @param showWhisker {Boolean}
+     * @param gIndex
+     * @param showOutliers {Boolean}
+     * @param showPoints {Boolean}
      * @private
      */
-    _drawViolin(dom, entry, showWhisker, gIndex, showOutliers){
+    _drawViolin(dom, entry, showWhisker, gIndex, showOutliers, showPoints){
 
         // generate the vertices for the violin path use a kde
         let kde = kernelDensityEstimator(
@@ -496,8 +502,19 @@ export default class GroupedViolin {
                 .attr("y2", this.scale.y(med))
                 .attr("class", "violin-median");
 
-            // outliers
-            if (showOutliers) {
+            // data points or outliers
+            if (showPoints) {
+                violinG.append("g")
+                    .attr("class", "violin-points")
+                    .selectAll("circle")
+                    .data(entry.values)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", ()=>this.scale.z(0))
+                    .attr("cy", (d)=>this.scale.y(d))
+                    .attr("r", 2);
+            }
+            else if (showOutliers) {
                 const iqr = Math.abs(q3-q1);
                 const upper = max(entry.values.filter((d)=>d<=q3+(iqr*1.5)));
                 const lower = min(entry.values.filter((d)=>d>=q1-(iqr*1.5)));

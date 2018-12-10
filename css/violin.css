@@ -110,6 +110,11 @@ text.violin-legend-text {
     fill: none;
 }
 
+.violin-points circle {
+    stroke: #aaaaaa;
+    fill: none;
+}
+
 .violin-title {
     font-size: 16px;
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
