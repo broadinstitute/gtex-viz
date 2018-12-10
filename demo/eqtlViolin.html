@@ -13,7 +13,9 @@
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
     <h3>GTEx EQTL Violin Plot</h3>
     <hr>
-    <div id="violinRoot"></div>
+    <div id="violin-1-root"></div>
+    <div id="violin-2-root"></div>
+    <div id="violin-3-root"></div>
 
     </body>
     <script
@@ -33,12 +35,12 @@
     <script src="/build/js/eqtl-violin.bundle.min.js"></script>
     <script>
         $(document).ready(function(){
-            let gencodeId = 'ENSG00000248746.1'; // ACTN3
-            let tissueId = 'Muscle_Skeletal';
-            let group = "Muscle - Skeletal";
-            let variantId = '11_66329732_A_G_b37';
-            let config = {
-                id: "violinRoot",
+            let gencodeId1 = 'ENSG00000248746.1'; // ACTN3
+            let tissueId1 = 'Muscle_Skeletal';
+            let group1 = 'Muscle - Skeletal';
+            let variantId1 = '11_66329732_A_G_b37';
+            let config1 = {
+                id: 'violin-1-root',
                 data: undefined, // web service call would assign the plot's data
                 width: 250,
                 height: 200,
@@ -48,7 +50,7 @@
                 marginBottom: 50,
                 showDivider: false,
                 xPadding: 0.3,
-                yLabel: "Norm. Expression",
+                yLabel: 'Norm. Expression',
                 showSubX: true,
                 showX: false,
                 xAngle: 0,
@@ -57,7 +59,60 @@
                 showLegend: false,
                 showSampleSize: true
             };
-            EqtlViolinPlot.render(config, gencodeId, variantId, tissueId, group);
+            EqtlViolinPlot.render(config1, gencodeId1, variantId1, tissueId1, group1);
+
+            let gencodeId2 = 'ENSG00000100030.10'; // MAPK1
+            let tissueId2 = 'Brain_Hypothalamus';
+            let group2 = 'Brain - Hypothalamus';
+            let variantId2 = '22_23174771_A_G_b37';
+            let config2 = {
+                id: 'violin-2-root',
+                data: undefined, // web service call would assign the plot's data
+                width: 250,
+                height: 200,
+                marginLeft: 50,
+                marginRight: 20,
+                marginTop: 20,
+                marginBottom: 50,
+                showDivider: false,
+                xPadding: 0.3,
+                yLabel: 'Norm. Expression',
+                showSubX: true,
+                showX: false,
+                xAngle: 0,
+                subXAngle: 0,
+                showWhisker: false,
+                showLegend: false,
+                showSampleSize: true
+            };
+            EqtlViolinPlot.render(config2, gencodeId2, variantId2, tissueId2, group2);
+
+            let gencodeId3 = 'ENSG00000100030.10'; // MAPK1
+            let tissueId3 = 'Brain_Anterior_cingulate_cortex_BA24';
+            let group3 = 'Brain - Anterior cingulate cortex (BA24)';
+            let variantId3 = '22_22504321_T_C_b37';
+            let config3 = {
+                id: 'violin-3-root',
+                data: undefined, // web service call would assign the plot's data
+                width: 250,
+                height: 200,
+                marginLeft: 50,
+                marginRight: 20,
+                marginTop: 20,
+                marginBottom: 50,
+                showDivider: false,
+                xPadding: 0.3,
+                yLabel: 'Norm. Expression',
+                showSubX: true,
+                showX: false,
+                xAngle: 0,
+                subXAngle: 0,
+                showWhisker: false,
+                showLegend: false,
+                showSampleSize: true
+            };
+            EqtlViolinPlot.render(config3, gencodeId3, variantId3, tissueId3, group3);
+
         });
 
     </script>
