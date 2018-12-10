@@ -30,6 +30,7 @@ import {area} from "d3-shape";
 import {axisTop, axisBottom, axisLeft} from "d3-axis";
 import {select, selectAll, event} from "d3-selection";
 import {brush} from "d3-brush";
+import {randomUniform} from "d3-random";
 
 import {kernelDensityEstimator, kernel, kernelBandwidth} from "./kde";
 import Tooltip from "./Tooltip";
@@ -504,15 +505,16 @@ export default class GroupedViolin {
 
             // data points or outliers
             if (showPoints) {
+                let jitter = randomUniform(-z, z);
                 violinG.append("g")
                     .attr("class", "violin-points")
                     .selectAll("circle")
                     .data(entry.values)
                     .enter()
                     .append("circle")
-                    .attr("cx", ()=>this.scale.z(0))
+                    .attr("cx", ()=>this.scale.z(jitter()))
                     .attr("cy", (d)=>this.scale.y(d))
-                    .attr("r", 2);
+                    .attr("r", 1);
             }
             else if (showOutliers) {
                 const iqr = Math.abs(q3-q1);
