@@ -112,7 +112,7 @@ text.violin-legend-text {
 
 .violin-points circle {
     stroke: #aaaaaa;
-    fill: none;
+    fill: #aaaaaa;
 }
 
 .violin-title {
