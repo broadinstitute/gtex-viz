@@ -30,7 +30,7 @@ import {area} from "d3-shape";
 import {axisTop, axisBottom, axisLeft} from "d3-axis";
 import {select, selectAll, event} from "d3-selection";
 import {brush} from "d3-brush";
-import {randomUniform, randomNormal} from "d3-random";
+import {randomNormal} from "d3-random";
 
 import {kernelDensityEstimator, kernel, kernelBandwidth} from "./kde";
 import Tooltip from "./Tooltip";
@@ -505,7 +505,7 @@ export default class GroupedViolin {
 
             // outliers
              if (showOutliers) {
-                let jitter = randomUniform(-z, z);
+                let jitter = randomNormal(0, z/2);
                 const iqr = Math.abs(q3-q1);
                 const upper = max(entry.values.filter((d)=>d<=q3+(iqr*1.5)));
                 const lower = min(entry.values.filter((d)=>d>=q1-(iqr*1.5)));
@@ -538,7 +538,7 @@ export default class GroupedViolin {
                 vPath.classed("highlighted", false);
             });
         }
-        else {
+        else if (numPoints) {
             // define the z scale -- the violin width
             let zMax = max(entry.values, (d)=>Math.abs(d)); // find the abs(value) in entry.values
             this.scale.z
