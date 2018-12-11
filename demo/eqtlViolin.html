@@ -16,6 +16,7 @@
     <div id="violin-1-root"></div>
     <div id="violin-2-root"></div>
     <div id="violin-3-root"></div>
+    <div id="violin-4-root"></div>
 
     </body>
     <script
@@ -112,6 +113,33 @@
                 showSampleSize: true
             };
             EqtlViolinPlot.render(config3, gencodeId3, variantId3, tissueId3, group3);
+
+            let gencodeId4 = 'ENSG00000100030.10'; // ACTN3
+            let tissueId4 = 'Brain_Hippocampus';
+            let group4 = 'Brain - Hippocampus';
+            let variantId4 = '22_23193959_T_G_b37';
+            let config4 = {
+                id: 'violin-4-root',
+                data: undefined, // web service call would assign the plot's data
+                width: 250,
+                height: 200,
+                marginLeft: 50,
+                marginRight: 20,
+                marginTop: 20,
+                marginBottom: 50,
+                showDivider: false,
+                xPadding: 0.3,
+                yLabel: 'Norm. Expression',
+                showSubX: true,
+                showX: false,
+                xAngle: 0,
+                subXAngle: 0,
+                showWhisker: false,
+                showLegend: false,
+                showSampleSize: true
+            };
+            EqtlViolinPlot.render(config4, gencodeId4, variantId4, tissueId4, group4);
+
 
         });
 
