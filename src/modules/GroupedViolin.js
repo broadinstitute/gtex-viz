@@ -544,7 +544,8 @@ export default class GroupedViolin {
             this.scale.z
                 .domain([-zMax, zMax])
                 .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
-            let jitter = randomNormal(0, zMax/2);
+            const z = this.scale.z.domain()[1]/3;
+            let jitter = randomNormal(0, z/2);
 
             violinG.append("g")
                 .attr("class", "violin-points")
