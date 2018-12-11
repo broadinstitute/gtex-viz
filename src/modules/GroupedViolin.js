@@ -444,7 +444,7 @@ export default class GroupedViolin {
                 .datum(entry);
 
         // violin plot and box can only be drawn when vertices exist and there are no NaN points
-        if (entry.values.length > numPoints && vertices.length && this._validVertices(vertices)) {
+        if (entry.values.length >= numPoints && vertices.length && this._validVertices(vertices)) {
             // define the z scale -- the violin width
             let zMax = max(vertices, (d)=>Math.abs(d[1])); // find the abs(value) in entry.values
             this.scale.z
