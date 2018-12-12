@@ -24,7 +24,7 @@
 .violin-size-axis-hide text {
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
     fill: #239db8;
-    font-size: 8px;
+    font-size: 11px;
 }
 
 .violin-x-axis-hide line, .violin-x-axis-hide path{
@@ -55,22 +55,23 @@
 
 .violin-sub-axis text, .violin-sub-axis-hide text {
     fill: SlateGray;
-    font-size: 9px;
+    font-size: 12px;
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
 
 }
 
 .violin-axis-label {
     fill: SlateGray;
-    font-size: 9px;
+    font-size: 12px;
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
 }
 .violin-group-label {
-    font-size: 9px;
+    font-size: 12px;
     text-anchor: middle;
 }
 
 div.violin-tooltip {
-   min-width: 100px;
+   min-width: 50px;
    display: none;
    background-color : rgba(32, 53, 73, 0.95);
    padding: 10px;
@@ -102,6 +103,21 @@ text.violin-legend-text {
     font-size: 9px;
     font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
 
+}
+
+.violin-outliers circle {
+    stroke: #aaaaaa;
+    fill: none;
+}
+
+.violin-points circle {
+    stroke: #aaaaaa;
+    fill: #aaaaaa;
+}
+
+.violin-title {
+    font-size: 16px;
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
 }
 
 

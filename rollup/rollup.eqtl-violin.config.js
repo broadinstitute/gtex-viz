@@ -2,11 +2,11 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 import {minify} from 'uglify-es';
 
-const name= 'GTExViz';
+const name= 'EqtlViolinPlot';
 export default {
     input: 'src/' + name + '.js',
     output: {
-        file: 'build/js/gtex-viz.bundle.min.js',
+        file: 'build/js/eqtl-violin.bundle.min.js',
         format: 'iife',
         name: name,
         sourcemap: 'inline'

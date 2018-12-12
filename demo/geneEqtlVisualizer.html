@@ -18,7 +18,7 @@
     <hr>
         <div class="row">
             <div class="col-xs-12 col-sm-2">
-                <form id="isoformExpressForm" style="padding: 5px;">
+                <form id="geneEqtlForm" style="padding: 5px;">
                      <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
                         <input id="gene" type="text" class="form-control" placeholder="Enter a gencode ID or gene name" style="font-size:12px; text-transform:uppercase;"></input>
                          <small>e.g. ACTN3, NDRG4, ENGASE</small>
@@ -27,10 +27,7 @@
             </div>
             <div id="bmap-info-box" class="col-xs-12 col-sm-10">
                 <div><i id="spinner" class="fas fa-sync fa-spin" style="display:none; "></i></div>
-                <div id="bmap-gene-info" style="font-size:12px;">
-                    <p>
-                        GTEx Gene-eQTL Visualizer (GEV) is for exploring genetic variations associated with tissue-specific gene expression.
-                    </p>
+                <div id="bmap-gene-info" style="font-size:12px;">GTEx Gene-eQTL Visualizer (GEV) is for exploring genetic variations associated with tissue-specific gene expression. <br/>
                 </div>
                 <div id="bmap-filter-info"></div>
             </div>
@@ -73,18 +70,18 @@
       crossorigin="anonymous">
     </script>
     <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
-    <script src="/build/js/gev.bundle.dev.js"></script>
+    <script src="/build/js/gev.bundle.min.js"></script>
     <script>
         $(document).ready(function(){
 
             let svgConfig = {
                 id: 'bmap',
-                width: 1800,
-                height: 500,
+                width: window.innerWidth * 0.9,
+                height: 650,
                 marginTop: 40,
                 marginRight: 20,
                 marginBottom: 20,
-                marginLeft: 50,
+                marginLeft: 100,
                 legendHeight: 100, // assuming the color legends appear at the top of the focus panel
 
                 miniPanelHeight: 100,
@@ -94,7 +91,7 @@
                         show: true,
                         height: 100,
                         angle: 90,
-                        adjust: 30,
+                        adjust: 20,
                         location: 'bottom',
                         textAlign: 'left'
                     },
@@ -114,7 +111,7 @@
                 ldLegendSpace: 50,
 
                 colorScheme: "RdBu",
-                colorScaleDomain: [-0.75, 0.75],
+                colorScaleDomain: [-1.2, 1.2],
 
                 useLog: false,
                 logBase: undefined,
@@ -123,6 +120,7 @@
                 divSpinner: "spinner",
                 divDashboard: "bmap-dashboard",
                 divInfo: "bmap-filter-info",
+                divGeneInfo: "bmap-gene-info",
                 divModal: 'bmap-modal'
             };
 

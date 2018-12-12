@@ -74,7 +74,7 @@ export default class Boxplot {
         // x-axis label
         dom.append('text')
             .attr('transform', `translate(${margins.left + width/2 + scales.x.bandwidth()/2}, ${height - xAxisLabelFontSize/2})`)
-            .style('text-anchor', 'middle')
+            .attr('text-anchor', 'middle')
             .style('font-size', xAxisLabelFontSize)
             .text(xAxisLabel);
 
@@ -87,7 +87,7 @@ export default class Boxplot {
         // y-axis label
         dom.append('text')
             .attr('transform', `translate(${yAxisLabelFontSize}, ${(height - margins.bottom)/2}) rotate(270)`)
-            .style('text-anchor', 'middle')
+            .attr('text-anchor', 'middle')
             .style('font-size', yAxisLabelFontSize)
             .text(yAxisLabel);
 

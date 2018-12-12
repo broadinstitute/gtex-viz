@@ -24,7 +24,7 @@ import {
 } from "./modules/gtexDataParser";
 import BubbleMap from "./modules/BubbleMap";
 import HalfMap from "./modules/HalfMap";
-import {groupedViolinPlot} from "./GTExViz";
+import {render as eqtlViolinPlotRender} from "./EqtlViolinPlot";
 
 export function render(par, geneId, urls = getGtexUrls()){
     $(`#${par.divSpinner}`).show();
@@ -32,6 +32,12 @@ export function render(par, geneId, urls = getGtexUrls()){
     json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
         .then((data)=> {
             let gene = parseGenes(data, true, geneId);
+            // report the gene info
+            $(`#${par.divGeneInfo}`).empty();
+            $("<span/>")
+                .html(`<span>${gene.geneSymbol} (${gene.gencodeId}), Chr${gene.chromosome}:${gene.start} - ${gene.end} (${gene.strand}), ${gene.description}`)
+                .appendTo($(`#${par.divGeneInfo}`));
+
             let promises = [
                 json(urls.tissueSummary),
                 json(urls.tissueSites),
@@ -66,8 +72,7 @@ export function render(par, geneId, urls = getGtexUrls()){
                                 $(`#${par.divModal}`).find(":input").each(function(){
                                     if($(this).prop("checked")) checked.push($(this).val());
                                 });
-                                console.log(checked)
-                                if (checked.length == oriY.length) return; // no change
+                                // if (checked.length == oriY.length) return; // no change
                                 // filter eQTL data based on selected tissues
                                 par.data = eqtls.filter((d)=>{
                                     return checked.indexOf(d.y) >= 0;
@@ -110,8 +115,11 @@ function setDimensions(par){
             .map((d) => d.key) // then return the unique list of d.x
             .sort((a, b) => {return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;});
     let h = (par.height-(par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight))/yList.length;
-    par.height = h>10&&h<15?par.height:10*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
-
+    let hMax = 18;
+    let hMin = 10;
+    if (h < hMin) par.height = hMin*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
+    else if (h > hMax) par.height = hMax*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
+    console.log(par.height)
     par.inWidth = par.width - (par.margin.left + par.margin.right);
     par.inHeight = par.height - (par.margin.top + par.margin.bottom);
 
@@ -162,8 +170,9 @@ function createSvg(rootId, width, height, svgId=undefined){
  * @param bmap {BubbleMap} object of the bubble map because the LD rendering domain is based on the bubble map's focus domain.
  */
 function renderLdMap(par, bmap){
-    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, par.id+"-ld-tooltip", [0,1]);
+    let ldMap = new HalfMap(par.ldData, par.ldCutoff, false, undefined, par.ldColorScheme, [0,1]);
     $(`#${par.ldId}`).empty(); // jQuery syntax...
+    ldMap.addTooltip(par.ldId);
     let ldCanvas = select(`#${par.ldId}`).append("canvas")
         .attr("id", par.ldId + "-ld-canvas")
         .attr("width", par.width)
@@ -203,7 +212,8 @@ function renderLdMap(par, bmap){
  * @returns {BubbleMap}
  */
 function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, update=false){
-    let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme, par.id+"-bmap-tooltip");
+    let bmap = new BubbleMap(par.data, par.useLog, par.logBase, par.colorScheme);
+    bmap.addTooltip(par.id);
 
     ////// Custom attributes added to bmap //////
     bmap.urls = urls; // TODO: find a better way to store additional attributes
@@ -250,7 +260,9 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
                 selected.classed('highlighted', true);
                 let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
                 let displaySize = d.rDisplayValue === undefined? d.r.toPrecision(4):d.rDisplayValue;
-                bmap.tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> NES: ${displayValue}<br/> p-value: ${displaySize}`);
+                let displayX = d.displayX === undefined? d.x:d.displayX;
+                let displayY = d.displayY === undefined? d.y:d.displayY;
+                bmap.tooltip.show(`Column: ${displayX} <br/> Row: ${displayY}<br/> NES: ${displayValue}<br/> p-value: ${displaySize}`);
             });
 
     //-- filters for p-value, nes
@@ -294,16 +306,19 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
     bmap.brush = brushX()
         .extent([
             [0,0],
-            [par.inWidth, par.miniPanelHeight]
+            [par.inWidth, par.miniPanelHeight + 5]
         ])
         .on("brush", bmap.brushEvent);
 
-    bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 3, "NES");
+    bmap.drawColorLegend(bmapSvg, {x: par.focusPanelMargin.left, y: par.focusPanelMargin.top-50}, 4, "NES");
 
     miniG.append("g")
         .attr("class", "brush")
         .call(bmap.brush)
-        .call(bmap.brush.move, [0, bmap.xScaleMini.bandwidth()*100]);
+        .call(bmap.brush.move, [0, bmap.xScaleMini.bandwidth()*80]); // set the brush size to 60 columns
+
+    // hide the mini map when the focus map includes all eQTLs
+    if (bmap.xScaleMini.domain().length == bmap.xScale.domain().length) miniG.style("display", "none");
 
     return bmap;
 }
@@ -349,7 +364,10 @@ function updateFocusView(par, bmap, bmapSvg){
             return `translate(${x}, ${y}) rotate(${cl.angle})`;
 
         })
-        .style("font-size", `${Math.floor(bmap.xScale.bandwidth())/2}px`)
+        .style("font-size", () => {
+            let size = Math.floor(bmap.xScale.bandwidth()/ 2)>10?10:Math.floor(bmap.xScale.bandwidth()/ 2);
+            return `${size}px`
+        })
         .style("display", (d) => {
             let x = bmap.xScale(d);
             return x === undefined ? "none" : "block";
@@ -376,17 +394,17 @@ function renderTissueBadges(tissues, bmap, bmapSvg){
     g.append('ellipse')
         .attr('cx', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2-10)
         .attr('cy', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2)
-        .attr('rx', 15) // Warning: hard-coded value
+        .attr('rx', 11) // Warning: hard-coded value
         .attr('ry', bmap.yScale.bandwidth()/2)
         .attr('fill', '#748797');
 
     g.append('text')
         .text((d)=>d.rnaSeqAndGenotypeSampleCount)
         .attr('x', bmap.xScale.range()[0] - bmap.xScale.bandwidth()/2 - 17)
-        .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2 + 2)
+        .attr('y', (d)=>bmap.yScale(d.tissueSiteDetailId) + bmap.yScale.bandwidth()/2+3)
         .attr('fill', '#ffffff')
-        .style('font-size', 8)
-        .style('text-anchor', 'center')
+        .style('font-size', "8px")
+        .attr('text-anchor', 'center')
 
 }
 
@@ -557,7 +575,7 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
         .append('rect')
         .classed('track', true)
         .attr('x', (d)=>bmap.xScale(d))
-        .attr('y', bmap.yScale.range()[1] + bmap.yScale.bandwidth())
+        .attr('y', bmap.yScale.range()[1])
         .attr('width', bmap.xScale.bandwidth())
         .attr('height', bmap.yScale.bandwidth())
         .attr('fill', (d)=>{
@@ -576,7 +594,14 @@ function renderTssDistanceTrack(gene, bmap, bmapSvg){
         .on('mouseout', function(d){
             bmap.tooltip.hide();
             selectAll('.track').classed('highlighted', false);
-        })
+        });
+
+    g.append("text")
+        .text("TSS Proximity")
+        .attr("x", bmap.xScale.range()[0])
+        .attr("y", bmap.yScale.range()[1] + bmap.yScale.bandwidth())
+        .attr("text-anchor", "end")
+        .style("font-size", "8px")
 
 }
 
@@ -595,12 +620,12 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         {
             id: 'pvaluePanel',
             class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '12px',
+            fontSize: '11px',
             search: {
                 id: 'pvalueLimit',
                 size: 3,
                 value: 0,
-                label: 'eQTL -log<sub>10</sub>(pValue) >= '
+                label: '-log<sub>10</sub>(pValue)>='
             },
             slider: {
                 id: 'pvalueSlider',
@@ -614,12 +639,12 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         {
             id: 'nesPanel',
             class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '12px',
+            fontSize: '11px',
             search:  {
                 id: 'nesLimit',
                 size: 3,
                 value: 0,
-                label: 'eQTL abs(NES) >= '
+                label: 'abs(NES)>='
             },
             slider: {
                 id: 'nesSlider',
@@ -632,57 +657,35 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
         },
         {
             id: 'variantPanel',
-            fontSize: '12px',
+            fontSize: '11px',
             class: 'col-xs-12 col-sm-6 col-lg-2',
             search: {
                 id: 'varLocator',
                 size: 20,
-                label: 'Variant locator ',
+                label: 'Variant locator',
                 placeholder: '  Variant or RS ID... '
             },
         }
     ];
      // create each search section
-    $('<label/>')
-        .attr('font-size', '12px')
-        .attr('class', 'col-xs-12 col-md-12 col-lg-1')
-        .html('Apply Filters: ')
-        .appendTo($(`#${id}`));
-
     ////// Add custom DOMs that are not defined in the panels:
-    // -- add the RS ID option here
-    let rsDiv = $('<div/>')
-        .attr('class', 'col-xs-12 col-sm-6 col-md-1')
-        .css('padding-top', '2px')
-        .css('margin', '1px')
-        .css('font-size', '12px')
-        .appendTo($(`#${id}`));
-    let radioButton = $('<input/>')
-        .attr('id', 'rsSwitch')
-        .attr('type', 'checkbox')
-        .css('margin-left', '10px')
-        .appendTo(rsDiv);
-    $('<label/>')
-        .css('margin-left', '2px')
-        .css('padding-top', '2px')
-        .html('Use RS ID')
-        .appendTo(rsDiv);
 
     // -- add the link to the tissue filter menu here
     let tiDiv = $('<div/>')
-        .attr('class', 'col-xs-12 col-sm-6 col-md-1')
+        .attr('class', 'col-xs-12 col-sm-6 col-lg-1')
          .css('padding-top', '4px')
         .css('margin', '1px')
         .css('font-size', '12px')
         .appendTo($(`#${id}`));
-    let tiMenuLink = $('<span/>')
+
+    $('<span/>')
         .attr('data-toggle', 'modal')
         .attr('data-target', `#${modalId}`) // bMap-modal must be defined on the html
         .css('margin-left', '2px')
         .css('padding-top', '2px')
         .css('color', '#0868ac')
         .css('cursor', 'pointer')
-        .html('Show tissue menu<br/>')
+        .html('<i class="fas fa-filter"></i>Filter Tissues<br/>')
         .appendTo(tiDiv);
 
     ////// end adding custom DOMs
@@ -710,7 +713,26 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
     // Add all other eQTL filter panels
     panelBuilder(panels, id);
 
-    ////// definte the filter events
+    // -- add the RS ID option here
+    let rsDiv = $('<div/>')
+        .attr('class', 'col-xs-12 col-sm-6 col-lg-1')
+        .css('padding-top', '2px')
+        .css('margin', '1px')
+        .css('font-size', '12px')
+        .appendTo($(`#${id}`));
+    let radioButton = $('<input/>')
+        .attr('id', 'rsSwitch')
+        .attr('type', 'checkbox')
+        .css('margin-left', '10px')
+        .appendTo(rsDiv);
+    $('<label/>')
+        .css('margin-left', '2px')
+        .css('padding-top', '2px')
+        .css('font-size', '11px')
+        .html('Use RS ID')
+        .appendTo(rsDiv);
+
+    ////// define the filter events
     let minP = 0;
     let minNes = 0;
     let minLd = 0;
@@ -738,7 +760,6 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
     $('#pvalueLimit').keydown((e)=>{
         if(e.keyCode == 13){
             minP = parseFloat($('#pvalueLimit').val());
-            console.log("updated")
             updateBubbles();
         }
     });
@@ -781,12 +802,13 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
             const regex = new RegExp(v);
             focusG.selectAll('.bubble-map-xlabel')
                 .classed('query', (d)=>{
-                    return regex.test(d)||regex.test(rsLookUp[d])||regex.test(varLookUp[d]);
+                    var bool = regex.test(d)||regex.test(bmap.rsLookUp[d])||regex.test(bmap.varLookUp[d]);
+                    return bool;
                 });
 
             miniG.selectAll('.mini-marker')
                 .classed('highlighted', (d)=>{
-                    return regex.test(d)||regex.test(rsLookUp[d])||regex.test(varLookUp[d]);
+                    return regex.test(d)||regex.test(bmap.rsLookUp[d])||regex.test(bmap.varLookUp[d]);
                 });
 
         } else {
@@ -825,12 +847,12 @@ function renderLDFilters(id, ldMap, ldCanvas, ldG, ldConfig){
         {
             id: 'ldPanel',
             class: 'col-xs-12 col-sm-6 col-lg-2',
-            fontSize: '12px',
+            fontSize: '11px',
             search:  {
                 id: 'ldLimit',
                 size: 3,
                 value: 0,
-                label: 'LD cutoff R<sup>2</sup> >= '
+                label: 'LD cutoff R<sup>2</sup>>='
             },
             slider: {
                 id: 'ldSlider',
@@ -882,15 +904,15 @@ function panelBuilder(panels, id){
                 .attr('id', p.id)
                 .attr('class', p.class)
                 .css('font-size', p.fontSize)
-                .css('background-color', "#eeeeee")
                 .css('margin', '1px')
                 .css('padding-top', '2px')
-                .css('border', '1px solid #d1d1d1')
+                // .css("white-space", "nowrap")
                 .appendTo($(`#${id}`));
             div.addClass(p.class);
 
             // add the search box
             $('<label/>')
+                .css('font-weight', 'normal')
                 .html(p.search.label)
                 .appendTo(div);
 
@@ -899,7 +921,7 @@ function panelBuilder(panels, id){
                 .attr('value', p.search.value)
                 .attr('size', p.search.size)
                 .attr('placeholder', p.search.placeholder)
-                .css('margin-left', '10px')
+                .css('margin-left', '2px')
                 .appendTo(div);
 
             // add the slider if defined
@@ -911,7 +933,7 @@ function panelBuilder(panels, id){
                 .attr('min', p.slider.min)
                 .attr('max', p.slider.max)
                 .attr('step', p.slider.step)
-                .css('margin-left', '10px')
+                .css('margin-left', '0px')
                 .css('width', '100px')
                 .appendTo(div);
             }
@@ -919,51 +941,61 @@ function panelBuilder(panels, id){
     });
 }
 
-function addBubbleClickEvent(bmap, bmapSvg, par){
-    let dialogDivId = par.id+"violin-dialog";
-    createDialog(par.divDashboard, par.id+"violin-dialog", "eQTL Violin Plot Dialog");
+ // todo report p-value
+function addBubbleClickEvent(bmap, bmapSvg, par) {
+    let dialogDivId = par.id + "violin-dialog";
+    createDialog(par.divDashboard, par.id + "violin-dialog", "eQTL Violin Plot Dialog");
     bmapSvg.selectAll('.bubble-map-cell')
-        .on("click", (d)=>{
+        .on("click", (d) => {
             $(`#${dialogDivId}`).dialog('open');
-            json(`${bmap.urls['dyneqtl']}?variantId=${d.variantId}&gencodeId=${d.gencodeId}&tissueSiteDetailId=${d.tissueSiteDetailId}`)
-                .then(function(json){
-                    let data = parseDynEqtl(json);
+            let plot = $('<div/>')
+                .attr('class', 'bMap-dialog')
+                .css('float', 'left')
+                .css('margin', '20px')
+                .appendTo($(`#bMap-content`));
 
-                    // generate genotype text labels
-                    let ref = d.variantId.split(/_/)[2];
-                    let alt = d.variantId.split(/_/)[3];
-                    const het = ref + alt;
-                    ref = ref + ref;
-                    alt = alt + alt;
-
-                    // construct the dynEqtl data for the three genotypes: ref, het, alt
-                    let violinData = [
-                        {
-                            group: d.displayX,
-                            label: ref.length>2?"ref":ref,
-                            size: data.homoRefExp.length,
-                            values: data.homoRefExp
-                        },
-                        {
-                            group: d.displayX,
-                            label: het.length>2?"het":het,
-                            size: data.heteroExp.length,
-                            values: data.heteroExp
-                        },
-                        {
-                            group: d.displayX,
-                            label: alt.length>2?"alt":alt,
-                            size: data.homoAltExp.length,
-                            values: data.homoAltExp
-                        }
-                    ];
-                    // todo report p-value
-                    addViolinPlot(d, violinData);
-                    console.log(violinData)
+            // add a header section
+            let head = $('<div/>').appendTo(plot);
+            // add a window-close icon
+            $('<i/>').attr('class', 'fa fa-window-close')
+                .css('margin-right', '2px')
+                .click(function () {
+                    plot.remove()
                 })
+                .appendTo(head);
 
+            $('<span/>')
+                .attr('class', 'title')
+                .html(`${d.displayX}<br/>${d.displayY}`)
+                .appendTo(head);
 
-        })
+            // add the violin plot
+            let id = "dEqtl" + Date.now().toString(); // random ID generator
+            $('<div/>').attr('id', id).appendTo(plot);
+
+            let vConfig = {
+                id: id,
+                data: undefined, // this would be assigned by the eqtl violin function
+                width: 250,
+                height: 200,
+                marginLeft: 50,
+                marginRight: 20,
+                marginTop: 20,
+                marginBottom: 50,
+                showDivider: false,
+                xPadding: 0.3,
+                yLabel: "Norm. Expression",
+                showSubX: true,
+                showX: false,
+                subXAngle: 0,
+                xAngle: 0,
+                showWhisker: false,
+                showLegend: false,
+                showSampleSize: true
+            };
+            eqtlViolinPlotRender(vConfig, d.gencodeId, d.variantId, d.tissueSiteDetailId, d.displayY, bmap.urls)
+
+        });
 }
 
 /**
@@ -972,7 +1004,7 @@ function addBubbleClickEvent(bmap, bmapSvg, par){
  * @param dialogDivId {String}
  * @param title {String} the title of the dialog window
  */
-function createDialog(parentDivId, dialogDivId, title){
+function  createDialog(parentDivId, dialogDivId, title){
      // jquery UI dialog
     checkDomId(parentDivId);
     let parent = $(`#${parentDivId}`);
@@ -981,12 +1013,12 @@ function createDialog(parentDivId, dialogDivId, title){
         .attr('title', title)
         .appendTo(parent);
     let clearDiv = $('<div/>')
-        .attr('class', 'bMap-clear')
+        // .attr('class', 'bMap-clear')
         .html("Clear All")
         .appendTo(dialog);
     let contentDiv = $('<div/>')
         .attr('id', 'bMap-content')
-        .attr('class', 'bMap-content')
+        // .attr('class', 'bMap-content')
         .appendTo(dialog);
     dialog.dialog({
         title: title,
@@ -997,55 +1029,4 @@ function createDialog(parentDivId, dialogDivId, title){
     });
 }
 
-/** Create the violin plot given a gene, variant and tissue
- * * @param eQTL {Object} with attr: variantId, gencodeId, tissueSiteDetailId, displayX
- * jQuery dependent
- * a div with ID, bMap-content, must exist
- */
-function addViolinPlot(eqtl, data){
-    let plot = $('<div/>')
-        .attr('class', 'bMap-dialog')
-        .css('float', 'left')
-        .css('margin', '20px')
-        .appendTo($(`#bMap-content`));
 
-    // add a header section
-    let head = $('<div/>').appendTo(plot);
-    // add a window-close icon
-    $('<i/>').attr('class', 'fa fa-window-close')
-        .css('margin-right', '2px')
-        .click(function(){
-            plot.remove()
-        })
-        .appendTo(head);
-
-    $('<span/>')
-        .attr('class', 'title')
-        .html(`${eqtl.displayX}<br/>${eqtl.tissueSiteDetailId}`)
-        .appendTo(head);
-
-    // add the violin plot
-    let id = "dEqtl" + Date.now().toString(); // random ID generator
-    $('<div/>').attr('id', id).appendTo(plot);
-
-    let vConfig = {
-            id: id,
-            data: data,
-            width: 250,
-            height: 200,
-            marginLeft: 50,
-            marginRight: 20,
-            marginTop: 20,
-            marginBottom: 50,
-            showDivider: false,
-            xPadding: 0.3,
-            yLabel: "Norm. Expression",
-            showGroupX: false,
-            showX: true,
-            xAngle: 0,
-            showWhisker: false,
-            showLegend: false,
-            showSampleSize: true
-        };
-    groupedViolinPlot(vConfig);
-}

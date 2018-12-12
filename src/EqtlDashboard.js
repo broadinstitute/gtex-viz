@@ -118,7 +118,24 @@ function _visualize(gene, variant, mainId, input, info){
     const tooltip = violin.createTooltip(id.tooltip);
     const toolbar = violin.createToolbar(id.toolbar, tooltip);
     toolbar.createDownloadSvgButton(id.buttons.save, id.svg, `${id.main}-save.svg`, id.clone);
-    violin.render(dom, innerWidth, innerHeight, 0.3, undefined, [], "Normalized Expression", false, true, 0, false, true, false, true);
+    violin.render(
+        dom,
+        innerWidth,
+        innerHeight,
+        0.3,
+        undefined,
+        [],
+        "Norm. Expression",
+        false,
+        0,
+        true,
+        0,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false);
     _customizeViolinPlot(violin, dom);
 }
 /**
@@ -140,7 +157,7 @@ function _customizeViolinPlot(plot, dom){
             .attr("class", "violin-group-label")
             .attr("transform", (d, i) => {
                 let x = plot.scale.x(gname) + plot.scale.x.bandwidth()/2;
-                let y = plot.scale.y(plot.scale.y.domain()[0]) + 75 + (10*i); // todo: avoid hard-coded values
+                let y = plot.scale.y(plot.scale.y.domain()[0]) + 75 + (12*i); // todo: avoid hard-coded values
                 return `translate(${x}, ${y})`
             })
             .text((d) => d);

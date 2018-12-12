@@ -14,7 +14,7 @@ import Tooltip from "./Tooltip";
 import {setColorScale, drawColorLegend} from "./colors";
 
 export default class BubbleMap {
-    constructor(data, useLog=true, logBase=10, colorScheme="Reds", tooltipId = "tooltip"){
+    constructor(data, useLog=true, logBase=10, colorScheme="Reds"){
         this.data = data;
         this.useLog = useLog;
         this.logBase = logBase;
@@ -26,13 +26,16 @@ export default class BubbleMap {
         this.colorScale = undefined;
         this.bubbleScale = undefined;
 
-        // peripheral features
-        // Tooltip
-        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
+        this.toolbar = undefined;
+        this.tooltip = undefined;
+    }
+
+    addTooltip(parentId){
+        let parent = $(`#${parentId}`);
+        let tooltipId = parentId + '-tooltip';
+        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo(parent);
         this.tooltip = new Tooltip(tooltipId);
         select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
-
-        this.toolbar = undefined;
     }
 
     /**
@@ -218,7 +221,9 @@ export default class BubbleMap {
                 selected.classed('highlighted', true);
                 let displayValue = d.displayValue === undefined?parseFloat(d.value.toExponential()).toPrecision(4):d.displayValue;
                 let displaySize = d.rDisplayValue === undefined? d.r.toPrecision(4):d.rDisplayValue;
-                tooltip.show(`Column: ${d.x} <br/> Row: ${d.y}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`);
+                let displayX = d.displayX === undefined? d.x:d.displayX;
+                let displayY = d.displayY === undefined? d.y:d.displayY;
+                tooltip.show(`Column: ${displayX} <br/> Row: ${displayY}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`);
             })
             .on("mouseout", function(){
                 dom.selectAll("*").classed('highlighted', false);
@@ -242,7 +247,7 @@ export default class BubbleMap {
                 .attr("class", (d, i) => `bubble-map-xlabel x${i}`)
                 .attr("x", 0)
                 .attr("y", 0)
-                .style("text-anchor", cl.textAlign=='left'?'start':'end')
+                .attr("text-anchor", cl.textAlign=='left'?'start':'end')
                 .style("cursor", "default")
                 .style("font-size", () => {
                     let size = Math.floor(this.xScale.bandwidth()/ 2)>12?12:Math.floor(this.xScale.bandwidth()/ 2);
@@ -269,10 +274,11 @@ export default class BubbleMap {
                 .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
                 .attr("x", 0)
                 .attr("y", 0)
-                .style("text-anchor", rl.textAlign=='left'?'start':'end')
+                .attr("text-anchor", rl.textAlign=='left'?'start':'end')
                 .style("cursor", "default")
                 .style("font-size", ()=>{
-                    let size = Math.floor(this.yScale.bandwidth()/1.5)>10?10:Math.floor(this.yScale.bandwidth()/1.5);
+
+                    let size = Math.floor(this.yScale.bandwidth()/1.5)>14?14:Math.floor(this.yScale.bandwidth()/1.5)<10?10:Math.floor(this.yScale.bandwidth()/1.5);
                     return `${size}px`
                 })
                 .attr("transform", (d) => {
