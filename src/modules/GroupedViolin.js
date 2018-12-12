@@ -30,6 +30,7 @@ import {area} from "d3-shape";
 import {axisTop, axisBottom, axisLeft} from "d3-axis";
 import {select, selectAll, event} from "d3-selection";
 import {brush} from "d3-brush";
+import {randomNormal} from "d3-random";
 
 import {kernelDensityEstimator, kernel, kernelBandwidth} from "./kde";
 import Tooltip from "./Tooltip";
@@ -66,6 +67,8 @@ export default class GroupedViolin {
      * @param showLegend
      * @param showSize
      * @param sortSubX
+     * @param showOutliers
+     * @param numPoints {Integer} Number of points required to render violin plot. Displays points if n < numPoints.
      */
 
     render(dom,
@@ -84,7 +87,8 @@ export default class GroupedViolin {
            showLegend=false,
            showSize=false,
            sortSubX=false,
-           showOutliers=false){
+           showOutliers=false,
+           numPoints=0){
 
         // define the reset for this plot
         this.reset = () => {
@@ -175,7 +179,7 @@ export default class GroupedViolin {
 
                 if (0 == entry.values.length) return; // no further rendering if this group has no entries
                 entry.values = entry.values.sort(ascending);
-                this._drawViolin(dom, entry, showWhisker, g.index, showOutliers);
+                this._drawViolin(dom, entry, showWhisker, g.index, showOutliers, numPoints);
             });
 
             // adds the sub-x axis if there are more than one entries
@@ -418,9 +422,12 @@ export default class GroupedViolin {
      * @param dom {D3 DOM}
      * @param entry {Object} with attrs: values, label
      * @param showWhisker {Boolean}
+     * @param gIndex
+     * @param showOutliers {Boolean}
+     * @param showPoints {Boolean}
      * @private
      */
-    _drawViolin(dom, entry, showWhisker, gIndex, showOutliers){
+    _drawViolin(dom, entry, showWhisker, gIndex, showOutliers, numPoints){
 
         // generate the vertices for the violin path use a kde
         let kde = kernelDensityEstimator(
@@ -431,8 +438,13 @@ export default class GroupedViolin {
         const eDomain = extent(entry.values); // get the max and min in entry.values
         const vertices = kde(entry.values).filter((d)=>d[0]>=eDomain[0]&&d[0]<=eDomain[1]); // filter the vertices that aren't in the entry.values
 
+        const violinG = dom.append("g")
+                .attr('id', `violin${gIndex}-${entry.label}`)
+                .attr('class', 'violin-g')
+                .datum(entry);
+
         // violin plot and box can only be drawn when vertices exist and there are no NaN points
-        if (vertices.length && this._validVertices(vertices)) {
+        if (entry.values.length >= numPoints && vertices.length && this._validVertices(vertices)) {
             // define the z scale -- the violin width
             let zMax = max(vertices, (d)=>Math.abs(d[1])); // find the abs(value) in entry.values
             this.scale.z
@@ -440,11 +452,6 @@ export default class GroupedViolin {
                 .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
 
             // visual rendering
-            const violinG = dom.append("g")
-                .attr('id', `violin${gIndex}-${entry.label}`)
-                .attr('class', 'violin-g')
-                .datum(entry);
-
             let violin = area()
                 .x0((d) => this.scale.z(d[1]))
                 .x1((d) => this.scale.z(-d[1]))
@@ -497,7 +504,8 @@ export default class GroupedViolin {
                 .attr("class", "violin-median");
 
             // outliers
-            if (showOutliers) {
+             if (showOutliers) {
+                let jitter = randomNormal(0, z/2);
                 const iqr = Math.abs(q3-q1);
                 const upper = max(entry.values.filter((d)=>d<=q3+(iqr*1.5)));
                 const lower = min(entry.values.filter((d)=>d>=q1-(iqr*1.5)));
@@ -508,7 +516,8 @@ export default class GroupedViolin {
                     .data(outliers)
                     .enter()
                     .append("circle")
-                    .attr("cx", ()=>this.scale.z(0))
+                    // .attr("cx", ()=>this.scale.z(0))
+                    .attr("cx", ()=>this.scale.z(jitter()))
                     .attr("cy", (d)=>this.scale.y(d))
                     .attr("r", 2);
             }
@@ -528,6 +537,25 @@ export default class GroupedViolin {
             violinG.on("mouseout", ()=>{
                 vPath.classed("highlighted", false);
             });
+        }
+        else if (numPoints) {
+            // define the z scale -- the violin width
+            let zMax = max(entry.values, (d)=>Math.abs(d)); // find the abs(value) in entry.values
+            this.scale.z
+                .domain([-zMax, zMax])
+                .range([this.scale.subx(entry.label), this.scale.subx(entry.label) + this.scale.subx.bandwidth()]);
+            const z = this.scale.z.domain()[1]/3;
+            let jitter = randomNormal(0, z/2);
+
+            violinG.append("g")
+                .attr("class", "violin-points")
+                .selectAll("circle")
+                .data(entry.values)
+                .enter()
+                .append("circle")
+                .attr("cx", ()=>this.scale.z(jitter()))
+                .attr("cy", (d)=>this.scale.y(d))
+                .attr("r", 2);
         }
 
     }

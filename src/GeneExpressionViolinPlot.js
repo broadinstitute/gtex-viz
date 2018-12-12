@@ -80,7 +80,7 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
                 groupColorDict[x.tissueSiteDetailId] = x.colorHex;
             });
 
-            const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, groupColorDict);
+            const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, groupColorDict, false);
             let violinPlot = new GroupedViolin(violinPlotData);
             let tooltip = violinPlot.createTooltip(ids.tooltip);
 
@@ -99,9 +99,9 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
             // default plot options
             violinPlot.gpConfig = {
                 subset: false,
-                scale: 'log',
+                scale: 'linear',
                 sort: ids.plotSorts.ascAlphaSort,
-                showOutliers: false,
+                showOutliers: true,
                 title: plotTitle
             };
 
@@ -241,9 +241,9 @@ function _addToolbar(vplot, tooltip, ids, urls) {
 
     // plot defaults
     selectAll(`#${ids.buttons.ascAlphaSort},
-               #${ids.buttons.logScale},
+               #${ids.buttons.linearScale},
                #${ids.buttons.noDiff},
-               #${ids.buttons.outliersOff}`).classed('active', true);
+               #${ids.buttons.outliersOn}`).classed('active', true);
 
     // filter
     toolbar.createButton(ids.buttons.filter, 'fa-filter');
@@ -468,7 +468,7 @@ function _drawViolinPlot(vplot, margins, dimensions, ids) {
     const xPadding = 0.2;
     const xDomain = _sortData(vplot.gpConfig.sort, vplot.sortData, ids);
     const yDomain =[];
-    const yLabel = 'log10(TPM+1)';
+    const yLabel = 'TPM';
     const showX = true;
     const xAngle = 35;
     const showSubX = false;

@@ -37,6 +37,7 @@ export function render(par, gencodeId, variantId, tissueId, groupName=undefined,
                     values: data.homoAltExp
                 }
             ];
+            par.numPoints = 10;
             groupedViolinPlot(par);
         })
 

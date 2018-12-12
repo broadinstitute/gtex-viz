@@ -33,6 +33,7 @@ export function render(par, geneId, urls = getGtexUrls()){
         .then((data)=> {
             let gene = parseGenes(data, true, geneId);
             // report the gene info
+            $(`#${par.divGeneInfo}`).empty();
             $("<span/>")
                 .html(`<span>${gene.geneSymbol} (${gene.gencodeId}), Chr${gene.chromosome}:${gene.start} - ${gene.end} (${gene.strand}), ${gene.description}`)
                 .appendTo($(`#${par.divGeneInfo}`));
