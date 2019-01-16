@@ -162,7 +162,7 @@ export function parseGenes(data, single=false, geneId=null){
  * @returns {List} of tissues
  */
 export function parseTissues(json){
-    const attr = 'tissueSiteDetail';
+    const attr = 'tissueInfo';
     if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attr is missing: ' + attr;
     const tissues = json[attr];
 
@@ -192,7 +192,7 @@ export function parseTissueDict(json){
 
 /**
  * Parse the tissues sample counts, GTEx release specific
- * @param json from web service tissueSummary
+ * @param json from web service tissueInfo
  */
 export function parseTissueSampleCounts(json){
     const attr = 'tissueInfo';
