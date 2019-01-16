@@ -18,6 +18,6 @@ export default {
     name: name,
     plugins: [
         nodeResolve({jsnext: true, main: true}),
-        uglify({}, minify) // uglify for production: NODE_ENV=production rollup -c
+        uglify({}, minify)
     ]
 }
