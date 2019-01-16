@@ -10,7 +10,6 @@ export function getGtexUrls(){
         // gene-eqtl visualizer specific
         singleTissueEqtl: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v7&gencodeId=',
         ld: host + 'dataset/ld?format=json&datasetId=gtex_v7&gencodeId=',
-        tissueSummary: host + 'dataset/tissueSummary?datasetId=gtex_v7',
 
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
@@ -42,9 +41,7 @@ export function getGtexUrls(){
         geneId: host + 'reference/gene?format=json&gencodeVersion=v19&genomeBuild=GRCh37%2Fhg19&geneId=',
 
         // tissue menu specific
-        // TODO: remove redundant URLs
-        tissue:  host + 'metadata/tissueSiteDetail?format=json',
-        tissueSites: host + 'metadata/tissueSiteDetail?format=json',
+        tissue:  host + 'dataset/tissueInfo?format=json&datasetId=gtex_v7',
 
         // local static files
         sample: 'tmpSummaryData/gtex.Sample.csv',
@@ -183,7 +180,7 @@ export function parseTissues(json){
  * @returns {*}
  */
 export function parseTissueDict(json){
-    const attr = 'tissueSiteDetail';
+    const attr = 'tissueInfo';
     if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attr is missing: ' + attr;
     const tissues = json[attr];
     // sanity check
@@ -198,7 +195,7 @@ export function parseTissueDict(json){
  * @param json from web service tissueSummary
  */
 export function parseTissueSampleCounts(json){
-    const attr = 'tissueSummary';
+    const attr = 'tissueInfo';
     if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attr is missing: ' + attr;
     const tissues = json[attr];
 
@@ -216,11 +213,11 @@ export function parseTissueSampleCounts(json){
  * @returns {Dictionary} of lists of tissues indexed by the tissue group name
  */
 export function parseTissueSites(data, forEqtl=false){
-    // the list of invalide eqtl tissues due to sample size < 70
+    // the list of invalid eqtl tissues due to sample size < 70
     // a hard-coded list because the sample size is not easy to retrieve
     const invalidTissues = ['Bladder', 'Cervix_Ectocervix', 'Cervix_Endocervix', 'Fallopian_Tube', 'Kidney_Cortex'];
 
-    const attr = 'tissueSiteDetail';
+    const attr = 'tissueInfo';
     if(!data.hasOwnProperty(attr)) throw 'Parsing Error: required json attribute is missing: ' + attr;
     let tissues = data[attr];
     ['tissueSite','tissueSiteDetailId','tissueSiteDetail'].forEach((d)=>{

@@ -39,17 +39,16 @@ export function render(par, geneId, urls = getGtexUrls()){
                 .appendTo($(`#${par.divGeneInfo}`));
 
             let promises = [
-                json(urls.tissueSummary),
-                json(urls.tissueSites),
+                json(urls.tissue),
                 json(urls.exon + gene.gencodeId),
                 json(urls.singleTissueEqtl + gene.gencodeId)
             ];
             Promise.all(promises)
                 .then(function(results){
                     let tissues = parseTissueSampleCounts(results[0]);
-                    let tissueSiteTable = parseTissueDict(results[1]);
-                    let exons = parseExonsToList(results[2]);
-                    let eqtls = parseSingleTissueEqtls(results[3], tissueSiteTable);
+                    let tissueSiteTable = parseTissueDict(results[0]);
+                    let exons = parseExonsToList(results[1]);
+                    let eqtls = parseSingleTissueEqtls(results[2], tissueSiteTable);
                     par.data = eqtls;
                     par = setDimensions(par);
                     let bmap = renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls);
