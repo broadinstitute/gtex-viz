@@ -35,7 +35,7 @@ import {
 export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls=getGtexUrls()){
     let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
 
-    json(urls.tissueSites)
+    json(urls.tissue)
         .then(function(data){ // retrieve all tissue (sub)sites
             const forEqtl = true;
             let tissueGroups = parseTissueSites(data, forEqtl);
