@@ -560,7 +560,6 @@ function _customizeGeneModel(tissues, geneModel, dmap){
         .on("mouseover", function(d){
             selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
             tooltip.show(`${d.displayName}<br/>Junction ${d.junctionId} (${Number(d.chromEnd) - Number(d.chromStart) + 1} bp)`);
-            console.log(d);
 
             if (d.startExon !== undefined){
                 model.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);

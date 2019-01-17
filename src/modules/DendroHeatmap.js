@@ -89,7 +89,6 @@ export default class DendroHeatmap {
         }
 
         if (this.title != '') {
-            console.log(this.title);
             select(`#${domId}-svg`).append('text')
                 .attr('x', 0)
                 .attr('y', 20)

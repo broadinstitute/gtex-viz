@@ -79,7 +79,7 @@ export function launchTopExpressed(tissueId, heatmapRootId, violinRootId, urls=g
 export function launch(formId, menuId, submitId, heatmapRootId, violinRootId, urls=getGtexUrls(), callback=undefined){
     let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
 
-    json(urls.tissueSites)
+    json(urls.tissue)
         .then(function(data){ // retrieve all tissue (sub)sites
             const forEqtl = false;
             let tissueGroups = parseTissueSites(data, forEqtl);
