@@ -118,7 +118,6 @@ function setDimensions(par){
     let hMin = 10;
     if (h < hMin) par.height = hMin*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
     else if (h > hMax) par.height = hMax*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
-    console.log(par.height)
     par.inWidth = par.width - (par.margin.left + par.margin.right);
     par.inHeight = par.height - (par.margin.top + par.margin.bottom);
 
