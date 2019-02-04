@@ -411,7 +411,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
             dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.x] === undefined?d.x:tissueDict[d.x].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.id}<br/> ${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.transcriptId}<br/> ${d.unit}: ${value==0?'NA':value}`)
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
