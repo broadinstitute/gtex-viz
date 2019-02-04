@@ -411,7 +411,12 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
             dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.x] === undefined?d.x:tissueDict[d.x].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.transcriptId}<br/> ${d.unit}: ${value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.transcriptId}<br/> ${d.unit}: ${value}`);
+
+            // highlight the isoform track
+            const id = d.transcriptId.replace(".", "_"); // dot is not an allowable character, so it has been replaced with an underscore
+            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the confusing class name
+            mapSvg.select(`#${id}`).selectAll(".intron").classed("highlighted", true);
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -425,7 +430,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
 
             // highlight the isoform track
             const id = d.replace(".", "_"); // dot is not an allowable character, so it has been replaced with an underscore
-            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the class name?
+            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the confusing class name
             mapSvg.select(`#${id}`).selectAll(".intron").classed("highlighted", true);
         })
         .on("mouseout", function(){
