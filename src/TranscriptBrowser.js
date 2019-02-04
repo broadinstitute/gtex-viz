@@ -509,6 +509,13 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0]; // get the junction display name
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
             tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName} (${Number(junc.chromEnd) - Number(junc.chromStart)} bp)<br/> ${d.unit}: ${value}`)
+
+            // highlight the junction and its exons on the gene model
+            mapSvg.selectAll(`.junc${junc.junctionId}`).classed("highlighted", true);
+            if (junc !== undefined) {
+                mapSvg.selectAll(`.exon${junc.startExon.exonNumber}`).classed("highlighted", true);
+                mapSvg.selectAll(`.exon${junc.endExon.exonNumber}`).classed("highlighted", true);
+            }
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
