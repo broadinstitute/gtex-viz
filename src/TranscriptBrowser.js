@@ -411,7 +411,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
             dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.x] === undefined?d.x:tissueDict[d.x].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.transcriptId}<br/> ${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.transcriptId}<br/> ${d.unit}: ${value}`)
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -460,7 +460,7 @@ function _customizeExonMap(tissues, geneModel, dmap){
             dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd)-Number(d.chromStart) + 1}bp) <br/>${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd)-Number(d.chromStart) + 1}bp) <br/>${d.unit}: ${value}`)
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -508,7 +508,7 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0]; // get the junction display name
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName} (${Number(junc.chromEnd) - Number(junc.chromStart)} bp)<br/> ${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName} (${Number(junc.chromEnd) - Number(junc.chromStart)} bp)<br/> ${d.unit}: ${value}`)
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);

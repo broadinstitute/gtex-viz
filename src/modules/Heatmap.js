@@ -90,7 +90,7 @@ export default class Heatmap {
      * @param useNullColor {Boolean} whether to render null values with the pre-defined null color
      */
 
-    draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=true, columnLabelPosAdjust=null){
+    draw(dom, dimensions={w:1000, h:600}, angle=30, useNullColor=false, columnLabelPosAdjust=null){
 
         if (this.xList === undefined) this._setXScale(dimensions.w);
         if (this.yList === undefined) this._setYScale(dimensions.h);
