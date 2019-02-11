@@ -411,7 +411,12 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
             dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.x] === undefined?d.x:tissueDict[d.x].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.id}<br/> ${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.transcriptId}<br/> ${d.unit}: ${value}`);
+
+            // highlight the isoform track
+            const id = d.transcriptId.replace(".", "_"); // dot is not an allowable character, so it has been replaced with an underscore
+            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the confusing class name
+            mapSvg.select(`#${id}`).selectAll(".intron").classed("highlighted", true);
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -425,7 +430,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
 
             // highlight the isoform track
             const id = d.replace(".", "_"); // dot is not an allowable character, so it has been replaced with an underscore
-            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the class name?
+            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the confusing class name
             mapSvg.select(`#${id}`).selectAll(".intron").classed("highlighted", true);
         })
         .on("mouseout", function(){
@@ -460,7 +465,11 @@ function _customizeExonMap(tissues, geneModel, dmap){
             dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd)-Number(d.chromStart) + 1}bp) <br/>${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd)-Number(d.chromStart) + 1}bp) <br/>${d.unit}: ${value}`)
+
+             // highlight the exon on the gene model
+            const exonNumber = d.exonId.split("_")[1];
+            mapSvg.selectAll(`.exon-curated${exonNumber}`).classed("highlighted", true);
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -508,7 +517,14 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0]; // get the junction display name
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName} (${Number(junc.chromEnd) - Number(junc.chromStart)} bp)<br/> ${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName} (${Number(junc.chromEnd) - Number(junc.chromStart)} bp)<br/> ${d.unit}: ${value}`)
+
+            // highlight the junction and its exons on the gene model
+            mapSvg.selectAll(`.junc${junc.junctionId}`).classed("highlighted", true);
+            if (junc !== undefined) {
+                mapSvg.selectAll(`.exon${junc.startExon.exonNumber}`).classed("highlighted", true);
+                mapSvg.selectAll(`.exon${junc.endExon.exonNumber}`).classed("highlighted", true);
+            }
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
