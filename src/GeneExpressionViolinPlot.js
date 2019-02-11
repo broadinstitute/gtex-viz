@@ -81,6 +81,12 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
             });
 
             const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, groupColorDict, false);
+            if (!violinPlotData.length) {
+                $(`#${ids.toolbar}`).remove();
+                $(`<div id="gene-exp-vplot">No gene expression data found for ${gencodeId}</div>`).appendTo(`#${ids.root}`);
+                $(`#${ids.root} #${ids.spinner}`).hide();
+                return;
+            }
             let violinPlot = new GroupedViolin(violinPlotData);
             let tooltip = violinPlot.createTooltip(ids.tooltip);
 
