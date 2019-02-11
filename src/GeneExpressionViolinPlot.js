@@ -212,8 +212,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .attr('class', 'btn-group btn-group-sm')
         .attr('id', `${ids.plotOptionGroups.sort}-alpha`);
     let alphaSortButtonGroup = $(`#${ids.plotOptionGroups.sort}-alpha.btn-group`);
-    $(`<button class="btn btn-default fa fa-sort-alpha-down" id="${ids.buttons.ascAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
-    $(`<button class="btn btn-default fa fa-sort-alpha-up" id="${ids.buttons.descAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-caret-up" id="${ids.buttons.ascAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-caret-down" id="${ids.buttons.descAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
 
 
     // sort options -- median sorts
@@ -227,8 +227,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .attr('class', 'btn-group btn-group-sm')
         .attr('id', `${ids.plotOptionGroups.sort}-num`);
     let numSortButtonGroup = $(`#${ids.plotOptionGroups.sort}-num.btn-group`);
-    $(`<button class="btn btn-default fa fa-sort-numeric-down" id="${ids.buttons.ascSort}"></button>`).appendTo(numSortButtonGroup);
-    $(`<button class="btn btn-default fa fa-sort-numeric-up" id="${ids.buttons.descSort}"></button>`).appendTo(numSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-caret-up" id="${ids.buttons.ascSort}"></button>`).appendTo(numSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-caret-down" id="${ids.buttons.descSort}"></button>`).appendTo(numSortButtonGroup);
 
     // outlier display options
     $('<div/>').appendTo(plotOptions)
