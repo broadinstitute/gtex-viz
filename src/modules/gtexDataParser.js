@@ -44,9 +44,9 @@ export function getGtexUrls(){
         tissue:  host + 'dataset/tissueInfo?format=json&datasetId=gtex_v7',
 
         // local static files
-        sample: 'tmpSummaryData/gtex.Sample.csv',
-        rnaseqCram: 'tmpSummaryData/rnaseq_cram_files_v7_dbGaP_011516.txt',
-        wgsCram: 'tmpSummaryData/wgs_cram_files_v7_hg38_dbGaP_011516.txt',
+        sample: '/tmpSummaryData/gtex.Sample.csv',
+        rnaseqCram: '/tmpSummaryData/rnaseq_cram_files_v7_dbGaP_011516.txt',
+        wgsCram: '/tmpSummaryData/wgs_cram_files_v7_hg38_dbGaP_011516.txt',
 
         // fireCloud
         fcBilling: 'https://api.firecloud.org/api/profile/billing',
