@@ -362,7 +362,7 @@ function _addClickEvents(tableId){
  * Dependencies: googleUser.js
  */
 function _addToolbar(tableId, mat, googleFuncDict, urls){
-    // TODO: get rid of hard-coded dom IDs
+    // TODO: decouple data download and fire cloud submission
     const theCells = select(`#${tableId}`).select('tbody').selectAll('td');
 
     // create the toolbar and buttons
