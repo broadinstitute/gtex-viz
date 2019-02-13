@@ -209,7 +209,7 @@ function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
         });
 
         // tissue filtering
-        let tempSamples = tissueType == 'all'?samples.slice():samples.filter((s)=>nonEqtlTissues.indexOf(s.tissueSiteDetailId)<0);
+        let tempSamples = tissueType == 'all'?samples.slice():samples.filter((s)=>nonEqtlTissues.indexOf(s.tissueSiteDetailId)<0 && s._type=='RNA-Seq-WGS');
 
         // sex filtering
         tempSamples = sex == 'both'? tempSamples: tempSamples.filter((s)=>s.sex==sex);
