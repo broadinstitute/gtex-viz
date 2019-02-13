@@ -200,12 +200,20 @@ function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
         let sex = $('input[name="sex"]:checked').val(); // jQuery syntax for DOM manipulations
         let tissueType = $('input[name="tissueType"]:checked').val();
         let ages = [];
+        let hardyScales = [];
 
         // modified the age bracket "allAges" radio button based on the age bracket selections
         $('.ageBox').each(function(){
             if ($(this).is(":checked")) ages.push($(this).val());
             if(ages.length < 6) $('input[name="allAges"]').prop('checked', false);
             if(ages.length == 6) $('input[name="allAges"][value="all"]').prop('checked', true);
+        });
+
+        // modified the hardy scale filtering
+        $('.hardyScale').each(function(){
+            if ($(this).is(":checked")) hardyScales.push($(this).val());
+            if(hardyScales.length < 5) $('input[name="allHardyScales"]').prop('checked', false);
+            if(hardyScales.length == 5) $('input[name="allHardyScales"][value="all"]').prop('checked', true);
         });
 
         // tissue filtering
@@ -216,7 +224,13 @@ function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
 
         // age filtering
         tempSamples = ages.length == 6? tempSamples: tempSamples.filter((s)=>ages.indexOf(s.ageBracket)>=0);
+
+        // hardy scale filtering
+        tempSamples = hardyScales.length == 5? tempSamples: tempSamples.filter((s)=>hardyScales.indexOf(s.hardyScale)>=0);
+
+        // rebuild and re-render the table
         _renderMatrixTable(tableId, _buildMatrix(mat.datasetId, tempSamples, tissues), googleFuncDict, urls);
+
     };
 
     // Define input change events:
@@ -240,7 +254,28 @@ function _addFilters(tableId, mat, samples, tissues, googleFuncDict, urls){
                 // do nothing
         }
     });
+
     $('input[name="tissueType"]').change(__filter);
+
+    $('.hardyScale').each(function(){
+        $(this).change(__filter);
+    });
+    $('input[name="allHardyScale"]').change(function(){
+        let val = $(this).val();
+        switch(val){
+            case 'all': {
+                $('.hardyScale').prop('checked', true);
+                __filter();
+                break;
+            }
+            case 'reset': {
+                $('.hardyScale').prop('checked', false);
+                break;
+            }
+            default:
+                // do nothing
+        }
+    });
 }
 
 /**
