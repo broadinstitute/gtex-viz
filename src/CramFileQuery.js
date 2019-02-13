@@ -363,19 +363,24 @@ function _addClickEvents(tableId){
  */
 function _addToolbar(tableId, mat, googleFuncDict, urls){
     // TODO: decouple data download and fire cloud submission
-    const theCells = select(`#${tableId}`).select('tbody').selectAll('td');
 
     // create the toolbar and buttons
     select('#matrix-table-toolbar').selectAll('*').remove();
     const toolbar = new Toolbar('matrix-table-toolbar', undefined, true);
     toolbar.createButton('sample-download');
-    toolbar.createButton('send-to-firecloud', 'fa-cloud-upload-alt');
+    // toolbar.createButton('send-to-firecloud', 'fa-cloud-upload-alt'); // FireCloud related, not in use at this time
 
+    bindDownloadClickEvent(tableId, mat);
+    // bindFireCloudClickEvents(tableId, googleFuncDict) // not in use at this time
+}
+
+function bindDownloadClickEvent(tableId, mat){
+    const allCells = select(`#${tableId}`).select('tbody').selectAll('td');
     select('#sample-download')
         .style('cursor', 'pointer')
         .on('click', function(){
             // fetch selected table cells
-            let cells = theCells.filter(`.selected`);
+            let cells = allCells.filter(`.selected`);
             if (cells.empty()) alert('You have not selected any samples to download.');
             else {
                 let downloadContent = [
@@ -388,50 +393,58 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
                         'CRAM File Size',
                         'CRAM Index GCP',
                         'CRAM Index AWS'
-                    ].join("\t") + '\n';
+                    ].join("\t") + '\n'; // initiate the download content with the column headers
+
+                // for each selected cell
                 cells.each(function(d){
                     // parse the cell's x and y IDs
                     const marker = select(this).attr('class').split(' ').filter((c)=>{return c!='selected'});
                     const x = mat.X[parseInt(marker[0].replace('x', ''))];
                     const y = mat.Y[parseInt(marker[1].replace('y', ''))];
 
-                    // const selectedSamples = mat.data.filter((s)=>__filterSample(s, x, y)).map((s)=>{
                     const selectedSamples = y.data[x.id].map((s)=>{
-                            let cram = [
-                                'cram_file',
-                                'cram_file_aws',
-                                'cram_file_md5',
-                                'cram_file_size',
-                                'cram_index',
-                                'cram_index_aws'
-                            ].map((d)=>s.cramFile[d]);
-                            ['cramFile', 'tissueSiteDetail', 'dataType'].forEach((k)=>{
-                                if(!s.hasOwnProperty(k)) throw 'Parse Error: required attribute is missing: ' + k;
-                            });
-                            let columns = [s.cramFile.sample_id, s.tissueSiteDetail, s.dataType].concat(cram);
-                            return columns.join("\t");
+                        let cram = [
+                            'cram_file',
+                            'cram_file_aws',
+                            'cram_file_md5',
+                            'cram_file_size',
+                            'cram_index',
+                            'cram_index_aws'
+                        ].map((d)=>s.cramFile[d]); // obtain the CRAM file info of the sample, d
+
+                        // Error-checking of data integrity
+                        ['cramFile', 'tissueSiteDetail', 'dataType'].forEach((k)=>{
+                            if(!s.hasOwnProperty(k)) throw 'Parse Error: required attribute is missing: ' + k;
                         });
+
+                        // obtain sample's meta data
+                        let columns = [s.cramFile.sample_id, s.tissueSiteDetail, s.dataType].concat(cram);
+                        return columns.join("\t");
+                    });
                     downloadContent += selectedSamples.join("\n");
                 });
                 let file = new Blob([downloadContent], {type: 'text/plain;charset=utf-8'});
-                saveAs(file, 'GTEx.cram.txt', true); // saveAs() is a FileSaver file, disable auto BOM
-
+                saveAs(file, 'GTEx.cram.txt', true); // saveAs() is a FileSaver function, disable auto BOM
             }
-
         });
+}
 
-    select('#send-to-firecloud')
+function bindFireCloudClickEvents(tableId, googleFuncDict){
+    // TODO: not yet tested after code review
+     const allCells = select(`#${tableId}`).select('tbody').selectAll('td');
+
+     select('#send-to-firecloud')
         .style('cursor', 'pointer')
         .on('click', function(){
             $('#fire-cloud-status').empty();
-             if (!googleFuncDict.checkSignedIn()){
-                 alert("You need to sign in first");
-             }
-             const scopes = 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me';
+            if (!googleFuncDict.checkSignedIn()){
+                alert("You need to sign in first");
+            }
+            const scopes = 'profile email https://www.googleapis.com/auth/devstorage.full_control https://www.googleapis.com/auth/plus.me';
             googleFuncDict.grantScopes(scopes);
             _reportBillingProjects(googleFuncDict.getUser());
 
-            let cells = theCells.filter(`.selected`);
+            let cells = allCells.filter(`.selected`);
             if (cells.empty()) alert('You have not selected any samples to submit.');
             else {
                 select('#fire-cloud-form').style("display", "block");
@@ -452,7 +465,7 @@ function _addToolbar(tableId, mat, googleFuncDict, urls){
             });
             if (inputStatus == 1) {
                 $('#fire-cloud-status').empty(); // clear any existing FireCloud status messages
-                let cells = theCells.filter(`.selected`);
+                let cells = allCells.filter(`.selected`);
                 let allSelectedSamples = [];
                 cells.each(function(d) {
                     const marker = select(this).attr('class').split(' ').filter((c) => {
