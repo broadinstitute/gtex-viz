@@ -18,7 +18,8 @@ export function checkDomId(id){
     // test input params
     if ($(`#${id}`).length == 0) {
         let error = `Input Error: DOM ID ${id} is not found.`;
-        alert(error);
+        //alert(error);
+        console.warn(error);
         throw error;
     }
 }
