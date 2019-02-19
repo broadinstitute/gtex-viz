@@ -303,7 +303,7 @@ function _renderMatrixTable(tableId, mat, markEqtlTissues, googleFuncDict, urls)
         .append('th')
         .attr('scope', 'col')
         .attr('class', (d, i)=>d.id==""?'':`y${i-1}`)
-        .text((d)=>d.label)
+        .text((d)=>d.label);
 
 
     theTable.select('.table-label').selectAll('*').remove();
