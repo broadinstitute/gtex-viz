@@ -17,6 +17,7 @@
             <div id="demo"></div>
             <div id="eQTL-browser"></div>
             <div id="sQTL-browser"></div>
+            <div id="QTL-map"></div>
         </div>
     </body>
     <script
@@ -33,12 +34,13 @@
       crossorigin="anonymous">
     </script>
     <script src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
-    <script src="/build/js/gtex-mini-browser.bundle.min.js"></script>
+    <script src="/build/js/qtl-browser.bundle.min.js"></script>
     <script>
         $(document).ready(function() {
-            GTExMiniBrowser.render("ACTN3", GTExMiniBrowser.demoConfig);
-            GTExMiniBrowser.render("ACTN3", GTExMiniBrowser.eqtlConfig);
-            GTExMiniBrowser.render("ACTN3", GTExMiniBrowser.sqtlConfig);
+            QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.demoConfig);
+            QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.eqtlConfig);
+            QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.sqtlConfig);
+            QTLBrowser.renderQtlMap("ACTN3", QTLBrowser.qtlMapConfig)
         });
 
     </script>

@@ -2,11 +2,11 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 import {minify} from 'uglify-es';
 
-const name= 'GTExMiniBrowser';
+const name= 'QTLBrowser';
 export default {
     input: 'src/' + name + '.js',
     output: {
-        file: 'build/js/gtex-mini-browser.bundle.min.js',
+        file: 'build/js/qtl-browser.bundle.min.js',
         format: 'iife'
     },
     sourcemap: 'inline',
