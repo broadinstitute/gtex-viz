@@ -8,8 +8,8 @@ export function getGtexUrls(){
     // const host = 'https://dev.gtexportal.org/rest/v1/';
     return {
         // gene-eqtl visualizer specific
-        singleTissueEqtl: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v7&gencodeId=',
-        ld: host + 'dataset/ld?format=json&datasetId=gtex_v7&gencodeId=',
+        singleTissueEqtl: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v8&gencodeId=',
+        ld: host + 'dataset/ld?format=json&datasetId=gtex_v8&gencodeId=',
 
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
@@ -17,31 +17,31 @@ export function getGtexUrls(){
         variantId: host + 'dataset/variant?format=json&variantId=',
 
         // transcript, exon, junction expression specific
-        exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
-        transcriptExp: host + 'expression/medianTranscriptExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
-        junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
-        transcript: host + 'reference/transcript?datasetId=gtex_v7&gencodeId=',
-        exon: host + 'reference/exon?datasetId=gtex_v7&gencodeId=',
-        geneModel: host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
-        geneModelUnfiltered: host + 'dataset/fullCollapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
+        exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v8&hcluster=true&gencodeId=',
+        transcriptExp: host + 'expression/medianTranscriptExpression?datasetId=gtex_v8&hcluster=true&gencodeId=',
+        junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v8&hcluster=true&gencodeId=',
+        transcript: host + 'reference/transcript?datasetId=gtex_v8&gencodeId=',
+        exon: host + 'reference/exon?datasetId=gtex_v8&gencodeId=',
+        geneModel: host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=',
+        geneModelUnfiltered: host + 'dataset/fullCollapsedGeneModelExon?datasetId=gtex_v8&gencodeId=',
 
         // gene expression violin plot specific
-        geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
+        geneExp: host + 'expression/geneExpression?datasetId=gtex_v8&gencodeId=',
 
         // gene expression heat map specific
-        medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&pageSize=10000',
+        medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v8&hcluster=true&pageSize=10000',
 
         // gene expression boxplot specific
-        geneExpBoxplot: host + 'expression/geneExpression?datasetId=gtex_v7&boxplotDetail=full&gencodeId=',
+        geneExpBoxplot: host + 'expression/geneExpression?datasetId=gtex_v8&boxplotDetail=full&gencodeId=',
 
         // top expressed gene expression specific
-        topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
-        topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v7&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
+        topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v8&filterMtGene=true&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
+        topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v8&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
 
-        geneId: host + 'reference/gene?format=json&gencodeVersion=v19&genomeBuild=GRCh37%2Fhg19&geneId=',
+        geneId: host + 'reference/gene?format=json&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&geneId=',
 
         // tissue menu specific
-        tissue:  host + 'dataset/tissueInfo?format=json&datasetId=gtex_v7',
+        tissue:  host + 'dataset/tissueInfo?format=json&datasetId=gtex_v8',
 
         // local static files
         sample: 'tmpSummaryData/gtex.Sample.csv',
