@@ -253,11 +253,11 @@ export function parseTissueSites(data, forEqtl=false){
 /**
  * parse the exons
  * @param data {Json}
- * @param full {Boolean}
+ * @param isFull {Boolean}
  * @returns {List} of exons
  */
-export function parseModelExons(json){
-    const attr = 'collapsedGeneModelExon';
+export function parseModelExons(json, isFull){
+    const attr = isFull?'fullCollapsedGeneModelExon':'collapsedGeneModelExon';
     if(!json.hasOwnProperty(attr)){
         console.error(json);
         throw 'Parsing Error: Required json attribute is missing: ' + attr;
@@ -291,7 +291,7 @@ export function parseJunctions(json){
     // check required json attributes
     ['tissueSiteDetailId', 'junctionId'].forEach((d)=>{
         // use the first element in the json objects as a test case
-        if(!json[attr][0].hasOwnProperty(d)){
+        if(json[attr].length && !json[attr][0].hasOwnProperty(d)){
             console.error(json[attr][0]);
             throw 'Parsing Error: required junction attribute is missing: ' + d;
         }
