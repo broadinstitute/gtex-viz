@@ -693,16 +693,18 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
     if($(`#${modalId}`).find(":input").length == 0){
         // if the menu is empty
         bmap.yScale.domain().forEach((y)=>{ // create a menu item for each tissue
+            let x = $('<label/>');
             $('<input/>')
                 .attr('value', y)
                 .attr('type', 'checkbox')
                 .prop('checked', true)
-                .appendTo(modalBody);
-            $('<label/>')
+                .appendTo(x);
+            $('<span/>')
                 .css('font-size', '12px')
                 .css('margin-left', '2px')
                 .html(tissueSiteTable[y].tissueSiteDetail)
-                .appendTo(modalBody);
+                .appendTo(x);
+            x.appendTo(modalBody);
             $('<br/>').appendTo(modalBody);
         });
     }
