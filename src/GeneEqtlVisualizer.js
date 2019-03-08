@@ -339,7 +339,7 @@ function updateFocusView(par, bmap, bmapSvg){
     let bubbleMax = bmap._setBubbleMax();
     bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
 
-    bmap.drawBubbleLegend(bmapSvg, {x: par.width/2, y:par.focusPanelMargin.top-50, title: "-log10(p-value)"}, 5, "-log10(p-value)");
+    bmap.drawBubbleLegend(bmapSvg, {x: par.width/2 * 1.1, y:par.focusPanelMargin.top-50, title: "-log10(p-value)"}, 5, "-log10(p-value)");
 
     // update the focus bubbles
     bmapSvg.select("#focusG").selectAll(".bubble-map-cell")
