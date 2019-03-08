@@ -35,7 +35,7 @@ export function render(par, geneId, urls = getGtexUrls()){
             // report the gene info
             $(`#${par.divGeneInfo}`).empty();
             $("<span/>")
-                .html(`<span>${gene.geneSymbol} (${gene.gencodeId}), Chr${gene.chromosome}:${gene.start} - ${gene.end} (${gene.strand}), ${gene.description}`)
+                .html(`<span>${gene.geneSymbol} (${gene.gencodeId}), ${gene.chromosome}:${gene.start} - ${gene.end} (${gene.strand}), ${gene.description}`)
                 .appendTo($(`#${par.divGeneInfo}`));
 
             let promises = [
