@@ -430,6 +430,7 @@ export function heatmap(par=heatmapDemoConfig){
     let h = new Heatmap(par.data, par.useLog, par.logBase, par.colorScheme, par.cornerRadius, tooltipId);
     h.draw(svg, {w:inWidth, h:inHeight}, par.columnLabelAngle, false, par.columnLabelPosAdjust);
     h.drawColorLegend(svg, {x:20, y: -20}, 10);
+    return h
 }
 
 const dendroHeatmapDemoConfig = {

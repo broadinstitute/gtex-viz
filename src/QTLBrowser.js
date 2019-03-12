@@ -8,22 +8,55 @@
 import {tsv} from "d3-fetch";
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
 import {checkDomId, createSvg} from "./modules/utils";
-import {bubblemap} from "./GTExViz";
+import {bubblemap, heatmap} from "./GTExViz";
 
-import {
-    getGtexUrls,
-} from "./modules/gtexDataParser";
+export const dim = {
+    width: 1800,
+};
+
+export const gwasHeatmapConfig = {
+    id: 'gwasHeatmap',
+    data: null,
+    useLog: false,
+    logBase: null,
+    width: dim.width,
+    height: 250,
+    marginLeft: 100,
+    marginRight: 10,
+    marginTop: 50,
+    marginBottom: 120,
+    colorScheme: "Greys",
+    cornerRadius: 2,
+    columnLabelHeight: 20,
+    columnLabelAngle: 90,
+    columnLabelPosAdjust: 10,
+    rowLabelWidth: 100,
+    url: "../tempData/ACTN3.neighbor.genes.csv",
+    dataParser: (d)=>{
+        d.start = parseInt(d.start);
+        d.end = parseInt(d.end);
+        d.featureLabel = d.geneSymbol;
+        d.featureType = d.geneType;
+        return d;
+    },
+    dataFilter: (d)=>{
+        return d.featureType == "protein coding"||d.featureType=="lincRNA"
+    },
+    dataSort: (a, b)=>{
+        return parseInt(a.start)-parseInt(b.start)
+    }
+};
 
 export const demoConfig = {
     id: 'demo',
     data: undefined,
-    width: 1800,
-    height: 300,
+    width: dim.width,
+    height: 100,
     marginLeft: 10,
     marginRight: 10,
-    marginTop: 20,
+    marginTop: 0,
     marginBottom: 0,
-    showLabels: true,
+    showLabels: false,
     trackColor: "#848484",
     url: "../tempData/ACTN3.neighbor.genes.csv",
     center: 66546395,
@@ -36,6 +69,9 @@ export const demoConfig = {
     },
     dataFilter: (d)=>{
         return d.featureType == "protein coding"||d.featureType=="lincRNA"
+    },
+    dataSort: (a, b)=>{
+        return parseInt(a.start)-parseInt(b.start)
     }
 };
 
@@ -166,6 +202,18 @@ export function renderQtlMap(geneId, par=qtlMapConfig){
         .catch(function(err){console.error(err)})
 }
 
+export function renderGwasHeatmap(geneId, par=gwasHeatmapConfig){
+    tsv(par.url)
+        .then((data)=>{
+            let cols = data.map(par.dataParser).filter(par.dataFilter);
+            cols.sort(par.dataSort);
+            console.log(cols);
+            par.data = generateRandomMatrix({x:cols.length, y:4, scaleFactor:1}, cols.map((d)=>d.geneSymbol));
+            console.log(par.data);
+            let hmap = heatmap(par);
+        })
+}
+
 export function renderBrowserTrack(geneId, par=demoConfig){
     // preparation for the plot
     checkDomId(par.id);
@@ -181,26 +229,52 @@ export function renderBrowserTrack(geneId, par=demoConfig){
     };
     let svg = createSvg(par.id, par.width, par.height, margin);
 
-    tsv(par.url)
-        .then((data)=> {
+    const process = (data)=> {
 
-            par.data = data.map(par.dataParser).filter(par.dataFilter)
-            par.data.sort((a, b)=>{
-                return parseInt(a.start)-parseInt(b.start)
-            });
-            let browser = new MiniGenomeBrowser(par.data, par.center);
-            browser.render(
-                svg,
-                inWidth,
-                inHeight,
-                false,
-                par.showLabels,
-                par.trackColor
-            )
-        })
+        par.data = data.map(par.dataParser).filter(par.dataFilter)
+        par.data.sort(par.dataSort);
+        let browser = new MiniGenomeBrowser(par.data, par.center);
+        browser.render(
+            svg,
+            inWidth,
+            inHeight,
+            false,
+            par.showLabels,
+            par.trackColor
+        )
+    };
+    if (par.data === undefined){
+         tsv(par.url)
+        .then((dataprocess)
         .catch((err)=>{
             console.error(err)
         })
+    } else {
+        process()
+    }
+
+}
+
+function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}, cols = []){
+    let range = n => Array.from(Array(n).keys());
+    let X = cols === undefined?range(par.x):cols; // generates a 1-based list.
+    let Y = range(par.y);
+    let data = [];
+    X.forEach((x)=>{
+        x = cols===undefined?'col ' + x.toString():x;
+        Y.forEach((y)=>{
+            y = 'trait ' + y.toString();
+            let v = Math.random()*par.scaleFactor;
+            let dataPoint = {
+                x: x,
+                y: y,
+                value: v,
+                displayValue: v.toPrecision(3)
+            };
+            data.push(dataPoint);
+        })
+    });
+    return data;
 }
 
 
