@@ -57,7 +57,7 @@ export const demoConfig = {
     marginTop: 0,
     marginBottom: 0,
     showLabels: false,
-    trackColor: "#848484",
+    trackColor: "#efefef",
     url: "../tempData/ACTN3.neighbor.genes.csv",
     center: 66546395,
     dataParser: (d)=>{
@@ -87,7 +87,7 @@ export const eqtlConfig = {
     url: "/tempData/ACTN3.eqtls.csv",
     center: 66546395,
     showLabels: false,
-    trackColor: "#58c9d7",
+    trackColor: "#f2f2f2",
     dataParser: (d)=>{
         let id = d.variantId;
         d.chr = d.chromosome;
@@ -113,7 +113,7 @@ export const sqtlConfig = {
     url: "/tempData/ACTN3.sqtls.csv",
     center: 66546395,
     showLabels: false,
-    trackColor: "#00aed7",
+    trackColor: "#f4f4f4",
     dataParser: (d)=>{
         let id = d.variantId;
         d.chr = d.chromosome;
@@ -245,10 +245,10 @@ export function renderBrowserTrack(geneId, par=demoConfig){
     };
     if (par.data === undefined){
          tsv(par.url)
-        .then((dataprocess)
-        .catch((err)=>{
-            console.error(err)
-        })
+            .then(process)
+            .catch((err)=>{
+                console.error(err)
+            })
     } else {
         process()
     }

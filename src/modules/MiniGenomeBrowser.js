@@ -20,7 +20,7 @@ export default class MiniGenomeBrowser{
         this.tooltip = undefined;
     }
 
-    render(dom, width=1500, height=200, showFeatureSize=false, showLabels=true, backboneColor="#0086af"){
+    render(dom, width=1500, height=200, showFeatureSize=false, showLabels=true, backboneColor="#eeeeee"){
         let range = [0, width];
         let domain = [this.center-this.window, this.center+this.window];
         this.scale = scaleLinear()
@@ -72,7 +72,7 @@ export default class MiniGenomeBrowser{
                 let featureH = showFeatureSize?Math.abs(this.scale(d.start)-this.scale(d.end) + 1):0;
                 return h+featureH
             })
-            .style("fill", '#eeeeee');
+            .style("fill", (d)=>d.start==this.center?"red":'#0086af');
 
         // feature labels
         if (showLabels == false) return;
