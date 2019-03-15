@@ -20,7 +20,7 @@ export default class MiniGenomeBrowser{
         this.tooltip = undefined;
     }
 
-    render(dom, width=1500, height=200, showFeatureSize=false, showLabels=true, backboneColor="#eeeeee"){
+    render(dom, width=1500, height=200, showFeatureSize=false, showFeatureLabels=true, backboneColor="#ffffff", trackLabel="Track"){
         let range = [0, width];
         let domain = [this.center-this.window, this.center+this.window];
         this.scale = scaleLinear()
@@ -36,11 +36,13 @@ export default class MiniGenomeBrowser{
             .attr("y", height/2)
             .attr("width", width)
             .attr("height", backboneHeight)
-            .style("fill", backboneColor);
+            .style("fill", backboneColor)
+            .style("stroke", "#ababab")
+            .style("stroke-width", 1)
 
         // genome features (genes)
         const yAdjust = (d, i)=>{
-            if (showLabels == false) return 0;
+            if (showFeatureLabels == false) return 0;
             let adjust = 5;
             if (i>0){
                 // if the upstream feature x position is too close, adjust the y height;
@@ -58,7 +60,6 @@ export default class MiniGenomeBrowser{
             .append("rect")
             .attr("class", "minibrowser-feature")
             .attr("x", (d)=>{
-                // console.log(d.start, " ", this.scale(d.start));
                 return this.scale(d.start)
             })
             .attr("y", (d, i)=>{
@@ -72,10 +73,18 @@ export default class MiniGenomeBrowser{
                 let featureH = showFeatureSize?Math.abs(this.scale(d.start)-this.scale(d.end) + 1):0;
                 return h+featureH
             })
-            .style("fill", (d)=>d.start==this.center?"red":'#0086af');
+            .style("fill", (d)=>d.start==this.center?"red":'#ababab');
+
+        // track label
+        browser.append("text")
+            .attr("x", -10)
+            .attr("y", height/2 + 5)
+            .style("font-size", "9px")
+            .style("text-anchor", "end")
+            .text(trackLabel);
 
         // feature labels
-        if (showLabels == false) return;
+        if (showFeatureLabels == false) return;
         let fLabels = browser.selectAll('.minibrowser-feature-label')
             .data(this.data)
             .enter()

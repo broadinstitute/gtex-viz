@@ -14,12 +14,12 @@
     <h3>GTEx QTL Visualization</h3>
     <hr>
         <div class="row">
-            <div id="gwasHeatmap"></div>
+            <div id="qtl-browser"></div>
             <div id="demo"></div>
-            <div id="eQTL-browser"></div>
-            <div id="sQTL-browser"></div>
-            <div style="height: 100px;"></div>
-            <div id="QTL-map"></div>
+            <!--<div id="eQTL-browser"></div>-->
+            <!--<div id="sQTL-browser"></div>-->
+            <!--<div style="height: 100px;"></div>-->
+            <!--<div id="QTL-map"></div>-->
         </div>
     </body>
     <script
@@ -39,11 +39,12 @@
     <script src="/build/js/qtl-browser.bundle.min.js"></script>
     <script>
         $(document).ready(function() {
-            QTLBrowser.renderGwasHeatmap("ACTN3", QTLBrowser.gwasHeatmapConfig);
-            QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.demoConfig);
-            QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.eqtlConfig);
-            QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.sqtlConfig);
-            QTLBrowser.renderQtlMap("ACTN3", QTLBrowser.qtlMapConfig)
+            QTLBrowser.render("ACTN3")
+            // QTLBrowser.renderGwasHeatmap("ACTN3", QTLBrowser.gwasHeatmapConfig);
+            // QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.demoConfig);
+            // QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.eqtlConfig);
+            // QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.sqtlConfig);
+            // QTLBrowser.renderQtlMap("ACTN3", QTLBrowser.qtlMapConfig)
         });
 
     </script>

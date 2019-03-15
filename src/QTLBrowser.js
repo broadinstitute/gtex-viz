@@ -7,19 +7,49 @@
 "use strict";
 import {tsv} from "d3-fetch";
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
+import Heatmap from "./modules/Heatmap.js";
 import {checkDomId, createSvg} from "./modules/utils";
-import {bubblemap, heatmap} from "./GTExViz";
+import {bubblemap} from "./GTExViz";
 
-export const dim = {
+export const browserConfig = {
+    id: "qtl-browser",
     width: 1800,
+    height: 2000,
+    margin: {
+        left: 20,
+        top: 50
+    },
+    urls: {
+        genes: "../tempData/ACTN3.neighbor.genes.csv",
+
+    },
+    parsers: {
+        genes: (d)=>{
+            d.start = parseInt(d.start);
+            d.end = parseInt(d.end);
+            d.featureLabel = d.geneSymbol;
+            d.featureType = d.geneType;
+            return d;
+        },
+    },
+    dataFilters: {
+        genes: (d) => {
+            return d.featureType == "protein coding" || d.featureType == "lincRNA"
+        },
+    },
+    dataSort: {
+        genes: (a, b) => {
+            return parseInt(a.start) - parseInt(b.start)
+        }
+    }
 };
 
-export const gwasHeatmapConfig = {
+const gwasHeatmapConfig = {
     id: 'gwasHeatmap',
     data: null,
     useLog: false,
     logBase: null,
-    width: dim.width,
+    width: browserConfig.width,
     height: 250,
     marginLeft: 100,
     marginRight: 10,
@@ -31,33 +61,20 @@ export const gwasHeatmapConfig = {
     columnLabelAngle: 90,
     columnLabelPosAdjust: 10,
     rowLabelWidth: 100,
-    url: "../tempData/ACTN3.neighbor.genes.csv",
-    dataParser: (d)=>{
-        d.start = parseInt(d.start);
-        d.end = parseInt(d.end);
-        d.featureLabel = d.geneSymbol;
-        d.featureType = d.geneType;
-        return d;
-    },
-    dataFilter: (d)=>{
-        return d.featureType == "protein coding"||d.featureType=="lincRNA"
-    },
-    dataSort: (a, b)=>{
-        return parseInt(a.start)-parseInt(b.start)
-    }
 };
 
-export const demoConfig = {
-    id: 'demo',
+const geneTrackConfig = {
+    id: 'geneTrack',
+    label: 'Gene Position',
     data: undefined,
-    width: dim.width,
+    width: browserConfig.width,
     height: 100,
-    marginLeft: 10,
-    marginRight: 10,
-    marginTop: 0,
+    marginLeft: 50,
+    marginRight: 50,
+    marginTop: 500,
     marginBottom: 0,
     showLabels: false,
-    trackColor: "#efefef",
+    trackColor: "#ffffff",
     url: "../tempData/ACTN3.neighbor.genes.csv",
     center: 66546395,
     dataParser: (d)=>{
@@ -202,56 +219,94 @@ export function renderQtlMap(geneId, par=qtlMapConfig){
         .catch(function(err){console.error(err)})
 }
 
-export function renderGwasHeatmap(geneId, par=gwasHeatmapConfig){
-    tsv(par.url)
+
+export function render(geneId, par=browserConfig){
+    let mainSvg = createSvg(par.id, par.width, par.height, {left:par.margin.left, top:par.margin.top});
+
+    tsv(par.urls.genes)
         .then((data)=>{
-            let cols = data.map(par.dataParser).filter(par.dataFilter);
-            cols.sort(par.dataSort);
-            console.log(cols);
-            par.data = generateRandomMatrix({x:cols.length, y:4, scaleFactor:1}, cols.map((d)=>d.geneSymbol));
-            console.log(par.data);
-            let hmap = heatmap(par);
+            let genes = data.map(par.parsers.genes).filter(par.dataFilters.genes);
+            genes.sort(par.dataSort.genes);
+
+            gwasHeatmapConfig.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
+            const heatmapViz = renderGwasHeatmap(geneId, mainSvg, gwasHeatmapConfig);
+
+            geneTrackConfig.data = genes;
+            const geneTrackViz = renderFeatureTrack(geneId, mainSvg, geneTrackConfig);
+            let trackHeight = geneTrackConfig.height - (geneTrackConfig.marginTop + geneTrackConfig.marginBottom);
+
+            let xAdjust = gwasHeatmapConfig.marginLeft - geneTrackConfig.marginLeft + (heatmapViz.xScale.bandwidth()/2)
+            geneTrackViz.svg.selectAll(".connect")
+                .data(genes)
+                .enter()
+                .append('line')
+                .attr("class", "connect")
+                .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+                .attr("x2", (d)=>geneTrackViz.scale(d.start))
+                .attr("y1", trackHeight/2-20)
+                .attr("y2", trackHeight/2)
+                .attr("stroke", (d)=>d.geneSymbol==geneId?"red":"#ababab")
+                .attr("stroke-width", 0.5);
+
+            geneTrackViz.svg.selectAll(".connect2")
+                .data(genes)
+                .enter()
+                .append('line')
+                .attr("class", "connect2")
+                .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+                .attr("x2", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+                .attr("y1", trackHeight/2-20)
+                .attr("y2", (d)=>trackHeight/2-175 +(d.geneSymbol.length*10))
+                .attr("stroke", (d)=>d.geneSymbol==geneId?"red":"#ababab")
+                .attr("stroke-width", 0.5)
+
+
         })
 }
 
-export function renderBrowserTrack(geneId, par=demoConfig){
+function renderGwasHeatmap(geneId, svg, par=gwasHeatmapConfig){
+
+    let inWidth = par.width - (par.marginLeft + par.marginRight + par.rowLabelWidth);
+    let inHeight = par.height - (par.marginTop + par.marginBottom + par.columnLabelHeight);
+    let mapG = svg.append("g")
+        .attr("id", par.id)
+        .attr("transform", `translate(${par.marginLeft}, ${par.marginTop})`);
+    let tooltipId = `${par.id}Tooltip`;
+
+    let hViz = new Heatmap(par.data, false, undefined, par.colorScheme, par.colorRadius, tooltipId);
+    hViz.draw(mapG, {w:inWidth, h:inHeight}, par.columnLabelAngle, false, par.columnLabelPosAdjust);
+    hViz.drawColorLegend(mapG, {x: 20, y:-20}, 10);
+
+    // highlight the anchor gene
+
+    mapG.selectAll(".exp-map-xlabel")
+        .attr('fill', (d)=>d==geneId?"red":"#000000")
+
+    hViz.svg = mapG;
+    return hViz
+
+}
+
+function renderFeatureTrack(geneId, svg, par=geneTrackConfig){
     // preparation for the plot
-    checkDomId(par.id);
     let inWidth = par.width - (par.marginLeft + par.marginRight);
     let inHeight = par.height - (par.marginTop + par.marginBottom);
-    let svgId = `${par.id}Svg`;
-    let tooltipId = `${par.id}Tooltip`;
-    let margin = {
-        top: par.marginTop,
-        right: par.marginRight,
-        bottom: par.marginBottom,
-        left: par.marginLeft
-    };
-    let svg = createSvg(par.id, par.width, par.height, margin);
+    let trackG = svg.append("g")
+        .attr("id", par.id)
+        .attr("transform", `translate(${par.marginLeft}, ${par.marginTop})`);
 
-    const process = (data)=> {
-
-        par.data = data.map(par.dataParser).filter(par.dataFilter)
-        par.data.sort(par.dataSort);
-        let browser = new MiniGenomeBrowser(par.data, par.center);
-        browser.render(
-            svg,
-            inWidth,
-            inHeight,
-            false,
-            par.showLabels,
-            par.trackColor
-        )
-    };
-    if (par.data === undefined){
-         tsv(par.url)
-            .then(process)
-            .catch((err)=>{
-                console.error(err)
-            })
-    } else {
-        process()
-    }
+    let featureViz = new MiniGenomeBrowser(par.data, par.center);
+    featureViz.render(
+        trackG,
+        inWidth,
+        inHeight,
+        false,
+        par.showLabels,
+        par.trackColor,
+        par.label
+    );
+    featureViz.svg = trackG;
+    return featureViz
 
 }
 
