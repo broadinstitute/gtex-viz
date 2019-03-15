@@ -21,7 +21,8 @@ export const browserConfig = {
     },
     urls: {
         genes: "../tempData/ACTN3.neighbor.genes.csv",
-
+        eqtls: "/tempData/ACTN3.eqtls.csv",
+        sqtls:  "/tempData/ACTN3.sqtls.csv",
     },
     parsers: {
         genes: (d)=>{
@@ -31,14 +32,25 @@ export const browserConfig = {
             d.featureType = d.geneType;
             return d;
         },
+        qtlFeatures: (d)=>{
+            let id = d.variantId;
+            d.chr = d.chromosome;
+            d.start = parseInt(d.pos);
+            d.end = d.start;
+            d.featureType = "variant";
+            d.featureLabel = d.snpId||d.variantId;
+            d.strand = "+";
+            return d;
+        },
     },
     dataFilters: {
         genes: (d) => {
             return d.featureType == "protein coding" || d.featureType == "lincRNA"
         },
+
     },
     dataSort: {
-        genes: (a, b) => {
+        features: (a, b) => {
             return parseInt(a.start) - parseInt(b.start)
         }
     }
@@ -49,12 +61,12 @@ const gwasHeatmapConfig = {
     data: null,
     useLog: false,
     logBase: null,
-    width: browserConfig.width,
-    height: 250,
+    width: 1800,
+    height: 80,
     marginLeft: 100,
     marginRight: 10,
-    marginTop: 50,
-    marginBottom: 120,
+    marginTop: 0,
+    marginBottom: 0, // need to save room for text labels
     colorScheme: "Greys",
     cornerRadius: 2,
     columnLabelHeight: 20,
@@ -68,80 +80,46 @@ const geneTrackConfig = {
     label: 'Gene Position',
     data: undefined,
     width: browserConfig.width,
-    height: 100,
-    marginLeft: 50,
+    height: 20,
+    marginLeft: 80,
     marginRight: 50,
-    marginTop: 500,
+    marginTop: 400, // space for connecting lines
     marginBottom: 0,
     showLabels: false,
     trackColor: "#ffffff",
-    url: "../tempData/ACTN3.neighbor.genes.csv",
     center: 66546395,
-    dataParser: (d)=>{
-        d.start = parseInt(d.start);
-        d.end = parseInt(d.end);
-        d.featureLabel = d.geneSymbol;
-        d.featureType = d.geneType;
-        return d;
-    },
-    dataFilter: (d)=>{
-        return d.featureType == "protein coding"||d.featureType=="lincRNA"
-    },
-    dataSort: (a, b)=>{
-        return parseInt(a.start)-parseInt(b.start)
-    }
 };
 
-export const eqtlConfig = {
+export const eqtlTrackConfig = {
     id: 'eQTL-browser',
     data: undefined,
-    width: 1800,
+    width: browserConfig.width,
     height: 20,
-    marginLeft: 10,
-    marginRight: 10,
-    marginTop: 0,
+    marginLeft: 80,
+    marginRight: 50,
+    marginTop: 500, // enough space to visually separate query gene association data panel
     marginBottom: 0,
-    url: "/tempData/ACTN3.eqtls.csv",
     center: 66546395,
     showLabels: false,
-    trackColor: "#f2f2f2",
-    dataParser: (d)=>{
-        let id = d.variantId;
-        d.chr = d.chromosome;
-        d.start = parseInt(d.pos)
-        d.end = d.start
-        d.featureType = "variant"
-        d.featureLabel = d.snpId||d.variantId
-        d.strand = "+"
-        return d;
-    },
-    dataFilter: (d)=>{return d}
+    trackColor: "#ffffff",
+    tickColor: "#0086af",
+    label: 'eQTL Position'
 };
 
-export const sqtlConfig = {
+export const sqtlTrackConfig = {
     id: 'sQTL-browser',
     data: undefined,
-    width: 1800,
+    width: browserConfig.width,
     height: 20,
-    marginLeft: 10,
-    marginRight: 10,
-    marginTop: 0,
+    marginLeft: 80,
+    marginRight: 50,
+    marginTop: 530, // TODO: this should be calculated
     marginBottom: 0,
-    url: "/tempData/ACTN3.sqtls.csv",
     center: 66546395,
     showLabels: false,
-    trackColor: "#f4f4f4",
-    dataParser: (d)=>{
-        let id = d.variantId;
-        d.chr = d.chromosome;
-        d.start = parseInt(d.pos)
-        d.end = d.start
-        d.featureType = "variant"
-        d.featureLabel = d.snpId||d.variantId
-        d.strand = "+"
-        return d;
-    },
-    dataFilter: (d)=>{return d}
+    trackColor: "#ffffff",
+    tickColor: "#0086af",
+    label: 'sQTL Position'
 };
 
 export const qtlMapConfig = {
@@ -222,46 +200,82 @@ export function renderQtlMap(geneId, par=qtlMapConfig){
 
 export function render(geneId, par=browserConfig){
     let mainSvg = createSvg(par.id, par.width, par.height, {left:par.margin.left, top:par.margin.top});
+    const promises = ["genes", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
 
-    tsv(par.urls.genes)
-        .then((data)=>{
-            let genes = data.map(par.parsers.genes).filter(par.dataFilters.genes);
-            genes.sort(par.dataSort.genes);
-
-            gwasHeatmapConfig.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
-            const heatmapViz = renderGwasHeatmap(geneId, mainSvg, gwasHeatmapConfig);
-
-            geneTrackConfig.data = genes;
-            const geneTrackViz = renderFeatureTrack(geneId, mainSvg, geneTrackConfig);
-            let trackHeight = geneTrackConfig.height - (geneTrackConfig.marginTop + geneTrackConfig.marginBottom);
-
-            let xAdjust = gwasHeatmapConfig.marginLeft - geneTrackConfig.marginLeft + (heatmapViz.xScale.bandwidth()/2)
-            geneTrackViz.svg.selectAll(".connect")
-                .data(genes)
-                .enter()
-                .append('line')
-                .attr("class", "connect")
-                .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
-                .attr("x2", (d)=>geneTrackViz.scale(d.start))
-                .attr("y1", trackHeight/2-20)
-                .attr("y2", trackHeight/2)
-                .attr("stroke", (d)=>d.geneSymbol==geneId?"red":"#ababab")
-                .attr("stroke-width", 0.5);
-
-            geneTrackViz.svg.selectAll(".connect2")
-                .data(genes)
-                .enter()
-                .append('line')
-                .attr("class", "connect2")
-                .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
-                .attr("x2", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
-                .attr("y1", trackHeight/2-20)
-                .attr("y2", (d)=>trackHeight/2-175 +(d.geneSymbol.length*10))
-                .attr("stroke", (d)=>d.geneSymbol==geneId?"red":"#ababab")
-                .attr("stroke-width", 0.5)
-
-
+    Promise.all(promises)
+        .then((args)=> {
+            renderGeneVisualComponents(geneId, mainSvg, args[0], par);
+            renderVariantVisualComponents(geneId, mainSvg, par, args[1], args[2])
         })
+}
+
+
+function renderVariantVisualComponents(geneId, mainSvg, par=browserConfig, eqData, sqData){
+
+    // eQTL position track
+    let eqtlFeatures = eqData.map(par.parsers.qtlFeatures);
+    eqtlFeatures.sort(par.dataSort.features);
+    eqtlTrackConfig.data = eqtlFeatures;
+    const eqtlTrackViz = renderFeatureTrack(geneId, mainSvg, eqtlTrackConfig);
+
+    // sQTL position track
+    let sqtlFeatures = sqData.map(par.parsers.qtlFeatures);
+    sqtlFeatures.sort(par.dataSort.features);
+    sqtlTrackConfig.data = sqtlFeatures;
+    const sqtlTrackViz = renderFeatureTrack(geneId, mainSvg, sqtlTrackConfig);
+}
+
+
+/**
+ * Render the visual components related to genes: GWAS trait heatmap, gene position track
+ * @param geneId {String} the anchor gene's ID/symbol
+ * @param mainSvg {d3 svg} the root svg
+ * @param data {List} a list of gene objects with attr: geneSymbol, strand, start, end, geneType
+ * @param par {Object} the configuration object of the overall visualization
+ */
+function renderGeneVisualComponents(geneId, mainSvg, data, par){
+    let genes = data.map(par.parsers.genes).filter(par.dataFilters.genes);
+    genes.sort(par.dataSort.genes);
+
+    gwasHeatmapConfig.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
+    const heatmapViz = renderGwasHeatmap(geneId, mainSvg, gwasHeatmapConfig);
+
+    geneTrackConfig.data = genes;
+    const geneTrackViz = renderFeatureTrack(geneId, mainSvg, geneTrackConfig);
+
+    //// draw connecting lines between the GWAS trait heatmap and gene position track
+    let xAdjust = gwasHeatmapConfig.marginLeft - geneTrackConfig.marginLeft + (heatmapViz.xScale.bandwidth()/2);
+    let trackHeight = geneTrackConfig.height - (geneTrackConfig.marginTop + geneTrackConfig.marginBottom);
+
+    geneTrackViz.svg.selectAll(".connect")
+        .data(genes)
+        .enter()
+        .append('line')
+        .attr("class", "connect")
+        .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+        .attr("x2", (d)=>geneTrackViz.scale(d.start))
+        .attr("y1", trackHeight/2-20)
+        .attr("y2", trackHeight/2)
+        .attr("stroke", (d)=>d.geneSymbol==geneId?"red":"#ababab")
+        .attr("stroke-width", 0.5);
+
+    geneTrackViz.svg.selectAll(".connect2")
+        .data(genes)
+        .enter()
+        .append('line')
+        .attr("class", "connect2")
+        .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+        .attr("x2", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+        .attr("y1", trackHeight/2-20)
+        .attr("y2", (d)=>{
+            // TODO: figure out the best way to make layout adjustment
+            let adjust = -150 +(d.geneSymbol.length*heatmapViz.yScale.bandwidth());
+            adjust = adjust > -20?-20:adjust;
+            return trackHeight/2 + adjust;
+        })
+        .attr("stroke", (d)=>d.geneSymbol==geneId?"red":"#ababab")
+        .attr("stroke-width", 0.5)
+
 }
 
 function renderGwasHeatmap(geneId, svg, par=gwasHeatmapConfig){
@@ -302,8 +316,9 @@ function renderFeatureTrack(geneId, svg, par=geneTrackConfig){
         inHeight,
         false,
         par.showLabels,
+        par.label,
         par.trackColor,
-        par.label
+        par.tickColor
     );
     featureViz.svg = trackG;
     return featureViz

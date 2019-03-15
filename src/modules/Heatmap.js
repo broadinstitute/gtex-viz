@@ -115,8 +115,9 @@ export default class Heatmap {
             .attr("class", (d, i) => `exp-map-xlabel x${i}`)
             .attr("x", 0)
             .attr("y", 0)
-            .attr("text-anchor", "start")
+            .style("text-anchor", "start")
             .style("cursor", "default")
+            .style("font-size", this.xScale.bandwidth())
             .attr("transform", (d) => {
                 let x = this.xScale(d) + adjust;
                 let y = Y;
