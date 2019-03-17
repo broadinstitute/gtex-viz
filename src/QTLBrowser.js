@@ -3,12 +3,13 @@
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
 
-// TODO: consider creating a GEV class that stores bmap and LD objects...
+//TODO: Add a brush window on the QTL tracks
+
 "use strict";
 import {tsv} from "d3-fetch";
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
 import Heatmap from "./modules/Heatmap.js";
-import {checkDomId, createSvg} from "./modules/utils";
+import {createSvg} from "./modules/utils";
 import {bubblemap} from "./GTExViz";
 
 export const browserConfig = {
@@ -197,7 +198,6 @@ export function renderQtlMap(geneId, par=qtlMapConfig){
         .catch(function(err){console.error(err)})
 }
 
-
 export function render(geneId, par=browserConfig){
     let mainSvg = createSvg(par.id, par.width, par.height, {left:par.margin.left, top:par.margin.top});
     const promises = ["genes", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
@@ -208,7 +208,6 @@ export function render(geneId, par=browserConfig){
             renderVariantVisualComponents(geneId, mainSvg, par, args[1], args[2])
         })
 }
-
 
 function renderVariantVisualComponents(geneId, mainSvg, par=browserConfig, eqData, sqData){
 
@@ -224,7 +223,6 @@ function renderVariantVisualComponents(geneId, mainSvg, par=browserConfig, eqDat
     sqtlTrackConfig.data = sqtlFeatures;
     const sqtlTrackViz = renderFeatureTrack(geneId, mainSvg, sqtlTrackConfig);
 }
-
 
 /**
  * Render the visual components related to genes: GWAS trait heatmap, gene position track
