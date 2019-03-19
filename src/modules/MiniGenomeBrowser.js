@@ -115,11 +115,11 @@ export default class MiniGenomeBrowser{
 
     }
 
-    renderAxis(addBrush=true, callback=null){
+    renderAxis(yAdjust, addBrush=true, callback=null){
         this.axis = axisTop(this.scale)
             .tickValues(this.scale.ticks(7));
         const axisG = this.dom.append("g")
-        axisG.attr("transform", `translate(0, -150)`)
+        axisG.attr("transform", `translate(0,${yAdjust})`)
             .call(this.axis)
             .selectAll("text");
 

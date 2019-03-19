@@ -208,7 +208,9 @@ export default class BubbleMap {
             .attr("col", (d)=> `y${this.yScale.domain().indexOf(d.y)}`)
             .attr("cx", (d) => this.xScale(d.x) + this.xScale.bandwidth()/2)
             .attr("cy", (d) => this.yScale(d.y) + this.yScale.bandwidth()/2)
-            .attr("r", (d) => this.bubbleScale(d.r))
+            .attr("r", (d) => {
+                return isFinite(d.r)?this.bubbleScale(d.r):this.bubbleScale.range()[1];
+            })
             .style("fill", (d) => this.colorScale(d.value))
             .on("mouseover", function(d){
                 let selected = select(this);
@@ -461,8 +463,11 @@ export default class BubbleMap {
     }
 
     _setBubbleScale(range={max:10, min:0}){
+        const maxData = max(this.data.filter((d)=>{
+            return isFinite(d.r)
+        }).map((d)=>d.r));
         return scaleSqrt()
-            .domain([3, max(this.data.map((d)=>d.r))]) // set min at 2 for -log(0.01)
+            .domain([3, maxData]) // set min at 2 for -log(0.01)
             .range([range.min, range.max]);
     }
 

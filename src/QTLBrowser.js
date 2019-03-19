@@ -48,7 +48,8 @@ export const browserConfig = {
             d.x = d.variantId;
             d.y = dataType;
             d.value = parseFloat(d.nes);
-            d.r = -Math.log10(parseFloat(d.pValue))
+            d.r = -Math.log10(parseFloat(d.pValue));
+            if (parseFloat(d.pValue) == 0) console.log(d.variantId, " ", d.y, " ", d.pValue, " ", d.r)
             return d;
         }
     },
@@ -89,10 +90,11 @@ const geneTrackConfig = {
     label: 'Gene Position',
     data: undefined,
     width: browserConfig.width,
+    posH: 200,
     height: 20,
     marginLeft: 80,
     marginRight: 50,
-    marginTop: 400, // space for connecting lines
+    marginTop: 0, // space for connecting lines
     marginBottom: 0,
     showLabels: false,
     trackColor: "#ffffff",
@@ -104,9 +106,10 @@ export const eqtlTrackConfig = {
     data: undefined,
     width: browserConfig.width,
     height: 20,
+    posH: 220,
     marginLeft: 80,
     marginRight: 50,
-    marginTop: 450, // enough space to visually separate query gene association data panel
+    marginTop: 0, // enough space to visually separate query gene association data panel
     marginBottom: 0,
     center: 66546395,
     showLabels: false,
@@ -120,9 +123,10 @@ export const sqtlTrackConfig = {
     data: undefined,
     width: browserConfig.width,
     height: 20,
+    posH: 240,
     marginLeft: 80,
     marginRight: 50,
-    marginTop: 500, // TODO: this should be calculated
+    marginTop: 0, // TODO: this should be calculated
     marginBottom: 0,
     center: 66546395,
     showLabels: false,
@@ -135,7 +139,8 @@ export const qtlMapConfig = {
     id: 'QTL-map',
     width: 1800, //window.innerWidth*0.9,
     height: 50, // TODO: use a dynamic width based on the matrix size
-    marginTop: 350,
+    posH: 320,
+    marginTop: 0,
     marginRight: 50,
     marginBottom: 0,
     marginLeft: 80,
@@ -233,12 +238,12 @@ function renderVariantVisualComponents(geneId, mainSvg, par=browserConfig, eqDat
     let bmapG = mainSvg.append("g")
         .attr("id", qtlMapConfig.id)
         .attr("class", "focus")
-        .attr("transform", `translate(${qtlMapConfig.marginLeft}, ${qtlMapConfig.marginTop})`);
+        .attr("transform", `translate(${qtlMapConfig.marginLeft}, ${qtlMapConfig.marginTop + qtlMapConfig.posH})`);
     bmap.drawSvg(bmapG, {w:qtlMapConfig.width-(qtlMapConfig.marginLeft + qtlMapConfig.marginRight), h:qtlMapConfig.height, top: 0, left:0})
     const callback = (left, right)=>{
         $("#console").text(" " + left + ", " + right);
     }
-    eqtlTrackViz.renderAxis(true, callback);
+    sqtlTrackViz.renderAxis(sqtlTrackConfig.height + 30, true, callback);
 
     // QTL bubble map
 }
@@ -324,7 +329,7 @@ function renderFeatureTrack(geneId, svg, par=geneTrackConfig){
     let inHeight = par.height - (par.marginTop + par.marginBottom);
     let trackG = svg.append("g")
         .attr("id", par.id)
-        .attr("transform", `translate(${par.marginLeft}, ${par.marginTop})`);
+        .attr("transform", `translate(${par.marginLeft}, ${par.marginTop + par.posH})`);
 
     let featureViz = new MiniGenomeBrowser(par.data, par.center);
     featureViz.render(
