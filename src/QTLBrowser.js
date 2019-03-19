@@ -7,6 +7,8 @@
 
 "use strict";
 import {tsv} from "d3-fetch";
+import {brushX} from "d3-brush";
+import {select} from "d3-selection";
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
 import Heatmap from "./modules/Heatmap.js";
 import {createSvg} from "./modules/utils";
@@ -98,7 +100,7 @@ export const eqtlTrackConfig = {
     height: 20,
     marginLeft: 80,
     marginRight: 50,
-    marginTop: 500, // enough space to visually separate query gene association data panel
+    marginTop: 450, // enough space to visually separate query gene association data panel
     marginBottom: 0,
     center: 66546395,
     showLabels: false,
@@ -114,7 +116,7 @@ export const sqtlTrackConfig = {
     height: 20,
     marginLeft: 80,
     marginRight: 50,
-    marginTop: 530, // TODO: this should be calculated
+    marginTop: 500, // TODO: this should be calculated
     marginBottom: 0,
     center: 66546395,
     showLabels: false,
@@ -222,6 +224,9 @@ function renderVariantVisualComponents(geneId, mainSvg, par=browserConfig, eqDat
     sqtlFeatures.sort(par.dataSort.features);
     sqtlTrackConfig.data = sqtlFeatures;
     const sqtlTrackViz = renderFeatureTrack(geneId, mainSvg, sqtlTrackConfig);
+
+    // chromosome axis
+    eqtlTrackViz.renderAxis();
 }
 
 /**

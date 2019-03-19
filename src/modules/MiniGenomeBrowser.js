@@ -4,6 +4,7 @@
  */
 
 import {scaleLinear} from "d3-scale";
+import {axisBottom, axisTop} from "d3-axis";
 
 export default class MiniGenomeBrowser{
     /**
@@ -21,13 +22,14 @@ export default class MiniGenomeBrowser{
     }
 
     render(dom, width=1500, height=200, showFeatureSize=false, showFeatureLabels=true, trackLabel="Track", backboneColor="#ffffff", tickColor="#ababab"){
+        this.dom = dom;
         let range = [0, width];
         let domain = [this.center-this.window, this.center+this.window];
         this.scale = scaleLinear()
             .rangeRound(range)
             .domain(domain);
 
-        let browser = dom.append("g");
+        let browser = this.dom.append("g");
 
         // genome browser backbone
         let backboneHeight = 10;
@@ -109,5 +111,14 @@ export default class MiniGenomeBrowser{
             .text((d) => d.featureLabel);
 
 
+    }
+
+    renderAxis(margin){
+        this.axis = axisTop(this.scale)
+            .tickValues(this.scale.ticks(7));
+        this.dom.append("g")
+            .attr("transform", `translate(0, -150)`)
+            .call(this.axis)
+            .selectAll("text")
     }
 }

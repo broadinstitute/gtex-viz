@@ -287,7 +287,7 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
     //-- Add the click event for the bubbles: pop a dialog window and render the eQTL violin plot
     addBubbleClickEvent(bmap, bmapSvg, par);
 
-    //-- add the focus view brush and defint the brush event
+    //-- add the focus view brush and define the brush event
     bmap.brushEvent = ()=>{
         // update all the variant related visual features
 
