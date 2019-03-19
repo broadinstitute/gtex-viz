@@ -5,6 +5,8 @@
 
 import {scaleLinear} from "d3-scale";
 import {axisBottom, axisTop} from "d3-axis";
+import {brushX} from "d3-brush";
+import {event} from "d3-selection";
 
 export default class MiniGenomeBrowser{
     /**
@@ -113,12 +115,34 @@ export default class MiniGenomeBrowser{
 
     }
 
-    renderAxis(margin){
+    renderAxis(addBrush=true, callback=null){
         this.axis = axisTop(this.scale)
             .tickValues(this.scale.ticks(7));
-        this.dom.append("g")
-            .attr("transform", `translate(0, -150)`)
+        const axisG = this.dom.append("g")
+        axisG.attr("transform", `translate(0, -150)`)
             .call(this.axis)
-            .selectAll("text")
+            .selectAll("text");
+
+        if (addBrush){
+            const brushEvent = ()=> {
+                let selection = event.selection; // event is a d3-selection object
+                let brushLeftBound = Math.round(this.scale.invert(selection[0])); // selection provides the position in pixel, use the scale to invert that to chromosome position
+                let brushRightBound = Math.round(this.scale.invert(selection[1]));
+                callback(brushLeftBound, brushRightBound)
+            };
+
+    // update scales
+
+            const brush = brushX()
+                .extent([
+                    [0,-20],
+                    [this.scale.range()[1], 20]
+                ])
+                .on("brush", brushEvent)
+            axisG.append("g")
+                .attr("class", "brush")
+                .call(brush)
+                .call(brush.move, [this.scale(this.center)-100,this.scale(this.center)+100])
+        }
     }
 }

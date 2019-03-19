@@ -7,17 +7,16 @@
 
 "use strict";
 import {tsv} from "d3-fetch";
-import {brushX} from "d3-brush";
 import {select} from "d3-selection";
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
+import BubbleMap from "./modules/BubbleMap.js";
 import Heatmap from "./modules/Heatmap.js";
 import {createSvg} from "./modules/utils";
-import {bubblemap} from "./GTExViz";
 
 export const browserConfig = {
     id: "qtl-browser",
     width: 1800,
-    height: 2000,
+    height: 1000,
     margin: {
         left: 20,
         top: 50
@@ -36,7 +35,7 @@ export const browserConfig = {
             return d;
         },
         qtlFeatures: (d)=>{
-            let id = d.variantId;
+            // let id = d.variantId;
             d.chr = d.chromosome;
             d.start = parseInt(d.pos);
             d.end = d.start;
@@ -45,6 +44,13 @@ export const browserConfig = {
             d.strand = "+";
             return d;
         },
+        qtlBubbles: (d, dataType)=>{
+            d.x = d.variantId;
+            d.y = dataType;
+            d.value = parseFloat(d.nes);
+            d.r = -Math.log10(parseFloat(d.pValue))
+            return d;
+        }
     },
     dataFilters: {
         genes: (d) => {
@@ -65,8 +71,8 @@ const gwasHeatmapConfig = {
     useLog: false,
     logBase: null,
     width: 1800,
-    height: 80,
-    marginLeft: 100,
+    height: 70,
+    marginLeft: 80,
     marginRight: 10,
     marginTop: 0,
     marginBottom: 0, // need to save room for text labels
@@ -106,7 +112,7 @@ export const eqtlTrackConfig = {
     showLabels: false,
     trackColor: "#ffffff",
     tickColor: "#0086af",
-    label: 'eQTL Position'
+    label: 'ACTN3 eQTLs'
 };
 
 export const sqtlTrackConfig = {
@@ -122,17 +128,17 @@ export const sqtlTrackConfig = {
     showLabels: false,
     trackColor: "#ffffff",
     tickColor: "#0086af",
-    label: 'sQTL Position'
+    label: 'ACTN3 sQTLs'
 };
 
 export const qtlMapConfig = {
     id: 'QTL-map',
     width: 1800, //window.innerWidth*0.9,
-    height: 150, // TODO: use a dynamic width based on the matrix size
-    marginTop: 0,
-    marginRight: 0,
+    height: 50, // TODO: use a dynamic width based on the matrix size
+    marginTop: 350,
+    marginRight: 50,
     marginBottom: 0,
-    marginLeft: 100,
+    marginLeft: 80,
 
     colorScheme: "RdBu",
     colorScaleDomain: [-0.75, 0.75],
@@ -147,32 +153,25 @@ export const qtlMapConfig = {
     divGeneInfo: "bmap-gene-info",
     divModal: 'bmap-modal',
     data: [],
-    urls: [
-        "/tempData/ACTN3.eqtls.csv",
-        "/tempData/ACTN3.sqtls.csv",
-    ],
-    dataType: [
-        "eQTL",
-        "sQTL"
-    ],
-      labels: {
-                column: {
-                    show: false,
-                    height: 100,
-                    angle: 90,
-                    adjust: 10,
-                    location: 'bottom',
-                    textAlign: 'left'
-                },
-                row: {
-                    show: true,
-                    width: 150,
-                    angle: 0,
-                    adjust: 0,
-                    location: 'left',
-                    textAlign: 'right'
-                }
-            },
+
+    labels: {
+        column: {
+            show: false,
+            height: 100,
+            angle: 90,
+            adjust: 10,
+            location: 'bottom',
+            textAlign: 'left'
+        },
+        row: {
+            show: true,
+            width: 150,
+            angle: 0,
+            adjust: 0,
+            location: 'left',
+            textAlign: 'right'
+        }
+    },
 
     useCanvas: false // TODO: canvas mode is currently buggy
 };
@@ -225,8 +224,23 @@ function renderVariantVisualComponents(geneId, mainSvg, par=browserConfig, eqDat
     sqtlTrackConfig.data = sqtlFeatures;
     const sqtlTrackViz = renderFeatureTrack(geneId, mainSvg, sqtlTrackConfig);
 
-    // chromosome axis
-    eqtlTrackViz.renderAxis();
+    // chromosome axis and zoom brush
+    qtlMapConfig.data = qtlMapConfig.data.concat(eqData.map((d)=>{return browserConfig.parsers.qtlBubbles(d, "eQTL")}))
+    qtlMapConfig.data = qtlMapConfig.data.concat(sqData.map((d)=>{return browserConfig.parsers.qtlBubbles(d, "sQTL")}))
+
+    let bmap = new BubbleMap(qtlMapConfig.data, qtlMapConfig.useLog, qtlMapConfig.logBase, qtlMapConfig.colorScheme);
+    bmap.addTooltip(qtlMapConfig.id);
+    let bmapG = mainSvg.append("g")
+        .attr("id", qtlMapConfig.id)
+        .attr("class", "focus")
+        .attr("transform", `translate(${qtlMapConfig.marginLeft}, ${qtlMapConfig.marginTop})`);
+    bmap.drawSvg(bmapG, {w:qtlMapConfig.width-(qtlMapConfig.marginLeft + qtlMapConfig.marginRight), h:qtlMapConfig.height, top: 0, left:0})
+    const callback = (left, right)=>{
+        $("#console").text(" " + left + ", " + right);
+    }
+    eqtlTrackViz.renderAxis(true, callback);
+
+    // QTL bubble map
 }
 
 /**
