@@ -7,6 +7,8 @@ import {scaleLinear} from "d3-scale";
 import {axisBottom, axisTop} from "d3-axis";
 import {brushX} from "d3-brush";
 import {event} from "d3-selection";
+import {setColorScale} from "./colors";
+import {max, min} from "d3-array";
 
 export default class MiniGenomeBrowser{
     /**
@@ -23,7 +25,7 @@ export default class MiniGenomeBrowser{
         this.tooltip = undefined;
     }
 
-    render(dom, width=1500, height=200, showFeatureSize=false, showFeatureLabels=true, trackLabel="Track", backboneColor="#ffffff", tickColor="#ababab"){
+    render(dom, width=1500, height=200, showFeatureSize=false, showFeatureLabels=true, trackLabel="Track", backboneColor="#ffffff", tickColor="#ababab", useColorValue=false){
         this.dom = dom;
         let range = [0, width];
         let domain = [this.center-this.window, this.center+this.window];
@@ -31,6 +33,11 @@ export default class MiniGenomeBrowser{
             .rangeRound(range)
             .domain(domain);
 
+        if (useColorValue){
+            this.colorScale = setColorScale(this.data.map((d)=>d.colorValue), "Greys", 0);
+            const maxValue = max(this.data.map((d)=>d.colorValue))
+            this.maxColor = this.colorScale(maxValue)
+        }
         let browser = this.dom.append("g");
 
         // genome browser backbone
@@ -77,7 +84,14 @@ export default class MiniGenomeBrowser{
                 let featureH = showFeatureSize?Math.abs(this.scale(d.pos)-this.scale(d.end) + 1):0;
                 return h+featureH
             })
-            .style("fill", (d)=>d.pos==this.center?"red":tickColor);
+            .style("fill", (d)=>{
+                if (d.pos == this.center) return "red"
+                if (useColorValue){
+                    if (!isFinite(d.colorValue)) return this.maxColor
+                    return this.colorScale(d.colorValue)
+                }
+                return tickColor
+            });
 
         // track label
         browser.append("text")

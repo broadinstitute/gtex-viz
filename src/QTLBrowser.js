@@ -42,26 +42,30 @@ export function render(geneId, par=browserConfig){
 
     Promise.all(promises)
         .then((args)=> {
-            renderGeneVisualComponents(geneId, mainSvg, args[0], par);
-            renderVariantVisualComponents(geneId, mainSvg, par, args[1], args[2])
+            let genes = renderGeneVisualComponents(geneId, mainSvg, args[0], par);
+            let queryGene = genes.filter((g)=>g.geneSymbol == geneId)[0];
+            console.log(queryGene);
+            renderVariantVisualComponents(queryGene, mainSvg, par, args[1], args[2])
         })
 }
 
-function renderVariantVisualComponents(geneId, mainSvg, par=browserConfig, eqData, sqData){
+function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eqData, sqData){
 
     // eQTL position track
     let eqtlFeatures = eqData.map(par.parsers.qtlFeatures);
     eqtlFeatures.sort(par.dataSort.features);
     eqtlTrackConfig.data = eqtlFeatures;
-    const eqtlTrackViz = renderFeatureTrack(geneId, mainSvg, eqtlTrackConfig);
+    const eqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, eqtlTrackConfig, true);
 
     // sQTL position track
     let sqtlFeatures = sqData.map(par.parsers.qtlFeatures);
     sqtlFeatures.sort(par.dataSort.features);
     sqtlTrackConfig.data = sqtlFeatures;
-    const sqtlTrackViz = renderFeatureTrack(geneId, mainSvg, sqtlTrackConfig);
+    const sqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, sqtlTrackConfig, true);
 
-    // chromosome axis and zoom brush
+
+
+    // QTL bubble map
     qtlMapConfig.data = qtlMapConfig.data.concat(eqData.map((d)=>{return browserConfig.parsers.qtlBubbles(d, "eQTL")}))
     qtlMapConfig.data = qtlMapConfig.data.concat(sqData.map((d)=>{return browserConfig.parsers.qtlBubbles(d, "sQTL")}))
 
@@ -79,11 +83,20 @@ function renderVariantVisualComponents(geneId, mainSvg, par=browserConfig, eqDat
             let pos = parseInt(d.split("_")[1]);
             return pos>=left && pos<=right
         });
-        bmap.renderWithNewDomain(bmapG, focusDomain)
+        bmap.renderWithNewDomain(bmapG, focusDomain);
+
+        // -- gene TSS and TES markers
+        renderGeneStartEndMarkers(bmap, bmapG);
+
     };
+
+     //-- TSS and TES markers
+    findVariantsNearGeneStartEnd(queryGene, bmap);
+    renderGeneStartEndMarkers(bmap, bmapG);
+
+    // chromosome axis and zoom brush
     sqtlTrackViz.renderAxis(sqtlTrackConfig.height + 30, true, callback);
 
-    // QTL bubble map
 }
 
 /**
@@ -136,6 +149,7 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par){
         .attr("stroke", (d)=>d.geneSymbol==geneId?"red":"#ababab")
         .attr("stroke-width", 0.5)
 
+    return genes;
 }
 
 function renderGwasHeatmap(geneId, svg, par=gwasHeatmapConfig){
@@ -161,7 +175,7 @@ function renderGwasHeatmap(geneId, svg, par=gwasHeatmapConfig){
 
 }
 
-function renderFeatureTrack(geneId, svg, par=geneTrackConfig){
+function renderFeatureTrack(geneId, svg, par=geneTrackConfig, useColorScale=false){
     // preparation for the plot
     let inWidth = par.width - (par.marginLeft + par.marginRight);
     let inHeight = par.height - (par.marginTop + par.marginBottom);
@@ -178,7 +192,8 @@ function renderFeatureTrack(geneId, svg, par=geneTrackConfig){
         par.showLabels,
         par.label,
         par.trackColor,
-        par.tickColor
+        par.tickColor,
+        useColorScale
     );
     featureViz.svg = trackG;
     return featureViz
@@ -207,6 +222,83 @@ function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}, cols = []){
     return data;
 }
 
+/**
+ * Find the closest left-side variant of the gene start and end sites (tss and tes)
+ * This function creates two new attributes, tss and tes, for bmap
+ * @param gene {Object} that has attributes start and end
+ * @param bmap {BubbleMap}
+ */
+function findVariantsNearGeneStartEnd(gene, bmap) {
+    let tss = gene.strand == '+' ? gene.start : gene.end;
+    let tes = gene.strand == '+' ? gene.end : gene.start;
+    let variants = bmap.fullDomain;
+    const findLeftSideNearestNeighborVariant = (site) => {
+        return variants.filter((d, i) => {
+            // if the variant position is the site position
+            let pos = parseFloat(d.split('_')[1]); // assumption: the variant ID has the genomic location
+            if (pos === site) return true;
+
+            // else find where the site is located
+            // first, get the neighbor variant
+            if (variants[i + 1] === undefined) return false;
+            let next = parseFloat(variants[i + 1].split('_')[1]) || undefined;
+            return (pos - site) * (next - site) < 0; // rationale: the value would be < 0 when the site is located between two variants.
+        })
+    };
+
+    let tssVariant = findLeftSideNearestNeighborVariant(tss);
+    let tesVariant = findLeftSideNearestNeighborVariant(tes);
+    bmap.tss = tssVariant[0]; // bmap.tss stores the closest left-side variant of the start site
+    bmap.tes = tesVariant[0]; // bmap.tes stores the closest left-side variant of the end site
+}
+
+/**
+ * Render the TSS and TES of the Gene if applicable
+ * @param bmap {BubbleMap}
+ * @param bmapSvg {D3} the SVG object of the bubble map
+ */
+function renderGeneStartEndMarkers(bmap, dom){
+    // rendering TSS
+
+    select('#siteMarkers').selectAll("*").remove(); // clear previously rendered markers
+    select('#siteMarkers').remove();
+    let g = dom.append('g')
+        .attr('id', 'siteMarkers');
+    if (bmap.tss && bmap.xScale(bmap.tss)){
+        console.log(bmap.xScale(bmap.tss));
+         g.append('line')
+        .attr('x1', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth())
+        .attr('x2', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth())
+        .attr('y1', 0)
+        .attr('y2', bmap.yScale.range()[1])
+        .style('stroke', '#94a8b8')
+        .style('stroke-width', 2);
+         g.append('text')
+             .text('TSS')
+             .attr('x', bmap.xScale(bmap.tss))
+             .attr('y', -5)
+             .attr('text-anchor', 'center')
+             .style('font-size', "12px")
+    }
+
+    if (bmap.tes && bmap.xScale(bmap.tes)){
+        console.log(bmap.xScale(bmap.tss));
+        g.append('line')
+        .attr('x1', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth())
+        .attr('x2', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth())
+        .attr('y1', 0)
+        .attr('y2', bmap.yScale.range()[1])
+        .style('stroke', '#748797')
+        .style('stroke-width', 2);
+        g.append('text')
+             .text('TES')
+             .attr('x', bmap.xScale(bmap.tes))
+             .attr('y', -5)
+             .attr('text-anchor', 'center')
+             .style('font-size', "12px")
+    }
+
+}
 
 const browserConfig = {
     id: "qtl-browser",
@@ -239,6 +331,7 @@ const browserConfig = {
             d.featureType = "variant";
             d.featureLabel = d.snpId||d.variantId;
             d.strand = "+";
+            d.colorValue = -Math.log10(parseFloat(d.pValue));
             return d;
         },
         qtlBubbles: (d, dataType)=>{

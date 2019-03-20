@@ -147,7 +147,7 @@ export function getColorInterpolator(name){
  * @param reverse {Boolean} reverse the color scheme
  */
 export function setColorScale(data, colors="YlGnBu", dmin=undefined, dmax=undefined, reverse=false) {
-    // let dmax = Math.round(max(data));
+    data = data.filter((d)=>{return isFinite(d)});
     dmax = dmax === undefined?max(data):dmax;
     dmin = dmin === undefined?min(data):dmin;
     const scale = scaleSequential(getColorInterpolator(colors));
