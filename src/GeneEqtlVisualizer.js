@@ -329,47 +329,8 @@ function renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls, updat
  * @returns {*}
  */
 function updateFocusView(par, bmap, bmapSvg){
-    let selection = event.selection;
-    let brushLeft = Math.round(selection[0] / bmap.xScaleMini.step());
-    let brushRight = Math.round(selection[1] / bmap.xScaleMini.step());
-
-    // update scales
-    let focusDomain = bmap.xScaleMini.domain().slice(brushLeft, brushRight);
-    bmap.xScale.domain(focusDomain); // reset the xScale domain
-    let bubbleMax = bmap._setBubbleMax();
-    bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
-
+    let focusDomain = bmap.brushed(bmapSvg.select("#focusG"), par.focusPanelLabels);
     bmap.drawBubbleLegend(bmapSvg, {x: par.width/2, y:par.focusPanelMargin.top-50, title: "-log10(p-value)"}, 5, "-log10(p-value)");
-
-    // update the focus bubbles
-    bmapSvg.select("#focusG").selectAll(".bubble-map-cell")
-        .attr("cx", (d) => {
-            let x = bmap.xScale(d.x);
-            return x === undefined ? bmap.xScale.bandwidth() / 2 : x + bmap.xScale.bandwidth() / 2;
-
-        })
-        .attr("r", (d) => {
-            let x = bmap.xScale(d.x);
-            return x === undefined ? 0 : bmap.bubbleScale(d.r); // set the r to zero when x is not in the zoom view.
-        });
-
-    // update the column labels
-    let cl = par.focusPanelLabels.column;
-    bmapSvg.select("#focusG").selectAll(".bubble-map-xlabel")
-        .attr("transform", (d) => {
-            let x = bmap.xScale(d) + bmap.xScale.bandwidth()/3 || 0; // TODO: remove hard-coded value
-            let y = bmap.yScale.range()[1] + cl.adjust;
-            return `translate(${x}, ${y}) rotate(${cl.angle})`;
-
-        })
-        .style("font-size", () => {
-            let size = Math.floor(bmap.xScale.bandwidth()/ 2)>10?10:Math.floor(bmap.xScale.bandwidth()/ 2);
-            return `${size}px`
-        })
-        .style("display", (d) => {
-            let x = bmap.xScale(d);
-            return x === undefined ? "none" : "block";
-        });
     return focusDomain;
 }
 

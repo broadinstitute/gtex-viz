@@ -168,7 +168,7 @@ export default class BubbleMap {
                     [dimensions.w, dimensions.h]
                 ])
                 .on("brush", ()=>{
-                    this._brushed(focusDom, labelConfig);
+                    this.brushed(focusDom, labelConfig);
                 });
             miniDom.append("g")
                 .attr("class", "brush")
@@ -337,7 +337,10 @@ export default class BubbleMap {
             .attr("y", 0);
     }
 
-    renderWithNewDomain(dom, domain, angle=90){
+    /**
+    re-rendering the focus Heatmap with a new (user-defined) domain of the x scale
+     */
+    renderWithNewDomain(dom, domain, column={adjust: 0, angle:90}){
         this.xScale.domain(domain); // reset the xScale domain
         let bubbleMax = this._setBubbleMax();
         this.bubbleScale = this._setBubbleScale({max: bubbleMax, min: 2}); // TODO: change hard-coded min radius
@@ -347,7 +350,7 @@ export default class BubbleMap {
         dom.selectAll(".bubble-map-cell")
             .attr("cx", (d) => {
                 let x = this.xScale(d.x);
-                return x === undefined ? this.xScale.bandwidth() / 2 : x + this.xScale.bandwidth() / 2;
+                return x === undefined ? 0: x + this.xScale.bandwidth() / 2;
 
             })
             .attr("r", (d) => {
@@ -357,15 +360,14 @@ export default class BubbleMap {
             });
 
         // update the column labels
+        let size = Math.floor(this.xScale.bandwidth()/ 2)>10?10:Math.floor(this.xScale.bandwidth()/ 2);
         dom.selectAll(".bubble-map-xlabel")
             .attr("transform", (d) => {
-                let x = this.xScale(d) + this.xScale.bandwidth()/3 || 0; // TODO: remove hard-coded value
-                let y = this.yScale.range()[1];
-                return `translate(${x}, ${y}) rotate(${angle})`;
-
+                let x = this.xScale(d) + this.xScale.bandwidth() / 2 - size/2|| 0;
+                let y = this.yScale.range()[1] + column.adjust;
+                return `translate(${x}, ${y}) rotate(${column.angle})`;
             })
             .style("font-size", () => {
-                let size = Math.floor(this.xScale.bandwidth()/ 2)>10?10:Math.floor(this.xScale.bandwidth()/ 2);
                 return `${size}px`
             })
             .style("display", (d) => {
@@ -374,15 +376,20 @@ export default class BubbleMap {
             });
     }
 
-    // private methods
-    _brushed(focusDom, labelConfig){ // TODO: code review and refactoring
+    /**
+     * Defining the brush event of the mini heat map
+     * @param focusDom
+     * @param labelConfig
+     * @returns {*}
+     */
+    brushed(focusDom, labelConfig){ // TODO: code review and refactoring
 
         let selection = event.selection;
         let brushLeft = Math.round(selection[0] / this.xScaleMini.step());
         let brushRight = Math.round(selection[1] / this.xScaleMini.step());
         let domain = this.xScaleMini.domain().slice(brushLeft, brushRight);
-        this.renderWithNewDomain(focusDom, domain, labelConfig.column.angle)
-
+        this.renderWithNewDomain(focusDom, domain, labelConfig.column)
+        return domain;
         // // update the column labels
         // focusDom.selectAll(".bubble-map-xlabel")
         //     .attr("transform", (d) => {
@@ -397,6 +404,8 @@ export default class BubbleMap {
         //     });
 
     }
+
+    // private methods
 
     _setMiniScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
         if (this.xScaleMini === undefined) this.xScaleMini = this._setXScaleMini(dimensions);
