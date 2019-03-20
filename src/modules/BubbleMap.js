@@ -155,7 +155,9 @@ export default class BubbleMap {
             .attr("col", (d) => `y${this.yScaleMini.domain().indexOf(d.y)}`)
             .attr("cx", (d) => this.xScaleMini(d.x) + this.xScaleMini.bandwidth() / 2)
             .attr("cy", (d) => this.yScaleMini(d.y))
-            .attr("r", (d) => this.bubbleScaleMini(d.r))
+            .attr("r", (d) => {
+                return isFinite(d.r)?this.bubbleScaleMini(d.r):this.bubleScaleMini.range()[1]
+            })
             .style("fill", (d) => this.colorScale(d.value));
 
         if (addBrush) {
@@ -323,7 +325,9 @@ export default class BubbleMap {
         g.append("circle")
             .attr("cx", (d, i) => cellW*i)
             .attr("cy", 10)
-            .attr("r", (d)=>this.bubbleScale(d))
+            .attr("r", (d)=>{
+                return isFinite(d.r)?this.bubbleScale(d.r):this.bubbleScale.range()[1];
+            })
             .style("fill", "black");
 
         g.append("text")
@@ -333,8 +337,45 @@ export default class BubbleMap {
             .attr("y", 0);
     }
 
+    renderWithNewDomain(dom, domain, angle=90){
+        this.xScale.domain(domain); // reset the xScale domain
+        let bubbleMax = this._setBubbleMax();
+        this.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
+
+
+        // update the focus bubbles
+        dom.selectAll(".bubble-map-cell")
+            .attr("cx", (d) => {
+                let x = this.xScale(d.x);
+                return x === undefined ? this.xScale.bandwidth() / 2 : x + this.xScale.bandwidth() / 2;
+
+            })
+            .attr("r", (d) => {
+                let x = this.xScale(d.x);
+                if (x === undefined) return 0; // set r to 0 when x is not in the focus domain
+                return isFinite(d.r)?this.bubbleScale(d.r):this.bubbleScale.range()[1];
+            });
+
+        // update the column labels
+        dom.selectAll(".bubble-map-xlabel")
+            .attr("transform", (d) => {
+                let x = this.xScale(d) + this.xScale.bandwidth()/3 || 0; // TODO: remove hard-coded value
+                let y = this.yScale.range()[1];
+                return `translate(${x}, ${y}) rotate(${angle})`;
+
+            })
+            .style("font-size", () => {
+                let size = Math.floor(this.xScale.bandwidth()/ 2)>10?10:Math.floor(this.xScale.bandwidth()/ 2);
+                return `${size}px`
+            })
+            .style("display", (d) => {
+                let x = this.xScale(d);
+                return x === undefined ? "none" : "block";
+            });
+    }
+
     // private methods
-    _brushed(focusDom, labelConfig){
+    _brushed(focusDom, labelConfig){ // TODO: code review and refactoring
 
         let selection = event.selection;
         let brushLeft = Math.round(selection[0] / this.xScaleMini.step());

@@ -13,174 +13,6 @@ import BubbleMap from "./modules/BubbleMap.js";
 import Heatmap from "./modules/Heatmap.js";
 import {createSvg} from "./modules/utils";
 
-export const browserConfig = {
-    id: "qtl-browser",
-    width: 1800,
-    height: 1000,
-    margin: {
-        left: 20,
-        top: 50
-    },
-    urls: {
-        genes: "../tempData/ACTN3.neighbor.genes.csv",
-        eqtls: "/tempData/ACTN3.eqtls.csv",
-        sqtls:  "/tempData/ACTN3.sqtls.csv",
-    },
-    parsers: {
-        genes: (d)=>{
-            d.start = parseInt(d.start);
-            d.end = parseInt(d.end);
-            d.featureLabel = d.geneSymbol;
-            d.featureType = d.geneType;
-            return d;
-        },
-        qtlFeatures: (d)=>{
-            // let id = d.variantId;
-            d.chr = d.chromosome;
-            d.start = parseInt(d.pos);
-            d.end = d.start;
-            d.featureType = "variant";
-            d.featureLabel = d.snpId||d.variantId;
-            d.strand = "+";
-            return d;
-        },
-        qtlBubbles: (d, dataType)=>{
-            d.x = d.variantId;
-            d.y = dataType;
-            d.value = parseFloat(d.nes);
-            d.r = -Math.log10(parseFloat(d.pValue));
-            if (parseFloat(d.pValue) == 0) console.log(d.variantId, " ", d.y, " ", d.pValue, " ", d.r)
-            return d;
-        }
-    },
-    dataFilters: {
-        genes: (d) => {
-            return d.featureType == "protein coding" || d.featureType == "lincRNA"
-        },
-
-    },
-    dataSort: {
-        features: (a, b) => {
-            return parseInt(a.start) - parseInt(b.start)
-        }
-    }
-};
-
-const gwasHeatmapConfig = {
-    id: 'gwasHeatmap',
-    data: null,
-    useLog: false,
-    logBase: null,
-    width: 1800,
-    height: 70,
-    marginLeft: 80,
-    marginRight: 10,
-    marginTop: 0,
-    marginBottom: 0, // need to save room for text labels
-    colorScheme: "Greys",
-    cornerRadius: 2,
-    columnLabelHeight: 20,
-    columnLabelAngle: 90,
-    columnLabelPosAdjust: 10,
-    rowLabelWidth: 100,
-};
-
-const geneTrackConfig = {
-    id: 'geneTrack',
-    label: 'Gene Position',
-    data: undefined,
-    width: browserConfig.width,
-    posH: 200,
-    height: 20,
-    marginLeft: 80,
-    marginRight: 50,
-    marginTop: 0, // space for connecting lines
-    marginBottom: 0,
-    showLabels: false,
-    trackColor: "#ffffff",
-    center: 66546395,
-};
-
-export const eqtlTrackConfig = {
-    id: 'eQTL-browser',
-    data: undefined,
-    width: browserConfig.width,
-    height: 20,
-    posH: 220,
-    marginLeft: 80,
-    marginRight: 50,
-    marginTop: 0, // enough space to visually separate query gene association data panel
-    marginBottom: 0,
-    center: 66546395,
-    showLabels: false,
-    trackColor: "#ffffff",
-    tickColor: "#0086af",
-    label: 'ACTN3 eQTLs'
-};
-
-export const sqtlTrackConfig = {
-    id: 'sQTL-browser',
-    data: undefined,
-    width: browserConfig.width,
-    height: 20,
-    posH: 240,
-    marginLeft: 80,
-    marginRight: 50,
-    marginTop: 0, // TODO: this should be calculated
-    marginBottom: 0,
-    center: 66546395,
-    showLabels: false,
-    trackColor: "#ffffff",
-    tickColor: "#0086af",
-    label: 'ACTN3 sQTLs'
-};
-
-export const qtlMapConfig = {
-    id: 'QTL-map',
-    width: 1800, //window.innerWidth*0.9,
-    height: 50, // TODO: use a dynamic width based on the matrix size
-    posH: 320,
-    marginTop: 0,
-    marginRight: 50,
-    marginBottom: 0,
-    marginLeft: 80,
-
-    colorScheme: "RdBu",
-    colorScaleDomain: [-0.75, 0.75],
-
-    useLog: false,
-    logBase: undefined,
-
-    // div IDs
-    divSpinner: "spinner",
-    divDashboard: "bmap-dashboard",
-    divInfo: "bmap-filter-info",
-    divGeneInfo: "bmap-gene-info",
-    divModal: 'bmap-modal',
-    data: [],
-
-    labels: {
-        column: {
-            show: false,
-            height: 100,
-            angle: 90,
-            adjust: 10,
-            location: 'bottom',
-            textAlign: 'left'
-        },
-        row: {
-            show: true,
-            width: 150,
-            angle: 0,
-            adjust: 0,
-            location: 'left',
-            textAlign: 'right'
-        }
-    },
-
-    useCanvas: false // TODO: canvas mode is currently buggy
-};
-
 export function renderQtlMap(geneId, par=qtlMapConfig){
     const promises = par.urls.map((url)=>{return tsv(url)});
     Promise.all(promises)
@@ -240,9 +72,15 @@ function renderVariantVisualComponents(geneId, mainSvg, par=browserConfig, eqDat
         .attr("class", "focus")
         .attr("transform", `translate(${qtlMapConfig.marginLeft}, ${qtlMapConfig.marginTop + qtlMapConfig.posH})`);
     bmap.drawSvg(bmapG, {w:qtlMapConfig.width-(qtlMapConfig.marginLeft + qtlMapConfig.marginRight), h:qtlMapConfig.height, top: 0, left:0})
+    bmap.fullDomain = bmap.xScale.domain();
     const callback = (left, right)=>{
         $("#console").text(" " + left + ", " + right);
-    }
+        let focusDomain = bmap.fullDomain.filter((d)=>{
+            let pos = parseInt(d.split("_")[1]);
+            return pos>=left && pos<=right
+        });
+        bmap.renderWithNewDomain(bmapG, focusDomain)
+    };
     sqtlTrackViz.renderAxis(sqtlTrackConfig.height + 30, true, callback);
 
     // QTL bubble map
@@ -370,3 +208,169 @@ function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}, cols = []){
 }
 
 
+const browserConfig = {
+    id: "qtl-browser",
+    width: 1800,
+    height: 1000,
+    margin: {
+        left: 20,
+        top: 50
+    },
+    urls: {
+        genes: "../tempData/ACTN3.neighbor.genes.csv",
+        eqtls: "/tempData/ACTN3.eqtls.csv",
+        sqtls:  "/tempData/ACTN3.sqtls.csv",
+    },
+    parsers: {
+        genes: (d)=>{
+            d.start = parseInt(d.start);
+            d.end = parseInt(d.end);
+            d.featureLabel = d.geneSymbol;
+            d.featureType = d.geneType;
+            return d;
+        },
+        qtlFeatures: (d)=>{
+            // let id = d.variantId;
+            d.chr = d.chromosome;
+            d.start = parseInt(d.pos);
+            d.end = d.start;
+            d.featureType = "variant";
+            d.featureLabel = d.snpId||d.variantId;
+            d.strand = "+";
+            return d;
+        },
+        qtlBubbles: (d, dataType)=>{
+            d.x = d.variantId;
+            d.y = dataType;
+            d.value = parseFloat(d.nes);
+            d.r = -Math.log10(parseFloat(d.pValue));
+            return d;
+        }
+    },
+    dataFilters: {
+        genes: (d) => {
+            return d.featureType == "protein coding" || d.featureType == "lincRNA"
+        },
+
+    },
+    dataSort: {
+        features: (a, b) => {
+            return parseInt(a.start) - parseInt(b.start)
+        }
+    }
+};
+
+const gwasHeatmapConfig = {
+    id: 'gwasHeatmap',
+    data: null,
+    useLog: false,
+    logBase: null,
+    width: 1800,
+    height: 70,
+    marginLeft: 80,
+    marginRight: 10,
+    marginTop: 0,
+    marginBottom: 0, // need to save room for text labels
+    colorScheme: "Greys",
+    cornerRadius: 2,
+    columnLabelHeight: 20,
+    columnLabelAngle: 90,
+    columnLabelPosAdjust: 10,
+    rowLabelWidth: 100,
+};
+
+const geneTrackConfig = {
+    id: 'geneTrack',
+    label: 'Gene Position',
+    data: undefined,
+    width: browserConfig.width,
+    posH: 200,
+    height: 20,
+    marginLeft: 80,
+    marginRight: 50,
+    marginTop: 0, // space for connecting lines
+    marginBottom: 0,
+    showLabels: false,
+    trackColor: "#ffffff",
+    center: 66546395,
+};
+
+const eqtlTrackConfig = {
+    id: 'eQTL-browser',
+    data: undefined,
+    width: browserConfig.width,
+    height: 20,
+    posH: 220,
+    marginLeft: 80,
+    marginRight: 50,
+    marginTop: 0, // enough space to visually separate query gene association data panel
+    marginBottom: 0,
+    center: 66546395,
+    showLabels: false,
+    trackColor: "#ffffff",
+    tickColor: "#0086af",
+    label: 'ACTN3 eQTLs'
+};
+
+const sqtlTrackConfig = {
+    id: 'sQTL-browser',
+    data: undefined,
+    width: browserConfig.width,
+    height: 20,
+    posH: 240,
+    marginLeft: 80,
+    marginRight: 50,
+    marginTop: 0, // TODO: this should be calculated
+    marginBottom: 0,
+    center: 66546395,
+    showLabels: false,
+    trackColor: "#ffffff",
+    tickColor: "#0086af",
+    label: 'ACTN3 sQTLs'
+};
+
+const qtlMapConfig = {
+    id: 'QTL-map',
+    width: 1800, //window.innerWidth*0.9,
+    height: 50, // TODO: use a dynamic width based on the matrix size
+    posH: 320,
+    marginTop: 0,
+    marginRight: 50,
+    marginBottom: 0,
+    marginLeft: 80,
+
+    colorScheme: "RdBu",
+    colorScaleDomain: [-0.75, 0.75],
+
+    useLog: false,
+    logBase: undefined,
+
+    // div IDs
+    divSpinner: "spinner",
+    divDashboard: "bmap-dashboard",
+    divInfo: "bmap-filter-info",
+    divGeneInfo: "bmap-gene-info",
+    divModal: 'bmap-modal',
+    data: [],
+
+    labels: {
+        column: {
+            show: false,
+            height: 100,
+            angle: 90,
+            adjust: 10,
+            location: 'bottom',
+            textAlign: 'left'
+        },
+        row: {
+            show: true,
+            width: 150,
+            angle: 0,
+            adjust: 0,
+            location: 'left',
+            textAlign: 'right'
+        }
+    },
+
+    useCanvas: false // TODO: canvas mode is currently buggy
+};
