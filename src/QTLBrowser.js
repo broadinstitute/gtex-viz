@@ -225,6 +225,7 @@ const browserConfig = {
         genes: (d)=>{
             d.start = parseInt(d.start);
             d.end = parseInt(d.end);
+            d.pos = parseInt(d.tss);
             d.featureLabel = d.geneSymbol;
             d.featureType = d.geneType;
             return d;
@@ -234,6 +235,7 @@ const browserConfig = {
             d.chr = d.chromosome;
             d.start = parseInt(d.pos);
             d.end = d.start;
+            d.pos = parseInt(d.pos);
             d.featureType = "variant";
             d.featureLabel = d.snpId||d.variantId;
             d.strand = "+";
@@ -281,7 +283,7 @@ const gwasHeatmapConfig = {
 
 const geneTrackConfig = {
     id: 'geneTrack',
-    label: 'Gene Position',
+    label: 'TSS location',
     data: undefined,
     width: browserConfig.width,
     posH: 200,

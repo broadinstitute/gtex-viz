@@ -11,7 +11,7 @@ import {event} from "d3-selection";
 export default class MiniGenomeBrowser{
     /**
      * Rendering the genomic features in a 1D plot
-     * @param data {LIST} a list of gene objects with attributes: start, end, strand, featureLabel, and featureType
+     * @param data {LIST} a list of gene objects with attributes: pos, strand, featureLabel, and featureType
      * @param center {Integer} the center position
      * @param window {Integer} the position range (one-side)
      */
@@ -52,7 +52,7 @@ export default class MiniGenomeBrowser{
                 // if the upstream feature x position is too close, adjust the y height;
                 let upstreamF = this.data[i-1];
                 if (upstreamF.strand != d.strand) return adjust;
-                let dist = this.scale(d.start - upstreamF.start) + 1;
+                let dist = this.scale(d.pos - upstreamF.pos) + 1;
                 if (dist <= 10) {adjust = i%2?adjust + 60: adjust + 30}
             }
             return adjust
@@ -64,20 +64,20 @@ export default class MiniGenomeBrowser{
             .append("rect")
             .attr("class", "minibrowser-feature")
             .attr("x", (d)=>{
-                return this.scale(d.start)
+                return this.scale(d.pos)
             })
             .attr("y", (d, i)=>{
                 let y = height/2;
-                let featureH = showFeatureSize?Math.abs(this.scale(d.start)-this.scale(d.end) + 1):0;
+                let featureH = showFeatureSize?Math.abs(this.scale(d.pos)-this.scale(d.end) + 1):0;
                 return d.strand=="+"?(y - featureH - yAdjust(d, i)): y;
             })
             .attr("width", 1)
             .attr("height", (d, i)=>{
                 let h = backboneHeight + yAdjust(d, i);
-                let featureH = showFeatureSize?Math.abs(this.scale(d.start)-this.scale(d.end) + 1):0;
+                let featureH = showFeatureSize?Math.abs(this.scale(d.pos)-this.scale(d.end) + 1):0;
                 return h+featureH
             })
-            .style("fill", (d)=>d.start==this.center?"red":tickColor);
+            .style("fill", (d)=>d.pos==this.center?"red":tickColor);
 
         // track label
         browser.append("text")
@@ -96,15 +96,15 @@ export default class MiniGenomeBrowser{
             .attr("class", (d, i) => `.minibrowser-feature-label`)
             .attr("x", 0)
             .attr("y", 0)
-            .style("font-size", (d)=>d.start==this.center?'12px':'9px')
-            .style("fill", (d)=>d.start == this.center? "red":"black")
+            .style("font-size", (d)=>d.pos==this.center?'12px':'9px')
+            .style("fill", (d)=>d.pos == this.center? "red":"black")
             // .attr("text-anchor", (d)=>d.strand='-'?'start':'end')
 
             .attr("transform", (d, i) => {
-                let x = d.strad=="+"?this.scale(d.start):this.scale(d.start)-5;
+                let x = d.strad=="+"?this.scale(d.pos):this.scale(d.pos)-5;
                 let y = height/2;
                 let adjust = d.strand=="+"?yAdjust(d, i):yAdjust(d, i) + 5;
-                let featureH = showFeatureSize?Math.abs(this.scale(d.start)-this.scale(d.end) + 1):0;
+                let featureH = showFeatureSize?Math.abs(this.scale(d.pos)-this.scale(d.end) + 1):0;
 
                 y = d.strand=="+"?(y - featureH - adjust): (y + backboneHeight + featureH + adjust);
                 let angle = d.strand=="+"?-45:45;
