@@ -13,29 +13,6 @@ import BubbleMap from "./modules/BubbleMap.js";
 import Heatmap from "./modules/Heatmap.js";
 import {createSvg} from "./modules/utils";
 
-export function renderQtlMap(geneId, par=qtlMapConfig){
-    const promises = par.urls.map((url)=>{return tsv(url)});
-    Promise.all(promises)
-        .then(function(args){
-            args.forEach((arg, i)=>{
-                let dtype = par.dataType[i]
-                console.log(dtype)
-                arg.forEach((d)=>{
-                    d.x = d.variantId;
-                    d.y = d.geneSymbol + "-" + dtype;
-                    d.value = parseFloat(d.nes);
-                    d.displayValue = d.value.toPrecision(3);
-                    d.r = -Math.log10(parseInt(d.pValue)); // set r to be the -log10(p-value)
-                    d.rDisplayValue = parseFloat(d.r.toExponential()).toPrecision(3);
-                    par.data.push(d)
-                })
-            })
-            console.log(par.data);
-            bubblemap(par)
-        })
-        .catch(function(err){console.error(err)})
-}
-
 export function render(geneId, par=browserConfig){
     let mainSvg = createSvg(par.id, par.width, par.height, {left:par.margin.left, top:par.margin.top});
     const promises = ["genes", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
@@ -94,8 +71,11 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eq
     findVariantsNearGeneStartEnd(queryGene, bmap);
     renderGeneStartEndMarkers(bmap, bmapG);
 
-    // chromosome axis and zoom brush
+    // render the chromosome position axis and zoom brush
     sqtlTrackViz.renderAxis(sqtlTrackConfig.height + 30, true, callback);
+
+    // LD map
+
 
 }
 
