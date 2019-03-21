@@ -145,8 +145,6 @@ export default class MiniGenomeBrowser{
                 callback(brushLeftBound, brushRightBound)
             };
 
-    // update scales
-
             const brush = brushX()
                 .extent([
                     [0,-20],
@@ -157,6 +155,8 @@ export default class MiniGenomeBrowser{
                 .attr("class", "brush")
                 .call(brush)
                 .call(brush.move, [this.scale(this.center)-100,this.scale(this.center)+100])
+            return brush
         }
+        return null
     }
 }

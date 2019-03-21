@@ -56,6 +56,7 @@ export function createCanvas(id, width, height, margin, canvasId=undefined, posi
 export function createSvg(id, width, height, margin, svgId=undefined, position="relative"){
     checkDomId(id);
     if (svgId===undefined) svgId=`${id}-svg`;
+    if (margin===undefined) margin={top:0, left:0}
     return select("#"+id).append("svg")
         .attr("width", width)
         .attr("height", height)

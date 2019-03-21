@@ -11,6 +11,7 @@ import {select} from "d3-selection";
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
 import BubbleMap from "./modules/BubbleMap.js";
 import Heatmap from "./modules/Heatmap.js";
+import HalfMap from "./modules/HalfMap.js";
 import {createSvg} from "./modules/utils";
 
 export function render(geneId, par=browserConfig){
@@ -23,7 +24,7 @@ export function render(geneId, par=browserConfig){
             let queryGene = genes.filter((g)=>g.geneSymbol == geneId)[0];
             console.log(queryGene);
             renderVariantVisualComponents(queryGene, mainSvg, par, args[1], args[2])
-        })
+        });
 }
 
 function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eqData, sqData){
@@ -40,8 +41,6 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eq
     sqtlTrackConfig.data = sqtlFeatures;
     const sqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, sqtlTrackConfig, true);
 
-
-
     // QTL bubble map
     qtlMapConfig.data = qtlMapConfig.data.concat(eqData.map((d)=>{return browserConfig.parsers.qtlBubbles(d, "eQTL")}))
     qtlMapConfig.data = qtlMapConfig.data.concat(sqData.map((d)=>{return browserConfig.parsers.qtlBubbles(d, "sQTL")}))
@@ -54,29 +53,79 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eq
         .attr("transform", `translate(${qtlMapConfig.marginLeft}, ${qtlMapConfig.marginTop + qtlMapConfig.posH})`);
     bmap.drawSvg(bmapG, {w:qtlMapConfig.width-(qtlMapConfig.marginLeft + qtlMapConfig.marginRight), h:qtlMapConfig.height, top: 0, left:0})
     bmap.fullDomain = bmap.xScale.domain();
-    const callback = (left, right)=>{
-        $("#console").text(" " + left + ", " + right);
-        let focusDomain = bmap.fullDomain.filter((d)=>{
-            let pos = parseInt(d.split("_")[1]);
-            return pos>=left && pos<=right
-        });
-        bmap.renderWithNewDomain(bmapG, focusDomain);
 
-        // -- gene TSS and TES markers
-        renderGeneStartEndMarkers(bmap, bmapG);
-
-    };
 
      //-- TSS and TES markers
     findVariantsNearGeneStartEnd(queryGene, bmap);
     renderGeneStartEndMarkers(bmap, bmapG);
 
-    // render the chromosome position axis and zoom brush
-    sqtlTrackViz.renderAxis(sqtlTrackConfig.height + 30, true, callback);
+
 
     // LD map
+    tsv(par.urls.ld)
+        .then((data)=>{
+            let ldData = data.map(browserConfig.parsers.ld);
+            const vList = {};
+            ldData.forEach((d)=>{
+                vList[d.x] = true;
+                vList[d.y] = true;
+            });
+            ldConfig.data = ldData.concat(Object.keys(vList).map((v)=>{
+                return {
+                    x: v,
+                    y: v,
+                    value: 1,
+                    displayValue: "1"
+                }
+            }));
+            const ldBrush = renderLdMap(ldConfig, bmap);
 
+            // render the chromosome position axis and zoom brush
+            const callback = (left, right)=>{
+                $("#console").text(" " + left + ", " + right);
+                let focusDomain = bmap.fullDomain.filter((d)=>{
+                    let pos = parseInt(d.split("_")[1]);
+                    return pos>=left && pos<=right
+                });
+                bmap.renderWithNewDomain(bmapG, focusDomain);
 
+                // -- gene TSS and TES markers
+                renderGeneStartEndMarkers(bmap, bmapG);
+
+                // LD updates
+                ldBrush();
+
+            };
+            sqtlTrackViz.renderAxis(sqtlTrackConfig.height + 30, true, callback);
+        });
+
+}
+
+function renderLdMap(config, bmap){
+    let ldMap = new HalfMap(config.data, config.cutoff, false, undefined, config.colorScheme, [0,1]);
+    ldMap.addTooltip(config.id);
+    let ldCanvas = select(`#${config.id}`).append("canvas")
+        .attr("id", config.id + "-ld-canvas")
+        .attr("width", config.width)
+        .attr("height", config.width)
+        .style("position", "absolute");
+    let ldSvg = createSvg(config.id, config.width, config.width, {top: 0, left:0});
+    let ldG = ldSvg.append("g")
+        .attr("class", "ld")
+        .attr("id", "ldG")
+        .attr("transform", `translate(${config.margin.left}, ${config.margin.top})`);
+    ldMap.drawColorLegend(ldSvg, {x: config.margin.left, y: 100}, 10, "LD");
+    ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
+    // let ldConfig = {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left};
+    const drawConfig = {w: config.width-(config.margin.left+config.margin.right), top: config.margin.top, left: config.margin.left}
+    ldMap.draw(ldCanvas, ldG, drawConfig, [0, 1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain())
+
+    // update the brush event with interactive LD map
+    const ldBrush = ()=>{
+        ldG.selectAll("*").remove();
+        ldMap.draw(ldCanvas, ldG, drawConfig, [0, 1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain())
+    };
+    return ldBrush;
 }
 
 /**
@@ -127,7 +176,7 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par){
             return trackHeight/2 + adjust;
         })
         .attr("stroke", (d)=>d.geneSymbol==geneId?"red":"#ababab")
-        .attr("stroke-width", 0.5)
+        .attr("stroke-width", 0.5);
 
     return genes;
 }
@@ -245,7 +294,6 @@ function renderGeneStartEndMarkers(bmap, dom){
     let g = dom.append('g')
         .attr('id', 'siteMarkers');
     if (bmap.tss && bmap.xScale(bmap.tss)){
-        console.log(bmap.xScale(bmap.tss));
          g.append('line')
         .attr('x1', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth())
         .attr('x2', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth())
@@ -262,7 +310,6 @@ function renderGeneStartEndMarkers(bmap, dom){
     }
 
     if (bmap.tes && bmap.xScale(bmap.tes)){
-        console.log(bmap.xScale(bmap.tss));
         g.append('line')
         .attr('x1', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth())
         .attr('x2', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth())
@@ -280,10 +327,23 @@ function renderGeneStartEndMarkers(bmap, dom){
 
 }
 
+const ldConfig = {
+    id: "ld-browser",
+    data: [],
+    cutoff: 0.1,
+    width: 1800,
+    margin: {
+        left: 80,
+        top: 0,
+        right: 50
+    },
+    colorScheme: "Greys"
+};
 const browserConfig = {
     id: "qtl-browser",
+    ldId: "ld-browser",
     width: 1800,
-    height: 1000,
+    height: 500,
     margin: {
         left: 20,
         top: 50
@@ -292,6 +352,7 @@ const browserConfig = {
         genes: "../tempData/ACTN3.neighbor.genes.csv",
         eqtls: "/tempData/ACTN3.eqtls.csv",
         sqtls:  "/tempData/ACTN3.sqtls.csv",
+        ld: "/tempData/ACTN3.ld.csv"
     },
     parsers: {
         genes: (d)=>{
@@ -319,6 +380,13 @@ const browserConfig = {
             d.y = dataType;
             d.value = parseFloat(d.nes);
             d.r = -Math.log10(parseFloat(d.pValue));
+            return d;
+        },
+        ld: (d)=>{
+            d.x = d.snpId1;
+            d.y = d.snpId2;
+            d.value = parseFloat(d.rSquared);
+            d.displayValue = parseFloat(d.value).toPrecision(3)
             return d;
         }
     },
