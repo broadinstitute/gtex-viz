@@ -129,7 +129,7 @@ function setDimensions(par){
     };
     par.ldPanelMargin = {
         left: par.margin.left,
-        top: 0
+        top: 10
     };
     return par;
 }
@@ -176,6 +176,8 @@ function renderLdMap(par, bmap){
         .attr("width", par.width)
         .attr("height", par.width)
         .style("position", "absolute");
+    let ldContext = ldCanvas.node().getContext('2d');
+    ldContext.translate(par.ldPanelMargin.left, par.ldPanelMargin.top);
     let ldSvg = createSvg(par.ldId, par.width, par.width, undefined);
     let ldG = ldSvg.append("g")
         .attr("class", "ld")

@@ -154,7 +154,7 @@ export default class MiniGenomeBrowser{
             axisG.append("g")
                 .attr("class", "brush")
                 .call(brush)
-                .call(brush.move, [this.scale(this.center)-100,this.scale(this.center)+100])
+                .call(brush.move, [this.scale(this.center)-50,this.scale(this.center)+50])
             return brush
         }
         return null

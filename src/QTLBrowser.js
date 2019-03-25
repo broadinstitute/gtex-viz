@@ -3,7 +3,7 @@
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
 
-//TODO: Add a brush window on the QTL tracks
+//TODO: code review on setting configurations
 
 "use strict";
 import {tsv} from "d3-fetch";
@@ -15,7 +15,7 @@ import HalfMap from "./modules/HalfMap.js";
 import {createSvg} from "./modules/utils";
 
 export function render(geneId, par=browserConfig){
-    let mainSvg = createSvg(par.id, par.width, par.height, {left:par.margin.left, top:par.margin.top});
+    let mainSvg = createSvg(par.id, par.width, par.height, {left:0, top:0});
     const promises = ["genes", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
 
     Promise.all(promises)
@@ -42,8 +42,8 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eq
     const sqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, sqtlTrackConfig, true);
 
     // QTL bubble map
-    qtlMapConfig.data = qtlMapConfig.data.concat(eqData.map((d)=>{return browserConfig.parsers.qtlBubbles(d, "eQTL")}))
-    qtlMapConfig.data = qtlMapConfig.data.concat(sqData.map((d)=>{return browserConfig.parsers.qtlBubbles(d, "sQTL")}))
+    qtlMapConfig.data = qtlMapConfig.data.concat(eqData.map((d)=>{return par.parsers.qtlBubbles(d, "eQTL")}))
+    qtlMapConfig.data = qtlMapConfig.data.concat(sqData.map((d)=>{return par.parsers.qtlBubbles(d, "sQTL")}))
 
     let bmap = new BubbleMap(qtlMapConfig.data, qtlMapConfig.useLog, qtlMapConfig.logBase, qtlMapConfig.colorScheme);
     bmap.addTooltip(qtlMapConfig.id);
@@ -51,20 +51,11 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eq
         .attr("id", qtlMapConfig.id)
         .attr("class", "focus")
         .attr("transform", `translate(${qtlMapConfig.marginLeft}, ${qtlMapConfig.marginTop + qtlMapConfig.posH})`);
-    bmap.drawSvg(bmapG, {w:qtlMapConfig.width-(qtlMapConfig.marginLeft + qtlMapConfig.marginRight), h:qtlMapConfig.height, top: 0, left:0})
-    bmap.fullDomain = bmap.xScale.domain();
-
-
-     //-- TSS and TES markers
-    findVariantsNearGeneStartEnd(queryGene, bmap);
-    renderGeneStartEndMarkers(bmap, bmapG);
-
-
 
     // LD map
     tsv(par.urls.ld)
         .then((data)=>{
-            let ldData = data.map(browserConfig.parsers.ld);
+            let ldData = data.map(par.parsers.ld);
             const vList = {};
             ldData.forEach((d)=>{
                 vList[d.x] = true;
@@ -78,8 +69,16 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eq
                     displayValue: "1"
                 }
             }));
-            const ldBrush = renderLdMap(ldConfig, bmap);
 
+            // render bubble map
+            bmap.drawSvg(bmapG, {w:qtlMapConfig.width-(qtlMapConfig.marginLeft + qtlMapConfig.marginRight), h:qtlMapConfig.height, top: 0, left:0})
+            bmap.fullDomain = bmap.xScale.domain();
+
+             //-- TSS and TES markers
+            findVariantsNearGeneStartEnd(queryGene, bmap);
+            renderGeneStartEndMarkers(bmap, bmapG);
+
+            const ldBrush = renderLdMap(ldConfig, bmap);
             // render the chromosome position axis and zoom brush
             const callback = (left, right)=>{
                 $("#console").text(" " + left + ", " + right);
@@ -108,7 +107,9 @@ function renderLdMap(config, bmap){
         .attr("id", config.id + "-ld-canvas")
         .attr("width", config.width)
         .attr("height", config.width)
-        .style("position", "absolute");
+        .style("position", "absolute")
+    let ldContext = ldCanvas.node().getContext('2d');
+    ldContext.translate(config.margin.left, config.margin.top);
     let ldSvg = createSvg(config.id, config.width, config.width, {top: 0, left:0});
     let ldG = ldSvg.append("g")
         .attr("class", "ld")
@@ -117,7 +118,7 @@ function renderLdMap(config, bmap){
     ldMap.drawColorLegend(ldSvg, {x: config.margin.left, y: 100}, 10, "LD");
     ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
     // let ldConfig = {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left};
-    const drawConfig = {w: config.width-(config.margin.left+config.margin.right), top: config.margin.top, left: config.margin.left}
+    const drawConfig = {w: config.width-(config.margin.left+config.margin.right), top: 0, left: 0}
     ldMap.draw(ldCanvas, ldG, drawConfig, [0, 1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain())
 
     // update the brush event with interactive LD map
@@ -295,8 +296,8 @@ function renderGeneStartEndMarkers(bmap, dom){
         .attr('id', 'siteMarkers');
     if (bmap.tss && bmap.xScale(bmap.tss)){
          g.append('line')
-        .attr('x1', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth())
-        .attr('x2', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth())
+        .attr('x1', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth()/2)
+        .attr('x2', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth()/2)
         .attr('y1', 0)
         .attr('y2', bmap.yScale.range()[1])
         .style('stroke', '#94a8b8')
@@ -311,8 +312,8 @@ function renderGeneStartEndMarkers(bmap, dom){
 
     if (bmap.tes && bmap.xScale(bmap.tes)){
         g.append('line')
-        .attr('x1', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth())
-        .attr('x2', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth())
+        .attr('x1', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth()/2)
+        .attr('x2', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth()/2)
         .attr('y1', 0)
         .attr('y2', bmap.yScale.range()[1])
         .style('stroke', '#748797')
@@ -334,7 +335,7 @@ const ldConfig = {
     width: 1800,
     margin: {
         left: 80,
-        top: 0,
+        top: 10,
         right: 50
     },
     colorScheme: "Greys"
@@ -344,10 +345,6 @@ const browserConfig = {
     ldId: "ld-browser",
     width: 1800,
     height: 500,
-    margin: {
-        left: 20,
-        top: 50
-    },
     urls: {
         genes: "../tempData/ACTN3.neighbor.genes.csv",
         eqtls: "/tempData/ACTN3.eqtls.csv",
@@ -412,7 +409,7 @@ const gwasHeatmapConfig = {
     height: 70,
     marginLeft: 80,
     marginRight: 10,
-    marginTop: 0,
+    marginTop: 40,
     marginBottom: 0, // need to save room for text labels
     colorScheme: "Greys",
     cornerRadius: 2,

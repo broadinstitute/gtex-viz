@@ -74,13 +74,13 @@ export default class HalfMap{
 
         // transform the canvas
         context.save();
-        context.translate(dimensions.left , dimensions.top + (this.xScale.bandwidth()*Math.sqrt(2)/2)); // shift the radius distance...
         context.rotate(Math.PI*(-45/180)); // rotate counterclockwise (negative) 45 degrees
+
         context.clearRect(-dimensions.w,-dimensions.w,dimensions.w*2, dimensions.w*2);
         // LD canvas rendering from GEV old code
         this.filteredData.forEach((d)=>{
-            let x = this.xScale(d.x);
-            let y = this.yScale(d.y);
+            let x = this.xScale(d.x) - this.xScale.bandwidth()/2;
+            let y = this.yScale(d.y) - this.yScale.bandwidth()/2;
             if (x === undefined || y === undefined) return;
             d.color = d.value==0?"#fff":this.useLog?this.colorScale(this._log(d.value)):this.colorScale(d.value);
             context.fillStyle = this.colorScale(d.value);
@@ -145,7 +145,7 @@ export default class HalfMap{
             .style("stroke", "#d2111b")
             .style("stroke-width", "1px")
             .style("fill", "none")
-            .style("display", "none");
+            // .style("display", "none");
 
         svg.on('mouseout', ()=>{
             cursor.style("display", "none");

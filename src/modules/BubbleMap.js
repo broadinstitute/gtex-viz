@@ -78,7 +78,7 @@ export default class BubbleMap {
         this.data.forEach((d)=>{
             context.beginPath();
             context.fillStyle = this.colorScale(d.value);
-            context.arc(this.xScale(d.x) + this.xScale.bandwidth()/2, this.yScale(d.y), this.bubbleScale(d.r), 0, 2*Math.PI);
+            context.arc(this.xScale(d.x), this.yScale(d.y), this.bubbleScale(d.r), 0, 2*Math.PI);
             context.fill();
             context.closePath();
         });
@@ -103,7 +103,7 @@ export default class BubbleMap {
                 context.fillStyle = 'black';
                 context.font = '10px Open Sans';
                 context.textAlign = cl.textAlign;
-                context.translate(this.xScale(d)+this.xScale.bandwidth()/2 - 3, this.yScale.range()[1] + cl.adjust);
+                context.translate(this.xScale(d) - 3, this.yScale.range()[1] + cl.adjust);
                 context.rotate(cl.angle==0?0:Math.PI/(180/cl.angle));
                 context.fillText(d, 0, 0);
                 context.restore();
@@ -153,7 +153,7 @@ export default class BubbleMap {
             .attr('class', 'mini-map-cell')
             .attr("row", (d) => `x${this.xScaleMini.domain().indexOf(d.x)}`)
             .attr("col", (d) => `y${this.yScaleMini.domain().indexOf(d.y)}`)
-            .attr("cx", (d) => this.xScaleMini(d.x) + this.xScaleMini.bandwidth() / 2)
+            .attr("cx", (d) => this.xScaleMini(d.x))
             .attr("cy", (d) => this.yScaleMini(d.y))
             .attr("r", (d) => {
                 return isFinite(d.r)?this.bubbleScaleMini(d.r):this.bubleScaleMini.range()[1]
@@ -190,7 +190,7 @@ export default class BubbleMap {
            row: {
                 show: true,
                 angle: 0,
-                adjust: 0,
+                adjust: 10,
                 location: 'left',
                 textAlign: 'right',
            }
@@ -208,8 +208,8 @@ export default class BubbleMap {
             .attr("class", "bubble-map-cell")
             .attr("row", (d)=> `x${this.xScale.domain().indexOf(d.x)}`)
             .attr("col", (d)=> `y${this.yScale.domain().indexOf(d.y)}`)
-            .attr("cx", (d) => this.xScale(d.x) + this.xScale.bandwidth()/2)
-            .attr("cy", (d) => this.yScale(d.y) + this.yScale.bandwidth()/2)
+            .attr("cx", (d)=> this.xScale(d.x))
+            .attr("cy", (d)=>this.yScale(d.y))
             .attr("r", (d) => {
                 return isFinite(d.r)?this.bubbleScale(d.r):this.bubbleScale.range()[1];
             })
@@ -240,6 +240,7 @@ export default class BubbleMap {
         if(cl.show) {
             // column labels
             let lookup = {};
+            let size = Math.floor(this.xScale.bandwidth()/ 2)>12?12:Math.floor(this.xScale.bandwidth()/ 2);
             nest()
                 .key((d) => d.x) // group this.data by d.x
                 .entries(this.data)
@@ -254,11 +255,10 @@ export default class BubbleMap {
                 .attr("text-anchor", cl.textAlign=='left'?'start':'end')
                 .style("cursor", "default")
                 .style("font-size", () => {
-                    let size = Math.floor(this.xScale.bandwidth()/ 2)>12?12:Math.floor(this.xScale.bandwidth()/ 2);
                     return `${size}px`
                 })
                 .attr("transform", (d) => {
-                    let x = this.xScale(d) + this.xScale.bandwidth() / 3;
+                    let x = this.xScale(d) - size/2;
                     let y = this.yScale.range()[1] + cl.adjust;
                     return `translate(${x}, ${y}) rotate(${cl.angle})`;
                 })
@@ -267,6 +267,7 @@ export default class BubbleMap {
         if (rl.show){
             // row labels
             let lookup = {};
+            let size = Math.floor(this.yScale.bandwidth()/1.5)>14?14:Math.floor(this.yScale.bandwidth()/1.5)<10?10:Math.floor(this.yScale.bandwidth()/1.5);
             nest()
                 .key((d) => d.y) // group this.data by d.y
                 .entries(this.data)
@@ -282,12 +283,11 @@ export default class BubbleMap {
                 .style("cursor", "default")
                 .style("font-size", ()=>{
 
-                    let size = Math.floor(this.yScale.bandwidth()/1.5)>14?14:Math.floor(this.yScale.bandwidth()/1.5)<10?10:Math.floor(this.yScale.bandwidth()/1.5);
                     return `${size}px`
                 })
                 .attr("transform", (d) => {
                     let x = this.xScale.range()[0] - rl.adjust;
-                    let y = this.yScale(d) + this.yScale.bandwidth()/1.5;
+                    let y = this.yScale(d);
                     return `translate(${x}, ${y}) rotate(${rl.angle})`;
                 })
                 .text((d) => lookup[d]||d);
@@ -350,7 +350,7 @@ export default class BubbleMap {
         dom.selectAll(".bubble-map-cell")
             .attr("cx", (d) => {
                 let x = this.xScale(d.x);
-                return x === undefined ? 0: x + this.xScale.bandwidth() / 2;
+                return x === undefined ? 0: x;
 
             })
             .attr("r", (d) => {
@@ -363,7 +363,7 @@ export default class BubbleMap {
         let size = Math.floor(this.xScale.bandwidth()/ 2)>10?10:Math.floor(this.xScale.bandwidth()/ 2);
         dom.selectAll(".bubble-map-xlabel")
             .attr("transform", (d) => {
-                let x = this.xScale(d) + this.xScale.bandwidth() / 2 - size/2|| 0;
+                let x = this.xScale(d) - size/2|| 0;
                 let y = this.yScale.range()[1] + column.adjust;
                 return `translate(${x}, ${y}) rotate(${column.angle})`;
             })
