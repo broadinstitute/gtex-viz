@@ -14,20 +14,27 @@ import Heatmap from "./modules/Heatmap.js";
 import HalfMap from "./modules/HalfMap.js";
 import {createSvg} from "./modules/utils";
 
-export function render(geneId, par=browserConfig){
+export function render(geneId, par=CONFIG){
+    par.height = Object.keys(par.panels)
+        .reduce((total, panelKey)=>{
+            let p = par.panels[panelKey];
+            return total + p.height
+        }, 0)
     let mainSvg = createSvg(par.id, par.width, par.height, {left:0, top:0});
     const promises = ["genes", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
 
     Promise.all(promises)
         .then((args)=> {
             let genes = renderGeneVisualComponents(geneId, mainSvg, args[0], par);
+            return;
             let queryGene = genes.filter((g)=>g.geneSymbol == geneId)[0];
             console.log(queryGene);
             renderVariantVisualComponents(queryGene, mainSvg, par, args[1], args[2])
-        });
+        })
+        .catch((err)=>{console.error(err)})
 }
 
-function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eqData, sqData){
+function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, sqData){
 
     // eQTL position track
     let eqtlFeatures = eqData.map(par.parsers.qtlFeatures);
@@ -136,13 +143,13 @@ function renderLdMap(config, bmap){
  * @param data {List} a list of gene objects with attr: geneSymbol, strand, start, end, geneType
  * @param par {Object} the configuration object of the overall visualization
  */
-function renderGeneVisualComponents(geneId, mainSvg, data, par){
-    let genes = data.map(par.parsers.genes).filter(par.dataFilters.genes);
+function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
+    let genes = data.map(par.parsers.genes).filter(par.dataFilters.genes); // genes are filtered by gene types defined in the config object
     genes.sort(par.dataSort.genes);
 
-    gwasHeatmapConfig.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
-    const heatmapViz = renderGwasHeatmap(geneId, mainSvg, gwasHeatmapConfig);
-
+    par.panels.gwasMap.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
+    const heatmapViz = renderGwasHeatmap(geneId, mainSvg, par);
+    return
     geneTrackConfig.data = genes;
     const geneTrackViz = renderFeatureTrack(geneId, mainSvg, geneTrackConfig);
 
@@ -182,21 +189,29 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par){
     return genes;
 }
 
-function renderGwasHeatmap(geneId, svg, par=gwasHeatmapConfig){
+/**
+ * Rendering the GWAS Heatmap
+ * @param geneId {String}
+ * @param svg {D3 SVG} the root SVG object
+ * @param par {Object} the config object
+ * @returns {Heatmap}
+ */
+function renderGwasHeatmap(geneId, svg, par=CONFIG){
 
-    let inWidth = par.width - (par.marginLeft + par.marginRight + par.rowLabelWidth);
-    let inHeight = par.height - (par.marginTop + par.marginBottom + par.columnLabelHeight);
+    let panel = par.panels.gwasMap;
+    let inWidth = panel.width - (panel.margin.left + panel.margin.right);
+    let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
+    if (inWidth * inHeight <= 0) throw "The inner height and width of the GWAS heatmap panel must be positive values. Check the height and margin configuration of this panel"
     let mapG = svg.append("g")
         .attr("id", par.id)
-        .attr("transform", `translate(${par.marginLeft}, ${par.marginTop})`);
+        .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top})`);
     let tooltipId = `${par.id}Tooltip`;
 
-    let hViz = new Heatmap(par.data, false, undefined, par.colorScheme, par.colorRadius, tooltipId);
-    hViz.draw(mapG, {w:inWidth, h:inHeight}, par.columnLabelAngle, false, par.columnLabelPosAdjust);
+    let hViz = new Heatmap(panel.data, false, undefined, panel.colorScheme, panel.cornerRadius, tooltipId);
+    hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
     hViz.drawColorLegend(mapG, {x: 20, y:-20}, 10);
 
-    // highlight the anchor gene
-
+    // CUSTOMIZATION: highlight the anchor gene
     mapG.selectAll(".exp-map-xlabel")
         .attr('fill', (d)=>d==geneId?"red":"#000000")
 
@@ -340,11 +355,12 @@ const ldConfig = {
     },
     colorScheme: "Greys"
 };
-const browserConfig = {
+const GlobalWidth = window.innerWidth;
+const CONFIG = {
     id: "qtl-browser",
     ldId: "ld-browser",
-    width: 1800,
-    height: 450, // should be dynamically calculated
+    width: GlobalWidth,
+    height: null, // should be dynamically calculated
     urls: {
         genes: "../tempData/ACTN3.neighbor.genes.csv",
         eqtls: "/tempData/ACTN3.eqtls.csv",
@@ -397,33 +413,41 @@ const browserConfig = {
         features: (a, b) => {
             return parseInt(a.start) - parseInt(b.start)
         }
+    },
+    panels: {
+        gwasMap: {
+            id: 'gwas-map',
+            data: null,
+            useLog: false,
+            logBase: null,
+            width: GlobalWidth,
+            height: 180, // outer height: this includes top and bottom margins + inner height
+            margin: {
+                top: 40, // provide enough space for the color legend
+                right: 100, // provide enough space for the row labels
+                bottom: 100, // provide enough space for the column labels
+                left: 80
+            },
+            colorScheme: "Greys",
+            cornerRadius: 2,
+            columnLabel: {
+                angle: 90,
+                adjust: 10
+            },
+            rowLabel: {
+                width: 100
+            }
+        }
     }
 };
 
-const gwasHeatmapConfig = {
-    id: 'gwasHeatmap',
-    data: null,
-    useLog: false,
-    logBase: null,
-    width: 1800,
-    height: 80,
-    marginLeft: 100,
-    marginRight: 10,
-    marginTop: 40,
-    marginBottom: 0, // need to save room for text labels
-    colorScheme: "Greys",
-    cornerRadius: 2,
-    columnLabelHeight: 20,
-    columnLabelAngle: 90,
-    columnLabelPosAdjust: 10,
-    rowLabelWidth: 100,
-};
+
 
 const geneTrackConfig = {
     id: 'geneTrack',
     label: 'TSS location',
     data: undefined,
-    width: browserConfig.width,
+    width: CONFIG.width,
     posH: 220,
     height: 20,
     marginLeft: 80,
@@ -438,7 +462,7 @@ const geneTrackConfig = {
 const eqtlTrackConfig = {
     id: 'eQTL-browser',
     data: undefined,
-    width: browserConfig.width,
+    width: CONFIG.width,
     height: 20,
     posH: 240,
     marginLeft: 80,
@@ -455,7 +479,7 @@ const eqtlTrackConfig = {
 const sqtlTrackConfig = {
     id: 'sQTL-browser',
     data: undefined,
-    width: browserConfig.width,
+    width: CONFIG.width,
     height: 20,
     posH: 260,
     marginLeft: 80,
