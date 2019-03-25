@@ -344,7 +344,7 @@ const browserConfig = {
     id: "qtl-browser",
     ldId: "ld-browser",
     width: 1800,
-    height: 500,
+    height: 450, // should be dynamically calculated
     urls: {
         genes: "../tempData/ACTN3.neighbor.genes.csv",
         eqtls: "/tempData/ACTN3.eqtls.csv",
@@ -406,8 +406,8 @@ const gwasHeatmapConfig = {
     useLog: false,
     logBase: null,
     width: 1800,
-    height: 70,
-    marginLeft: 80,
+    height: 80,
+    marginLeft: 100,
     marginRight: 10,
     marginTop: 40,
     marginBottom: 0, // need to save room for text labels
@@ -424,7 +424,7 @@ const geneTrackConfig = {
     label: 'TSS location',
     data: undefined,
     width: browserConfig.width,
-    posH: 200,
+    posH: 220,
     height: 20,
     marginLeft: 80,
     marginRight: 50,
@@ -440,7 +440,7 @@ const eqtlTrackConfig = {
     data: undefined,
     width: browserConfig.width,
     height: 20,
-    posH: 220,
+    posH: 240,
     marginLeft: 80,
     marginRight: 50,
     marginTop: 0, // enough space to visually separate query gene association data panel
@@ -457,7 +457,7 @@ const sqtlTrackConfig = {
     data: undefined,
     width: browserConfig.width,
     height: 20,
-    posH: 240,
+    posH: 260,
     marginLeft: 80,
     marginRight: 50,
     marginTop: 0, // TODO: this should be calculated
@@ -473,7 +473,7 @@ const qtlMapConfig = {
     id: 'QTL-map',
     width: 1800, //window.innerWidth*0.9,
     height: 50, // TODO: use a dynamic width based on the matrix size
-    posH: 320,
+    posH: 350,
     marginTop: 0,
     marginRight: 50,
     marginBottom: 0,

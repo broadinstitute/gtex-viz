@@ -145,7 +145,7 @@ export default class HalfMap{
             .style("stroke", "#d2111b")
             .style("stroke-width", "1px")
             .style("fill", "none")
-            // .style("display", "none");
+            .style("display", "none");
 
         svg.on('mouseout', ()=>{
             cursor.style("display", "none");
