@@ -25,7 +25,7 @@ export default class MiniGenomeBrowser{
         this.tooltip = undefined;
     }
 
-    render(dom, width=1500, height=200, showFeatureSize=false, showFeatureLabels=true, trackLabel="Track", backboneColor="#ffffff", tickColor="#ababab", useColorValue=false){
+    render(dom, width=1500, height=200, showFeatureSize=false, showFeatureLabels=true, trackLabel="Track", backboneColor="#ffffff", tickColor="#ababab", useColorValue=false, maxColorValue=undefined){
         this.dom = dom;
         let range = [0, width];
         let domain = [this.center-this.window, this.center+this.window];
@@ -35,8 +35,8 @@ export default class MiniGenomeBrowser{
 
         if (useColorValue){
             this.colorScale = setColorScale(this.data.map((d)=>d.colorValue), "Greys", 0);
-            const maxValue = max(this.data.map((d)=>d.colorValue))
-            this.maxColor = this.colorScale(maxValue)
+            const maxValue = maxColorValue===undefined?(this.data.map((d)=>d.colorValue)):maxColorValue;
+            this.maxColor = this.colorScale(maxValue);
         }
         let browser = this.dom.append("g");
 
@@ -49,7 +49,7 @@ export default class MiniGenomeBrowser{
             .attr("height", backboneHeight)
             .style("fill", backboneColor)
             .style("stroke", "#ababab")
-            .style("stroke-width", 1)
+            .style("stroke-width", 1);
 
         // genome features (genes)
         const yAdjust = (d, i)=>{

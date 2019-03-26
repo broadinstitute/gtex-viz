@@ -9,6 +9,7 @@
 "use strict";
 import {tsv} from "d3-fetch";
 import {select} from "d3-selection";
+import {max} from "d3-array";
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
 import BubbleMap from "./modules/BubbleMap.js";
 import Heatmap from "./modules/Heatmap.js";
@@ -39,28 +40,32 @@ export function render(geneId, par=CONFIG){
         .catch((err)=>{console.error(err)})
 }
 
-function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, sqData){
+function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, sqData){ // TODO: separate the variant tracks and bubble map rendering into two functions
 
-    // eQTL position track
+    // eQTL position track data
     let eqtlFeatures = eqData.map(par.parsers.qtlFeatures);
     eqtlFeatures.sort(par.dataSort.features);
     let eqtlPanel = par.panels.eqtlTrack;
     eqtlPanel.data = eqtlFeatures;
-    const eqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, eqtlPanel, true);
 
-    // sQTL position track
+    // sQTL position track data
     let sqtlFeatures = sqData.map(par.parsers.qtlFeatures);
     sqtlFeatures.sort(par.dataSort.features);
     let sqtlPanel = par.panels.sqtlTrack;
     sqtlPanel.data = sqtlFeatures;
-    const sqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, sqtlPanel, true);
 
-    // QTL bubble map
+    // QTL bubble map data
     let qtlMapPanel = par.panels.qtlMap;
     qtlMapPanel.data = [];
     qtlMapPanel.data = qtlMapPanel.data.concat(eqData.map((d)=>{return par.parsers.qtlBubbles(d, "eQTL")}));
     qtlMapPanel.data = qtlMapPanel.data.concat(sqData.map((d)=>{return par.parsers.qtlBubbles(d, "sQTL")}));
 
+    // QTL tracks rendering
+    ////// find the max color value (-log(p-value)) from all QTLs, for creating a shared color scale for all variant tracks
+    const maxColorValue = max(eqtlPanel.data.concat(sqtlPanel.data).filter((d)=>isFinite(d.colorValue)).map((d)=>d.colorValue));
+    // console.log(maxColorValue);
+    const eqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, eqtlPanel, true, maxColorValue);
+    const sqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, sqtlPanel, true, maxColorValue);
     let bmap = new BubbleMap(qtlMapPanel.data, qtlMapPanel.useLog, qtlMapPanel.logBase, qtlMapPanel.colorScheme);
     bmap.addTooltip(qtlMapPanel.id);
     let bmapG = mainSvg.append("g")
@@ -237,7 +242,7 @@ function renderGwasHeatmap(geneId, svg, panel=CONFIG.panels.gwasMap){
 
 }
 
-function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorScale=false){
+function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorScale=false, maxColorValue=undefined){
     // preparation for the plot
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
@@ -255,7 +260,8 @@ function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorS
         panel.label,
         panel.color.background,
         panel.color.feature,
-        useColorScale
+        useColorScale,
+        maxColorValue
     );
     featureViz.svg = trackG;
     return featureViz
