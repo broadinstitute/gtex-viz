@@ -40,7 +40,7 @@ export function render(geneId, par=CONFIG){
         .catch((err)=>{console.error(err)})
 }
 
-function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, sqData){ 
+function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, sqData){
 
     // eQTL position track data
     let eqtlFeatures = eqData.map(par.parsers.qtlFeatures);
@@ -124,7 +124,7 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
 
             };
             let addBrush = true;
-            let brushConfig = {w: 100, h: Math.abs(par.panels.tssTrack.yPos - par.panels.sqtlTrack.yPos + 1)};
+            let brushConfig = {w: 100, h: Math.abs(par.panels.tssTrack.yPos + par.panels.tssTrack.margin.top - (par.panels.sqtlTrack.yPos + par.panels.sqtlTrack.height +20))};
             sqtlTrackViz.renderAxis(sqtlPanel.height + 30, addBrush, callback, brushConfig); // TODO: remove hard-coded adjustment
         });
 
@@ -338,14 +338,14 @@ function renderGeneStartEndMarkers(bmap, dom){
          g.append('line')
         .attr('x1', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth()/2)
         .attr('x2', bmap.xScale(bmap.tss) + bmap.xScale.bandwidth()/2)
-        .attr('y1', 0)
+        .attr('y1', -10)
         .attr('y2', bmap.yScale.range()[1])
         .style('stroke', '#94a8b8')
         .style('stroke-width', 2);
          g.append('text')
              .text('TSS')
              .attr('x', bmap.xScale(bmap.tss))
-             .attr('y', -5)
+             .attr('y', -12)
              .attr('text-anchor', 'center')
              .style('font-size', "12px")
     }
@@ -354,14 +354,14 @@ function renderGeneStartEndMarkers(bmap, dom){
         g.append('line')
         .attr('x1', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth()/2)
         .attr('x2', bmap.xScale(bmap.tes) + bmap.xScale.bandwidth()/2)
-        .attr('y1', 0)
+        .attr('y1', -10)
         .attr('y2', bmap.yScale.range()[1])
         .style('stroke', '#748797')
         .style('stroke-width', 2);
         g.append('text')
              .text('TES')
              .attr('x', bmap.xScale(bmap.tes))
-             .attr('y', -5)
+             .attr('y', -12)
              .attr('text-anchor', 'center')
              .style('font-size', "12px")
     }
