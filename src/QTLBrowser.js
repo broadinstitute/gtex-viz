@@ -87,13 +87,13 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
             let ldData = data.map(par.parsers.ld)
                 .filter((d)=>{
                     return par.dataFilters.ld(d, variantLookup)
-                })
-            console.log(ldData)
+                });
             const vList = {};
             ldData.forEach((d)=>{
                 vList[d.x] = true;
                 vList[d.y] = true;
             });
+            let ldConfig = par.ld;
             ldConfig.data = ldData.concat(Object.keys(vList).map((v)=>{
                 return {
                     x: v,
@@ -130,7 +130,7 @@ function renderLdMap(config, bmap){
         .attr("id", config.id + "-ld-canvas")
         .attr("width", config.width)
         .attr("height", config.width)
-        .style("position", "absolute")
+        .style("position", "absolute");
     let ldContext = ldCanvas.node().getContext('2d');
     ldContext.translate(config.margin.left, config.margin.top);
     let ldSvg = createSvg(config.id, config.width, config.width, {top: 0, left:0});
@@ -140,7 +140,6 @@ function renderLdMap(config, bmap){
         .attr("transform", `translate(${config.margin.left}, ${config.margin.top})`);
     ldMap.drawColorLegend(ldSvg, {x: config.margin.left, y: 100}, 10, "LD");
     ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
-    // let ldConfig = {w:par.inWidth, top:par.ldPanelMargin.top, left:par.ldPanelMargin.left};
     const drawConfig = {w: config.width-(config.margin.left+config.margin.right), top: 0, left: 0}
     ldMap.draw(ldCanvas, ldG, drawConfig, [0, 1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain())
 
@@ -364,18 +363,7 @@ function renderGeneStartEndMarkers(bmap, dom){
 
 const GlobalWidth = window.innerWidth;
 const AnchorPosition = 66546395;
-const ldConfig = {
-    id: "ld-browser",
-    data: [],
-    cutoff: 0.1,
-    width: GlobalWidth,
-    margin: {
-        left: 80,
-        top: 10,
-        right: 50
-    },
-    colorScheme: "Greys"
-};
+
 const CONFIG = {
     id: "qtl-browser",
     ldId: "ld-browser",
@@ -558,6 +546,19 @@ const CONFIG = {
                 }
             }
         }
+    },
+    ld: { // LD configuration is separate from the panels because it's in its own DIV and is rendered using canvas.
+        id: "ld-browser",
+        data: [],
+        cutoff: 0.1,
+        width: GlobalWidth,
+        margin: {
+            top: 10,
+            right: 50,
+            bottom: 0,
+            left: 80
+        },
+        colorScheme: "Greys"
     }
 };
 
