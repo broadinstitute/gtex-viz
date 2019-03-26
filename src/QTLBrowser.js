@@ -40,7 +40,7 @@ export function render(geneId, par=CONFIG){
         .catch((err)=>{console.error(err)})
 }
 
-function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, sqData){ // TODO: separate the variant tracks and bubble map rendering into two functions
+function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, sqData){ 
 
     // eQTL position track data
     let eqtlFeatures = eqData.map(par.parsers.qtlFeatures);
@@ -123,7 +123,9 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
                 ldBrush();
 
             };
-            sqtlTrackViz.renderAxis(sqtlPanel.height + 30, true, callback); // TODO: remove hard-coded adjustment
+            let addBrush = true;
+            let brushConfig = {w: 100, h: Math.abs(par.panels.tssTrack.yPos - par.panels.sqtlTrack.yPos + 1)};
+            sqtlTrackViz.renderAxis(sqtlPanel.height + 30, addBrush, callback, brushConfig); // TODO: remove hard-coded adjustment
         });
 
 }

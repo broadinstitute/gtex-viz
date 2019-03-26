@@ -129,7 +129,7 @@ export default class MiniGenomeBrowser{
 
     }
 
-    renderAxis(yAdjust, addBrush=true, callback=null){
+    renderAxis(yAdjust, addBrush=true, callback=null, brushConfig={w:50, h:20}){
         this.axis = axisTop(this.scale)
             .tickValues(this.scale.ticks(7));
         const axisG = this.dom.append("g")
@@ -147,14 +147,14 @@ export default class MiniGenomeBrowser{
 
             const brush = brushX()
                 .extent([
-                    [0,-20],
+                    [0,-brushConfig.h],
                     [this.scale.range()[1], 20]
                 ])
-                .on("brush", brushEvent)
+                .on("brush", brushEvent);
             axisG.append("g")
                 .attr("class", "brush")
                 .call(brush)
-                .call(brush.move, [this.scale(this.center)-50,this.scale(this.center)+50])
+                .call(brush.move, [this.scale(this.center)-brushConfig.w,this.scale(this.center)+brushConfig.h])
             return brush
         }
         return null
