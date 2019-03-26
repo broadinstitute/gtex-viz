@@ -4,6 +4,7 @@
  */
 
 //TODO: code review on setting configurations
+// TODO: unify QTL tracks' pvalue scale
 
 "use strict";
 import {tsv} from "d3-fetch";
@@ -14,7 +15,17 @@ import Heatmap from "./modules/Heatmap.js";
 import HalfMap from "./modules/HalfMap.js";
 import {createSvg} from "./modules/utils";
 
-export function render(geneId, par=browserConfig){
+export function render(geneId, par=CONFIG){
+    par.height = Object.keys(par.panels)
+        .reduce((total, panelKey, i)=>{
+            let p = par.panels[panelKey];
+            if (i > 0){
+                 // calculate panels' yPos
+                p.yPos = total;
+            }
+            return total + p.height // summing the height
+        }, 0);
+
     let mainSvg = createSvg(par.id, par.width, par.height, {left:0, top:0});
     const promises = ["genes", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
 
@@ -24,38 +35,60 @@ export function render(geneId, par=browserConfig){
             let queryGene = genes.filter((g)=>g.geneSymbol == geneId)[0];
             console.log(queryGene);
             renderVariantVisualComponents(queryGene, mainSvg, par, args[1], args[2])
-        });
+        })
+        .catch((err)=>{console.error(err)})
 }
 
-function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eqData, sqData){
+function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, sqData){
 
     // eQTL position track
     let eqtlFeatures = eqData.map(par.parsers.qtlFeatures);
     eqtlFeatures.sort(par.dataSort.features);
-    eqtlTrackConfig.data = eqtlFeatures;
-    const eqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, eqtlTrackConfig, true);
+    let eqtlPanel = par.panels.eqtlTrack;
+    eqtlPanel.data = eqtlFeatures;
+    const eqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, eqtlPanel, true);
 
     // sQTL position track
     let sqtlFeatures = sqData.map(par.parsers.qtlFeatures);
     sqtlFeatures.sort(par.dataSort.features);
-    sqtlTrackConfig.data = sqtlFeatures;
-    const sqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, sqtlTrackConfig, true);
+    let sqtlPanel = par.panels.sqtlTrack;
+    sqtlPanel.data = sqtlFeatures;
+    const sqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, sqtlPanel, true);
 
     // QTL bubble map
-    qtlMapConfig.data = qtlMapConfig.data.concat(eqData.map((d)=>{return par.parsers.qtlBubbles(d, "eQTL")}))
-    qtlMapConfig.data = qtlMapConfig.data.concat(sqData.map((d)=>{return par.parsers.qtlBubbles(d, "sQTL")}))
+    let qtlMapPanel = par.panels.qtlMap;
+    qtlMapPanel.data = [];
+    qtlMapPanel.data = qtlMapPanel.data.concat(eqData.map((d)=>{return par.parsers.qtlBubbles(d, "eQTL")}));
+    qtlMapPanel.data = qtlMapPanel.data.concat(sqData.map((d)=>{return par.parsers.qtlBubbles(d, "sQTL")}));
 
-    let bmap = new BubbleMap(qtlMapConfig.data, qtlMapConfig.useLog, qtlMapConfig.logBase, qtlMapConfig.colorScheme);
-    bmap.addTooltip(qtlMapConfig.id);
+    let bmap = new BubbleMap(qtlMapPanel.data, qtlMapPanel.useLog, qtlMapPanel.logBase, qtlMapPanel.colorScheme);
+    bmap.addTooltip(qtlMapPanel.id);
     let bmapG = mainSvg.append("g")
-        .attr("id", qtlMapConfig.id)
+        .attr("id", qtlMapPanel.id)
         .attr("class", "focus")
-        .attr("transform", `translate(${qtlMapConfig.marginLeft}, ${qtlMapConfig.marginTop + qtlMapConfig.posH})`);
+        .attr("transform", `translate(${qtlMapPanel.margin.left}, ${qtlMapPanel.margin.top + qtlMapPanel.yPos})`);
 
     // LD map
     tsv(par.urls.ld)
         .then((data)=>{
-            let ldData = data.map(par.parsers.ld);
+            // render bubble map
+            let bmapInWidth = qtlMapPanel.width-(qtlMapPanel.margin.left + qtlMapPanel.margin.right);
+            let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
+            bmap.drawSvg(bmapG, {w:bmapInWidth, h:bmapInHeight, top: 0, left:0});
+            bmap.fullDomain = bmap.xScale.domain();
+
+             //-- TSS and TES markers
+            findVariantsNearGeneStartEnd(queryGene, bmap);
+            renderGeneStartEndMarkers(bmap, bmapG);
+
+            // LD map
+            let variantLookup = {};
+            bmap.xScale.domain().forEach((x)=>{variantLookup[x]=true})
+            let ldData = data.map(par.parsers.ld)
+                .filter((d)=>{
+                    return par.dataFilters.ld(d, variantLookup)
+                })
+            console.log(ldData)
             const vList = {};
             ldData.forEach((d)=>{
                 vList[d.x] = true;
@@ -69,19 +102,9 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eq
                     displayValue: "1"
                 }
             }));
-
-            // render bubble map
-            bmap.drawSvg(bmapG, {w:qtlMapConfig.width-(qtlMapConfig.marginLeft + qtlMapConfig.marginRight), h:qtlMapConfig.height, top: 0, left:0})
-            bmap.fullDomain = bmap.xScale.domain();
-
-             //-- TSS and TES markers
-            findVariantsNearGeneStartEnd(queryGene, bmap);
-            renderGeneStartEndMarkers(bmap, bmapG);
-
             const ldBrush = renderLdMap(ldConfig, bmap);
             // render the chromosome position axis and zoom brush
             const callback = (left, right)=>{
-                $("#console").text(" " + left + ", " + right);
                 let focusDomain = bmap.fullDomain.filter((d)=>{
                     let pos = parseInt(d.split("_")[1]);
                     return pos>=left && pos<=right
@@ -95,7 +118,7 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=browserConfig, eq
                 ldBrush();
 
             };
-            sqtlTrackViz.renderAxis(sqtlTrackConfig.height + 30, true, callback);
+            sqtlTrackViz.renderAxis(sqtlPanel.height + 30, true, callback); // TODO: remove hard-coded adjustment
         });
 
 }
@@ -136,19 +159,23 @@ function renderLdMap(config, bmap){
  * @param data {List} a list of gene objects with attr: geneSymbol, strand, start, end, geneType
  * @param par {Object} the configuration object of the overall visualization
  */
-function renderGeneVisualComponents(geneId, mainSvg, data, par){
-    let genes = data.map(par.parsers.genes).filter(par.dataFilters.genes);
+function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
+    let genes = data.map(par.parsers.genes).filter(par.dataFilters.genes); // genes are filtered by gene types defined in the config object
     genes.sort(par.dataSort.genes);
 
-    gwasHeatmapConfig.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
-    const heatmapViz = renderGwasHeatmap(geneId, mainSvg, gwasHeatmapConfig);
+    par.panels.gwasMap.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
+    const heatmapViz = renderGwasHeatmap(geneId, mainSvg, par.panels.gwasMap);
 
-    geneTrackConfig.data = genes;
-    const geneTrackViz = renderFeatureTrack(geneId, mainSvg, geneTrackConfig);
+
+    par.panels.tssTrack.data = genes;
+    const geneTrackViz = renderFeatureTrack(geneId, mainSvg, par.panels.tssTrack);
 
     //// draw connecting lines between the GWAS trait heatmap and gene position track
-    let xAdjust = gwasHeatmapConfig.marginLeft - geneTrackConfig.marginLeft + (heatmapViz.xScale.bandwidth()/2);
-    let trackHeight = geneTrackConfig.height - (geneTrackConfig.marginTop + geneTrackConfig.marginBottom);
+    let gwasMapPanel = par.panels.gwasMap;
+    let tssPanel = par.panels.tssTrack;
+
+    let xAdjust = gwasMapPanel.margin.left - tssPanel.margin.left + (heatmapViz.xScale.bandwidth()/2);
+    let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
 
     geneTrackViz.svg.selectAll(".connect")
         .data(genes)
@@ -171,8 +198,7 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par){
         .attr("x2", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
         .attr("y1", trackHeight/2-20)
         .attr("y2", (d)=>{
-            // TODO: figure out the best way to make layout adjustment
-            let adjust = -150 +(d.geneSymbol.length*heatmapViz.yScale.bandwidth());
+            let adjust = -(gwasMapPanel.margin.bottom+tssPanel.margin.top - 10) +(d.geneSymbol.length*heatmapViz.yScale.bandwidth());
             adjust = adjust > -20?-20:adjust;
             return trackHeight/2 + adjust;
         })
@@ -182,47 +208,54 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par){
     return genes;
 }
 
-function renderGwasHeatmap(geneId, svg, par=gwasHeatmapConfig){
+/**
+ * Rendering the GWAS Heatmap
+ * @param geneId {String}
+ * @param svg {D3 SVG} the root SVG object
+ * @param panel {Object} the panel object defined in CONFIG
+ * @returns {Heatmap}
+ */
+function renderGwasHeatmap(geneId, svg, panel=CONFIG.panels.gwasMap){
 
-    let inWidth = par.width - (par.marginLeft + par.marginRight + par.rowLabelWidth);
-    let inHeight = par.height - (par.marginTop + par.marginBottom + par.columnLabelHeight);
+    let inWidth = panel.width - (panel.margin.left + panel.margin.right);
+    let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
+    if (inWidth * inHeight <= 0) throw "The inner height and width of the GWAS heatmap panel must be positive values. Check the height and margin configuration of this panel"
     let mapG = svg.append("g")
-        .attr("id", par.id)
-        .attr("transform", `translate(${par.marginLeft}, ${par.marginTop})`);
-    let tooltipId = `${par.id}Tooltip`;
+        .attr("id", panel.id)
+        .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top})`);
+    let tooltipId = `${panel.id}Tooltip`;
 
-    let hViz = new Heatmap(par.data, false, undefined, par.colorScheme, par.colorRadius, tooltipId);
-    hViz.draw(mapG, {w:inWidth, h:inHeight}, par.columnLabelAngle, false, par.columnLabelPosAdjust);
+    let hViz = new Heatmap(panel.data, false, undefined, panel.colorScheme, panel.cornerRadius, tooltipId);
+    hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
     hViz.drawColorLegend(mapG, {x: 20, y:-20}, 10);
 
-    // highlight the anchor gene
-
+    // CUSTOMIZATION: highlight the anchor gene
     mapG.selectAll(".exp-map-xlabel")
-        .attr('fill', (d)=>d==geneId?"red":"#000000")
+        .attr('fill', (d)=>d==geneId?"red":"#000000");
 
     hViz.svg = mapG;
     return hViz
 
 }
 
-function renderFeatureTrack(geneId, svg, par=geneTrackConfig, useColorScale=false){
+function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorScale=false){
     // preparation for the plot
-    let inWidth = par.width - (par.marginLeft + par.marginRight);
-    let inHeight = par.height - (par.marginTop + par.marginBottom);
+    let inWidth = panel.width - (panel.margin.left + panel.margin.right);
+    let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
     let trackG = svg.append("g")
-        .attr("id", par.id)
-        .attr("transform", `translate(${par.marginLeft}, ${par.marginTop + par.posH})`);
+        .attr("id", panel.id)
+        .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top + panel.yPos})`);
 
-    let featureViz = new MiniGenomeBrowser(par.data, par.center);
+    let featureViz = new MiniGenomeBrowser(panel.data, panel.centerPos);
     featureViz.render(
         trackG,
         inWidth,
         inHeight,
         false,
-        par.showLabels,
-        par.label,
-        par.trackColor,
-        par.tickColor,
+        panel.showLabels,
+        panel.label,
+        panel.color.background,
+        panel.color.feature,
         useColorScale
     );
     featureViz.svg = trackG;
@@ -328,11 +361,14 @@ function renderGeneStartEndMarkers(bmap, dom){
 
 }
 
+
+const GlobalWidth = window.innerWidth;
+const AnchorPosition = 66546395;
 const ldConfig = {
     id: "ld-browser",
     data: [],
     cutoff: 0.1,
-    width: 1800,
+    width: GlobalWidth,
     margin: {
         left: 80,
         top: 10,
@@ -340,11 +376,11 @@ const ldConfig = {
     },
     colorScheme: "Greys"
 };
-const browserConfig = {
+const CONFIG = {
     id: "qtl-browser",
     ldId: "ld-browser",
-    width: 1800,
-    height: 450, // should be dynamically calculated
+    width: GlobalWidth,
+    height: null, // should be dynamically calculated
     urls: {
         genes: "../tempData/ACTN3.neighbor.genes.csv",
         eqtls: "/tempData/ACTN3.eqtls.csv",
@@ -391,126 +427,137 @@ const browserConfig = {
         genes: (d) => {
             return d.featureType == "protein coding" || d.featureType == "lincRNA"
         },
-
+        ld: (d, lookupTable)=>{
+            return lookupTable[d.x] && lookupTable[d.y];
+        }
     },
     dataSort: {
         features: (a, b) => {
             return parseInt(a.start) - parseInt(b.start)
         }
+    },
+    panels: {
+        gwasMap: {
+            id: 'gwas-map',
+            data: null,
+            useLog: false,
+            logBase: null,
+            margin: {
+                top: 40, // provide enough space for the color legend
+                right: 100, // provide enough space for the row labels
+                bottom: 100, // provide enough space for the column labels
+                left: 80
+            },
+            width: GlobalWidth,
+            height: 180, // outer height: this includes top and bottom margins + inner height
+            colorScheme: "Greys",
+            cornerRadius: 2,
+            columnLabel: {
+                angle: 90,
+                adjust: 10
+            },
+            rowLabel: {
+                width: 100
+            }
+        },
+        tssTrack: {
+            id: 'tss-track',
+            label: 'TSS location',
+            data: null,
+            centerPos: AnchorPosition,
+            yPos: null, // where the panel should be placed to be calculated based on the panel layout
+            margin: {
+                top: 50,
+                right: 50,
+                bottom: 15,
+                left: 80
+            },
+            width: GlobalWidth,
+            height: 100, // outer height=inner height + top margin + bottom margin
+            showLabels: false, // whether to show the feature labels
+            color: {
+                background: "#ffffff",
+                feature: "#ababab"
+            }
+        },
+
+        eqtlTrack: {
+            id: 'eqtl-track',
+            label: 'ACTN3 eQTLs',
+            data: null,
+            centerPos: AnchorPosition,
+            yPos: null,
+            margin: {
+                top: 0,
+                right: 50,
+                bottom: 0,
+                left: 80
+            },
+            width: GlobalWidth,
+            height: 20, // outer height. outer height=inner height + top margin + bottom margin.
+            showLabels: false,
+            color: {
+                background: "#ffffff",
+                feature: "#ababab"
+            }
+
+        },
+
+        sqtlTrack: {
+            id: 'sqtl-track',
+            label: 'ACTN3 sQTLs',
+            data: null,
+            centerPos: AnchorPosition,
+            yPos: null,
+            margin: {
+                top: 0,
+                right: 50,
+                bottom: 0,
+                left: 80
+            },
+            width: GlobalWidth,
+            height: 20, // outer height. outer height=inner height + top margin + bottom margin.
+            showLabels: false,
+            color: {
+                background: "#ffffff",
+                feature: "#ababab"
+            }
+        },
+
+        qtlMap: {
+            id: 'qtl-map', // the bubble heat map of QTLs
+            width: GlobalWidth,
+            data: null,
+            yPos: null,
+            margin: {
+                top: 70, // provide space for the genome position scale
+                right: 50,
+                bottom: 70, // provide space for the column labels
+                left: 80
+            },
+            height: 200,
+            colorScheme: "RdBu",
+            colorScaleDomain: [-1, 1],
+            useLog: false,
+            logBase: null,
+            label: {
+                column: {
+                    show: true,
+                    angle: 90,
+                    adjust: 10,
+                    location: 'bottom',
+                    textAlign: 'left'
+                },
+                row: {
+                    show: true,
+                    width: 150,
+                    angle: 0,
+                    adjust: 0,
+                    location: 'left',
+                    textAlign: 'right'
+                }
+            }
+        }
     }
 };
 
-const gwasHeatmapConfig = {
-    id: 'gwasHeatmap',
-    data: null,
-    useLog: false,
-    logBase: null,
-    width: 1800,
-    height: 80,
-    marginLeft: 100,
-    marginRight: 10,
-    marginTop: 40,
-    marginBottom: 0, // need to save room for text labels
-    colorScheme: "Greys",
-    cornerRadius: 2,
-    columnLabelHeight: 20,
-    columnLabelAngle: 90,
-    columnLabelPosAdjust: 10,
-    rowLabelWidth: 100,
-};
-
-const geneTrackConfig = {
-    id: 'geneTrack',
-    label: 'TSS location',
-    data: undefined,
-    width: browserConfig.width,
-    posH: 220,
-    height: 20,
-    marginLeft: 80,
-    marginRight: 50,
-    marginTop: 0, // space for connecting lines
-    marginBottom: 0,
-    showLabels: false,
-    trackColor: "#ffffff",
-    center: 66546395,
-};
-
-const eqtlTrackConfig = {
-    id: 'eQTL-browser',
-    data: undefined,
-    width: browserConfig.width,
-    height: 20,
-    posH: 240,
-    marginLeft: 80,
-    marginRight: 50,
-    marginTop: 0, // enough space to visually separate query gene association data panel
-    marginBottom: 0,
-    center: 66546395,
-    showLabels: false,
-    trackColor: "#ffffff",
-    tickColor: "#0086af",
-    label: 'ACTN3 eQTLs'
-};
-
-const sqtlTrackConfig = {
-    id: 'sQTL-browser',
-    data: undefined,
-    width: browserConfig.width,
-    height: 20,
-    posH: 260,
-    marginLeft: 80,
-    marginRight: 50,
-    marginTop: 0, // TODO: this should be calculated
-    marginBottom: 0,
-    center: 66546395,
-    showLabels: false,
-    trackColor: "#ffffff",
-    tickColor: "#0086af",
-    label: 'ACTN3 sQTLs'
-};
-
-const qtlMapConfig = {
-    id: 'QTL-map',
-    width: 1800, //window.innerWidth*0.9,
-    height: 50, // TODO: use a dynamic width based on the matrix size
-    posH: 350,
-    marginTop: 0,
-    marginRight: 50,
-    marginBottom: 0,
-    marginLeft: 80,
-
-    colorScheme: "RdBu",
-    colorScaleDomain: [-0.75, 0.75],
-
-    useLog: false,
-    logBase: undefined,
-
-    // div IDs
-    divSpinner: "spinner",
-    divDashboard: "bmap-dashboard",
-    divInfo: "bmap-filter-info",
-    divGeneInfo: "bmap-gene-info",
-    divModal: 'bmap-modal',
-    data: [],
-
-    labels: {
-        column: {
-            show: false,
-            height: 100,
-            angle: 90,
-            adjust: 10,
-            location: 'bottom',
-            textAlign: 'left'
-        },
-        row: {
-            show: true,
-            width: 150,
-            angle: 0,
-            adjust: 0,
-            location: 'left',
-            textAlign: 'right'
-        }
-    },
-
-    useCanvas: false // TODO: canvas mode is currently buggy
-};
