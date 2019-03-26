@@ -13,9 +13,9 @@ import GroupedViolin from './modules/GroupedViolin';
 
 export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Expression Violin Plot", urls=getGtexUrls(), margins=_setViolinPlotMargins(50,75,250,60), dimensions={w: window.innerWidth*0.8, h:250}) {
     const promises = [
-        json(urls.tissue),
-        json(urls.geneExp + gencodeId),
-        json(urls.geneExp + gencodeId + '&attributeSubset=sex')
+        json(urls.tissue, {credentials: 'include'}),
+        json(urls.geneExp + gencodeId, {credentials: 'include'}),
+        json(urls.geneExp + gencodeId + '&attributeSubset=sex', {credentials: 'include'})
     ];
 
     const ids = {

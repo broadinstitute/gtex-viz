@@ -37,7 +37,7 @@ import IsoformTrackViewer from "./modules/IsoformTrackViewer";
  * @param urls {Object} of the GTEx web service urls with attr: geneId, tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
  */
 export function render(type, geneId, rootId, urls=getGtexUrls()){
-    json(urls.geneId + geneId) // query the gene by geneId--gene name or gencode ID with or without versioning
+    json(urls.geneId + geneId, {credentials: 'include'}) // query the gene by geneId--gene name or gencode ID with or without versioning
         .then(function(data){
              // get the gene object and its gencode Id
              const gene = parseGenes(data, true, geneId);
@@ -45,14 +45,14 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
 
              // build the promises
              const promises = [
-                json(urls.tissue),
-                json(urls.geneModelUnfiltered + gencodeId),
-                json(urls.geneModel + gencodeId),
-                json(urls.transcript + gencodeId),
-                json(urls.junctionExp + gencodeId),
-                json(urls.exonExp + gencodeId),
-                json(urls.transcriptExp + gencodeId),
-                json(urls.exon + gencodeId)
+                json(urls.tissue, {credentials: 'include'}),
+                json(urls.geneModelUnfiltered + gencodeId, {credentials: 'include'}),
+                json(urls.geneModel + gencodeId, {credentials: 'include'}),
+                json(urls.transcript + gencodeId, {credentials: 'include'}),
+                json(urls.junctionExp + gencodeId, {credentials: 'include'}),
+                json(urls.exonExp + gencodeId, {credentials: 'include'}),
+                json(urls.transcriptExp + gencodeId, {credentials: 'include'}),
+                json(urls.exon + gencodeId, {credentials: 'include'})
              ];
 
              Promise.all(promises)
