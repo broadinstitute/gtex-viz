@@ -16,10 +16,15 @@ import {createSvg} from "./modules/utils";
 
 export function render(geneId, par=CONFIG){
     par.height = Object.keys(par.panels)
-        .reduce((total, panelKey)=>{
+        .reduce((total, panelKey, i)=>{
             let p = par.panels[panelKey];
-            return total + p.height
-        }, 0)
+            if (i > 0){
+                 // calculate panels' yPos
+                p.yPos = total;
+            }
+            return total + p.height // summing the height
+        }, 0);
+
     let mainSvg = createSvg(par.id, par.width, par.height, {left:0, top:0});
     const promises = ["genes", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
 
@@ -148,14 +153,18 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
     genes.sort(par.dataSort.genes);
 
     par.panels.gwasMap.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
-    const heatmapViz = renderGwasHeatmap(geneId, mainSvg, par);
-    return
-    geneTrackConfig.data = genes;
-    const geneTrackViz = renderFeatureTrack(geneId, mainSvg, geneTrackConfig);
+    const heatmapViz = renderGwasHeatmap(geneId, mainSvg, par.panels.gwasMap);
+
+
+    par.panels.tssTrack.data = genes;
+    const geneTrackViz = renderFeatureTrack(geneId, mainSvg, par.panels.tssTrack);
 
     //// draw connecting lines between the GWAS trait heatmap and gene position track
-    let xAdjust = gwasHeatmapConfig.marginLeft - geneTrackConfig.marginLeft + (heatmapViz.xScale.bandwidth()/2);
-    let trackHeight = geneTrackConfig.height - (geneTrackConfig.marginTop + geneTrackConfig.marginBottom);
+    let gwasMapPanel = par.panels.gwasMap;
+    let tssPanel = par.panels.tssTrack;
+
+    let xAdjust = gwasMapPanel.margin.left - tssPanel.margin.left + (heatmapViz.xScale.bandwidth()/2);
+    let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
 
     geneTrackViz.svg.selectAll(".connect")
         .data(genes)
@@ -178,8 +187,7 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
         .attr("x2", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
         .attr("y1", trackHeight/2-20)
         .attr("y2", (d)=>{
-            // TODO: figure out the best way to make layout adjustment
-            let adjust = -150 +(d.geneSymbol.length*heatmapViz.yScale.bandwidth());
+            let adjust = -(gwasMapPanel.margin.bottom+tssPanel.margin.top - 10) +(d.geneSymbol.length*heatmapViz.yScale.bandwidth());
             adjust = adjust > -20?-20:adjust;
             return trackHeight/2 + adjust;
         })
@@ -193,19 +201,18 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
  * Rendering the GWAS Heatmap
  * @param geneId {String}
  * @param svg {D3 SVG} the root SVG object
- * @param par {Object} the config object
+ * @param panel {Object} the panel object defined in CONFIG
  * @returns {Heatmap}
  */
-function renderGwasHeatmap(geneId, svg, par=CONFIG){
+function renderGwasHeatmap(geneId, svg, panel=CONFIG.panels.gwasMap){
 
-    let panel = par.panels.gwasMap;
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
     if (inWidth * inHeight <= 0) throw "The inner height and width of the GWAS heatmap panel must be positive values. Check the height and margin configuration of this panel"
     let mapG = svg.append("g")
-        .attr("id", par.id)
+        .attr("id", panel.id)
         .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top})`);
-    let tooltipId = `${par.id}Tooltip`;
+    let tooltipId = `${panel.id}Tooltip`;
 
     let hViz = new Heatmap(panel.data, false, undefined, panel.colorScheme, panel.cornerRadius, tooltipId);
     hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
@@ -213,31 +220,31 @@ function renderGwasHeatmap(geneId, svg, par=CONFIG){
 
     // CUSTOMIZATION: highlight the anchor gene
     mapG.selectAll(".exp-map-xlabel")
-        .attr('fill', (d)=>d==geneId?"red":"#000000")
+        .attr('fill', (d)=>d==geneId?"red":"#000000");
 
     hViz.svg = mapG;
     return hViz
 
 }
 
-function renderFeatureTrack(geneId, svg, par=geneTrackConfig, useColorScale=false){
+function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorScale=false){
     // preparation for the plot
-    let inWidth = par.width - (par.marginLeft + par.marginRight);
-    let inHeight = par.height - (par.marginTop + par.marginBottom);
+    let inWidth = panel.width - (panel.margin.left + panel.margin.right);
+    let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
     let trackG = svg.append("g")
-        .attr("id", par.id)
-        .attr("transform", `translate(${par.marginLeft}, ${par.marginTop + par.posH})`);
+        .attr("id", panel.id)
+        .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top + panel.yPos})`);
 
-    let featureViz = new MiniGenomeBrowser(par.data, par.center);
+    let featureViz = new MiniGenomeBrowser(panel.data, panel.centerPos);
     featureViz.render(
         trackG,
         inWidth,
         inHeight,
         false,
-        par.showLabels,
-        par.label,
-        par.trackColor,
-        par.tickColor,
+        panel.showLabels,
+        panel.label,
+        panel.color.background,
+        panel.color.feature,
         useColorScale
     );
     featureViz.svg = trackG;
@@ -356,6 +363,7 @@ const ldConfig = {
     colorScheme: "Greys"
 };
 const GlobalWidth = window.innerWidth;
+const AnchorPosition = 66546395;
 const CONFIG = {
     id: "qtl-browser",
     ldId: "ld-browser",
@@ -420,14 +428,14 @@ const CONFIG = {
             data: null,
             useLog: false,
             logBase: null,
-            width: GlobalWidth,
-            height: 180, // outer height: this includes top and bottom margins + inner height
             margin: {
                 top: 40, // provide enough space for the color legend
                 right: 100, // provide enough space for the row labels
                 bottom: 100, // provide enough space for the column labels
                 left: 80
             },
+            width: GlobalWidth,
+            height: 180, // outer height: this includes top and bottom margins + inner height
             colorScheme: "Greys",
             cornerRadius: 2,
             columnLabel: {
@@ -437,11 +445,29 @@ const CONFIG = {
             rowLabel: {
                 width: 100
             }
+        },
+        tssTrack: {
+            id: 'tss-track',
+            label: 'TSS location',
+            data: null,
+            centerPos: AnchorPosition,
+            yPos: null, // where the panel should be placed to be calculated based on the panel layout
+            margin: {
+                top: 50,
+                right: 50,
+                bottom: 0,
+                left: 80
+            },
+            width: GlobalWidth,
+            height: 70, // outer height=inner height + top margin + bottom margin
+            showLabels: false, // whether to show the feature labels
+            color: {
+                background: "#ffffff",
+                feature: "#ababab"
+            }
         }
     }
 };
-
-
 
 const geneTrackConfig = {
     id: 'geneTrack',
