@@ -8,7 +8,7 @@
 
 "use strict";
 import {tsv} from "d3-fetch";
-import {select} from "d3-selection";
+import {select, selectAll} from "d3-selection";
 import {max} from "d3-array";
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
 import BubbleMap from "./modules/BubbleMap.js";
@@ -109,10 +109,10 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
             }));
             const ldBrush = renderLdMap(ldConfig, bmap);
             // render the chromosome position axis and zoom brush
-            const callback = (left, right)=>{
+            const callback = (left, right, xA, xB)=>{
                 let focusDomain = bmap.fullDomain.filter((d)=>{
                     let pos = parseInt(d.split("_")[1]);
-                    return pos>=left && pos<=right
+                    return pos>=xA && pos<=xB
                 });
                 bmap.renderWithNewDomain(bmapG, focusDomain);
 
@@ -121,6 +121,27 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
 
                 // LD updates
                 ldBrush();
+
+                // redraw brush lines
+                selectAll(".brushLine").remove();
+                select(".brush")
+                    .append("line")
+                    .classed("brushLine", true)
+                    .attr("x1", left)
+                    .attr("x2", bmap.xScale.range()[0])
+                    .attr("y1", 20)
+                    .attr("y2", 60)
+                    .style("stroke-width", 1)
+                    .style("stroke", "#ababab");
+                select(".brush")
+                    .append("line")
+                    .classed("brushLine", true)
+                    .attr("x1", right)
+                    .attr("x2", bmap.xScale.range()[1])
+                    .attr("y1", 20)
+                    .attr("y2", 60)
+                    .style("stroke-width", 1)
+                    .style("stroke", "#ababab")
 
             };
             let addBrush = true;
@@ -415,7 +436,7 @@ const CONFIG = {
             d.x = d.snpId1;
             d.y = d.snpId2;
             d.value = parseFloat(d.rSquared);
-            d.displayValue = parseFloat(d.value).toPrecision(3)
+            d.displayValue = parseFloat(d.value).toPrecision(3);
             return d;
         }
     },
@@ -526,12 +547,12 @@ const CONFIG = {
             data: null,
             yPos: null,
             margin: {
-                top: 70, // provide space for the genome position scale
+                top: 100, // provide space for the genome position scale
                 right: 50,
                 bottom: 70, // provide space for the column labels
                 left: 80
             },
-            height: 200,
+            height: 220,
             colorScheme: "RdBu",
             colorScaleDomain: [-1, 1],
             useLog: false,

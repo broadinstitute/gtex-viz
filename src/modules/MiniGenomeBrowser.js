@@ -140,9 +140,11 @@ export default class MiniGenomeBrowser{
         if (addBrush){
             const brushEvent = ()=> {
                 let selection = event.selection; // event is a d3-selection object
+                let leftPos = selection[0];
+                let rightPos = selection[1]
                 let brushLeftBound = Math.round(this.scale.invert(selection[0])); // selection provides the position in pixel, use the scale to invert that to chromosome position
                 let brushRightBound = Math.round(this.scale.invert(selection[1]));
-                callback(brushLeftBound, brushRightBound)
+                callback(leftPos, rightPos, brushLeftBound, brushRightBound)
             };
 
             const brush = brushX()
