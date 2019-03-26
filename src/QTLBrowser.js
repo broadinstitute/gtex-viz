@@ -105,7 +105,6 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
             const ldBrush = renderLdMap(ldConfig, bmap);
             // render the chromosome position axis and zoom brush
             const callback = (left, right)=>{
-                $("#console").text(" " + left + ", " + right);
                 let focusDomain = bmap.fullDomain.filter((d)=>{
                     let pos = parseInt(d.split("_")[1]);
                     return pos>=left && pos<=right
@@ -470,11 +469,11 @@ const CONFIG = {
             margin: {
                 top: 50,
                 right: 50,
-                bottom: 10,
+                bottom: 15,
                 left: 80
             },
             width: GlobalWidth,
-            height: 70, // outer height=inner height + top margin + bottom margin
+            height: 100, // outer height=inner height + top margin + bottom margin
             showLabels: false, // whether to show the feature labels
             color: {
                 background: "#ffffff",
