@@ -13,7 +13,7 @@ import {
 import {groupedViolinPlot} from "./GTExViz";
 
 export function render(par, gencodeId, variantId, tissueId, groupName=undefined, urls=getGtexUrls()){
-    json(urls['dyneqtl'] + `?variantId=${variantId}&gencodeId=${gencodeId}&tissueSiteDetailId=${tissueId}`)
+    json(urls['dyneqtl'] + `?variantId=${variantId}&gencodeId=${gencodeId}&tissueSiteDetailId=${tissueId}`, {credentials:'include'})
         .then(function(json){
             let data = parseDynEqtl(json);
             // construct the dynEqtl data for the three genotypes: ref, het, alt
