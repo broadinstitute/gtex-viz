@@ -29,7 +29,7 @@ import {render as eqtlViolinPlotRender} from "./EqtlViolinPlot";
 export function render(par, geneId, urls = getGtexUrls()){
     $(`#${par.divSpinner}`).show();
 
-    json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
+    json(urls.geneId + geneId, {credentials: 'include'}) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
         .then((data)=> {
             let gene = parseGenes(data, true, geneId);
             // report the gene info
@@ -39,9 +39,9 @@ export function render(par, geneId, urls = getGtexUrls()){
                 .appendTo($(`#${par.divGeneInfo}`));
 
             let promises = [
-                json(urls.tissue),
-                json(urls.exon + gene.gencodeId),
-                json(urls.singleTissueEqtl + gene.gencodeId)
+                json(urls.tissue, {credentials: 'include'}),
+                json(urls.exon + gene.gencodeId, {credentials: 'include'}),
+                json(urls.singleTissueEqtl + gene.gencodeId, {credentials: 'include'})
             ];
             Promise.all(promises)
                 .then(function(results){
@@ -53,7 +53,7 @@ export function render(par, geneId, urls = getGtexUrls()){
                     par = setDimensions(par);
                     let bmap = renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls);
                     // fetch LD data, this query is slow, so it's not included in the promises.
-                    json(urls.ld + gene.gencodeId)
+                    json(urls.ld + gene.gencodeId, {credentials: 'include'})
                         .then((ldJson) => {
                             let ld = parseLD(ldJson);
                             par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data

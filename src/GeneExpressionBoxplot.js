@@ -11,8 +11,8 @@ import Boxplot from './modules/Boxplot';
 
 export function launch(rootId, gencodeId, urls=getGtexUrls()) {
     const promises = [
-        json(urls.tissue),
-        json(urls.geneExp + gencodeId)
+        json(urls.tissue, {credentials: 'include'}),
+        json(urls.geneExp + gencodeId, {credentials: 'include'})
     ];
 
     Promise.all(promises)

@@ -15,7 +15,7 @@ import {getGtexUrls, parseTissues} from "./gtexDataParser";
  * dependency: select2
  */
 export function createTissueMenu(domId, url = getGtexUrls().tissue){
-    json(url)
+    json(url, {credentials: 'include'})
         .then(function(results){
             let tissues = parseTissues(results);
             tissues.forEach((d) => {
