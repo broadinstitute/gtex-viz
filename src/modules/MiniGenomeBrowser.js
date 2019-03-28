@@ -25,7 +25,7 @@ export default class MiniGenomeBrowser{
         this.tooltip = undefined;
     }
 
-    render(dom, width=1500, height=200, trackLabel="Track", backboneColor="#ffffff", tickColor="#ababab", useColorValue=false, maxColorValue=undefined){
+    render(dom, width=1500, height=200, trackLabel="Track", bgColor="#ffffff", featureColor="#ababab", useColorValue=false, maxColorValue=undefined){
         this.dom = dom;
         let range = [0, width];
         let domain = [this.center-this.window, this.center+this.window];
@@ -47,7 +47,7 @@ export default class MiniGenomeBrowser{
             .attr("y", height/2)
             .attr("width", width)
             .attr("height", backboneHeight)
-            .style("fill", backboneColor)
+            .style("fill", bgColor)
             .style("stroke", "#ababab")
             .style("stroke-width", 1);
 
@@ -69,7 +69,7 @@ export default class MiniGenomeBrowser{
                     if (!isFinite(d.colorValue)) return this.maxColor
                     return this.colorScale(d.colorValue)
                 }
-                return tickColor
+                return featureColor
             });
 
         // track label
