@@ -221,11 +221,12 @@ function renderGeneModel(svg, panel){
         .attr("id", panel.id)
         .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top + panel.yPos})`);
 
-    let modelViz = new MiniGenomeBrowser(panel.data, panel.centerPos);
+    let modelViz = new MiniGenomeBrowser(panel.data, panel.centerPos, 1e6);
     modelViz.render(
         trackG,
         inWidth,
         inHeight,
+        true,
         panel.label,
         panel.color.background,
         panel.color.feature
@@ -340,11 +341,12 @@ function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorS
         .attr("id", panel.id)
         .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top + panel.yPos})`);
 
-    let featureViz = new MiniGenomeBrowser(panel.data, panel.centerPos);
+    let featureViz = new MiniGenomeBrowser(panel.data, panel.centerPos, 1e6);
     featureViz.render(
         trackG,
         inWidth,
         inHeight,
+        false,
         panel.label,
         panel.color.background,
         panel.color.feature,

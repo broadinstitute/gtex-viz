@@ -13,7 +13,7 @@ import {max, min} from "d3-array";
 export default class MiniGenomeBrowser{
     /**
      * Rendering the genomic features in a 1D plot
-     * @param data {LIST} a list of gene objects with attributes: pos, strand, featureLabel, and featureType
+     * @param data {LIST} a list of gene objects with attributes: pos, start, end, strand, featureLabel, and featureType
      * @param center {Integer} the center position
      * @param window {Integer} the position range (one-side)
      */
@@ -25,7 +25,7 @@ export default class MiniGenomeBrowser{
         this.tooltip = undefined;
     }
 
-    render(dom, width=1500, height=200, trackLabel="Track", bgColor="#ffffff", featureColor="#ababab", useColorValue=false, maxColorValue=undefined){
+    render(dom, width=1500, height=200, showWidth=false, trackLabel="Track", bgColor="#ffffff", featureColor="#ababab", useColorValue=false, maxColorValue=undefined){
         this.dom = dom;
         let range = [0, width];
         let domain = [this.center-this.window, this.center+this.window];
@@ -52,22 +52,31 @@ export default class MiniGenomeBrowser{
             .style("stroke-width", 1);
 
         // genome features
+        // NOTE: d.pos is used when showWidth is false, d.pos is independent to the strand that the feature is on, applicable for rendering TSS sites, variants.
+        // NOTE: d.start and d.end are used when showWidth is true.
         let features = browser.selectAll('.minibrowser-feature')
             .data(this.data)
             .enter()
             .append("rect")
             .attr("class", "minibrowser-feature")
             .attr("x", (d)=>{
+                if (showWidth) return this.scale(d.start);
                 return this.scale(d.pos)
             })
             .attr("y", (d)=>height/2)
-            .attr("width", 1)
+            .attr("width", (d)=>{
+                if (showWidth) {
+                    let w = Math.abs(this.scale(d.start)-this.scale(d.end)+1)||1;
+                    return w
+                }
+                return 1;
+            })
             .attr("height", (d)=>backboneHeight)
             .style("fill", (d)=>{
-                if (d.pos == this.center) return "red";
+                if (!showWidth && d.pos == this.center) return "red";
                 if (useColorValue){
-                    if (!isFinite(d.colorValue)) return this.maxColor
-                    return this.colorScale(d.colorValue)
+                    if (!isFinite(d.colorValue)) return this.maxColor;
+                    return this.colorScale(d.colorValue);
                 }
                 return featureColor
             });
