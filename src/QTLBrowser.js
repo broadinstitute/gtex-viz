@@ -20,14 +20,14 @@ export function render(geneId, par=CONFIG){
     setDimensions(par);
 
     let mainSvg = createSvg(par.id, par.width, par.height, {left:0, top:0});
-    const promises = ["genes", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
+    const promises = ["genes", "geneModel", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
 
     Promise.all(promises)
         .then((args)=> {
-            let genes = renderGeneVisualComponents(geneId, mainSvg, args[0], par);
+            let genes = renderGeneVisualComponents(geneId, mainSvg, args.splice(0,2), par);
             let queryGene = genes.filter((g)=>g.geneSymbol == geneId)[0];
             console.log(queryGene);
-            renderVariantVisualComponents(queryGene, mainSvg, par, args[1], args[2])
+            renderVariantVisualComponents(queryGene, mainSvg, par, args)
         })
         .catch((err)=>{console.error(err)})
 }
@@ -47,8 +47,18 @@ function setDimensions(par=CONFIG){
         }, 0);
 }
 
-function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, sqData){
+/**
+ * Rendering all variant related visualization components
+ * TODO: break this function into smaller functions?
+ * @param queryGene
+ * @param mainSvg
+ * @param par
+ * @param data
+ */
+function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
 
+    let eqData = data[0];
+    let sqData = data[1];
     // eQTL position track data
     let eqtlFeatures = eqData.map(par.parsers.qtlFeatures);
     eqtlFeatures.sort(par.dataSort.features);
@@ -203,6 +213,28 @@ function renderLdMap(config, bmap){
     return ldBrush;
 }
 
+function renderGeneModel(svg, panel){
+    // preparation for the plot
+    let inWidth = panel.width - (panel.margin.left + panel.margin.right);
+    let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
+    let trackG = svg.append("g")
+        .attr("id", panel.id)
+        .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top + panel.yPos})`);
+
+    let modelViz = new MiniGenomeBrowser(panel.data, panel.centerPos);
+    modelViz.render(
+        trackG,
+        inWidth,
+        inHeight,
+        panel.showLabels,
+        panel.label,
+        panel.color.background,
+        panel.color.feature
+    );
+    modelViz.svg = trackG;
+    return modelViz
+}
+
 /**
  * Render the visual components related to genes: GWAS trait heatmap, gene position track
  * @param geneId {String} the anchor gene's ID/symbol
@@ -211,15 +243,18 @@ function renderLdMap(config, bmap){
  * @param par {Object} the configuration object of the overall visualization
  */
 function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
-    let genes = data.map(par.parsers.genes).filter(par.dataFilters.genes); // genes are filtered by gene types defined in the config object
+    let genes = data[0].map(par.parsers.genes).filter(par.dataFilters.genes); // genes are filtered by gene types defined in the config object
     genes.sort(par.dataSort.genes);
-
     par.panels.gwasMap.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
     const heatmapViz = renderGwasHeatmap(geneId, mainSvg, par.panels.gwasMap);
 
-
     par.panels.tssTrack.data = genes;
     const geneTrackViz = renderFeatureTrack(geneId, mainSvg, par.panels.tssTrack);
+
+    let gModel = data[1].map(par.parsers.geneModel);
+    par.panels.geneModelTrack.data = gModel;
+    renderGeneModel(mainSvg, par.panels.geneModelTrack);
+
 
     //// draw connecting lines between the GWAS trait heatmap and gene position track
     let gwasMapPanel = par.panels.gwasMap;
@@ -311,7 +346,6 @@ function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorS
         trackG,
         inWidth,
         inHeight,
-        false,
         panel.showLabels,
         panel.label,
         panel.color.background,
@@ -447,6 +481,13 @@ const CONFIG = {
             d.featureType = d.geneType;
             return d;
         },
+        geneModel: (d)=>{
+            d.start = parseInt(d.start);
+            d.end = parseInt(d.end);
+            d.pos = d.start;
+            d.featureLabel = d.exonId;
+            return d;
+        },
         qtlFeatures: (d)=>{
             // let id = d.variantId;
             d.chr = d.chromosome;
@@ -520,11 +561,11 @@ const CONFIG = {
             margin: {
                 top: 50,
                 right: 50,
-                bottom: 15,
+                bottom: 0,
                 left: 80
             },
             width: GlobalWidth,
-            height: 100, // outer height=inner height + top margin + bottom margin
+            height: 70, // outer height=inner height + top margin + bottom margin
             showLabels: false, // whether to show the feature labels
             color: {
                 background: "#ffffff",
@@ -533,17 +574,17 @@ const CONFIG = {
         },
         geneModelTrack: {
             id: 'gene-model-track',
-            label: "ACTN3 collapsed gene model",
+            label: "ACTN3 exons",
             centerPos: AnchorPosition,
             yPos: null,
             margin: {
-                top: 10,
+                top: 0,
                 right: 50,
                 bottom: 10,
                 left: 80
             },
             width: GlobalWidth,
-            height: 40,
+            height: 30,
             showLabels: false,
             color: {
                 background: '#ffffff',

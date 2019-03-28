@@ -25,7 +25,7 @@ export default class MiniGenomeBrowser{
         this.tooltip = undefined;
     }
 
-    render(dom, width=1500, height=200, showFeatureSize=false, showFeatureLabels=true, trackLabel="Track", backboneColor="#ffffff", tickColor="#ababab", useColorValue=false, maxColorValue=undefined){
+    render(dom, width=1500, height=200, showFeatureLabels=true, trackLabel="Track", backboneColor="#ffffff", tickColor="#ababab", useColorValue=false, maxColorValue=undefined){
         this.dom = dom;
         let range = [0, width];
         let domain = [this.center-this.window, this.center+this.window];
@@ -75,14 +75,12 @@ export default class MiniGenomeBrowser{
             })
             .attr("y", (d, i)=>{
                 let y = height/2;
-                let featureH = showFeatureSize?Math.abs(this.scale(d.pos)-this.scale(d.end) + 1):0;
-                return d.strand=="+"?(y - featureH - yAdjust(d, i)): y;
+                return d.strand=="+"?(y - yAdjust(d, i)): y;
             })
             .attr("width", 1)
             .attr("height", (d, i)=>{
                 let h = backboneHeight + yAdjust(d, i);
-                let featureH = showFeatureSize?Math.abs(this.scale(d.pos)-this.scale(d.end) + 1):0;
-                return h+featureH
+                return h
             })
             .style("fill", (d)=>{
                 if (d.pos == this.center) return "red"
@@ -118,9 +116,8 @@ export default class MiniGenomeBrowser{
                 let x = d.strad=="+"?this.scale(d.pos):this.scale(d.pos)-5;
                 let y = height/2;
                 let adjust = d.strand=="+"?yAdjust(d, i):yAdjust(d, i) + 5;
-                let featureH = showFeatureSize?Math.abs(this.scale(d.pos)-this.scale(d.end) + 1):0;
 
-                y = d.strand=="+"?(y - featureH - adjust): (y + backboneHeight + featureH + adjust);
+                y = d.strand=="+"?(y - adjust): (y + backboneHeight + adjust);
                 let angle = d.strand=="+"?-45:45;
                 return `translate(${x}, ${y}) rotate(${angle})`;
             })
