@@ -25,7 +25,7 @@ export default class MiniGenomeBrowser{
         this.tooltip = undefined;
     }
 
-    render(dom, width=1500, height=200, showFeatureLabels=true, trackLabel="Track", backboneColor="#ffffff", tickColor="#ababab", useColorValue=false, maxColorValue=undefined){
+    render(dom, width=1500, height=200, trackLabel="Track", backboneColor="#ffffff", tickColor="#ababab", useColorValue=false, maxColorValue=undefined){
         this.dom = dom;
         let range = [0, width];
         let domain = [this.center-this.window, this.center+this.window];
@@ -51,20 +51,7 @@ export default class MiniGenomeBrowser{
             .style("stroke", "#ababab")
             .style("stroke-width", 1);
 
-        // genome features (genes)
-        const yAdjust = (d, i)=>{
-            if (showFeatureLabels == false) return 0;
-            let adjust = 5;
-            if (i>0){
-                // if the upstream feature x position is too close, adjust the y height;
-                let upstreamF = this.data[i-1];
-                if (upstreamF.strand != d.strand) return adjust;
-                let dist = this.scale(d.pos - upstreamF.pos) + 1;
-                if (dist <= 10) {adjust = i%2?adjust + 60: adjust + 30}
-            }
-            return adjust
-        };
-
+        // genome features
         let features = browser.selectAll('.minibrowser-feature')
             .data(this.data)
             .enter()
@@ -73,17 +60,11 @@ export default class MiniGenomeBrowser{
             .attr("x", (d)=>{
                 return this.scale(d.pos)
             })
-            .attr("y", (d, i)=>{
-                let y = height/2;
-                return d.strand=="+"?(y - yAdjust(d, i)): y;
-            })
+            .attr("y", (d)=>height/2)
             .attr("width", 1)
-            .attr("height", (d, i)=>{
-                let h = backboneHeight + yAdjust(d, i);
-                return h
-            })
+            .attr("height", (d)=>backboneHeight)
             .style("fill", (d)=>{
-                if (d.pos == this.center) return "red"
+                if (d.pos == this.center) return "red";
                 if (useColorValue){
                     if (!isFinite(d.colorValue)) return this.maxColor
                     return this.colorScale(d.colorValue)
@@ -98,31 +79,6 @@ export default class MiniGenomeBrowser{
             .style("font-size", "9px")
             .style("text-anchor", "end")
             .text(trackLabel);
-
-        // feature labels
-        if (showFeatureLabels == false) return;
-        let fLabels = browser.selectAll('.minibrowser-feature-label')
-            .data(this.data)
-            .enter()
-            .append("text")
-            .attr("class", (d, i) => `.minibrowser-feature-label`)
-            .attr("x", 0)
-            .attr("y", 0)
-            .style("font-size", (d)=>d.pos==this.center?'12px':'9px')
-            .style("fill", (d)=>d.pos == this.center? "red":"black")
-            // .attr("text-anchor", (d)=>d.strand='-'?'start':'end')
-
-            .attr("transform", (d, i) => {
-                let x = d.strad=="+"?this.scale(d.pos):this.scale(d.pos)-5;
-                let y = height/2;
-                let adjust = d.strand=="+"?yAdjust(d, i):yAdjust(d, i) + 5;
-
-                y = d.strand=="+"?(y - adjust): (y + backboneHeight + adjust);
-                let angle = d.strand=="+"?-45:45;
-                return `translate(${x}, ${y}) rotate(${angle})`;
-            })
-            .text((d) => d.featureLabel);
-
 
     }
 

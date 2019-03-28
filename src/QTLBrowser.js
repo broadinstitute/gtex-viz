@@ -226,7 +226,6 @@ function renderGeneModel(svg, panel){
         trackG,
         inWidth,
         inHeight,
-        panel.showLabels,
         panel.label,
         panel.color.background,
         panel.color.feature
@@ -346,7 +345,6 @@ function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorS
         trackG,
         inWidth,
         inHeight,
-        panel.showLabels,
         panel.label,
         panel.color.background,
         panel.color.feature,
@@ -566,7 +564,6 @@ const CONFIG = {
             },
             width: GlobalWidth,
             height: 70, // outer height=inner height + top margin + bottom margin
-            showLabels: false, // whether to show the feature labels
             color: {
                 background: "#ffffff",
                 feature: "#ababab"
@@ -585,7 +582,6 @@ const CONFIG = {
             },
             width: GlobalWidth,
             height: 30,
-            showLabels: false,
             color: {
                 background: '#ffffff',
                 feature: "#910807"
@@ -606,7 +602,6 @@ const CONFIG = {
             },
             width: GlobalWidth,
             height: 20, // outer height. outer height=inner height + top margin + bottom margin.
-            showLabels: false,
             color: {
                 background: "#ffffff",
                 feature: "#ababab"
@@ -628,7 +623,6 @@ const CONFIG = {
             },
             width: GlobalWidth,
             height: 20, // outer height. outer height=inner height + top margin + bottom margin.
-            showLabels: false,
             color: {
                 background: "#ffffff",
                 feature: "#ababab"
