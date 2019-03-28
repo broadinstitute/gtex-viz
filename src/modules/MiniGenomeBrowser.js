@@ -73,7 +73,7 @@ export default class MiniGenomeBrowser{
             })
             .attr("height", (d)=>backboneHeight)
             .style("fill", (d)=>{
-                if (!showWidth && d.pos == this.center) return "red";
+                if (d.pos == this.center) return "red";
                 if (useColorValue){
                     if (!isFinite(d.colorValue)) return this.maxColor;
                     return this.colorScale(d.colorValue);

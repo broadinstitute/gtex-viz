@@ -80,8 +80,8 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
     // QTL tracks rendering
     ////// find the max color value (-log(p-value)) from all QTLs, for creating a shared color scale for all variant tracks
     const maxColorValue = max(eqtlPanel.data.concat(sqtlPanel.data).filter((d)=>isFinite(d.colorValue)).map((d)=>d.colorValue));
-    const eqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, eqtlPanel, true, maxColorValue);
-    const sqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, sqtlPanel, true, maxColorValue);
+    const eqtlTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, eqtlPanel, false, true, maxColorValue);
+    const sqtlTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, sqtlPanel, false, true, maxColorValue);
     let bmap = new BubbleMap(qtlMapPanel.data, qtlMapPanel.useLog, qtlMapPanel.logBase, qtlMapPanel.colorScheme);
     bmap.addTooltip(qtlMapPanel.id);
     let bmapG = mainSvg.append("g")
@@ -213,28 +213,6 @@ function renderLdMap(config, bmap){
     return ldBrush;
 }
 
-function renderGeneModel(svg, panel){
-    // preparation for the plot
-    let inWidth = panel.width - (panel.margin.left + panel.margin.right);
-    let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
-    let trackG = svg.append("g")
-        .attr("id", panel.id)
-        .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top + panel.yPos})`);
-
-    let modelViz = new MiniGenomeBrowser(panel.data, panel.centerPos, 1e6);
-    modelViz.render(
-        trackG,
-        inWidth,
-        inHeight,
-        true,
-        panel.label,
-        panel.color.background,
-        panel.color.feature
-    );
-    modelViz.svg = trackG;
-    return modelViz
-}
-
 /**
  * Render the visual components related to genes: GWAS trait heatmap, gene position track
  * @param geneId {String} the anchor gene's ID/symbol
@@ -249,11 +227,11 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
     const heatmapViz = renderGwasHeatmap(geneId, mainSvg, par.panels.gwasMap);
 
     par.panels.tssTrack.data = genes;
-    const geneTrackViz = renderFeatureTrack(geneId, mainSvg, par.panels.tssTrack);
+    const geneTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, par.panels.tssTrack, false);
 
     let gModel = data[1].map(par.parsers.geneModel);
     par.panels.geneModelTrack.data = gModel;
-    renderGeneModel(mainSvg, par.panels.geneModelTrack);
+    renderFeatureTrack(mainSvg, par.genomicWindow, par.panels.geneModelTrack, true);
 
 
     //// draw connecting lines between the GWAS trait heatmap and gene position track
@@ -326,14 +304,15 @@ function renderGwasHeatmap(geneId, svg, panel=CONFIG.panels.gwasMap){
 
 /**
  * Render a feature track
- * @param geneId {String} the query gene ID
  * @param svg {D3 SVG}
+ * @param window {Numeric} genomic window in view (one-sided)
  * @param panel {Object} of the panel, by default, it's defined in CONFIG
+ * @param showWidth {Boolean} render the feature's width
  * @param useColorScale {Boolean} whether the color of the features should use a color scale
  * @param maxColorValue {Numnber} defines the maximum color value when useColorScale is true
  * @returns {MiniGenomeBrowser}
  */
-function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorScale=false, maxColorValue=undefined){
+function renderFeatureTrack(svg, window, panel=CONFIG.panels.tssTrack, showWidth, useColorScale=false, maxColorValue=undefined){
     // preparation for the plot
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
@@ -341,12 +320,12 @@ function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorS
         .attr("id", panel.id)
         .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top + panel.yPos})`);
 
-    let featureViz = new MiniGenomeBrowser(panel.data, panel.centerPos, 1e6);
+    let featureViz = new MiniGenomeBrowser(panel.data, panel.centerPos, window);
     featureViz.render(
         trackG,
         inWidth,
         inHeight,
-        false,
+        showWidth,
         panel.label,
         panel.color.background,
         panel.color.feature,
@@ -465,6 +444,7 @@ const CONFIG = {
     ldId: "ld-browser",
     width: GlobalWidth,
     height: null, // should be dynamically calculated
+    genomicWindow: 1e6,
     urls: {
         genes: "../tempData/ACTN3.neighbor.genes.csv",
         geneModel: "../tempData/ACTN3.full.collapsed.gene.model.csv", // should use final collapsed gene model instead. correct this when switching to query data from the web service
