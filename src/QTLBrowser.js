@@ -92,10 +92,10 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
             findVariantsNearGeneStartEnd(queryGene, bmap); // NOTE: bmap.fullDomain is used in this function
             renderGeneStartEndMarkers(bmap, bmapG);
 
-            // LD map
+            // LD map: parse the data and call the initial rendering
             _ldMapDataParserHelper(data, bmap, par);
+            const ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
 
-            const ldBrush = renderLdMap(par.ld, bmap);
             // render the chromosome position axis and zoom brush
             const callback = (left, right, xA, xB)=>{
                 // parameters: left and right are screen coordinates, xA and xB are genomic coordinates
@@ -139,7 +139,7 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
                 w: 20,
                 h: Math.abs(par.panels.tssTrack.yPos + par.panels.tssTrack.margin.top - (par.panels.sqtlTrack.yPos + par.panels.sqtlTrack.height +20)) // the brush should cover all tracks
             };
-            sqtlTrackViz.renderAxis(sqtlPanel.height + 30, addBrush, callback, brushConfig); // TODO: remove hard-coded adjustment
+            MiniGenomeBrowser.renderAxis(sqtlTrackViz.dom, sqtlTrackViz.scale, sqtlPanel.height + 30, addBrush, callback, brushConfig, sqtlPanel.centerPos); // TODO: remove hard-coded adjustment
         });
 
 }

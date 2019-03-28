@@ -129,36 +129,34 @@ export default class MiniGenomeBrowser{
 
     }
 
-    renderAxis(yAdjust, addBrush=true, callback=null, brushConfig={w:50, h:20}){
-        this.axis = axisTop(this.scale)
-            .tickValues(this.scale.ticks(7));
-        const axisG = this.dom.append("g")
-        axisG.attr("transform", `translate(0,${yAdjust})`)
-            .call(this.axis)
+    static renderAxis(dom, scale, yPos, addBrush=true, callback=null, brushConfig={w:50, h:20}, brushCenter=0){
+        let axis = axisTop(scale)
+            .tickValues(scale.ticks(7)); // TODO: provide more options to customize the axis--location and the number of ticks
+        const axisG = dom.append("g");
+        axisG.attr("transform", `translate(0,${yPos})`)
+            .call(axis)
             .selectAll("text");
 
         if (addBrush){
             const brushEvent = ()=> {
                 let selection = event.selection; // event is a d3-selection object
                 let leftPos = selection[0];
-                let rightPos = selection[1]
-                let brushLeftBound = Math.round(this.scale.invert(selection[0])); // selection provides the position in pixel, use the scale to invert that to chromosome position
-                let brushRightBound = Math.round(this.scale.invert(selection[1]));
+                let rightPos = selection[1];
+                let brushLeftBound = Math.round(scale.invert(selection[0])); // selection provides the position in pixel, use the scale to invert that to chromosome position
+                let brushRightBound = Math.round(scale.invert(selection[1]));
                 callback(leftPos, rightPos, brushLeftBound, brushRightBound)
             };
 
             const brush = brushX()
                 .extent([
                     [0,-brushConfig.h],
-                    [this.scale.range()[1], 20]
+                    [scale.range()[1], 20]
                 ])
                 .on("brush", brushEvent);
             axisG.append("g")
                 .attr("class", "brush")
                 .call(brush)
-                .call(brush.move, [this.scale(this.center)-brushConfig.w,this.scale(this.center)+brushConfig.h])
-            return brush
+                .call(brush.move, [scale(brushCenter)-brushConfig.w,scale(brushCenter)+brushConfig.w])
         }
-        return null
     }
 }
