@@ -17,15 +17,7 @@ import HalfMap from "./modules/HalfMap.js";
 import {createSvg} from "./modules/utils";
 
 export function render(geneId, par=CONFIG){
-    par.height = Object.keys(par.panels)
-        .reduce((total, panelKey, i)=>{
-            let p = par.panels[panelKey];
-            if (i > 0){
-                 // calculate panels' yPos
-                p.yPos = total;
-            }
-            return total + p.height // summing the height
-        }, 0);
+    setDimensions(par);
 
     let mainSvg = createSvg(par.id, par.width, par.height, {left:0, top:0});
     const promises = ["genes", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
@@ -38,6 +30,21 @@ export function render(geneId, par=CONFIG){
             renderVariantVisualComponents(queryGene, mainSvg, par, args[1], args[2])
         })
         .catch((err)=>{console.error(err)})
+}
+
+/**
+ * Calculate and sum the height of the root SVG based on the individual visual panels
+ * Calculate and determine the Y position of each individual visual panel in the root SVG
+ * @param par
+ */
+function setDimensions(par=CONFIG){
+    par.height = Object.keys(par.panels)
+        .reduce((total, panelKey, i)=>{
+            let p = par.panels[panelKey];
+             // simultaneously calculate the panel's yPos
+            p.yPos = total;
+            return total + p.height // summing the height
+        }, 0);
 }
 
 function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, sqData){
@@ -63,7 +70,6 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
     // QTL tracks rendering
     ////// find the max color value (-log(p-value)) from all QTLs, for creating a shared color scale for all variant tracks
     const maxColorValue = max(eqtlPanel.data.concat(sqtlPanel.data).filter((d)=>isFinite(d.colorValue)).map((d)=>d.colorValue));
-    // console.log(maxColorValue);
     const eqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, eqtlPanel, true, maxColorValue);
     const sqtlTrackViz = renderFeatureTrack(queryGene.geneSymbol, mainSvg, sqtlPanel, true, maxColorValue);
     let bmap = new BubbleMap(qtlMapPanel.data, qtlMapPanel.useLog, qtlMapPanel.logBase, qtlMapPanel.colorScheme);
@@ -80,46 +86,30 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
             let bmapInWidth = qtlMapPanel.width-(qtlMapPanel.margin.left + qtlMapPanel.margin.right);
             let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
             bmap.drawSvg(bmapG, {w:bmapInWidth, h:bmapInHeight, top: 0, left:0});
-            bmap.fullDomain = bmap.xScale.domain();
+            bmap.fullDomain = bmap.xScale.domain(); // save the full domain as a new attribute of bmap
 
              //-- TSS and TES markers
-            findVariantsNearGeneStartEnd(queryGene, bmap);
+            findVariantsNearGeneStartEnd(queryGene, bmap); // NOTE: bmap.fullDomain is used in this function
             renderGeneStartEndMarkers(bmap, bmapG);
 
             // LD map
-            let variantLookup = {};
-            bmap.xScale.domain().forEach((x)=>{variantLookup[x]=true})
-            let ldData = data.map(par.parsers.ld)
-                .filter((d)=>{
-                    return par.dataFilters.ld(d, variantLookup)
-                });
-            const vList = {};
-            ldData.forEach((d)=>{
-                vList[d.x] = true;
-                vList[d.y] = true;
-            });
-            let ldConfig = par.ld;
-            ldConfig.data = ldData.concat(Object.keys(vList).map((v)=>{
-                return {
-                    x: v,
-                    y: v,
-                    value: 1,
-                    displayValue: "1"
-                }
-            }));
-            const ldBrush = renderLdMap(ldConfig, bmap);
+            _ldMapDataParserHelper(data, bmap, par);
+
+            const ldBrush = renderLdMap(par.ld, bmap);
             // render the chromosome position axis and zoom brush
             const callback = (left, right, xA, xB)=>{
+                // parameters: left and right are screen coordinates, xA and xB are genomic coordinates
+                // refresh the x scale's domain() based on the brush
                 let focusDomain = bmap.fullDomain.filter((d)=>{
                     let pos = parseInt(d.split("_")[1]);
                     return pos>=xA && pos<=xB
                 });
                 bmap.renderWithNewDomain(bmapG, focusDomain);
 
-                // -- gene TSS and TES markers
+                // refresh the gene's TSS and TES markers on the bubble map
                 renderGeneStartEndMarkers(bmap, bmapG);
 
-                // LD updates
+                // update the LD
                 ldBrush();
 
                 // redraw brush lines
@@ -145,10 +135,44 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, eqData, s
 
             };
             let addBrush = true;
-            let brushConfig = {w: 100, h: Math.abs(par.panels.tssTrack.yPos + par.panels.tssTrack.margin.top - (par.panels.sqtlTrack.yPos + par.panels.sqtlTrack.height +20))};
+            let brushConfig = {
+                w: 20,
+                h: Math.abs(par.panels.tssTrack.yPos + par.panels.tssTrack.margin.top - (par.panels.sqtlTrack.yPos + par.panels.sqtlTrack.height +20)) // the brush should cover all tracks
+            };
             sqtlTrackViz.renderAxis(sqtlPanel.height + 30, addBrush, callback, brushConfig); // TODO: remove hard-coded adjustment
         });
 
+}
+
+/**
+ * LD map parser
+ * This parser may change again when the data is queried from the web service
+ * @param data {Object} raw LD data
+ * @param bmap {BubbleMap}
+ * @param par {config object}
+ * @private
+ */
+function _ldMapDataParserHelper(data, bmap, par=CONFIG){
+    let variantLookup = {};
+    bmap.xScale.domain().forEach((x)=>{variantLookup[x]=true})
+    let ldData = data.map(par.parsers.ld)
+        .filter((d)=>{
+            return par.dataFilters.ld(d, variantLookup)
+        });
+    const vList = {};
+    ldData.forEach((d)=>{
+        vList[d.x] = true;
+        vList[d.y] = true;
+    });
+    let ldConfig = par.ld;
+    ldConfig.data = ldData.concat(Object.keys(vList).map((v)=>{
+        return {
+            x: v,
+            y: v,
+            value: 1,
+            displayValue: "1"
+        }
+    }));
 }
 
 function renderLdMap(config, bmap){
@@ -236,7 +260,7 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
 }
 
 /**
- * Rendering the GWAS Heatmap
+ * Render the GWAS Heatmap
  * @param geneId {String}
  * @param svg {D3 SVG} the root SVG object
  * @param panel {Object} the panel object defined in CONFIG
@@ -265,6 +289,15 @@ function renderGwasHeatmap(geneId, svg, panel=CONFIG.panels.gwasMap){
 
 }
 
+/**
+ * Render a feature track
+ * @param geneId {String} the query gene ID
+ * @param svg {D3 SVG}
+ * @param panel {Object} of the panel, by default, it's defined in CONFIG
+ * @param useColorScale {Boolean} whether the color of the features should use a color scale
+ * @param maxColorValue {Numnber} defines the maximum color value when useColorScale is true
+ * @returns {MiniGenomeBrowser}
+ */
 function renderFeatureTrack(geneId, svg, panel=CONFIG.panels.tssTrack, useColorScale=false, maxColorValue=undefined){
     // preparation for the plot
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
@@ -389,7 +422,7 @@ function renderGeneStartEndMarkers(bmap, dom){
 
 }
 
-
+/*********************/
 const GlobalWidth = window.innerWidth;
 const AnchorPosition = 66546395;
 
@@ -400,6 +433,7 @@ const CONFIG = {
     height: null, // should be dynamically calculated
     urls: {
         genes: "../tempData/ACTN3.neighbor.genes.csv",
+        geneModel: "../tempData/ACTN3.full.collapsed.gene.model.csv", // should use final collapsed gene model instead. correct this when switching to query data from the web service
         eqtls: "/tempData/ACTN3.eqtls.csv",
         sqtls:  "/tempData/ACTN3.sqtls.csv",
         ld: "/tempData/ACTN3.ld.csv"
@@ -497,7 +531,26 @@ const CONFIG = {
                 feature: "#ababab"
             }
         },
-
+        geneModelTrack: {
+            id: 'gene-model-track',
+            label: "ACTN3 collapsed gene model",
+            centerPos: AnchorPosition,
+            yPos: null,
+            margin: {
+                top: 10,
+                right: 50,
+                bottom: 10,
+                left: 80
+            },
+            width: GlobalWidth,
+            height: 40,
+            showLabels: false,
+            color: {
+                background: '#ffffff',
+                feature: "#910807"
+            }
+        }
+        ,
         eqtlTrack: {
             id: 'eqtl-track',
             label: 'ACTN3 eQTLs',
