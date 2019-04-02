@@ -1,3 +1,0 @@
-variant_id	panel_variant_id	chromosome	position	effect_allele	non_effect_allele	current_build	frequency	sample_size	zscore	pvalue	effect_size	standard_error	imputation_status	n_cases
-rs191249069	chr6_10472099_C_T_b38	chr6	10472099	T	C	hg38	0.016690855845808983	337159	5.82904863357544	5.574425740345437e-09	0.00220169	0.00037771	original	NA
-rs118091718	chr13_19193398_C_A_b38	chr13	19193398	A	C	hg38	0.010101010091602802	337159	6.49996280670166	8.033987200088293e-11	0.00219806	0.000338165	original	NA

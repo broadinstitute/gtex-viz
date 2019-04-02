@@ -1,1 +1,0 @@
-variant_id	panel_variant_id	chromosome	position	effect_allele	non_effect_allele	current_build	frequency	sample_size	zscore	pvalue	effect_size	standard_error	imputation_status	n_cases

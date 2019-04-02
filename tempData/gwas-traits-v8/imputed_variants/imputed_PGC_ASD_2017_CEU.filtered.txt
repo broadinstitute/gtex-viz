@@ -1,2 +1,0 @@
-variant_id	panel_variant_id	chromosome	position	effect_allele	non_effect_allele	current_build	frequency	sample_size	zscore	pvalue	effect_size	standard_error	imputation_status	n_cases
-rs7026354	chr9_116421847_G_A_b38	chr9	116421847	A	G	hg38	0.4646464586257935	15954	-5.451773166656494	4.987e-08	-0.13976194237515865	0.025	original	7387.0

@@ -1,2 +1,0 @@
-variant_id	panel_variant_id	chromosome	position	effect_allele	non_effect_allele	current_build	frequency	sample_size	zscore	pvalue	effect_size	standard_error	imputation_status	n_cases
-rs74812936	chr18_78208107_C_T_b38	chr18	78208107	T	C	hg38	0.010838150046765804	337159	5.468439102172852	4.540159982846046e-08	0.00265957	0.000486349	original	NA
