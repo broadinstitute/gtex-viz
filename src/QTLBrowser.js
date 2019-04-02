@@ -19,19 +19,55 @@ import {createSvg} from "./modules/utils";
 export function render(geneId, par=CONFIG){
     setDimensions(par);
 
+    const promises1 = [
+        json(par.urls.queryGene + geneId, {credentials: 'include'}),
+        tsv(par.urls.genes)
+    ]
     let mainSvg = createSvg(par.id, par.width, par.height, {left:0, top:0});
-    const promises = ["genes", "geneExpression", "geneModel", "eqtls", "sqtls"].map((dType)=>{
-        return dType=="geneExpression"?json(par.urls[dType]):tsv(par.urls[dType])
-    });
+    Promise.all(promises1)
+        .then((queryData)=>{
+            let gene = queryData[0].gene[0]; // grab the first gene in the query results
 
-    Promise.all(promises)
-        .then((args)=> {
-            let genes = renderGeneVisualComponents(geneId, mainSvg, args.splice(0,3), par);
-            let queryGene = genes.filter((g)=>g.geneSymbol == geneId)[0];
-            console.log(queryGene);
-            renderVariantVisualComponents(queryGene, mainSvg, par, args)
+            // fetch neighbor genes including the query gene itself
+            let genes = queryData[1].filter((d)=>{ // all genes within the genomic view range
+                const lower = gene.tss - CONFIG.genomicWindow;
+                const upper = gene.tss + CONFIG.genomicWindow;
+                return par.dataFilters.genes(d, gene.chromosome, lower, upper)
+            }).map(par.parsers.genes); // genes are filtered by gene types defined in the config object
+            genes.sort(par.dataSort.genes);
+
+            console.log(genes);
+            let genePosTable = {};
+            genes.forEach((g)=>{
+                genePosTable[g.gencodeId] = g.start
+            });
+
+            const geneStrings = genes.map((g)=>g.gencodeId).join(",");
+
+            const promises2 = ["geneExpression", "geneModel", "eqtls", "sqtls"].map((d)=>{
+                if(d == "geneExpression"){
+                    const url = par.urls[d] + geneStrings;
+                    return json(url, {credentials: 'include'})
+                }
+                if (d == "geneModel"){
+                    const url = par.urls[d] + gene.gencodeId;
+                    return json(url, {credentials: 'include'})
+                }
+                return tsv(par.urls[d])
+            });
+
+            Promise.all(promises2)
+                .then((args)=> {
+                    renderGeneVisualComponents(gene, mainSvg, args.splice(0,2), genes, genePosTable, par);
+
+            //         renderVariantVisualComponents(queryGene, mainSvg, par, args)
+                })
+                .catch((err)=>{console.error(err)})
         })
-        .catch((err)=>{console.error(err)})
+        .catch((err)=>{
+            console.error(err)
+        })
+
 }
 
 /**
@@ -217,32 +253,29 @@ function renderLdMap(config, bmap){
 
 /**
  * Render the visual components related to genes: GWAS trait heatmap, gene position track
- * @param geneId {String} the anchor gene's ID/symbol
+ * @param gene {Object} the anchor gene
  * @param mainSvg {d3 svg} the root svg
- * @param data {List} a list of gene objects with attr: geneSymbol, strand, start, end, geneType
+ * @param data {List} web service results
+ * @param genes {List} a list of gene objects with attr: geneSymbol, strand, start, end, geneType
+ * @param genePosTable {Dict} gene TSS indexed by gencodeId
  * @param par {Object} the configuration object of the overall visualization
  */
-function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
-    let genes = data[0].filter(par.dataFilters.genes).map(par.parsers.genes); // genes are filtered by gene types defined in the config object
-    genes.sort(par.dataSort.genes);
-    let genePosTable = {};
-    genes.forEach((g)=>{
-        genePosTable[g.gencodeId] = g.start
-    });
+function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, par = CONFIG){
+
     // par.panels.geneMap.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
-    par.panels.geneMap.data = data[1].medianGeneExpression.filter((d)=>genePosTable.hasOwnProperty(d.gencodeId)).map((d)=>{
+    par.panels.geneMap.data = data[0].medianGeneExpression.filter((d)=>genePosTable.hasOwnProperty(d.gencodeId)).map((d)=>{
         d = par.parsers.geneExpression(d);
         d.pos = genePosTable[d.gencodeId]
         return d;
     })
 
     par.panels.geneMap.data.sort(par.dataSort.geneExpression);
-    const heatmapViz = renderGwasHeatmap(geneId, mainSvg, par.panels.geneMap);
+    const heatmapViz = renderGeneHeatmap(gene, mainSvg, par.panels.geneMap);
 
     par.panels.tssTrack.data = genes;
     const geneTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, par.panels.tssTrack, false);
 
-    let gModel = data[2].map(par.parsers.geneModel);
+    let gModel = data[1].collapsedGeneModelExon.map(par.parsers.geneModel);
     par.panels.geneModelTrack.data = gModel;
     renderFeatureTrack(mainSvg, par.genomicWindow, par.panels.geneModelTrack, true);
 
@@ -263,7 +296,7 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
         .attr("x2", (d)=>geneTrackViz.scale(d.start))
         .attr("y1", trackHeight/2-20)
         .attr("y2", trackHeight/2)
-        .attr("stroke", (d)=>d.geneSymbol==geneId?"red":"#ababab")
+        .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
         .attr("stroke-width", 0.5);
 
     geneTrackViz.svg.selectAll(".connect2")
@@ -279,20 +312,20 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
             adjust = adjust > -20?-20:adjust;
             return trackHeight/2 + adjust;
         })
-        .attr("stroke", (d)=>d.geneSymbol==geneId?"red":"#ababab")
+        .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
         .attr("stroke-width", 0.5);
 
     return genes;
 }
 
 /**
- * Render the GWAS Heatmap
- * @param geneId {String}
+ * Render the Gene Heatmap
+ * @param gene {Object}
  * @param svg {D3 SVG} the root SVG object
  * @param panel {Object} the panel object defined in CONFIG
  * @returns {Heatmap}
  */
-function renderGwasHeatmap(geneId, svg, panel=CONFIG.panels.geneMap){
+function renderGeneHeatmap(gene, svg, panel=CONFIG.panels.geneMap){
 
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
@@ -308,7 +341,7 @@ function renderGwasHeatmap(geneId, svg, panel=CONFIG.panels.geneMap){
 
     // CUSTOMIZATION: highlight the anchor gene
     mapG.selectAll(".exp-map-xlabel")
-        .attr('fill', (d)=>d==geneId?"red":"#000000");
+        .attr('fill', (d)=>d==gene.geneSymbol?"red":"#000000");
 
     hViz.svg = mapG;
     return hViz
@@ -452,7 +485,7 @@ function renderGeneStartEndMarkers(bmap, dom){
 const GlobalWidth = window.innerWidth;
 const AnchorPosition = 66546395;
 const AnchorChr = 'chr11'
-
+const host = "https://dev.gtexportal.org/rest/v1/";
 const CONFIG = {
     id: "qtl-browser",
     ldId: "ld-browser",
@@ -460,9 +493,10 @@ const CONFIG = {
     height: null, // should be dynamically calculated
     genomicWindow: 1e6,
     urls: {
+        queryGene: host + 'reference/gene?format=json&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&geneId=',
         genes: "../tempData/V8.genes.csv",
-        geneExpression: "../tempData/gene.expression.json",
-        geneModel: "../tempData/ACTN3.full.collapsed.gene.model.csv", // should use final collapsed gene model instead. correct this when switching to query data from the web service
+        geneExpression: host + 'expression/medianGeneExpression?datasetId=gtex_v8&hcluster=true&pageSize=10000&gencodeId=',
+        geneModel:  host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=', // should use final collapsed gene model instead. correct this when switching to query data from the web service
         eqtls: "/tempData/ACTN3.eqtls.csv",
         sqtls:  "/tempData/ACTN3.sqtls.csv",
         ld: "/tempData/ACTN3.ld.csv"
@@ -520,8 +554,8 @@ const CONFIG = {
     dataFilters: {
         genes: (d) => {
             let lower = AnchorPosition - CONFIG.genomicWindow;
-            let higher = AnchorPosition + CONFIG.genomicWindow;
-            if (d.chromosome=AnchorChr && d.tss>=lower && d.tss<=higher){
+            let upper = AnchorPosition + CONFIG.genomicWindow;
+            if (d.chromosome==AnchorChr && d.tss>=lower && d.tss<=upper){
                 return d.geneType == "protein coding" || d.geneType == "lincRNA"
             } else {
                 return false
