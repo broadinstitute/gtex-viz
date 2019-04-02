@@ -1,0 +1,3 @@
+variant_id	panel_variant_id	chromosome	position	effect_allele	non_effect_allele	current_build	frequency	sample_size	zscore	pvalue	effect_size	standard_error	imputation_status	n_cases
+rs150126807	chr4_91297637_G_A_b38	chr4	91297637	A	G	hg38	0.012265512719750404	337199	5.502001762390137	3.75503200433749e-08	0.00362961	0.000659689	original	NA
+rs151169949	chr7_111196183_T_C_b38	chr7	111196183	C	T	hg38	0.014430014416575432	337199	5.4884562492370605	4.054616662411933e-08	0.00290903	0.000530027	original	NA

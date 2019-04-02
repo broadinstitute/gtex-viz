@@ -214,7 +214,9 @@ export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, bas
             .attr("class", "color-legend")
             .text((d) => useLog?(Math.pow(base, d)).toPrecision(2):d.toPrecision(2))
             .attr("x", (d, i) => cell.w * i)
-            .attr("y", 0);
+            .attr("y", 0)
+            .style("font-size", 10)
+
     } else {
          // legend title
         dom.append("text")

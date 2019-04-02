@@ -1,0 +1,3 @@
+variant_id	panel_variant_id	chromosome	position	effect_allele	non_effect_allele	current_build	frequency	sample_size	zscore	pvalue	effect_size	standard_error	imputation_status	n_cases
+rs7973260	chr12_117937681_A_G_b38	chr12	117937681	G	A	hg38	0.8097	180866	-6.0170722007751465	1.776e-09	-0.031	0.005	original	NA
+rs8099160	chr18_53226240_G_A_b38	chr18	53226240	A	G	hg38	0.4795	180866	5.5609564781188965	2.6830000000000003e-08	0.019	0.003	original	NA

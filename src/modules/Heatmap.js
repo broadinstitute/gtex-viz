@@ -117,7 +117,7 @@ export default class Heatmap {
             .attr("y", 0)
             .style("text-anchor", "start")
             .style("cursor", "default")
-            .style("font-size", this.xScale.bandwidth())
+            .style("font-size", this.xScale.bandwidth()>14?14:this.xScale.bandwidth())
             .attr("transform", (d) => {
                 let x = this.xScale(d) + adjust;
                 let y = Y;
@@ -134,7 +134,8 @@ export default class Heatmap {
             .enter().append("text")
             .text((d) => d)
             .attr("x", this.xScale.range()[1] + 5)
-            .attr("y", (d) => this.yScale(d) + 10)
+            .attr("y", (d) => this.yScale(d) + this.yScale.bandwidth()/2)
+            .style("font-size", this.yScale.bandwidth())
             .attr("class", (d, i) => `exp-map-ylabel y${i}`)
             .attr("text-anchor", "start")
             .style("cursor", "default")

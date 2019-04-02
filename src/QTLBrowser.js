@@ -7,7 +7,7 @@
 // TODO: unify QTL tracks' pvalue scale
 
 "use strict";
-import {tsv} from "d3-fetch";
+import {tsv, json} from "d3-fetch";
 import {select, selectAll} from "d3-selection";
 import {max} from "d3-array";
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
@@ -20,11 +20,13 @@ export function render(geneId, par=CONFIG){
     setDimensions(par);
 
     let mainSvg = createSvg(par.id, par.width, par.height, {left:0, top:0});
-    const promises = ["genes", "geneModel", "eqtls", "sqtls"].map((dType)=>tsv(par.urls[dType]));
+    const promises = ["genes", "geneExpression", "geneModel", "eqtls", "sqtls"].map((dType)=>{
+        return dType=="geneExpression"?json(par.urls[dType]):tsv(par.urls[dType])
+    });
 
     Promise.all(promises)
         .then((args)=> {
-            let genes = renderGeneVisualComponents(geneId, mainSvg, args.splice(0,2), par);
+            let genes = renderGeneVisualComponents(geneId, mainSvg, args.splice(0,3), par);
             let queryGene = genes.filter((g)=>g.geneSymbol == geneId)[0];
             console.log(queryGene);
             renderVariantVisualComponents(queryGene, mainSvg, par, args)
@@ -223,13 +225,24 @@ function renderLdMap(config, bmap){
 function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
     let genes = data[0].map(par.parsers.genes).filter(par.dataFilters.genes); // genes are filtered by gene types defined in the config object
     genes.sort(par.dataSort.genes);
-    par.panels.gwasMap.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
+    let genePosTable = {};
+    genes.forEach((g)=>{
+        genePosTable[g.gencodeId] = g.start
+    });
+    // par.panels.gwasMap.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
+    par.panels.gwasMap.data = data[1].medianGeneExpression.filter((d)=>genePosTable.hasOwnProperty(d.gencodeId)).map((d)=>{
+        d = par.parsers.geneExpression(d);
+        d.pos = genePosTable[d.gencodeId]
+        return d;
+    })
+
+    par.panels.gwasMap.data.sort(par.dataSort.geneExpression);
     const heatmapViz = renderGwasHeatmap(geneId, mainSvg, par.panels.gwasMap);
 
     par.panels.tssTrack.data = genes;
     const geneTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, par.panels.tssTrack, false);
 
-    let gModel = data[1].map(par.parsers.geneModel);
+    let gModel = data[2].map(par.parsers.geneModel);
     par.panels.geneModelTrack.data = gModel;
     renderFeatureTrack(mainSvg, par.genomicWindow, par.panels.geneModelTrack, true);
 
@@ -242,7 +255,7 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
     let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
 
     geneTrackViz.svg.selectAll(".connect")
-        .data(genes)
+        .data(genes.filter((d)=>heatmapViz.xScale.domain().indexOf(d.geneSymbol)>=0))
         .enter()
         .append('line')
         .attr("class", "connect")
@@ -254,7 +267,7 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
         .attr("stroke-width", 0.5);
 
     geneTrackViz.svg.selectAll(".connect2")
-        .data(genes)
+        .data(genes.filter((d)=>heatmapViz.xScale.domain().indexOf(d.geneSymbol)>=0))
         .enter()
         .append('line')
         .attr("class", "connect2")
@@ -291,7 +304,7 @@ function renderGwasHeatmap(geneId, svg, panel=CONFIG.panels.gwasMap){
 
     let hViz = new Heatmap(panel.data, false, undefined, panel.colorScheme, panel.cornerRadius, tooltipId);
     hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
-    hViz.drawColorLegend(mapG, {x: 20, y:-20}, 10);
+    hViz.drawColorLegend(mapG, {x: 20, y:-20}, 5);
 
     // CUSTOMIZATION: highlight the anchor gene
     mapG.selectAll(".exp-map-xlabel")
@@ -447,6 +460,7 @@ const CONFIG = {
     genomicWindow: 1e6,
     urls: {
         genes: "../tempData/ACTN3.neighbor.genes.csv",
+        geneExpression: "../tempData/gene.expression.json",
         geneModel: "../tempData/ACTN3.full.collapsed.gene.model.csv", // should use final collapsed gene model instead. correct this when switching to query data from the web service
         eqtls: "/tempData/ACTN3.eqtls.csv",
         sqtls:  "/tempData/ACTN3.sqtls.csv",
@@ -466,6 +480,13 @@ const CONFIG = {
             d.end = parseInt(d.end);
             d.pos = d.start;
             d.featureLabel = d.exonId;
+            return d;
+        },
+        geneExpression: (d)=>{
+            d.x = d.geneSymbol
+            d.y = d.tissueSiteDetailId
+            d.value = d.median
+            d.displayValue = d.value
             return d;
         },
         qtlFeatures: (d)=>{
@@ -504,9 +525,12 @@ const CONFIG = {
         }
     },
     dataSort: {
-        features: (a, b) => {
+        genes: (a, b) => {
             return parseInt(a.start) - parseInt(b.start)
-        }
+        },
+        geneExpression: (a, b) => {
+            return parseInt(a.pos) - parseInt(b.pos)
+        },
     },
     panels: {
         gwasMap: {
@@ -521,7 +545,7 @@ const CONFIG = {
                 left: 80
             },
             width: GlobalWidth,
-            height: 180, // outer height: this includes top and bottom margins + inner height
+            height: 500, // outer height: this includes top and bottom margins + inner height
             colorScheme: "Greys",
             cornerRadius: 2,
             columnLabel: {
