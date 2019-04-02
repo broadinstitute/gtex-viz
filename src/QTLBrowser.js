@@ -223,21 +223,21 @@ function renderLdMap(config, bmap){
  * @param par {Object} the configuration object of the overall visualization
  */
 function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
-    let genes = data[0].map(par.parsers.genes).filter(par.dataFilters.genes); // genes are filtered by gene types defined in the config object
+    let genes = data[0].filter(par.dataFilters.genes).map(par.parsers.genes); // genes are filtered by gene types defined in the config object
     genes.sort(par.dataSort.genes);
     let genePosTable = {};
     genes.forEach((g)=>{
         genePosTable[g.gencodeId] = g.start
     });
-    // par.panels.gwasMap.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
-    par.panels.gwasMap.data = data[1].medianGeneExpression.filter((d)=>genePosTable.hasOwnProperty(d.gencodeId)).map((d)=>{
+    // par.panels.geneMap.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
+    par.panels.geneMap.data = data[1].medianGeneExpression.filter((d)=>genePosTable.hasOwnProperty(d.gencodeId)).map((d)=>{
         d = par.parsers.geneExpression(d);
         d.pos = genePosTable[d.gencodeId]
         return d;
     })
 
-    par.panels.gwasMap.data.sort(par.dataSort.geneExpression);
-    const heatmapViz = renderGwasHeatmap(geneId, mainSvg, par.panels.gwasMap);
+    par.panels.geneMap.data.sort(par.dataSort.geneExpression);
+    const heatmapViz = renderGwasHeatmap(geneId, mainSvg, par.panels.geneMap);
 
     par.panels.tssTrack.data = genes;
     const geneTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, par.panels.tssTrack, false);
@@ -248,10 +248,10 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
 
 
     //// draw connecting lines between the GWAS trait heatmap and gene position track
-    let gwasMapPanel = par.panels.gwasMap;
+    let geneMapPanel = par.panels.geneMap;
     let tssPanel = par.panels.tssTrack;
 
-    let xAdjust = gwasMapPanel.margin.left - tssPanel.margin.left + (heatmapViz.xScale.bandwidth()/2);
+    let xAdjust = geneMapPanel.margin.left - tssPanel.margin.left + (heatmapViz.xScale.bandwidth()/2);
     let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
 
     geneTrackViz.svg.selectAll(".connect")
@@ -275,7 +275,7 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
         .attr("x2", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
         .attr("y1", trackHeight/2-20)
         .attr("y2", (d)=>{
-            let adjust = -(gwasMapPanel.margin.bottom+tssPanel.margin.top - 10) +(d.geneSymbol.length*heatmapViz.yScale.bandwidth());
+            let adjust = -(geneMapPanel.margin.bottom+tssPanel.margin.top - 10) +(d.geneSymbol.length*heatmapViz.yScale.bandwidth());
             adjust = adjust > -20?-20:adjust;
             return trackHeight/2 + adjust;
         })
@@ -292,7 +292,7 @@ function renderGeneVisualComponents(geneId, mainSvg, data, par = CONFIG){
  * @param panel {Object} the panel object defined in CONFIG
  * @returns {Heatmap}
  */
-function renderGwasHeatmap(geneId, svg, panel=CONFIG.panels.gwasMap){
+function renderGwasHeatmap(geneId, svg, panel=CONFIG.panels.geneMap){
 
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
@@ -451,6 +451,7 @@ function renderGeneStartEndMarkers(bmap, dom){
 /*********************/
 const GlobalWidth = window.innerWidth;
 const AnchorPosition = 66546395;
+const AnchorChr = 'chr11'
 
 const CONFIG = {
     id: "qtl-browser",
@@ -459,7 +460,7 @@ const CONFIG = {
     height: null, // should be dynamically calculated
     genomicWindow: 1e6,
     urls: {
-        genes: "../tempData/ACTN3.neighbor.genes.csv",
+        genes: "../tempData/V8.genes.csv",
         geneExpression: "../tempData/gene.expression.json",
         geneModel: "../tempData/ACTN3.full.collapsed.gene.model.csv", // should use final collapsed gene model instead. correct this when switching to query data from the web service
         eqtls: "/tempData/ACTN3.eqtls.csv",
@@ -518,7 +519,13 @@ const CONFIG = {
     },
     dataFilters: {
         genes: (d) => {
-            return d.featureType == "protein coding" || d.featureType == "lincRNA"
+            let lower = AnchorPosition - CONFIG.genomicWindow;
+            let higher = AnchorPosition + CONFIG.genomicWindow;
+            if (d.chromosome=AnchorChr && d.tss>=lower && d.tss<=higher){
+                return d.geneType == "protein coding" || d.geneType == "lincRNA"
+            } else {
+                return false
+            }
         },
         ld: (d, lookupTable)=>{
             return lookupTable[d.x] && lookupTable[d.y];
@@ -533,8 +540,8 @@ const CONFIG = {
         },
     },
     panels: {
-        gwasMap: {
-            id: 'gwas-map',
+        geneMap: {
+            id: 'gene-map',
             data: null,
             useLog: false,
             logBase: null,
