@@ -49,15 +49,8 @@ export function render(geneId, par=CONFIG){
                     const url = par.urls[d] + geneStrings;
                     return json(url, {credentials: 'include'})
                 }
-                if (d == "geneModel"){
-                    const url = par.urls[d] + gene.gencodeId;
-                    return json(url, {credentials: 'include'})
-                }
-                if (d == "eqtls"){
-                    const url = par.urls[d] + gene.gencodeId;
-                    return json(url, {credentials: 'include'})
-                }
-                return tsv(par.urls[d])
+                const url = par.urls[d] + gene.gencodeId;
+                return json(url, {credentials: 'include'})
             });
 
             Promise.all(promises2)
@@ -113,25 +106,35 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
         else {
             uniqEqtl[d.variantId] = d;
         }
-    })
+    });
     let eqtlFeatures = Object.values(uniqEqtl).map(par.parsers.qtlFeatures);
     eqtlFeatures.sort(par.dataSort.variants);
     let eqtlPanel = par.panels.eqtlTrack;
     eqtlPanel.data = eqtlFeatures;
-    console.log(eqtlFeatures)
 
     // sQTL position track data
-    let sqtlFeatures = sqData.map(par.parsers.qtlFeatures);
+    //-- Collapse sQTLs at each each locus, and report only the best (smallest) p-value.
+    let uniqSqtl = {};
+    sqData.singleTissueSqtl.forEach((d)=>{
+        if (uniqSqtl.hasOwnProperty(d.variantId)){
+            // compare p-value, save the eqtl with the smallest p-value
+            let temp = uniqSqtl[d.variantId];
+            if (parseFloat(temp.pValue) > parseFloat(d.pValue)) {uniqSqtl[d.variantId] = d} // find the smaller p-value
+        }
+        else {
+            uniqSqtl[d.variantId] = d;
+        }
+    })
+    let sqtlFeatures = Object.values(uniqSqtl).map(par.parsers.qtlFeatures);
     sqtlFeatures.sort(par.dataSort.variants);
     let sqtlPanel = par.panels.sqtlTrack;
     sqtlPanel.data = sqtlFeatures;
-    console.log(sqtlFeatures)
 
     // QTL bubble map data
     let qtlMapPanel = par.panels.qtlMap;
     qtlMapPanel.data = [];
     qtlMapPanel.data = qtlMapPanel.data.concat(eqData.singleTissueEqtl.map((d)=>{return par.parsers.qtlBubbles(d, "e")}));
-    qtlMapPanel.data = qtlMapPanel.data.concat(sqData.map((d)=>{return par.parsers.qtlBubbles(d, "s")}));
+    qtlMapPanel.data = qtlMapPanel.data.concat(sqData.singleTissueSqtl.map((d)=>{return par.parsers.qtlBubbles(d, "s")}));
 
     // QTL tracks rendering
     ////// find the max color value (-log(p-value)) from all QTLs, for creating a shared color scale for all variant tracks
@@ -520,7 +523,7 @@ const CONFIG = {
         geneExpression: host + 'expression/medianGeneExpression?datasetId=gtex_v8&hcluster=true&pageSize=10000&gencodeId=',
         geneModel:  host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=', // should use final collapsed gene model instead. correct this when switching to query data from the web service
         eqtls: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v8&gencodeId=',
-        sqtls:  "/tempData/ACTN3.sqtls.csv",
+        sqtls:  host + 'association/singleTissueSqtl?format=json&datasetId=gtex_v8&gencodeId=',
         ld: "/tempData/ACTN3.ld.csv"
     },
     parsers: {
