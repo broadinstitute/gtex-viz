@@ -22,10 +22,11 @@ export function render(geneId, par=CONFIG){
     const promises1 = [
         json(par.urls.queryGene + geneId, {credentials: 'include'}),
         tsv(par.urls.genes)
-    ]
+    ];
     let mainSvg = createSvg(par.id, par.width, par.height, {left:0, top:0});
     Promise.all(promises1)
         .then((queryData)=>{
+            if (queryData[0].gene.length > 1) console.warn("More than one gene matching the query:", geneId);
             let gene = queryData[0].gene[0]; // grab the first gene in the query results
 
             // fetch neighbor genes including the query gene itself
@@ -36,10 +37,9 @@ export function render(geneId, par=CONFIG){
             }).map(par.parsers.genes); // genes are filtered by gene types defined in the config object
             genes.sort(par.dataSort.genes);
 
-            console.log(genes);
             let genePosTable = {};
             genes.forEach((g)=>{
-                genePosTable[g.gencodeId] = g.start
+                genePosTable[g.gencodeId] = g.tss
             });
 
             const geneStrings = genes.map((g)=>g.gencodeId).join(",");
@@ -128,8 +128,8 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
     // let max2 = max(sqtlPanel.data.filter((d)=>isFinite(d.colorValue)).map((d)=>d.colorValue));
     // const maxColorValue = max([max1, max2]);
     const maxColorValue = 50; // TODO: define a universal max value for the QTLs, so that it's comparable?
-    const eqtlTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, eqtlPanel, false, true, maxColorValue);
-    const sqtlTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, sqtlPanel, false, true, maxColorValue);
+    const eqtlTrackViz = renderFeatureTrack(queryGene.tss, mainSvg, par.genomicWindow, eqtlPanel, false, true, maxColorValue);
+    const sqtlTrackViz = renderFeatureTrack(queryGene.tss, mainSvg, par.genomicWindow, sqtlPanel, false, true, maxColorValue);
 
     // prepare bubble map
     let bmap = new BubbleMap(qtlMapPanel.data, qtlMapPanel.useLog, qtlMapPanel.logBase, qtlMapPanel.colorScheme);
@@ -274,25 +274,24 @@ function renderLdMap(config, bmap){
  */
 function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, par = CONFIG){
 
-    // par.panels.geneMap.data = generateRandomMatrix({x:genes.length, y:4, scaleFactor:1}, genes.map((d)=>d.geneSymbol));
     par.panels.geneMap.data = data[0].medianGeneExpression.filter((d)=>genePosTable.hasOwnProperty(d.gencodeId)).map((d)=>{
         d = par.parsers.geneExpression(d);
         d.pos = genePosTable[d.gencodeId]
         return d;
-    })
+    });
 
     par.panels.geneMap.data.sort(par.dataSort.geneExpression);
     const heatmapViz = renderGeneHeatmap(gene, mainSvg, par.panels.geneMap);
 
     par.panels.tssTrack.data = genes;
-    const geneTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, par.panels.tssTrack, false);
+    const geneTrackViz = renderFeatureTrack(gene.tss, mainSvg, par.genomicWindow, par.panels.tssTrack, false);
 
     let gModel = data[1].collapsedGeneModelExon.map(par.parsers.geneModel);
     par.panels.geneModelTrack.data = gModel;
-    renderFeatureTrack(mainSvg, par.genomicWindow, par.panels.geneModelTrack, true);
+    renderFeatureTrack(gene.tss, mainSvg, par.genomicWindow, par.panels.geneModelTrack, true);
 
 
-    //// draw connecting lines between the GWAS trait heatmap and gene position track
+    //// visual customization: draw connecting lines between the GWAS trait heatmap and gene position track
     let geneMapPanel = par.panels.geneMap;
     let tssPanel = par.panels.tssTrack;
 
@@ -305,7 +304,7 @@ function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, pa
         .append('line')
         .attr("class", "connect")
         .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
-        .attr("x2", (d)=>geneTrackViz.scale(d.start))
+        .attr("x2", (d)=>geneTrackViz.scale(d.tss))
         .attr("y1", trackHeight/2-20)
         .attr("y2", trackHeight/2)
         .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
@@ -370,7 +369,7 @@ function renderGeneHeatmap(gene, svg, panel=CONFIG.panels.geneMap){
  * @param maxColorValue {Numnber} defines the maximum color value when useColorScale is true
  * @returns {MiniGenomeBrowser}
  */
-function renderFeatureTrack(svg, window, panel=CONFIG.panels.tssTrack, showWidth, useColorScale=false, maxColorValue=undefined){
+function renderFeatureTrack(centerPos, svg, window, panel=CONFIG.panels.tssTrack, showWidth, useColorScale=false, maxColorValue=undefined){
     // preparation for the plot
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
@@ -378,7 +377,7 @@ function renderFeatureTrack(svg, window, panel=CONFIG.panels.tssTrack, showWidth
         .attr("id", panel.id)
         .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top + panel.yPos})`);
 
-    let featureViz = new MiniGenomeBrowser(panel.data, panel.centerPos, window);
+    let featureViz = new MiniGenomeBrowser(panel.data, centerPos, window);
     featureViz.render(
         trackG,
         inWidth,
@@ -495,8 +494,8 @@ function renderGeneStartEndMarkers(bmap, dom){
 
 /*********************/
 const GlobalWidth = window.innerWidth;
-const AnchorPosition = 66546395;
-const AnchorChr = 'chr11'
+// const AnchorPosition = 66546395;
+// const AnchorChr = 'chr11'
 const host = "https://dev.gtexportal.org/rest/v1/";
 const CONFIG = {
     id: "qtl-browser",
@@ -565,10 +564,8 @@ const CONFIG = {
         }
     },
     dataFilters: {
-        genes: (d) => {
-            let lower = AnchorPosition - CONFIG.genomicWindow;
-            let upper = AnchorPosition + CONFIG.genomicWindow;
-            if (d.chromosome==AnchorChr && d.tss>=lower && d.tss<=upper){
+        genes: (d, chr, lower, upper) => {
+            if (d.chromosome==chr && d.tss>lower && d.tss<upper){
                 return d.geneType == "protein coding" || d.geneType == "lincRNA"
             } else {
                 return false
@@ -580,7 +577,7 @@ const CONFIG = {
     },
     dataSort: {
         genes: (a, b) => {
-            return parseInt(a.start) - parseInt(b.start)
+            return parseInt(a.tss) - parseInt(b.tss)
         },
         geneExpression: (a, b) => {
             return parseInt(a.pos) - parseInt(b.pos)
@@ -617,7 +614,6 @@ const CONFIG = {
             id: 'tss-track',
             label: 'TSS location',
             data: null,
-            centerPos: AnchorPosition,
             yPos: null, // where the panel should be placed to be calculated based on the panel layout
             margin: {
                 top: 50,
@@ -634,8 +630,7 @@ const CONFIG = {
         },
         geneModelTrack: {
             id: 'gene-model-track',
-            label: "ACTN3 exons",
-            centerPos: AnchorPosition,
+            label: "Gene model",
             yPos: null,
             margin: {
                 top: 0,
@@ -653,9 +648,8 @@ const CONFIG = {
         ,
         eqtlTrack: {
             id: 'eqtl-track',
-            label: 'ACTN3 eQTLs',
+            label: 'eQTL summary',
             data: null,
-            centerPos: AnchorPosition,
             yPos: null,
             margin: {
                 top: 0,
@@ -674,9 +668,8 @@ const CONFIG = {
 
         sqtlTrack: {
             id: 'sqtl-track',
-            label: 'ACTN3 sQTLs',
+            label: 'sQTL summary',
             data: null,
-            centerPos: AnchorPosition,
             yPos: null,
             margin: {
                 top: 0,
