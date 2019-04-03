@@ -131,31 +131,28 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
     const eqtlTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, eqtlPanel, false, true, maxColorValue);
     const sqtlTrackViz = renderFeatureTrack(mainSvg, par.genomicWindow, sqtlPanel, false, true, maxColorValue);
 
+    // prepare bubble map
     let bmap = new BubbleMap(qtlMapPanel.data, qtlMapPanel.useLog, qtlMapPanel.logBase, qtlMapPanel.colorScheme);
     bmap.addTooltip(qtlMapPanel.id);
     let bmapG = mainSvg.append("g")
         .attr("id", qtlMapPanel.id)
         .attr("class", "focus")
         .attr("transform", `translate(${qtlMapPanel.margin.left}, ${qtlMapPanel.margin.top + qtlMapPanel.yPos})`);
+    let bmapInWidth = qtlMapPanel.width-(qtlMapPanel.margin.left + qtlMapPanel.margin.right);
+    let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
+    bmap.setScales({w:bmapInWidth, h:bmapInHeight, top: 0, left:0});
+    bmap.fullDomain = bmap.xScale.domain(); // save the full domain as a new attribute of bmap
+    //-- TSS and TES markers
+    findVariantsNearGeneStartEnd(queryGene, bmap); // NOTE: bmap.fullDomain is used in this function
 
     // LD map
-    tsv(par.urls.ld)
+    json(par.urls.ld + queryGene.gencodeId, {credentials: "include"})
         .then((data)=>{
-            // render bubble map
-            let bmapInWidth = qtlMapPanel.width-(qtlMapPanel.margin.left + qtlMapPanel.margin.right);
-            let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
-            bmap.drawSvg(bmapG, {w:bmapInWidth, h:bmapInHeight, top: 0, left:0});
-            bmap.fullDomain = bmap.xScale.domain(); // save the full domain as a new attribute of bmap
-
-             //-- TSS and TES markers
-            findVariantsNearGeneStartEnd(queryGene, bmap); // NOTE: bmap.fullDomain is used in this function
-            renderGeneStartEndMarkers(bmap, bmapG);
-
             // LD map: parse the data and call the initial rendering
             _ldMapDataParserHelper(data, bmap, par);
             const ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
 
-            // render the chromosome position axis and zoom brush
+            // Brush definition: render the chromosome position axis and zoom brush
             const callback = (left, right, xA, xB)=>{
                 // parameters: left and right are screen coordinates, xA and xB are genomic coordinates
                 // refresh the x scale's domain() based on the brush
@@ -192,12 +189,16 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
                     .style("stroke-width", 1)
                     .style("stroke", "#ababab")
 
-            };
+            }; // this is the brush event
             let addBrush = true;
             let brushConfig = {
                 w: 20,
                 h: Math.abs(par.panels.tssTrack.yPos + par.panels.tssTrack.margin.top - (par.panels.sqtlTrack.yPos + par.panels.sqtlTrack.height +20)) // the brush should cover all tracks
             };
+
+            // rendering components
+            bmap.drawSvg(bmapG, {w:bmapInWidth, h:bmapInHeight, top: 0, left:0}); // initialize bubble heat map
+            renderGeneStartEndMarkers(bmap, bmapG); // initialize tss and tes markers
             MiniGenomeBrowser.renderAxis(sqtlTrackViz.dom, sqtlTrackViz.scale, sqtlPanel.height + 30, addBrush, callback, brushConfig, sqtlPanel.centerPos); // TODO: remove hard-coded adjustment
         });
 
@@ -214,7 +215,7 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
 function _ldMapDataParserHelper(data, bmap, par=CONFIG){
     let variantLookup = {};
     bmap.xScale.domain().forEach((x)=>{variantLookup[x]=true})
-    let ldData = data.map(par.parsers.ld)
+    let ldData = data.ld.map(par.parsers.ld)
         .filter((d)=>{
             return par.dataFilters.ld(d, variantLookup)
         });
@@ -510,7 +511,7 @@ const CONFIG = {
         geneModel:  host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=', // should use final collapsed gene model instead. correct this when switching to query data from the web service
         eqtls: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v8&gencodeId=',
         sqtls:  host + 'association/singleTissueSqtl?format=json&datasetId=gtex_v8&gencodeId=',
-        ld: "/tempData/ACTN3.ld.csv"
+        ld: host + 'dataset/ld?format=json&datasetId=gtex_v8&gencodeId=',
     },
     parsers: {
         genes: (d)=>{
@@ -554,11 +555,13 @@ const CONFIG = {
             return d;
         },
         ld: (d)=>{
-            d.x = d.snpId1;
-            d.y = d.snpId2;
-            d.value = parseFloat(d.rSquared);
-            d.displayValue = parseFloat(d.value).toPrecision(3);
-            return d;
+            let vars = d[0].split(",");
+            return {
+                x: vars[0],
+                y: vars[1],
+                value: d[1],
+                displayValue: d[1].toPrecision(3)
+            }
         }
     },
     dataFilters: {

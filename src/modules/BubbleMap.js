@@ -66,7 +66,7 @@ export default class BubbleMap {
                 textAlign: 'right',
            }
     }){
-        this._setScales(dimensions, colorScaleDomain);
+        this.setScales(dimensions, colorScaleDomain);
 
         let context = canvas.node().getContext('2d');
 
@@ -195,7 +195,7 @@ export default class BubbleMap {
                 textAlign: 'right',
            }
         }){
-        this._setScales(dimensions, colorScaleDomain, brushSize);
+        this.setScales(dimensions, colorScaleDomain=undefined, brushSize=50);
         let tooltip = this.tooltip;
         // bubbles
         let bubbles = dom.append("g")
@@ -407,6 +407,16 @@ export default class BubbleMap {
 
     // private methods
 
+    setScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
+        if (this.xScale === undefined) this.xScale = this._setXScale(dimensions);
+        if (this.yScale === undefined) this.yScale = this._setYScale(dimensions);
+        if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
+        if (this.bubbleScale === undefined) {
+            let bubbleMax = this._setBubbleMax();
+            this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 2}); // TODO: change hard-coded min radius
+        }
+    }
+
     _setMiniScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
         if (this.xScaleMini === undefined) this.xScaleMini = this._setXScaleMini(dimensions);
         if (this.yScaleMini === undefined) this.yScaleMini = this._setYScaleMini(dimensions);
@@ -417,15 +427,7 @@ export default class BubbleMap {
         }
     }
 
-    _setScales(dimensions={w:1000, h:600, top:20, left:20}, cDomain){
-        if (this.xScale === undefined) this.xScale = this._setXScale(dimensions);
-        if (this.yScale === undefined) this.yScale = this._setYScale(dimensions);
-        if (this.colorScale === undefined) this.colorScale = this._setColorScale(cDomain);
-        if (this.bubbleScale === undefined) {
-            let bubbleMax = this._setBubbleMax();
-            this.bubbleScale = this._setBubbleScale({max:bubbleMax, min: 2}); // TODO: change hard-coded min radius
-        }
-    }
+
 
     _parseXList(){
          let xList = nest()
