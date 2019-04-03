@@ -199,7 +199,7 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
             // rendering components
             bmap.drawSvg(bmapG, {w:bmapInWidth, h:bmapInHeight, top: 0, left:0}); // initialize bubble heat map
             renderGeneStartEndMarkers(bmap, bmapG); // initialize tss and tes markers
-            MiniGenomeBrowser.renderAxis(sqtlTrackViz.dom, sqtlTrackViz.scale, sqtlPanel.height + 30, addBrush, callback, brushConfig, sqtlPanel.centerPos); // TODO: remove hard-coded adjustment
+            MiniGenomeBrowser.renderAxis(sqtlTrackViz.dom, sqtlTrackViz.scale, sqtlPanel.height + 30, addBrush, callback, brushConfig, queryGene.tss); // TODO: remove hard-coded adjustment
         });
 
 }
@@ -282,6 +282,15 @@ function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, pa
 
     par.panels.geneMap.data.sort(par.dataSort.geneExpression);
     const heatmapViz = renderGeneHeatmap(gene, mainSvg, par.panels.geneMap);
+
+    // heatmap column label click event
+    selectAll(".exp-map-xlabel")
+        .style("cursor", "pointer")
+        .on("click", (d)=>{
+            select("#"+CONFIG.id).selectAll("*").remove();
+            select("#"+CONFIG.ldId).selectAll("*").remove();
+            render(d);
+        });
 
     par.panels.tssTrack.data = genes;
     const geneTrackViz = renderFeatureTrack(gene.tss, mainSvg, par.genomicWindow, par.panels.tssTrack, false);
