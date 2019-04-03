@@ -96,36 +96,22 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
 
     // parse eQTL position track data
     //-- Collapse eQTLs at each each locus, and report only the best (smallest) p-value.
-    let uniqEqtl = {};
-    eqData.singleTissueEqtl.forEach((d)=>{
-        if (uniqEqtl.hasOwnProperty(d.variantId)){
-            // compare p-value, save the eqtl with the smallest p-value
-            let temp = uniqEqtl[d.variantId];
-            if (parseFloat(temp.pValue) > parseFloat(d.pValue)) {uniqEqtl[d.variantId] = d} // find the smaller p-value
-        }
-        else {
-            uniqEqtl[d.variantId] = d;
-        }
-    });
-    let eqtlFeatures = Object.values(uniqEqtl).map(par.parsers.qtlFeatures);
+    const collapse = (acc, d)=>{
+        if (acc.hasOwnProperty(d.variantId)){
+            if (acc[d.variantId].pValue > d.pValue) acc[d.variantId] = d;
+        } else { acc[d.variantId] = d }
+        return acc;
+    };
+    let uniqEqtlVariants = eqData.singleTissueEqtl.reduce(collapse, {});
+    let eqtlFeatures = Object.values(uniqEqtlVariants).map(par.parsers.qtlFeatures);
     eqtlFeatures.sort(par.dataSort.variants);
     let eqtlPanel = par.panels.eqtlTrack;
     eqtlPanel.data = eqtlFeatures;
 
     // sQTL position track data
     //-- Collapse sQTLs at each each locus, and report only the best (smallest) p-value.
-    let uniqSqtl = {};
-    sqData.singleTissueSqtl.forEach((d)=>{
-        if (uniqSqtl.hasOwnProperty(d.variantId)){
-            // compare p-value, save the eqtl with the smallest p-value
-            let temp = uniqSqtl[d.variantId];
-            if (parseFloat(temp.pValue) > parseFloat(d.pValue)) {uniqSqtl[d.variantId] = d} // find the smaller p-value
-        }
-        else {
-            uniqSqtl[d.variantId] = d;
-        }
-    })
-    let sqtlFeatures = Object.values(uniqSqtl).map(par.parsers.qtlFeatures);
+     let uniqSqtlVariants = sqData.singleTissueSqtl.reduce(collapse, {});
+    let sqtlFeatures = Object.values(uniqSqtlVariants).map(par.parsers.qtlFeatures);
     sqtlFeatures.sort(par.dataSort.variants);
     let sqtlPanel = par.panels.sqtlTrack;
     sqtlPanel.data = sqtlFeatures;
