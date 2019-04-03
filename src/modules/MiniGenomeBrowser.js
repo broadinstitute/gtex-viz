@@ -34,7 +34,7 @@ export default class MiniGenomeBrowser{
             .domain(domain);
 
         if (useColorValue){
-            this.colorScale = setColorScale(this.data.map((d)=>d.colorValue), "Greys", 0);
+            this.colorScale = setColorScale(this.data.map((d)=>d.colorValue), "Greys", 0, maxColorValue);
             const maxValue = maxColorValue===undefined?(this.data.map((d)=>d.colorValue)):maxColorValue;
             this.maxColor = this.colorScale(maxValue);
         }
