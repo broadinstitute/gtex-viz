@@ -339,9 +339,9 @@ function renderLdMap(config, bmap){
     let ldSvg = createSvg(config.id, config.width, config.width, {top: config.margin.top, left:config.margin.left});
     ldSvg.attr("class", "ld")
         .attr("id", "ldG");
-
-    ldMap.drawColorLegend(ldSvg, {x: config.margin.left, y: 100}, 10, "LD");
-    ldSvg.selectAll("*").remove(); // clear all child nodes in ldG before rendering
+    // ldSvg.selectAll("*").remove(); // clear all child nodes in ldG before rendering
+    const ldSvgParent = select(ldSvg.node().parentNode);
+    ldMap.drawColorLegend(ldSvgParent, {x: config.margin.left, y: 100}, 10, "LD");
     const drawConfig = {w: config.width-(config.margin.left+config.margin.right), top: 0, left: 0}
     ldMap.draw(ldCanvas, ldSvg, drawConfig, [0, 1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
 

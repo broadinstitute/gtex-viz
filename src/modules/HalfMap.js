@@ -58,7 +58,7 @@ export default class HalfMap{
         this.drawSvg(svg, dimensions, drawCells, showLabels, labelAngle, colorScaleDomain, xScaleDomain, yScaleDomain);
     }
 
-    ddrawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit="", colorScaleDomain=[0,1]){
+    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit="", colorScaleDomain=[0,1]){
         if (this.colorScale === undefined) this._setColorScale(colorScaleDomain);
         drawColorLegend(unit, dom, this.colorScale, legendConfig, this.useLog, ticks, this.logBase, {h:20, w:10}, "v");
     }
@@ -145,7 +145,7 @@ export default class HalfMap{
             .style("stroke", "#d2111b")
             .style("stroke-width", "1px")
             .style("fill", "none")
-            .style("display", "inline");
+            .style("display", "none");
 
         svg.on('mouseout', ()=>{
             cursor.style("display", "none");
@@ -175,7 +175,7 @@ export default class HalfMap{
                 let col = this.xScale.domain()[i];
                 let row = this.yScale.domain()[j];
                 let cell = this.dataDict[col+row];
-                console.log([x, y, x2, y2, col, row]); // debugging
+                // console.log([x, y, x2, y2, col, row]); // debugging
                 if (cell !== undefined) {
                     cursor.attr('transform', `translate(${x},${y}) rotate(-45)`);
                     cursor.style("display", "block");
