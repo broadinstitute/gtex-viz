@@ -324,7 +324,9 @@ function _ldMapDataParserHelper(data, bmap, par=CONFIG){
 
 function renderLdMap(config, bmap){
     let ldMap = new HalfMap(config.data, config.cutoff, false, undefined, config.colorScheme, [0,1]);
-    ldMap.addTooltip(config.id);
+    ldMap.addTooltip('locus-browser');
+
+    // LD heat map is rendered in canvas for performance optimization
     let ldCanvas = select(`#${config.id}`).append("canvas")
         .attr("id", config.id + "-ld-canvas")
         .attr("width", config.width)
@@ -332,20 +334,21 @@ function renderLdMap(config, bmap){
         .style("position", "absolute");
     let ldContext = ldCanvas.node().getContext('2d');
     ldContext.translate(config.margin.left, config.margin.top);
-    let ldSvg = createSvg(config.id, config.width, config.width, {top: 0, left:0});
-    let ldG = ldSvg.append("g")
-        .attr("class", "ld")
-        .attr("id", "ldG")
-        .attr("transform", `translate(${config.margin.left}, ${config.margin.top})`);
+
+    // SVG is used to render the cursor's rectangle
+    let ldSvg = createSvg(config.id, config.width, config.width, {top: config.margin.top, left:config.margin.left});
+    ldSvg.attr("class", "ld")
+        .attr("id", "ldG");
+
     ldMap.drawColorLegend(ldSvg, {x: config.margin.left, y: 100}, 10, "LD");
-    ldG.selectAll("*").remove(); // clear all child nodes in ldG before rendering
+    ldSvg.selectAll("*").remove(); // clear all child nodes in ldG before rendering
     const drawConfig = {w: config.width-(config.margin.left+config.margin.right), top: 0, left: 0}
-    ldMap.draw(ldCanvas, ldG, drawConfig, [0, 1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain())
+    ldMap.draw(ldCanvas, ldSvg, drawConfig, [0, 1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain());
 
     // update the brush event with interactive LD map
     const ldBrush = ()=>{
-        ldG.selectAll("*").remove();
-        ldMap.draw(ldCanvas, ldG, drawConfig, [0, 1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain())
+        ldSvg.selectAll("*").remove();
+        ldMap.draw(ldCanvas, ldSvg, drawConfig, [0, 1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain())
     };
     return ldBrush;
 }

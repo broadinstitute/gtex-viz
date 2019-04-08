@@ -264,6 +264,7 @@ const ldPlotDemoConfig = {
     useLog: false,
     logBase: undefined
 };
+
 export function ldPlot(par=ldPlotDemoConfig){
     let margin = {
         left: par.marginLeft,
