@@ -13,10 +13,10 @@
 
     </head>
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
-    <h3>GTEx QTL Visualization</h3>
+    <h3>GTEx New Gene Page</h3>
     <hr>
-    <div id="qtl-browser"></div>
-    <div id="ld-browser"></div>
+    <div id="qtl-browser"><!-- Root DOM for the SVG --></div>
+    <div id="ld-browser"><!-- Root DOM for the LD map--></div>
     </body>
     <script
       src="https://code.jquery.com/jquery-3.2.1.min.js"
@@ -36,11 +36,6 @@
     <script>
         $(document).ready(function() {
             QTLBrowser.render("ACTN3")
-            // QTLBrowser.renderGwasHeatmap("ACTN3", QTLBrowser.gwasHeatmapConfig);
-            // QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.demoConfig);
-            // QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.eqtlConfig);
-            // QTLBrowser.renderBrowserTrack("ACTN3", QTLBrowser.sqtlConfig);
-            // QTLBrowser.renderQtlMap("ACTN3", QTLBrowser.qtlMapConfig)
         });
 
     </script>
