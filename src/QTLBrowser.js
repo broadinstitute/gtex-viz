@@ -274,23 +274,10 @@ function renderLdMap(config, bmap){
  */
 function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, par = CONFIG){
 
-    par.panels.geneMap.data = data[0].medianGeneExpression.filter((d)=>genePosTable.hasOwnProperty(d.gencodeId)).map((d)=>{
-        d = par.parsers.geneExpression(d);
-        d.pos = genePosTable[d.gencodeId]
-        return d;
-    });
 
-    par.panels.geneMap.data.sort(par.dataSort.geneExpression);
-    const heatmapViz = renderGeneHeatmap(gene, mainSvg, par.panels.geneMap);
 
-    // heatmap column label click event
-    selectAll(".exp-map-xlabel")
-        .style("cursor", "pointer")
-        .on("click", (d)=>{
-            select("#"+CONFIG.id).selectAll("*").remove();
-            select("#"+CONFIG.ldId).selectAll("*").remove();
-            render(d);
-        });
+    // render the gene map as a heat map
+    const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
 
     par.panels.tssTrack.data = genes;
     const geneTrackViz = renderFeatureTrack(gene.tss, mainSvg, par.genomicWindow, par.panels.tssTrack, false);
@@ -342,30 +329,53 @@ function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, pa
  * Render the Gene Heatmap
  * @param gene {Object}
  * @param svg {D3 SVG} the root SVG object
- * @param panel {Object} the panel object defined in CONFIG
+ * @param data {List} of data objects
+ * @param par {Object} the viz CONFIG
+ * @param filterTable {Dict} filter genes based on this lookup table
  * @returns {Heatmap}
  */
-function renderGeneHeatmap(gene, svg, panel=CONFIG.panels.geneMap){
+function renderGeneHeatmap(gene, svg, data, par=CONFIG, filterTable){
+    let panel = par.panels.geneMap;
+    let dFilter = par.parsers.geneExpression;
+    let dSort = par.dataSort.geneExpression;
+    // parse gene map data
+    panel.data = data.filter((d)=>filterTable.hasOwnProperty(d.gencodeId)).map((d)=>{
+        d = dFilter(d); // Temporarily hard coded parser name
+        d.pos = filterTable[d.gencodeId];
+        return d;
+    });
+    panel.data.sort(dSort);
 
+    // calculate panel dimensions
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
     if (inWidth * inHeight <= 0) throw "The inner height and width of the GWAS heatmap panel must be positive values. Check the height and margin configuration of this panel"
+
+    // create panel <g> root element
     let mapG = svg.append("g")
         .attr("id", panel.id)
         .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top})`);
-    let tooltipId = `${panel.id}Tooltip`;
 
+    // instantiate a Heatmap object
+    let tooltipId = `${panel.id}Tooltip`;
     let hViz = new Heatmap(panel.data, false, undefined, panel.colorScheme, panel.cornerRadius, tooltipId);
+
+    // render
     hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
     hViz.drawColorLegend(mapG, {x: 20, y:-20}, 5);
 
     // CUSTOMIZATION: highlight the anchor gene
     mapG.selectAll(".exp-map-xlabel")
-        .attr('fill', (d)=>d==gene.geneSymbol?"red":"#000000");
-
+        .attr('fill', (d)=>d==gene.geneSymbol?"red":"#000000")
+        .style("cursor", "pointer")
+        .on("click", (d)=>{
+            // clear all visualizations
+            select("#"+par.id).selectAll("*").remove();
+            select("#"+par.ldId).selectAll("*").remove();
+            render(d); // render data of the new gene
+        });
     hViz.svg = mapG;
     return hViz
-
 }
 
 /**
