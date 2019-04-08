@@ -1,12 +1,25 @@
-div.heatmap-tooltip {
-   min-width: 100px;
-   display: none;
-   background-color : rgba(32, 53, 73, 0.95);
-   padding: 10px;
-   text-align:left;
-   color: #ffffff;
-   position:absolute;
-   font-size:12px;
-   z-index:4000;
-   border-radius:5px;
-}
+/*div.heatmap-tooltip {*/
+   /*min-width: 100px;*/
+   /*display: none;*/
+   /*background-color : rgba(32, 53, 73, 0.95);*/
+   /*padding: 10px;*/
+   /*text-align:left;*/
+   /*color: #ffffff;*/
+   /*position:absolute;*/
+   /*font-size:12px;*/
+   /*z-index:4000;*/
+   /*border-radius:5px;*/
+/*}*/
+
+/*div.bubblemap-tooltip {*/
+   /*min-width: 100px;*/
+   /*display: none;*/
+   /*background-color : rgba(32, 53, 73, 0.95);*/
+   /*padding: 10px;*/
+   /*text-align:left;*/
+   /*color: #ffffff;*/
+   /*position:absolute;*/
+   /*font-size:12px;*/
+   /*z-index:4000;*/
+   /*border-radius:5px;*/
+/*}*/

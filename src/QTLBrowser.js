@@ -218,7 +218,7 @@ function renderQtlBubbleMap(gene, svg, par=CONFIG, qtlData){
     let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
     bmap.setScales({w:bmapInWidth, h:bmapInHeight, top: 0, left:0});
     bmap.fullDomain = bmap.xScale.domain(); // save the full domain as a new attribute of bmap
-    bmap.addTooltip(qtlMapPanel.id);
+    bmap.addTooltip("locus-browser");
     bmap.svg = bmapG;
     // customization
     //-- TSS and TES markers
@@ -382,7 +382,7 @@ function renderGeneHeatmap(gene, svg, data, par=CONFIG, filterTable){
         .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top})`);
 
     // instantiate a Heatmap object
-    let tooltipId = `${panel.id}Tooltip`;
+    let tooltipId = "locus-browser-tooltip";
     let hViz = new Heatmap(panel.data, false, undefined, panel.colorScheme, panel.cornerRadius, tooltipId);
 
     // render

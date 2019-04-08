@@ -227,6 +227,7 @@ export default class BubbleMap {
                 let displaySize = d.rDisplayValue === undefined? d.r.toPrecision(4):d.rDisplayValue;
                 let displayX = d.displayX === undefined? d.x:d.displayX;
                 let displayY = d.displayY === undefined? d.y:d.displayY;
+                console.log(`Column: ${displayX} <br/> Row: ${displayY}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`)
                 tooltip.show(`Column: ${displayX} <br/> Row: ${displayY}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`);
             })
             .on("mouseout", function(){
