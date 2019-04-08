@@ -67,6 +67,97 @@ export function render(geneId, par=CONFIG){
 }
 
 /**
+ * Render the visual components related to genes: GWAS trait heatmap, gene position track
+ * @param gene {Object} the anchor gene
+ * @param mainSvg {d3 svg} the root svg
+ * @param data {List} web service results
+ * @param genes {List} a list of gene objects with attr: geneSymbol, strand, start, end, geneType
+ * @param genePosTable {Dict} gene TSS indexed by gencodeId
+ * @param par {Object} the configuration object of the overall visualization
+ */
+function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, par = CONFIG){
+    // render the gene map as a heat map
+    const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
+
+    // render gene related genomic tracks
+    const trackData = {
+        tssTrack: genes,
+        exonTrack: data[1].collapsedGeneModelExon
+    };
+    const tssTrackViz = renderGeneTracks(gene, mainSvg, par, trackData);
+
+    //// visual customization: draw connecting lines between the gene heatmap column labels and tss positions on the tss track
+    let geneMapPanel = par.panels.geneMap;
+    let tssPanel = par.panels.tssTrack;
+
+    let xAdjust = geneMapPanel.margin.left - tssPanel.margin.left + (heatmapViz.xScale.bandwidth()/2);
+    let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
+
+    tssTrackViz.svg.selectAll(".connect")
+        .data(genes.filter((d)=>heatmapViz.xScale.domain().indexOf(d.geneSymbol)>=0))
+        .enter()
+        .append('line')
+        .attr("class", "connect")
+        .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+        .attr("x2", (d)=>tssTrackViz.scale(d.tss))
+        .attr("y1", trackHeight/2-20)
+        .attr("y2", trackHeight/2)
+        .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
+        .attr("stroke-width", 0.5);
+
+    tssTrackViz.svg.selectAll(".connect2")
+        .data(genes.filter((d)=>heatmapViz.xScale.domain().indexOf(d.geneSymbol)>=0))
+        .enter()
+        .append('line')
+        .attr("class", "connect2")
+        .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+        .attr("x2", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+        .attr("y1", trackHeight/2-20)
+        .attr("y2", (d)=>{
+            let adjust = -(geneMapPanel.margin.bottom+tssPanel.margin.top - 10) +(d.geneSymbol.length*heatmapViz.yScale.bandwidth());
+            adjust = adjust > -20?-20:adjust;
+            return trackHeight/2 + adjust;
+        })
+        .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
+        .attr("stroke-width", 0.5);
+
+    return genes;
+}
+
+/**
+ * Rendering all variant related visualization components
+ * TODO: break this function into smaller functions?
+ * @param queryGene
+ * @param mainSvg
+ * @param par
+ * @param data
+ */
+function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
+    // QTL tracks
+    const qtlData = {
+        eqtl: data[0].singleTissueEqtl,
+        sqtl: data[1].singleTissueSqtl
+    };
+    const sqtlTrackViz = renderVariantTracks(queryGene, mainSvg, par, qtlData);
+
+    const bmap = renderQtlBubbleMap(queryGene, mainSvg, par, qtlData);
+    // QTL bubble map data
+
+    // LD map
+    json(par.urls.ld + queryGene.gencodeId, {credentials: "include"})
+        .then((data)=>{
+            // LD map: parse the data and call the initial rendering
+            _ldMapDataParserHelper(data, bmap, par);
+            const ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
+            createBrush(queryGene, sqtlTrackViz, bmap, par, ldBrush);
+             // initial rendering components
+            bmap.drawSvg(bmap.svg, {w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]), h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]), top: 0, left:0}); // initialize bubble heat map
+            renderGeneStartEndMarkers(bmap, bmap.svg); // initialize tss and tes markers
+        });
+
+}
+
+/**
  * Calculate and sum the height of the root SVG based on the individual visual panels
  * Calculate and determine the Y position of each individual visual panel in the root SVG
  * @param par
@@ -81,60 +172,44 @@ function setDimensions(par=CONFIG){
         }, 0);
 }
 
-/**
- * Rendering all variant related visualization components
- * TODO: break this function into smaller functions?
- * @param queryGene
- * @param mainSvg
- * @param par
- * @param data
- */
-function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
+function aggregateQtlData(data, par=CONFIG){
 
-    let eqData = data[0];
-    let sqData = data[1];
-
-    // parse eQTL position track data
-    //-- Collapse eQTLs at each each locus, and report only the best (smallest) p-value.
+    //-- Define the collapse function
+    //   Collapse QTLs at each each locus, and report only the best (smallest) p-value.
     const collapse = (acc, d)=>{
         if (acc.hasOwnProperty(d.variantId)){
             if (acc[d.variantId].pValue > d.pValue) acc[d.variantId] = d;
         } else { acc[d.variantId] = d }
         return acc;
     };
-    let uniqEqtlVariants = eqData.singleTissueEqtl.reduce(collapse, {});
-    let eqtlFeatures = Object.values(uniqEqtlVariants).map(par.parsers.qtlFeatures);
-    eqtlFeatures.sort(par.dataSort.variants);
-    let eqtlPanel = par.panels.eqtlTrack;
-    eqtlPanel.data = eqtlFeatures;
 
-    // sQTL position track data
-    //-- Collapse sQTLs at each each locus, and report only the best (smallest) p-value.
-     let uniqSqtlVariants = sqData.singleTissueSqtl.reduce(collapse, {});
-    let sqtlFeatures = Object.values(uniqSqtlVariants).map(par.parsers.qtlFeatures);
-    sqtlFeatures.sort(par.dataSort.variants);
-    let sqtlPanel = par.panels.sqtlTrack;
-    sqtlPanel.data = sqtlFeatures;
+    const parser = par.parsers.qtlFeatures;
+    const qtlSort = par.dataSort.variants;
+    let uniqEqtlVariants = data.reduce(collapse, {});
+    let qtlFeatures = Object.values(uniqEqtlVariants).map(parser);
+    qtlFeatures.sort(qtlSort);
+    return qtlFeatures;
+}
 
-    // QTL bubble map data
+/**
+ * Render QTL (variant)-based genomic tracks: eQTL, sQTL
+ * @param gene {Object} the query gene
+ * @param svg {D3} the root SVG
+ * @param par {Object} the config of the visualization
+ * @param trackData {Dictionary} QTL data
+ * @returns {MiniGenomeBrowser} sQTL's track object (or the object to apply the brush)
+ */
+
+function renderQtlBubbleMap(gene, svg, par=CONFIG, qtlData){
     let qtlMapPanel = par.panels.qtlMap;
+    let parser = par.parsers.qtlBubbles;
     qtlMapPanel.data = [];
-    qtlMapPanel.data = qtlMapPanel.data.concat(eqData.singleTissueEqtl.map((d)=>{return par.parsers.qtlBubbles(d, "e")}));
-    qtlMapPanel.data = qtlMapPanel.data.concat(sqData.singleTissueSqtl.map((d)=>{return par.parsers.qtlBubbles(d, "s")}));
-
-    // QTL tracks rendering
-    ////// find the max color value (-log(p-value)) from all QTLs, for creating a shared color scale for all variant tracks
-    // let max1 = max(eqtlPanel.data.filter((d)=>isFinite(d.colorValue)).map((d)=>d.colorValue));
-    // let max2 = max(sqtlPanel.data.filter((d)=>isFinite(d.colorValue)).map((d)=>d.colorValue));
-    // const maxColorValue = max([max1, max2]);
-    const maxColorValue = 50; // TODO: define a universal max value for the QTLs, so that it's comparable?
-    const eqtlTrackViz = renderFeatureTrack(queryGene.tss, mainSvg, par.genomicWindow, eqtlPanel, false, true, maxColorValue);
-    const sqtlTrackViz = renderFeatureTrack(queryGene.tss, mainSvg, par.genomicWindow, sqtlPanel, false, true, maxColorValue);
+    qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.eqtl.map((d)=>{return parser(d, "E")}));
+    qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.sqtl.map((d)=>{return parser(d, "S")}));
 
     // prepare bubble map
     let bmap = new BubbleMap(qtlMapPanel.data, qtlMapPanel.useLog, qtlMapPanel.logBase, qtlMapPanel.colorScheme);
-    bmap.addTooltip(qtlMapPanel.id);
-    let bmapG = mainSvg.append("g")
+    let bmapG = svg.append("g")
         .attr("id", qtlMapPanel.id)
         .attr("class", "focus")
         .attr("transform", `translate(${qtlMapPanel.margin.left}, ${qtlMapPanel.margin.top + qtlMapPanel.yPos})`);
@@ -142,65 +217,76 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
     let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
     bmap.setScales({w:bmapInWidth, h:bmapInHeight, top: 0, left:0});
     bmap.fullDomain = bmap.xScale.domain(); // save the full domain as a new attribute of bmap
+    bmap.addTooltip(qtlMapPanel.id);
+    bmap.svg = bmapG;
+    // customization
     //-- TSS and TES markers
-    findVariantsNearGeneStartEnd(queryGene, bmap); // NOTE: bmap.fullDomain is used in this function
+    findVariantsClosestToGeneStartEnd(gene, bmap); // NOTE: bmap.fullDomain is required in this function and bmap.tss, bmap.tes are created by this function
+    return bmap;
+}
 
-    // LD map
-    json(par.urls.ld + queryGene.gencodeId, {credentials: "include"})
-        .then((data)=>{
-            // LD map: parse the data and call the initial rendering
-            _ldMapDataParserHelper(data, bmap, par);
-            const ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
+function renderVariantTracks(gene, svg, par=CONFIG, trackData){
+    let eqtlPanel = par.panels.eqtlTrack;
+    let sqtlPanel = par.panels.sqtlTrack;
 
-            // Brush definition: render the chromosome position axis and zoom brush
-            const callback = (left, right, xA, xB)=>{
-                // parameters: left and right are screen coordinates, xA and xB are genomic coordinates
-                // refresh the x scale's domain() based on the brush
-                let focusDomain = bmap.fullDomain.filter((d)=>{
-                    let pos = parseInt(d.split("_")[1]);
-                    return pos>=xA && pos<=xB
-                });
-                bmap.renderWithNewDomain(bmapG, focusDomain);
+    eqtlPanel.data = aggregateQtlData(trackData.eqtl, par)
+    sqtlPanel.data = aggregateQtlData(trackData.sqtl, par)
+    // QTL tracks rendering
+    const maxColorValue = 50; // TODO: define a universal max value for the QTLs, so that it's comparable?
+    renderFeatureTrack(gene.tss, svg, par.genomicWindow, eqtlPanel, false, true, maxColorValue);
+    const sqtlTrackViz = renderFeatureTrack(gene.tss, svg, par.genomicWindow, sqtlPanel, false, true, maxColorValue);
+    return sqtlTrackViz;
+}
 
-                // refresh the gene's TSS and TES markers on the bubble map
-                renderGeneStartEndMarkers(bmap, bmapG);
-
-                // update the LD
-                ldBrush();
-
-                // redraw brush lines
-                selectAll(".brushLine").remove();
-                select(".brush")
-                    .append("line")
-                    .classed("brushLine", true)
-                    .attr("x1", left)
-                    .attr("x2", bmap.xScale.range()[0] + qtlMapPanel.margin.left - sqtlPanel.margin.left)
-                    .attr("y1", 20)
-                    .attr("y2", 60)
-                    .style("stroke-width", 1)
-                    .style("stroke", "#ababab");
-                select(".brush")
-                    .append("line")
-                    .classed("brushLine", true)
-                    .attr("x1", right)
-                    .attr("x2", bmap.xScale.range()[1]+ qtlMapPanel.margin.left - sqtlPanel.margin.left)
-                    .attr("y1", 20)
-                    .attr("y2", 60)
-                    .style("stroke-width", 1)
-                    .style("stroke", "#ababab")
-
-            }; // this is the brush event
-            let addBrush = true;
-            let brushConfig = {
-                w: 20,
-                h: Math.abs(par.panels.tssTrack.yPos + par.panels.tssTrack.margin.top - (par.panels.sqtlTrack.yPos + par.panels.sqtlTrack.height +20)) // the brush should cover all tracks
-            };
-
-            // rendering components
-            bmap.drawSvg(bmapG, {w:bmapInWidth, h:bmapInHeight, top: 0, left:0}); // initialize bubble heat map
-            renderGeneStartEndMarkers(bmap, bmapG); // initialize tss and tes markers
-            MiniGenomeBrowser.renderAxis(sqtlTrackViz.dom, sqtlTrackViz.scale, sqtlPanel.height + 30, addBrush, callback, brushConfig, queryGene.tss); // TODO: remove hard-coded adjustment
+function createBrush(gene, trackViz, bmap, par=CONFIG, ldBrush=undefined){
+    const qtlMapPanel = par.panels.qtlMap;
+    const brushPanel = par.panels.sqtlTrack; // TODO: the genomic track that the brush is on may not be the sqtl track
+    // Brush definition: render the chromosome position axis and zoom brush
+    // parameters: left and right are screen coordinates, xA and xB are genomic coordinates
+    const callback = (left, right, xA, xB)=>{
+        // re-define the x scale's domain() based on the brush window change
+        let focusDomain = bmap.fullDomain.filter((d)=>{
+            let pos = parseInt(d.split("_")[1]);
+            return pos>=xA && pos<=xB
         });
+        bmap.renderWithNewDomain(bmap.svg, focusDomain);
+
+        // refresh the gene's TSS and TES markers on the bubble map
+        renderGeneStartEndMarkers(bmap, bmap.svg);
+
+        // update the corresponding LD using the ldBrush
+        if(ldBrush!==undefined) ldBrush();
+
+        // redraw the connecting lines between the edges of the brush window to the edges of the bubble map
+        selectAll(".brushLine").remove();
+        select(".brush")
+            .append("line")
+            .classed("brushLine", true)
+            .attr("x1", left)
+            .attr("x2", bmap.xScale.range()[0] + qtlMapPanel.margin.left - brushPanel.margin.left)
+            .attr("y1", 20)
+            .attr("y2", 60)
+            .style("stroke-width", 1)
+            .style("stroke", "#ababab");
+        select(".brush")
+            .append("line")
+            .classed("brushLine", true)
+            .attr("x1", right)
+            .attr("x2", bmap.xScale.range()[1]+ qtlMapPanel.margin.left - brushPanel.margin.left)
+            .attr("y1", 20)
+            .attr("y2", 60)
+            .style("stroke-width", 1)
+            .style("stroke", "#ababab")
+
+    }; // this is the brush event
+
+    let brushConfig = {
+        w: 20,
+        h: Math.abs(par.panels.tssTrack.yPos + par.panels.tssTrack.margin.top - (par.panels.sqtlTrack.yPos + par.panels.sqtlTrack.height +20)) // the brush should cover all tracks
+    };
+
+    let addBrush = true;
+    MiniGenomeBrowser.renderAxis(trackViz.dom, trackViz.scale, brushPanel.height + 30, addBrush, callback, brushConfig, gene.tss); // TODO: remove hard-coded adjustment
 
 }
 
@@ -261,67 +347,6 @@ function renderLdMap(config, bmap){
         ldMap.draw(ldCanvas, ldG, drawConfig, [0, 1], false, undefined, bmap.xScale.domain(), bmap.xScale.domain())
     };
     return ldBrush;
-}
-
-/**
- * Render the visual components related to genes: GWAS trait heatmap, gene position track
- * @param gene {Object} the anchor gene
- * @param mainSvg {d3 svg} the root svg
- * @param data {List} web service results
- * @param genes {List} a list of gene objects with attr: geneSymbol, strand, start, end, geneType
- * @param genePosTable {Dict} gene TSS indexed by gencodeId
- * @param par {Object} the configuration object of the overall visualization
- */
-function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, par = CONFIG){
-
-
-
-    // render the gene map as a heat map
-    const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
-
-    // render gene related genomic tracks
-    const trackData = {
-        tssTrack: genes,
-        exonTrack: data[1].collapsedGeneModelExon
-    };
-    const tssTrackViz = renderGeneTracks(gene, mainSvg, par, trackData);
-
-    //// visual customization: draw connecting lines between the gene heatmap column labels and tss positions on the tss track
-    let geneMapPanel = par.panels.geneMap;
-    let tssPanel = par.panels.tssTrack;
-
-    let xAdjust = geneMapPanel.margin.left - tssPanel.margin.left + (heatmapViz.xScale.bandwidth()/2);
-    let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
-
-    tssTrackViz.svg.selectAll(".connect")
-        .data(genes.filter((d)=>heatmapViz.xScale.domain().indexOf(d.geneSymbol)>=0))
-        .enter()
-        .append('line')
-        .attr("class", "connect")
-        .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
-        .attr("x2", (d)=>tssTrackViz.scale(d.tss))
-        .attr("y1", trackHeight/2-20)
-        .attr("y2", trackHeight/2)
-        .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
-        .attr("stroke-width", 0.5);
-
-    tssTrackViz.svg.selectAll(".connect2")
-        .data(genes.filter((d)=>heatmapViz.xScale.domain().indexOf(d.geneSymbol)>=0))
-        .enter()
-        .append('line')
-        .attr("class", "connect2")
-        .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
-        .attr("x2", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
-        .attr("y1", trackHeight/2-20)
-        .attr("y2", (d)=>{
-            let adjust = -(geneMapPanel.margin.bottom+tssPanel.margin.top - 10) +(d.geneSymbol.length*heatmapViz.yScale.bandwidth());
-            adjust = adjust > -20?-20:adjust;
-            return trackHeight/2 + adjust;
-        })
-        .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
-        .attr("stroke-width", 0.5);
-
-    return genes;
 }
 
 /**
@@ -465,7 +490,7 @@ function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}, cols = []){
  * @param gene {Object} that has attributes start and end
  * @param bmap {BubbleMap}
  */
-function findVariantsNearGeneStartEnd(gene, bmap) {
+function findVariantsClosestToGeneStartEnd(gene, bmap) {
     let tss = gene.strand == '+' ? gene.start : gene.end;
     let tes = gene.strand == '+' ? gene.end : gene.start;
     let variants = bmap.fullDomain;
@@ -537,8 +562,6 @@ function renderGeneStartEndMarkers(bmap, dom){
 
 /*********************/
 const GlobalWidth = window.innerWidth;
-// const AnchorPosition = 66546395;
-// const AnchorChr = 'chr11'
 const host = "https://dev.gtexportal.org/rest/v1/";
 const CONFIG = {
     id: "qtl-browser",
