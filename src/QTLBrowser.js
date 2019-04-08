@@ -279,34 +279,33 @@ function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, pa
     // render the gene map as a heat map
     const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
 
-    par.panels.tssTrack.data = genes;
-    const geneTrackViz = renderFeatureTrack(gene.tss, mainSvg, par.genomicWindow, par.panels.tssTrack, false);
+    // render gene related genomic tracks
+    const trackData = {
+        tssTrack: genes,
+        exonTrack: data[1].collapsedGeneModelExon
+    };
+    const tssTrackViz = renderGeneTracks(gene, mainSvg, par, trackData);
 
-    let gModel = data[1].collapsedGeneModelExon.map(par.parsers.geneModel);
-    par.panels.geneModelTrack.data = gModel;
-    renderFeatureTrack(gene.tss, mainSvg, par.genomicWindow, par.panels.geneModelTrack, true);
-
-
-    //// visual customization: draw connecting lines between the GWAS trait heatmap and gene position track
+    //// visual customization: draw connecting lines between the gene heatmap column labels and tss positions on the tss track
     let geneMapPanel = par.panels.geneMap;
     let tssPanel = par.panels.tssTrack;
 
     let xAdjust = geneMapPanel.margin.left - tssPanel.margin.left + (heatmapViz.xScale.bandwidth()/2);
     let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
 
-    geneTrackViz.svg.selectAll(".connect")
+    tssTrackViz.svg.selectAll(".connect")
         .data(genes.filter((d)=>heatmapViz.xScale.domain().indexOf(d.geneSymbol)>=0))
         .enter()
         .append('line')
         .attr("class", "connect")
         .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
-        .attr("x2", (d)=>geneTrackViz.scale(d.tss))
+        .attr("x2", (d)=>tssTrackViz.scale(d.tss))
         .attr("y1", trackHeight/2-20)
         .attr("y2", trackHeight/2)
         .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
         .attr("stroke-width", 0.5);
 
-    geneTrackViz.svg.selectAll(".connect2")
+    tssTrackViz.svg.selectAll(".connect2")
         .data(genes.filter((d)=>heatmapViz.xScale.domain().indexOf(d.geneSymbol)>=0))
         .enter()
         .append('line')
@@ -377,6 +376,25 @@ function renderGeneHeatmap(gene, svg, data, par=CONFIG, filterTable){
     hViz.svg = mapG;
     return hViz
 }
+
+function renderGeneTracks(gene, svg, par=CONFIG, data){
+
+    // tss track
+    let tssTrack = par.panels.tssTrack;
+    tssTrack.data = data.tssTrack;
+    const tssTrackViz = renderFeatureTrack(gene.tss, svg, par.genomicWindow, tssTrack, false);
+
+    // gene model (exon) track
+    let modelParser = par.parsers.geneModel;
+    let gModel = data.exonTrack.map(modelParser);
+    let exonTrack = par.panels.geneModelTrack;
+    exonTrack.data = gModel;
+    renderFeatureTrack(gene.tss, svg, par.genomicWindow, exonTrack, true);
+
+    return tssTrackViz
+}
+
+
 
 /**
  * Render a feature track
