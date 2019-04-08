@@ -377,6 +377,14 @@ function renderGeneHeatmap(gene, svg, data, par=CONFIG, filterTable){
     return hViz
 }
 
+/**
+ * Render gene based genomic tracks: tss, exon
+ * @param gene {Object} the query gene
+ * @param svg {D3 SVG} the root SVG object
+ * @param par {Object} the viz CONFIG
+ * @param data {Dictionary} data of each gene-based track
+ * @returns {MiniGenomeBrowser} of the tss track
+ */
 function renderGeneTracks(gene, svg, par=CONFIG, data){
 
     // tss track
@@ -393,8 +401,6 @@ function renderGeneTracks(gene, svg, par=CONFIG, data){
 
     return tssTrackViz
 }
-
-
 
 /**
  * Render a feature track
