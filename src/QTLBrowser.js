@@ -149,10 +149,11 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
             // LD map: parse the data and call the initial rendering
             _ldMapDataParserHelper(data, bmap, par);
             const ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
-            createBrush(queryGene, sqtlTrackViz, bmap, par, ldBrush);
              // initial rendering components
             bmap.drawSvg(bmap.svg, {w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]), h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]), top: 0, left:0}); // initialize bubble heat map
             renderGeneStartEndMarkers(bmap, bmap.svg); // initialize tss and tes markers
+            createBrush(queryGene, sqtlTrackViz, bmap, par, ldBrush);
+
         });
 
 }
