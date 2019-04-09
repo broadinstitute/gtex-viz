@@ -225,7 +225,7 @@ export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, bas
             .attr("x", 5)
             .attr("text-anchor", "start")
             .attr("y", 0)
-            .attr("transform", `translate(${config.x}, ${config.y + cell.h * data.length})rotate(90)`);
+            .attr("transform", `translate(${config.x}, ${config.y + cell.h * (data.length + 1)})`);
 
         g.append("rect")
             .attr("x", 0)

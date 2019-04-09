@@ -175,7 +175,7 @@ export default class HalfMap{
                 let col = this.xScale.domain()[i];
                 let row = this.yScale.domain()[j];
                 let cell = this.dataDict[col+row];
-                console.log([x, y, x2, y2, i, j, col, row]); // debugging
+                // console.log([x, y, x2, y2, i, j, col, row]); // debugging
                 if (cell !== undefined) {
                     cursor.attr('transform', `translate(${x},${y}) rotate(-45)`);
                     cursor.style("display", "block");

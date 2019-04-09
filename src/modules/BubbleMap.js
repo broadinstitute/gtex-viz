@@ -227,7 +227,7 @@ export default class BubbleMap {
                 let displaySize = d.rDisplayValue === undefined? d.r.toPrecision(4):d.rDisplayValue;
                 let displayX = d.displayX === undefined? d.x:d.displayX;
                 let displayY = d.displayY === undefined? d.y:d.displayY;
-                console.log(`Column: ${displayX} <br/> Row: ${displayY}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`)
+                // console.log(`Column: ${displayX} <br/> Row: ${displayY}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`)
                 tooltip.show(`Column: ${displayX} <br/> Row: ${displayY}<br/> Value: ${displayValue}<br/> Size: ${displaySize}`);
             })
             .on("mouseout", function(){
@@ -295,11 +295,11 @@ export default class BubbleMap {
         }
     }
 
-    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit=""){
-        drawColorLegend(unit, dom, this.colorScale, legendConfig, this.useLog, ticks, this.logBase, {h:10, w:40}, "h", true);
+    drawColorLegend(dom, legendConfig={x:0, y:0}, ticks=5, unit="", cellConfig={h:10, w:40}, orientation="h"){
+        drawColorLegend(unit, dom, this.colorScale, legendConfig, this.useLog, ticks, this.logBase, cellConfig, orientation, true);
     }
 
-    drawBubbleLegend(dom, legendConfig={x:0, y:0, title:"Bubble legend"}, ticks=5, unit=""){
+    drawBubbleLegend(dom, legendConfig={x:0, y:0, title:"Bubble legend"}, ticks=5, unit="", orientation="h"){
         dom.selectAll(".bmap-bubble-legend").remove(); // clear previously rendered legend if any.
 
         let range = [...Array(ticks+1).keys()];
@@ -310,32 +310,62 @@ export default class BubbleMap {
         let legendG = dom.append("g")
                 .attr("class", "bmap-bubble-legend")
                 .attr("transform", `translate(${legendConfig.x}, ${legendConfig.y})`);
-         // legend title
-        legendG.append("text")
-            .attr("class", "color-legend")
-            .text(legendConfig.title)
-            .attr("x", -10)
-            .attr("text-anchor", "end")
-            .attr("y", 10);
+
 
         let legends = legendG.selectAll(".legend").data(data);
 
         let g = legends.enter().append("g").classed("legend", true);
         // the bubbles
-        let cellW = 40;
-        g.append("circle")
-            .attr("cx", (d, i) => cellW*i)
-            .attr("cy", 10)
-            .attr("r", (d)=>{
-                return isFinite(d.r)?this.bubbleScale(d.r):this.bubbleScale.range()[1];
-            })
-            .style("fill", "black");
-
-        g.append("text")
+        if (orientation == "h"){
+             // legend title
+            legendG.append("text")
             .attr("class", "color-legend")
-            .text((d) => this.useLog?(Math.pow(base, d)).toPrecision(2):d.toPrecision(2))
-            .attr("x", (d, i) => cellW * i -5)
-            .attr("y", 0);
+            .text(legendConfig.title)
+            .attr("x", -10)
+            .attr("text-anchor", "end")
+            .attr("y", 10);
+            let cellW = 40;
+            g.append("circle")
+                .attr("cx", (d, i) => cellW*i)
+                .attr("cy", 10)
+                .attr("r", (d)=>{
+                    return isFinite(d.r)?this.bubbleScale(d.r):this.bubbleScale.range()[1];
+                })
+                .style("fill", "#ababab");
+
+            g.append("text")
+                .attr("class", "color-legend")
+                .text((d) => this.useLog?(Math.pow(base, d)).toPrecision(2):d.toPrecision(2))
+                .attr("x", (d, i) => cellW * i -5)
+                .attr("y", 0);
+        }
+        else{ // vertical legend
+            let cellW = 20;
+
+            // legend title
+            legendG.append("text")
+            .attr("class", "color-legend")
+            .text(legendConfig.title)
+            .attr("x", 0)
+            .attr("text-anchor", "start")
+            .attr("y", cellW * (data.length));
+
+            g.append("circle")
+                .attr("cx", 5)
+                .attr("cy", (d, i) => cellW*i)
+                .attr("r", (d)=>{
+                    return isFinite(d)?this.bubbleScale(d):this.bubbleScale.range()[1];
+                })
+                .style("fill", "#ababab");
+
+            g.append("text")
+                .attr("class", "color-legend")
+                .attr('text-anchor', 'start')
+                .text((d) => this.useLog?(Math.pow(base, d)).toPrecision(2):d.toPrecision(2))
+                .attr("x", cellW)
+                .attr("y",(d, i) => cellW * i + 5);
+        }
+
     }
 
     /**

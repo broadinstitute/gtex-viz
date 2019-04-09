@@ -213,9 +213,14 @@ function renderQtlBubbleMap(gene, svg, par=CONFIG, qtlData){
         .attr("id", qtlMapPanel.id)
         .attr("class", "focus")
         .attr("transform", `translate(${qtlMapPanel.margin.left}, ${qtlMapPanel.margin.top + qtlMapPanel.yPos})`);
+
     let bmapInWidth = qtlMapPanel.width-(qtlMapPanel.margin.left + qtlMapPanel.margin.right);
     let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
     bmap.setScales({w:bmapInWidth, h:bmapInHeight, top: 0, left:0});
+    bmap.drawColorLegend(svg, {x: qtlMapPanel.margin.left + bmapInWidth + 20, y: qtlMapPanel.yPos + qtlMapPanel.margin.top}, 3, "NES", {h:15, w:10}, "v");
+    bmap.drawBubbleLegend(svg, {x: qtlMapPanel.margin.left + bmapInWidth + 20, y:qtlMapPanel.yPos + qtlMapPanel.margin.top + 150, title: "-log10(p-value)"}, 5, "-log10(p-value)", "v");
+
+
     bmap.fullDomain = bmap.xScale.domain(); // save the full domain as a new attribute of bmap
     bmap.addTooltip("locus-browser");
     bmap.svg = bmapG;
@@ -759,7 +764,7 @@ const CONFIG = {
             yPos: null,
             margin: {
                 top: 100, // provide space for the genome position scale
-                right: 50,
+                right: 100,
                 bottom: 120, // provide space for the column labels
                 left: 200
             },
@@ -794,7 +799,7 @@ const CONFIG = {
         width: GlobalWidth,
         margin: {
             top: 10,
-            right: 50,
+            right: 100,
             bottom: 0,
             left: 200
         },
