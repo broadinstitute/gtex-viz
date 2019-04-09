@@ -200,7 +200,6 @@ function aggregateQtlData(data, par=CONFIG){
  * @param trackData {Dictionary} QTL data
  * @returns {MiniGenomeBrowser} sQTL's track object (or the object to apply the brush)
  */
-
 function renderQtlBubbleMap(gene, svg, par=CONFIG, qtlData){
     let qtlMapPanel = par.panels.qtlMap;
     let parser = par.parsers.qtlBubbles;
@@ -233,7 +232,7 @@ function renderVariantTracks(gene, svg, par=CONFIG, trackData){
     eqtlPanel.data = aggregateQtlData(trackData.eqtl, par)
     sqtlPanel.data = aggregateQtlData(trackData.sqtl, par)
     // QTL tracks rendering
-    const maxColorValue = 50; // TODO: define a universal max value for the QTLs, so that it's comparable?
+    const maxColorValue = 30; // TODO: define a universal max value for the QTLs, so that it's comparable?
     renderFeatureTrack(gene.tss, svg, par.genomicWindow, eqtlPanel, false, true, maxColorValue);
     const sqtlTrackViz = renderFeatureTrack(gene.tss, svg, par.genomicWindow, sqtlPanel, false, true, maxColorValue);
     return sqtlTrackViz;
@@ -386,7 +385,7 @@ function renderGeneHeatmap(gene, svg, data, par=CONFIG, filterTable){
 
     // instantiate a Heatmap object
     let tooltipId = "locus-browser-tooltip";
-    let hViz = new Heatmap(panel.data, false, undefined, panel.colorScheme, panel.cornerRadius, tooltipId);
+    let hViz = new Heatmap(panel.data, panel.useLog, 10, panel.colorScheme, panel.cornerRadius, tooltipId);
 
     // render
     hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
@@ -660,7 +659,7 @@ const CONFIG = {
         geneMap: {
             id: 'gene-map',
             data: null,
-            useLog: false,
+            useLog: true,
             logBase: null,
             margin: {
                 top: 40, // provide enough space for the color legend
@@ -670,7 +669,7 @@ const CONFIG = {
             },
             width: GlobalWidth,
             height: 500, // outer height: this includes top and bottom margins + inner height
-            colorScheme: "Greys",
+            colorScheme: "YlGnBu",
             cornerRadius: 2,
             columnLabel: {
                 angle: 90,
