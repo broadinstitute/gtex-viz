@@ -129,7 +129,7 @@ export default class HalfMap{
                 .attr("text-anchor", "start")
                 .style("cursor", "none")
                 .attr("transform", (d) => {
-                    let x = this.labelScale(d) + this.labelScale.step()/2;
+                    let x = this.labelScale(d) - this.labelScale.step()/2;
                     let y = -5;
                     return `translate(${x}, ${y}) rotate(-${labelAngle})`;
                 })
@@ -138,8 +138,8 @@ export default class HalfMap{
 
         let cursor = svg.append('rect')
             .attr('class', 'half-map-cursor')
-            .attr("x", 0)
-            .attr("y", 0)
+            .attr("x", -this.xScale.bandwidth()/2)
+            .attr("y", -this.yScale.bandwidth()/2)
             .attr("width", this.xScale.bandwidth())
             .attr("height", this.yScale.bandwidth())
             .style("stroke", "#d2111b")
@@ -162,8 +162,8 @@ export default class HalfMap{
 
                 // find the colliding cell's coordinates (before transformation)
                 let radian = Math.PI*(45/180); // the radian at 45 degree angle
-                let x2 = x*Math.cos(radian) - y*Math.sin(radian) + this.xScale.step()/2;
-                let y2 = x*Math.sin(radian) + y*Math.cos(radian) - this.yScale.step()/2;
+                let x2 = x*Math.cos(radian) - y*Math.sin(radian) + this.xScale.bandwidth()/2;
+                let y2 = x*Math.sin(radian) + y*Math.cos(radian) + this.yScale.bandwidth()/2;
                 if (x < 0 || y<0 || x2 < 0 || y2<0) {
                     this.tooltip.hide();
                     cursor.style("display", "none");
@@ -175,7 +175,7 @@ export default class HalfMap{
                 let col = this.xScale.domain()[i];
                 let row = this.yScale.domain()[j];
                 let cell = this.dataDict[col+row];
-                // console.log([x, y, x2, y2, col, row]); // debugging
+                console.log([x, y, x2, y2, i, j, col, row]); // debugging
                 if (cell !== undefined) {
                     cursor.attr('transform', `translate(${x},${y}) rotate(-45)`);
                     cursor.style("display", "block");

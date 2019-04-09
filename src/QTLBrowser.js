@@ -713,8 +713,7 @@ const CONFIG = {
                 background: '#ffffff',
                 feature: "#910807"
             }
-        }
-        ,
+        },
         eqtlTrack: {
             id: 'eqtl-track',
             label: 'eQTL summary',
@@ -734,7 +733,6 @@ const CONFIG = {
             }
 
         },
-
         sqtlTrack: {
             id: 'sqtl-track',
             label: 'sQTL summary',
