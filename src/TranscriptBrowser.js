@@ -68,7 +68,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     let isoformExpress = parseTranscriptExpression(args[6]);
 
                     // error checking
-                    let exonColorScale, isoformColorScale, junctionColorScale;
+                    let exonColorScale, isoformColorScale, junctionColorScale; // in log
                     if (junctions.length >= 0){
                         // scenario1: not a single-exon gene
                         if (junctionExpress !== undefined){
