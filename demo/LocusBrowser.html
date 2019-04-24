@@ -2,8 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
               integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
               crossorigin="anonymous">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Franklin:300,400" >
@@ -14,6 +13,13 @@
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
     <h3>GTEx Locus Browser</h3>
     <hr>
+    <div id="locus-browser-toolbar" class="btn-group btn-group-sm col-lg-1">
+        <span style="margin-right: 10px;">Zoom</span>
+        <a id="zoom-reset" class="btn btn-outline-info"><i class="fa fa-undo"></i></a>
+        <a id="zoom-minus" class="btn btn-outline-info"><i class="fa fa-search-minus"></i></a>
+        <a id="zoom-plus" class="btn btn-outline-info"><i class="fa fa-search-plus"></i></a>
+
+    </div>
     <div id="locus-browser"><!-- Root DOM for the SVG --></div>
     <div id="ld-browser"><!-- Root DOM for the LD map--></div>
     </body>
@@ -21,6 +27,7 @@
     <script>
         const GlobalWidth = window.innerWidth;
         const host = "https://dev.gtexportal.org/rest/v1/";
+
 
         const panels = {
                 geneMap: {
@@ -154,12 +161,12 @@
                     }
                 }
             };
-        const config = {
+        let config = {
             id: "locus-browser",
             ldId: "ld-browser",
             width: GlobalWidth,
             height: null, // should be dynamically calculated
-            genomicWindow: 5e5,
+            genomicWindow: 1e6,
             urls: {
                 queryGene: host + 'reference/gene?format=json&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&geneId=',
                 genes: "../tempData/V8.genes.csv",
@@ -259,7 +266,9 @@
             }
         };
         document.addEventListener('DOMContentLoaded', function() {
-            LocusBrowser.render("ACTN3", config)
+            LocusBrowser.render("ACTN3", config);
+            LocusBrowser.setUIEvents("ACTN3", config);
+
         });
 
     </script>

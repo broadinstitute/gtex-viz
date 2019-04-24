@@ -27,6 +27,7 @@ export default class MiniGenomeBrowser{
 
     render(dom, width=1500, height=200, showWidth=false, trackLabel="Track", bgColor="#ffffff", featureColor="#ababab", useColorValue=false, maxColorValue=undefined){
         this.dom = dom;
+        let id = this.dom.attr("id");
         let range = [0, width];
         let domain = [this.center-this.window, this.center+this.window];
         this.scale = scaleLinear()
@@ -40,7 +41,7 @@ export default class MiniGenomeBrowser{
         }
         let browser = this.dom.append("g");
 
-        // genome browser backbone
+        // genome browser background rectangle
         let backboneHeight = 10;
         browser.append("rect")
             .attr("x", 0)
@@ -54,8 +55,12 @@ export default class MiniGenomeBrowser{
         // genome features
         // NOTE: d.pos is used when showWidth is false, d.pos is independent to the strand that the feature is on, applicable for rendering TSS sites, variants.
         // NOTE: d.start and d.end are used when showWidth is true.
-        let features = browser.selectAll('.minibrowser-feature')
-            .data(this.data)
+        let featureG = browser.append("g")
+
+        let features = featureG.selectAll('.minibrowser-feature')
+            .data(this.data.filter((d)=>{
+                return this.scale(d.pos)>0 && this.scale(d.pos)<width;
+            }))
             .enter()
             .append("rect")
             .attr("class", "minibrowser-feature")

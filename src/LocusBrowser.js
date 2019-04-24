@@ -21,7 +21,6 @@ import {createSvg} from "./modules/utils";
 
 export function render(geneId, par=DefaultConfig){
     setDimensions(par);
-
     const promises1 = [
         json(par.urls.queryGene + geneId, {credentials: 'include'}),
         tsv(par.urls.genes)
@@ -64,6 +63,39 @@ export function render(geneId, par=DefaultConfig){
         })
 
 }
+export function setUIEvents(geneId, par){
+    select("#zoom-plus")
+        .style("cursor", "pointer")
+        .on("click", ()=>{
+            par.genomicWindow = par.genomicWindow/2 < 1e4?1e4:par.genomicWindow/2;
+            console.log(par.genomicWindow)
+            rerender(geneId, par)
+        });
+    select("#zoom-minus")
+        .style("cursor", "pointer")
+        .on("click", ()=>{
+            par.genomicWindow = par.genomicWindow*2 > 1e6?1e6:par.genomicWindow*2;
+            console.log(par.genomicWindow)
+
+            rerender(geneId, par)
+        });
+    select("#zoom-reset")
+        .style("cursor", "pointer")
+        .on("click", ()=>{
+            par.genomicWindow = 1e6;
+            console.log(par.genomicWindow)
+
+            rerender(geneId, par)
+        })
+}
+
+function rerender(geneId, par){
+    // clear all visualizations
+    select("#"+par.id).selectAll("*").remove();
+    select("#"+par.ldId).selectAll("*").remove();
+    render(geneId, par);
+}
+
 
 function renderGeneLabels(queryGene, genes, mainSvg, panel, par){
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
@@ -96,11 +128,7 @@ function renderGeneLabels(queryGene, genes, mainSvg, panel, par){
     axisG.selectAll(".tick")
         .style("cursor", "pointer")
         .on("click", (d)=>{
-            console.log("Yike, ", d);
-            // clear all visualizations
-            select("#"+par.id).selectAll("*").remove();
-            select("#"+par.ldId).selectAll("*").remove();
-            render(d);
+            rerender(d, par);
         })
 
     return scale;
@@ -441,10 +469,7 @@ function renderGeneHeatmap(gene, svg, data, par=DefaultConfig, filterTable){
         .attr('fill', (d)=>d==gene.geneSymbol?"red":"#000000")
         .style("cursor", "pointer")
         .on("click", (d)=>{
-            // clear all visualizations
-            select("#"+par.id).selectAll("*").remove();
-            select("#"+par.ldId).selectAll("*").remove();
-            render(d); // render data of the new gene
+            rerender(d, par); // render data of the new gene
         });
     hViz.svg = mapG;
     return hViz
