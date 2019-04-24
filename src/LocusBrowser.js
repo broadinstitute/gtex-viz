@@ -430,7 +430,7 @@ function renderGeneHeatmap(gene, svg, data, par=CONFIG, filterTable){
 
     // instantiate a Heatmap object
     let tooltipId = "locus-browser-tooltip";
-    let hViz = new Heatmap(panel.data, panel.useLog, 10, panel.colorScheme, panel.cornerRadius, tooltipId);
+    let hViz = new Heatmap(panel.data, panel.useLog, 10, panel.colorScheme, panel.cornerRadius, tooltipId, tooltipId);
 
     // render
     hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
