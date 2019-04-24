@@ -30,12 +30,14 @@ export default class BubbleMap {
         this.tooltip = undefined;
     }
 
-    addTooltip(parentId){
-        let parent = $(`#${parentId}`);
+    addTooltip(parentId, tooltipCssClass="bubblemap-tooltip"){
+        // error-checking
+        if (select(`#${parentId}`).empty()) throw "DOM ID is missing: " + parentId;
+        let parent = select(`#${parentId}`);
         let tooltipId = parentId + '-tooltip';
-        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo(parent);
+        if (select(`#${tooltipId}`).empty()) parent.append("div").attr('id', tooltipId);
         this.tooltip = new Tooltip(tooltipId);
-        select(`#${tooltipId}`).classed('bubblemap-tooltip', true);
+        select(`#${tooltipId}`).classed(tooltipCssClass, true);
     }
 
     /**

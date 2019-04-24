@@ -21,7 +21,7 @@ export default class Heatmap {
      * @param colorScheme {String}: recognized terms in Colors:getColorInterpolator
      * @param r {Integer}: cell corner radius
      */
-    constructor(data, useLog=true, logBase=10, colorScheme="YlGnBu", r=2, tooltipId="heatmapTooltip"){
+    constructor(data, useLog=true, logBase=10, colorScheme="YlGnBu", r=2, tooltipId="heatmapTooltip", tooltipCssClass="heatmap-tooltip"){
         this.data = data;
         this.useLog = useLog;
         this.logBase = logBase;
@@ -37,9 +37,9 @@ export default class Heatmap {
         // peripheral features
         /// Tooltip
         /// create the tooltip DIV
-        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($('body'));
+        if (select(`#${tooltipId}`).length == 0) select('body').append('div').attr('id', tooltipId);
         this.tooltip = new Tooltip(tooltipId);
-        select(`#${tooltipId}`).classed('heatmap-tooltip', true);
+        select(`#${tooltipId}`).classed(tooltipCssClass, true);
 
         this.toolbar = undefined;
     }

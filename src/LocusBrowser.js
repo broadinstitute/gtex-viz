@@ -262,7 +262,7 @@ function renderQtlBubbleMap(gene, svg, par=CONFIG, qtlData){
 
 
     bmap.fullDomain = bmap.xScale.domain(); // save the full domain as a new attribute of bmap
-    bmap.addTooltip("locus-browser");
+    bmap.addTooltip("locus-browser", "locus-browser-tooltip");
     bmap.svg = bmapG;
     // customization
     //-- TSS and TES markers
@@ -326,7 +326,7 @@ function createBrush(gene, trackViz, bmap, par=CONFIG, ldBrush=undefined){
     }; // this is the brush event
 
     let brushConfig = {
-        w: 20,
+        w: 10*bmap.xScale.bandwidth(), // roughly proportional to the total number of variants
         h: Math.abs(par.panels.tssTrack.yPos + par.panels.tssTrack.margin.top - (par.panels.sqtlTrack.yPos + par.panels.sqtlTrack.height +20)) // the brush should cover all tracks
     };
 
@@ -612,7 +612,7 @@ function renderGeneStartEndMarkers(bmap, dom){
 const GlobalWidth = window.innerWidth;
 const host = "https://dev.gtexportal.org/rest/v1/";
 const CONFIG = {
-    id: "qtl-browser",
+    id: "locus-browser",
     ldId: "ld-browser",
     width: GlobalWidth,
     height: null, // should be dynamically calculated

@@ -46,8 +46,9 @@ export default class HalfMap{
     }
 
     addTooltip(parentId){
+        if (select(`#${parentId}`).empty()) throw "DOM ID is missing: " + parentId;
         let tooltipId = parentId + '-tooltip';
-        if ($(`#${tooltipId}`).length == 0) $('<div/>').attr('id', tooltipId).appendTo($(`#${parentId}`));
+        if (select(`#${tooltipId}`).empty()) select(`#${parentId}`).append('div').attr('id', tooltipId);
         this.tooltip = new Tooltip(tooltipId, false, 40, 0);
         select(`#${tooltipId}`).classed('half-map-tooltip', true);
     }
