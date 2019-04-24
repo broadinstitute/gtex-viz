@@ -19,7 +19,7 @@ import Heatmap from "./modules/Heatmap.js";
 import HalfMap from "./modules/HalfMap.js";
 import {createSvg} from "./modules/utils";
 
-export function render(geneId, par=CONFIG){
+export function render(geneId, par=DefaultConfig){
     setDimensions(par);
 
     const promises1 = [
@@ -34,8 +34,8 @@ export function render(geneId, par=CONFIG){
 
             // fetch neighbor genes including the query gene itself
             let genes = queryData[1].filter((d)=>{ // all genes within the genomic view range
-                const lower = gene.tss - CONFIG.genomicWindow;
-                const upper = gene.tss + CONFIG.genomicWindow;
+                const lower = gene.tss - par.genomicWindow;
+                const upper = gene.tss + par.genomicWindow;
                 return par.dataFilters.genes(d, gene.chromosome, lower, upper)
             }).map(par.parsers.genes); // genes are filtered by gene types defined in the config object
             genes.sort(par.dataSort.genes);
@@ -116,7 +116,7 @@ function renderGeneLabels(queryGene, genes, mainSvg, panel, par){
  * @param genePosTable {Dict} gene TSS indexed by gencodeId
  * @param par {Object} the configuration object of the overall visualization
  */
-function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, par = CONFIG){
+function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, par = DefaultConfig){
     // render the gene map as a heat map
     // const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
 
@@ -172,7 +172,7 @@ function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, pa
  * @param par
  * @param data
  */
-function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
+function renderVariantVisualComponents(queryGene, mainSvg, par=DefaultConfig, data){
     // QTL tracks
     const qtlData = {
         eqtl: data[0].singleTissueEqtl,
@@ -203,7 +203,7 @@ function renderVariantVisualComponents(queryGene, mainSvg, par=CONFIG, data){
  * Calculate and determine the Y position of each individual visual panel in the root SVG
  * @param par
  */
-function setDimensions(par=CONFIG){
+function setDimensions(par=DefaultConfig){
     par.height = Object.keys(par.panels)
         .reduce((total, panelKey, i)=>{
             let p = par.panels[panelKey];
@@ -213,7 +213,7 @@ function setDimensions(par=CONFIG){
         }, 0);
 }
 
-function aggregateQtlData(data, par=CONFIG){
+function aggregateQtlData(data, par=DefaultConfig){
 
     //-- Define the collapse function
     //   Collapse QTLs at each each locus, and report only the best (smallest) p-value.
@@ -240,7 +240,7 @@ function aggregateQtlData(data, par=CONFIG){
  * @param trackData {Dictionary} QTL data
  * @returns {MiniGenomeBrowser} sQTL's track object (or the object to apply the brush)
  */
-function renderQtlBubbleMap(gene, svg, par=CONFIG, qtlData){
+function renderQtlBubbleMap(gene, svg, par=DefaultConfig, qtlData){
     let qtlMapPanel = par.panels.qtlMap;
     let parser = par.parsers.qtlBubbles;
     qtlMapPanel.data = [];
@@ -270,7 +270,7 @@ function renderQtlBubbleMap(gene, svg, par=CONFIG, qtlData){
     return bmap;
 }
 
-function renderVariantTracks(gene, svg, par=CONFIG, trackData){
+function renderVariantTracks(gene, svg, par=DefaultConfig, trackData){
     let eqtlPanel = par.panels.eqtlTrack;
     let sqtlPanel = par.panels.sqtlTrack;
 
@@ -283,7 +283,7 @@ function renderVariantTracks(gene, svg, par=CONFIG, trackData){
     return sqtlTrackViz;
 }
 
-function createBrush(gene, trackViz, bmap, par=CONFIG, ldBrush=undefined){
+function createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined){
     const qtlMapPanel = par.panels.qtlMap;
     const brushPanel = par.panels.sqtlTrack; // TODO: the genomic track that the brush is on may not be the sqtl track
     // Brush definition: render the chromosome position axis and zoom brush
@@ -343,7 +343,7 @@ function createBrush(gene, trackViz, bmap, par=CONFIG, ldBrush=undefined){
  * @param par {config object}
  * @private
  */
-function _ldMapDataParserHelper(data, bmap, par=CONFIG){
+function _ldMapDataParserHelper(data, bmap, par=DefaultConfig){
     let variantLookup = {};
     bmap.xScale.domain().forEach((x)=>{variantLookup[x]=true})
     let ldData = data.ld.map(par.parsers.ld)
@@ -402,11 +402,11 @@ function renderLdMap(config, bmap){
  * @param gene {Object}
  * @param svg {D3 SVG} the root SVG object
  * @param data {List} of data objects
- * @param par {Object} the viz CONFIG
+ * @param par {Object} the viz DefaultConfig
  * @param filterTable {Dict} filter genes based on this lookup table
  * @returns {Heatmap}
  */
-function renderGeneHeatmap(gene, svg, data, par=CONFIG, filterTable){
+function renderGeneHeatmap(gene, svg, data, par=DefaultConfig, filterTable){
     let panel = par.panels.geneMap;
     let dFilter = par.parsers.geneExpression;
     let dSort = par.dataSort.geneExpression;
@@ -458,7 +458,7 @@ function renderGeneHeatmap(gene, svg, data, par=CONFIG, filterTable){
  * @param data {Dictionary} data of each gene-based track
  * @returns {MiniGenomeBrowser} of the tss track
  */
-function renderGeneTracks(gene, svg, par=CONFIG, data){
+function renderGeneTracks(gene, svg, par=DefaultConfig, data){
 
     // tss track
     let tssTrack = par.panels.tssTrack;
@@ -485,7 +485,7 @@ function renderGeneTracks(gene, svg, par=CONFIG, data){
  * @param maxColorValue {Numnber} defines the maximum color value when useColorScale is true
  * @returns {MiniGenomeBrowser}
  */
-function renderFeatureTrack(centerPos, svg, window, panel=CONFIG.panels.tssTrack, showWidth, useColorScale=false, maxColorValue=undefined){
+function renderFeatureTrack(centerPos, svg, window, panel=DefaultConfig.panels.tssTrack, showWidth, useColorScale=false, maxColorValue=undefined){
     // preparation for the plot
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
@@ -611,7 +611,7 @@ function renderGeneStartEndMarkers(bmap, dom){
 /*********************/
 const GlobalWidth = window.innerWidth;
 const host = "https://dev.gtexportal.org/rest/v1/";
-const CONFIG = {
+const DefaultConfig = {
     id: "locus-browser",
     ldId: "ld-browser",
     width: GlobalWidth,

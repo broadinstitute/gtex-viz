@@ -19,8 +19,247 @@
     </body>
     <script src="/build/js/locus-browser.bundle.min.js"></script>
     <script>
+        const GlobalWidth = window.innerWidth;
+        const host = "https://dev.gtexportal.org/rest/v1/";
+
+        const panels = {
+                geneMap: {
+                    id: 'gene-map',
+                    data: null,
+                    useLog: true,
+                    logBase: null,
+                    margin: {
+                        top: 0, // provide enough space for the color legend
+                        right: 100, // provide enough space for the row labels
+                        bottom: 0, // provide enough space for the column labels
+                        left: 80
+                    },
+                    width: GlobalWidth,
+                    height: 100, // outer height: this includes top and bottom margins + inner height
+                    colorScheme: "YlGnBu",
+                    cornerRadius: 2,
+                    columnLabel: {
+                        angle: 90,
+                        adjust: 10
+                    },
+                    rowLabel: {
+                        width: 100
+                    }
+                },
+                tssTrack: {
+                    id: 'tss-track',
+                    label: 'TSS location',
+                    data: null,
+                    yPos: null, // where the panel should be placed to be calculated based on the panel layout
+                    margin: {
+                        top: 50,
+                        right: 50,
+                        bottom: 0,
+                        left: 80
+                    },
+                    width: GlobalWidth,
+                    height: 70, // outer height=inner height + top margin + bottom margin
+                    color: {
+                        background: "#ffffff",
+                        feature: "#ababab"
+                    }
+                },
+                geneModelTrack: {
+                    id: 'gene-model-track',
+                    label: "Gene model",
+                    yPos: null,
+                    margin: {
+                        top: 0,
+                        right: 50,
+                        bottom: 10,
+                        left: 80
+                    },
+                    width: GlobalWidth,
+                    height: 30,
+                    color: {
+                        background: '#ffffff',
+                        feature: "#910807"
+                    }
+                },
+                eqtlTrack: {
+                    id: 'eqtl-track',
+                    label: 'eQTL summary',
+                    data: null,
+                    yPos: null,
+                    margin: {
+                        top: 0,
+                        right: 50,
+                        bottom: 0,
+                        left: 80
+                    },
+                    width: GlobalWidth,
+                    height: 20, // outer height. outer height=inner height + top margin + bottom margin.
+                    color: {
+                        background: "#ffffff",
+                        feature: "#ababab"
+                    }
+
+                },
+                sqtlTrack: {
+                    id: 'sqtl-track',
+                    label: 'sQTL summary',
+                    data: null,
+                    yPos: null,
+                    margin: {
+                        top: 0,
+                        right: 50,
+                        bottom: 0,
+                        left: 80
+                    },
+                    width: GlobalWidth,
+                    height: 20, // outer height. outer height=inner height + top margin + bottom margin.
+                    color: {
+                        background: "#ffffff",
+                        feature: "#ababab"
+                    }
+                },
+
+                qtlMap: {
+                    id: 'qtl-map', // the bubble heat map of QTLs
+                    width: GlobalWidth,
+                    data: null,
+                    yPos: null,
+                    margin: {
+                        top: 100, // provide space for the genome position scale
+                        right: 100,
+                        bottom: 120, // provide space for the column labels
+                        left: 200
+                    },
+                    height: 500,
+                    colorScheme: "RdBu",
+                    colorScaleDomain: [-1, 1],
+                    useLog: false,
+                    logBase: null,
+                    label: {
+                        column: {
+                            show: true,
+                            angle: 90,
+                            adjust: 10,
+                            location: 'bottom',
+                            textAlign: 'left'
+                        },
+                        row: {
+                            show: true,
+                            width: 150,
+                            angle: 0,
+                            adjust: 0,
+                            location: 'left',
+                            textAlign: 'right'
+                        }
+                    }
+                }
+            };
+        const config = {
+            id: "locus-browser",
+            ldId: "ld-browser",
+            width: GlobalWidth,
+            height: null, // should be dynamically calculated
+            genomicWindow: 5e5,
+            urls: {
+                queryGene: host + 'reference/gene?format=json&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&geneId=',
+                genes: "../tempData/V8.genes.csv",
+                geneExpression: host + 'expression/medianGeneExpression?datasetId=gtex_v8&hcluster=true&pageSize=10000&gencodeId=',
+                geneModel:  host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=', // should use final collapsed gene model instead. correct this when switching to query data from the web service
+                eqtls: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v8&gencodeId=',
+                sqtls:  host + 'association/singleTissueSqtl?format=json&datasetId=gtex_v8&gencodeId=',
+                ld: host + 'dataset/ld?format=json&datasetId=gtex_v8&gencodeId=',
+            },
+            parsers: {
+                genes: (d)=>{
+                    d.start = parseInt(d.start);
+                    d.end = parseInt(d.end);
+                    d.pos = parseInt(d.tss);
+                    d.featureLabel = d.geneSymbol;
+                    d.featureType = d.geneType;
+                    return d;
+                },
+                geneModel: (d)=>{
+                    d.start = parseInt(d.start);
+                    d.end = parseInt(d.end);
+                    d.pos = d.start;
+                    d.featureLabel = d.exonId;
+                    return d;
+                },
+                geneExpression: (d)=>{
+                    d.x = d.geneSymbol
+                    d.y = d.tissueSiteDetailId
+                    d.value = d.median
+                    d.displayValue = d.value
+                    return d;
+                },
+                qtlFeatures: (d)=>{
+                    // let id = d.variantId;
+                    d.chr = d.chromosome;
+                    d.start = parseInt(d.pos);
+                    d.end = d.start;
+                    d.pos = parseInt(d.pos);
+                    d.featureType = "variant";
+                    d.featureLabel = d.snpId||d.variantId;
+                    d.colorValue = -Math.log10(parseFloat(d.pValue));
+                    return d;
+                },
+                qtlBubbles: (d, dataType)=>{
+                    d.x = d.variantId;
+                    d.y = d.tissueSiteDetailId + "-" + dataType;
+                    d.value = parseFloat(d.nes);
+                    d.r = -Math.log10(parseFloat(d.pValue));
+                    return d;
+                },
+                ld: (d)=>{
+                    let vars = d[0].split(",");
+                    return {
+                        x: vars[0],
+                        y: vars[1],
+                        value: d[1],
+                        displayValue: d[1].toPrecision(3)
+                    }
+                }
+            },
+            dataFilters: {
+                genes: (d, chr, lower, upper) => {
+                    if (d.chromosome==chr && d.tss>lower && d.tss<upper){
+                        return d.geneType == "protein coding" || d.geneType == "lincRNA"
+                    } else {
+                        return false
+                    }
+                },
+                ld: (d, lookupTable)=>{
+                    return lookupTable[d.x] && lookupTable[d.y];
+                }
+            },
+            dataSort: {
+                genes: (a, b) => {
+                    return parseInt(a.tss) - parseInt(b.tss)
+                },
+                geneExpression: (a, b) => {
+                    return parseInt(a.pos) - parseInt(b.pos)
+                },
+                variants: (a, b) => {
+                    return parseInt(a.pos) - parseInt(b.pos)
+                },
+            },
+            panels: panels,
+            ld: { // LD configuration is separate from the panels because it's in its own DIV and is rendered using canvas.
+                id: "ld-browser",
+                data: [],
+                cutoff: 0.1,
+                width: GlobalWidth,
+                margin: {
+                    top: 10,
+                    right: 100,
+                    bottom: 0,
+                    left: 200
+                },
+                colorScheme: "Greys"
+            }
+        };
         document.addEventListener('DOMContentLoaded', function() {
-            LocusBrowser.render("ACTN3")
+            LocusBrowser.render("ACTN3", config)
         });
 
     </script>
