@@ -23,3 +23,7 @@
    /*z-index:4000;*/
    /*border-radius:5px;*/
 /*}*/
+
+g.tick text.highlighted {
+    text-decoration: underline;
+}

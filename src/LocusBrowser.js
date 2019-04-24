@@ -10,6 +10,9 @@
 import {tsv, json} from "d3-fetch";
 import {select, selectAll} from "d3-selection";
 import {max} from "d3-array";
+import {axisBottom} from "d3-axis";
+import {scaleBand} from "d3-scale";
+
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
 import BubbleMap from "./modules/BubbleMap.js";
 import Heatmap from "./modules/Heatmap.js";
@@ -44,18 +47,14 @@ export function render(geneId, par=CONFIG){
 
             const geneStrings = genes.map((g)=>g.gencodeId).join(",");
 
-            const promises2 = ["geneExpression", "geneModel", "eqtls", "sqtls"].map((d)=>{
-                if(d == "geneExpression"){
-                    const url = par.urls[d] + geneStrings;
-                    return json(url, {credentials: 'include'})
-                }
+            const promises2 = ["geneModel", "eqtls", "sqtls"].map((d)=>{
                 const url = par.urls[d] + gene.gencodeId;
                 return json(url, {credentials: 'include'})
             });
 
             Promise.all(promises2)
                 .then((args)=> {
-                    renderGeneVisualComponents(gene, mainSvg, args.splice(0,2), genes, genePosTable, par);
+                    renderGeneVisualComponents(gene, mainSvg, args.splice(0,1), genes, genePosTable, par);
                     renderVariantVisualComponents(gene, mainSvg, par, args)
                 })
                 .catch((err)=>{console.error(err)})
@@ -63,6 +62,48 @@ export function render(geneId, par=CONFIG){
         .catch((err)=>{
             console.error(err)
         })
+
+}
+
+function renderGeneLabels(queryGene, genes, mainSvg, panel, par){
+    let inWidth = panel.width - (panel.margin.left + panel.margin.right);
+    let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
+    if (inWidth * inHeight <= 0) throw "The inner height and width of the GWAS heatmap panel must both be positive values. Check the height and margin configuration of this panel"
+
+    let xList = genes.sort((a, b)=>{
+         return parseInt(a.tss) - parseInt(b.tss)
+    });
+    let scale = scaleBand()
+        .domain(xList.map((d)=>d.geneSymbol))
+        .range([0, inWidth])
+        .padding(.05);
+    let axis = axisBottom(scale).tickSize(0);
+
+    // render the text labels
+    const axisG = mainSvg.append("g");
+    axisG.attr("transform", `translate(${panel.margin.left}, ${panel.margin.top + inHeight})`)
+        .call(axis)
+        .selectAll("text")
+        .attr("y", 0)
+        .attr("x", 0)
+        .attr("dy", ".35em")
+        .attr("transform", `rotate(-90)`)
+        .style("text-anchor", "start")
+        .style("color", (d)=>d==queryGene.geneSymbol?"red":"black")
+    axisG.select(".domain").remove(); // remove the axis line
+
+    // define the axis ticks click events
+    axisG.selectAll(".tick")
+        .style("cursor", "pointer")
+        .on("click", (d)=>{
+            console.log("Yike, ", d);
+            // clear all visualizations
+            select("#"+par.id).selectAll("*").remove();
+            select("#"+par.ldId).selectAll("*").remove();
+            render(d);
+        })
+
+    return scale;
 
 }
 
@@ -77,12 +118,15 @@ export function render(geneId, par=CONFIG){
  */
 function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, par = CONFIG){
     // render the gene map as a heat map
-    const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
+    // const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
+
+    // render the gene list
+    const geneLabelScale = renderGeneLabels(gene, genes, mainSvg, par.panels.geneMap, par);
 
     // render gene related genomic tracks
     const trackData = {
         tssTrack: genes,
-        exonTrack: data[1].collapsedGeneModelExon
+        exonTrack: data[0].collapsedGeneModelExon
     };
     const tssTrackViz = renderGeneTracks(gene, mainSvg, par, trackData);
 
@@ -90,15 +134,15 @@ function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, pa
     let geneMapPanel = par.panels.geneMap;
     let tssPanel = par.panels.tssTrack;
 
-    let xAdjust = geneMapPanel.margin.left - tssPanel.margin.left + (heatmapViz.xScale.bandwidth()/2);
+    let xAdjust = geneMapPanel.margin.left - tssPanel.margin.left + (geneLabelScale.bandwidth()/2);
     let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
 
     tssTrackViz.svg.selectAll(".connect")
-        .data(genes.filter((d)=>heatmapViz.xScale.domain().indexOf(d.geneSymbol)>=0))
+        .data(genes.filter((d)=>geneLabelScale.domain().indexOf(d.geneSymbol)>=0))
         .enter()
         .append('line')
         .attr("class", "connect")
-        .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+        .attr("x1", (d)=>geneLabelScale(d.geneSymbol) + xAdjust)
         .attr("x2", (d)=>tssTrackViz.scale(d.tss))
         .attr("y1", trackHeight/2-20)
         .attr("y2", trackHeight/2)
@@ -106,18 +150,14 @@ function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, pa
         .attr("stroke-width", 0.5);
 
     tssTrackViz.svg.selectAll(".connect2")
-        .data(genes.filter((d)=>heatmapViz.xScale.domain().indexOf(d.geneSymbol)>=0))
+        .data(genes.filter((d)=>geneLabelScale.domain().indexOf(d.geneSymbol)>=0))
         .enter()
         .append('line')
         .attr("class", "connect2")
-        .attr("x1", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
-        .attr("x2", (d)=>heatmapViz.xScale(d.geneSymbol) + xAdjust)
+        .attr("x1", (d)=>geneLabelScale(d.geneSymbol) + xAdjust)
+        .attr("x2", (d)=>geneLabelScale(d.geneSymbol) + xAdjust)
         .attr("y1", trackHeight/2-20)
-        .attr("y2", (d)=>{
-            let adjust = -(geneMapPanel.margin.bottom+tssPanel.margin.top - 10) +(d.geneSymbol.length*heatmapViz.yScale.bandwidth());
-            adjust = adjust > -20?-20:adjust;
-            return trackHeight/2 + adjust;
-        })
+        .attr("y2", trackHeight/2-50)
         .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
         .attr("stroke-width", 0.5);
 
@@ -126,7 +166,7 @@ function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, pa
 
 /**
  * Rendering all variant related visualization components
- * TODO: break this function into smaller functions?
+ * TODO: break this function into smaller functions
  * @param queryGene
  * @param mainSvg
  * @param par
@@ -667,13 +707,13 @@ const CONFIG = {
             useLog: true,
             logBase: null,
             margin: {
-                top: 40, // provide enough space for the color legend
+                top: 0, // provide enough space for the color legend
                 right: 100, // provide enough space for the row labels
-                bottom: 100, // provide enough space for the column labels
+                bottom: 0, // provide enough space for the column labels
                 left: 80
             },
             width: GlobalWidth,
-            height: 500, // outer height: this includes top and bottom margins + inner height
+            height: 100, // outer height: this includes top and bottom margins + inner height
             colorScheme: "YlGnBu",
             cornerRadius: 2,
             columnLabel: {
