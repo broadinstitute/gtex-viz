@@ -31,7 +31,7 @@ export const dataFilters = {
     genes: (d, gene, window) => {
          const lower = gene.tss - window; // lower bound
          const upper = gene.tss + window;
-        if (d.chromosome==gene.chromosome && d.tss>lower && d.tss<upper){
+        if (d.chromosome==gene.chromosome && d.tss>=lower && d.tss<=upper){
             return d.geneType == "protein coding" || d.geneType == "lincRNA"
         } else {
             return false
@@ -39,6 +39,11 @@ export const dataFilters = {
     },
     ld: (d, lookupTable)=>{
         return lookupTable[d.x] && lookupTable[d.y];
+    },
+    qtls: (d, gene, window) =>{
+        const lower = gene.tss - window;
+        const upper = gene.tss + window;
+        return d.pos>=lower && d.pos<=upper;
     }
 };
 
@@ -90,7 +95,7 @@ export function setUIEvents(geneId, par){
         .style("cursor", "pointer")
         .on("click", ()=>{
             par.genomicWindow = par.genomicWindow <= 1e4?1e4:par.genomicWindow/2;
-            console.log(par.genomicWindow)
+            // console.log(par.genomicWindow)
             rerender(geneId, par)
         });
     select("#zoom-minus")
@@ -121,6 +126,7 @@ function rerender(geneId, par){
 
 function zoom(geneId, par){
     renderGeneVisualComponents(par);
+    // renderVariantTracks(par);
     renderVariantVisualComponents(par);
 }
 
@@ -240,18 +246,17 @@ function renderGeneVisualComponents(par = DefaultConfig){
 function renderVariantVisualComponents(par=DefaultConfig){
     // QTL tracks
     const qtlData = {
-        eqtl: par.data.eqtl.singleTissueEqtl,
-        sqtl: par.data.sqtl.singleTissueSqtl
+        eqtl: par.genomicWindow==1e6?par.data.eqtl.singleTissueEqtl:par.data.eqtl.singleTissueEqtl.filter((d)=>{return par.dataFilters.qtls(d, par.data.queryGene, par.genomicWindow)}),
+        sqtl: par.genomicWindow==1e6?par.data.sqtl.singleTissueSqtl:par.data.sqtl.singleTissueSqtl.filter((d)=>{return par.dataFilters.qtls(d, par.data.queryGene, par.genomicWindow)}),
     };
-    const sqtlTrackViz = renderVariantTracks(par.data.queryGene, par.svg, par, qtlData);
-
-    const bmap = renderQtlBubbleMap(par.data.queryGene, par.svg, par, qtlData);
+    const sqtlTrackViz = renderVariantTracks(par, qtlData);
+    const bmap = renderQtlBubbleMap(par, qtlData);
     // QTL bubble map data
 
     // LD map
 
     // LD map: parse the data and call the initial rendering
-    _ldMapDataParserHelper(par.data.ld, bmap, par);
+    if (par.ld.data.length == 0) _ldMapDataParserHelper(par.data.ld, bmap, par);
     const ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
      // initial rendering components
     bmap.drawSvg(bmap.svg, {w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]), h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]), top: 0, left:0}); // initialize bubble heat map
@@ -301,7 +306,10 @@ function aggregateQtlData(data, par=DefaultConfig){
  * @param trackData {Dictionary} QTL data
  * @returns {MiniGenomeBrowser} sQTL's track object (or the object to apply the brush)
  */
-function renderQtlBubbleMap(gene, svg, par=DefaultConfig, qtlData){
+function renderQtlBubbleMap(par=DefaultConfig, qtlData){
+    let gene = par.data.queryGene;
+    let svg = par.svg;
+
     let qtlMapPanel = par.panels.qtlMap;
     let parser = par.parsers.qtlBubbles;
     qtlMapPanel.data = [];
@@ -331,12 +339,16 @@ function renderQtlBubbleMap(gene, svg, par=DefaultConfig, qtlData){
     return bmap;
 }
 
-function renderVariantTracks(gene, svg, par=DefaultConfig, trackData){
+function renderVariantTracks(par=DefaultConfig, trackData){
+    let gene = par.data.queryGene;
+    let svg = par.svg;
     let eqtlPanel = par.panels.eqtlTrack;
     let sqtlPanel = par.panels.sqtlTrack;
+    if (eqtlPanel.data === null || sqtlPanel.data === null){
+        eqtlPanel.data = aggregateQtlData(trackData.eqtl, par)
+        sqtlPanel.data = aggregateQtlData(trackData.sqtl, par)
+    }
 
-    eqtlPanel.data = aggregateQtlData(trackData.eqtl, par)
-    sqtlPanel.data = aggregateQtlData(trackData.sqtl, par)
     // QTL tracks rendering
     const maxColorValue = 30; // TODO: define a universal max value for the QTLs, so that it's comparable?
     renderFeatureTrack(gene.tss, svg, par.genomicWindow, eqtlPanel, false, true, maxColorValue);
@@ -408,9 +420,9 @@ function _ldMapDataParserHelper(data, bmap, par=DefaultConfig){
     let variantLookup = {};
     bmap.xScale.domain().forEach((x)=>{variantLookup[x]=true})
     let ldData = data.ld.map(par.parsers.ld)
-        .filter((d)=>{
-            return par.dataFilters.ld(d, variantLookup)
-        });
+        // .filter((d)=>{
+        //     return par.dataFilters.ld(d, variantLookup)
+        // });
     const vList = {};
     ldData.forEach((d)=>{
         vList[d.x] = true;
