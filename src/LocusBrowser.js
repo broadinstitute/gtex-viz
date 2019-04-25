@@ -162,7 +162,14 @@ function renderGeneLabels(par){
     axisG.selectAll(".tick")
         .style("cursor", "pointer")
         .on("click", (d)=>{
-            rerender(d, par);
+            // reset everything
+            select("#" + par.id).selectAll("*").remove();
+            select("#"+par.ldId).selectAll("*").remove();
+            par.data = data;
+            par.panels.eqtlTrack.data = null;
+            par.panels.sqtlTrack.data = null;
+            par.ld.data = [];
+            render(d, par);
         })
 
     return scale;
