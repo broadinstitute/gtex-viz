@@ -67,16 +67,14 @@ export function setUIEvents(geneId, par){
     select("#zoom-plus")
         .style("cursor", "pointer")
         .on("click", ()=>{
-            par.genomicWindow = par.genomicWindow/2 < 1e4?1e4:par.genomicWindow/2;
+            par.genomicWindow = par.genomicWindow <= 1e4?1e4:par.genomicWindow/2;
             console.log(par.genomicWindow)
             rerender(geneId, par)
         });
     select("#zoom-minus")
         .style("cursor", "pointer")
         .on("click", ()=>{
-            par.genomicWindow = par.genomicWindow*2 > 1e6?1e6:par.genomicWindow*2;
-            console.log(par.genomicWindow)
-
+            par.genomicWindow = par.genomicWindow >= 1e6?1e6:par.genomicWindow*2;
             rerender(geneId, par)
         });
     select("#zoom-reset")
@@ -87,12 +85,15 @@ export function setUIEvents(geneId, par){
 
             rerender(geneId, par)
         })
+    select("#zoom-size")
+        .text(`genomic range: ${(2*par.genomicWindow).toLocaleString()} bases`)
 }
 
 function rerender(geneId, par){
     // clear all visualizations
     select("#"+par.id).selectAll("*").remove();
     select("#"+par.ldId).selectAll("*").remove();
+    select("#zoom-size").text(`genomic range: ${(2*par.genomicWindow).toLocaleString()} bases`)
     render(geneId, par);
 }
 

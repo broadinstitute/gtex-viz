@@ -13,13 +13,18 @@
     <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
     <h3>GTEx Locus Browser</h3>
     <hr>
-    <div id="locus-browser-toolbar" class="btn-group btn-group-sm col-lg-1">
-        <span style="margin-right: 10px;">Zoom</span>
-        <a id="zoom-reset" class="btn btn-outline-info"><i class="fa fa-undo"></i></a>
-        <a id="zoom-minus" class="btn btn-outline-info"><i class="fa fa-search-minus"></i></a>
-        <a id="zoom-plus" class="btn btn-outline-info"><i class="fa fa-search-plus"></i></a>
-
+    <div class="row">
+        <div id="locus-browser-toolbar" class="btn-group btn-group-sm col-lg-1 col-md-2 col-sm-3">
+            <span style="margin-right: 10px;">Zoom</span>
+            <a id="zoom-reset" class="btn btn-outline-info"><i class="fa fa-undo"></i></a>
+            <a id="zoom-minus" class="btn btn-outline-info"><i class="fa fa-search-minus"></i></a>
+            <a id="zoom-plus" class="btn btn-outline-info"><i class="fa fa-search-plus"></i></a>
+        </div>
+    <div class="col-lg-3">
+        <span id="zoom-size"></span>
     </div>
+    </div>
+
     <div id="locus-browser"><!-- Root DOM for the SVG --></div>
     <div id="ld-browser"><!-- Root DOM for the LD map--></div>
     </body>
