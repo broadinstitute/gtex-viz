@@ -232,18 +232,8 @@
                     }
                 }
             },
-            dataFilters: {
-                genes: (d, chr, lower, upper) => {
-                    if (d.chromosome==chr && d.tss>lower && d.tss<upper){
-                        return d.geneType == "protein coding" || d.geneType == "lincRNA"
-                    } else {
-                        return false
-                    }
-                },
-                ld: (d, lookupTable)=>{
-                    return lookupTable[d.x] && lookupTable[d.y];
-                }
-            },
+            dataFilters: LocusBrowser.dataFilters,
+            data: LocusBrowser.data,
             dataSort: {
                 genes: (a, b) => {
                     return parseInt(a.tss) - parseInt(b.tss)

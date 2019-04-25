@@ -19,49 +19,71 @@ import Heatmap from "./modules/Heatmap.js";
 import HalfMap from "./modules/HalfMap.js";
 import {createSvg} from "./modules/utils";
 
+export const data = {
+    queryGene: undefined,
+    genes: undefined,
+    geneModel: undefined,
+    sqtl: undefined,
+    eqtl: undefined
+};
+
+export const dataFilters = {
+    genes: (d, gene, window) => {
+         const lower = gene.tss - window; // lower bound
+         const upper = gene.tss + window;
+        if (d.chromosome==gene.chromosome && d.tss>lower && d.tss<upper){
+            return d.geneType == "protein coding" || d.geneType == "lincRNA"
+        } else {
+            return false
+        }
+    },
+    ld: (d, lookupTable)=>{
+        return lookupTable[d.x] && lookupTable[d.y];
+    }
+};
+
+function _findNeighbors(data, par){
+    // fetch neighbor genes including the query gene itself
+    let genes = data.filter((d)=>{ // all genes within the genomic view range
+        return par.dataFilters.genes(d, par.data.queryGene, par.genomicWindow)
+    }).map(par.parsers.genes); // genes are filtered by gene types defined in the config object
+    genes.sort(par.dataSort.genes);
+    return genes
+}
+
 export function render(geneId, par=DefaultConfig){
     setDimensions(par);
     const promises1 = [
         json(par.urls.queryGene + geneId, {credentials: 'include'}),
         tsv(par.urls.genes)
     ];
-    let mainSvg = createSvg(par.id, par.width, par.height, {left:0, top:0});
+    par.svg = createSvg(par.id, par.width, par.height, {left:0, top:0});
     Promise.all(promises1)
         .then((queryData)=>{
             if (queryData[0].gene.length > 1) console.warn("More than one gene matching the query:", geneId);
-            let gene = queryData[0].gene[0]; // grab the first gene in the query results
+            par.data.queryGene = queryData[0].gene[0]; // grab the first gene in the query results
+            par.data.genes = _findNeighbors(queryData[1], par)
 
-            // fetch neighbor genes including the query gene itself
-            let genes = queryData[1].filter((d)=>{ // all genes within the genomic view range
-                const lower = gene.tss - par.genomicWindow;
-                const upper = gene.tss + par.genomicWindow;
-                return par.dataFilters.genes(d, gene.chromosome, lower, upper)
-            }).map(par.parsers.genes); // genes are filtered by gene types defined in the config object
-            genes.sort(par.dataSort.genes);
 
-            let genePosTable = {};
-            genes.forEach((g)=>{
-                genePosTable[g.gencodeId] = g.tss
-            });
-
-            const geneStrings = genes.map((g)=>g.gencodeId).join(",");
-
-            const promises2 = ["geneModel", "eqtls", "sqtls"].map((d)=>{
-                const url = par.urls[d] + gene.gencodeId;
+            const promises2 = ["geneModel", "eqtls", "sqtls", "ld"].map((d)=>{
+                const url = par.urls[d] + par.data.queryGene.gencodeId;
                 return json(url, {credentials: 'include'})
             });
 
             Promise.all(promises2)
                 .then((args)=> {
-                    renderGeneVisualComponents(gene, mainSvg, args.splice(0,1), genes, genePosTable, par);
-                    renderVariantVisualComponents(gene, mainSvg, par, args)
+                    par.data.geneModel = args[0];
+                    par.data.eqtl = args[1];
+                    par.data.sqtl = args[2];
+                    par.data.ld = args[3];
+                    renderGeneVisualComponents(par);
+                    renderVariantVisualComponents(par);
                 })
                 .catch((err)=>{console.error(err)})
         })
         .catch((err)=>{
             console.error(err)
         })
-
 }
 export function setUIEvents(geneId, par){
     select("#zoom-plus")
@@ -91,21 +113,26 @@ export function setUIEvents(geneId, par){
 
 function rerender(geneId, par){
     // clear all visualizations
-    select("#"+par.id).selectAll("*").remove();
+    par.svg.selectAll("*").remove();
     select("#"+par.ldId).selectAll("*").remove();
     select("#zoom-size").text(`genomic range: ${(2*par.genomicWindow).toLocaleString()} bases`)
-    render(geneId, par);
+    zoom(geneId, par);
 }
 
+function zoom(geneId, par){
+    renderGeneVisualComponents(par);
+    renderVariantVisualComponents(par);
+}
 
-function renderGeneLabels(queryGene, genes, mainSvg, panel, par){
+function renderGeneLabels(par){
+    let queryGene = par.data.queryGene;
+    let mainSvg = par.svg;
+    let panel = par.panels.geneMap;
     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
     if (inWidth * inHeight <= 0) throw "The inner height and width of the GWAS heatmap panel must both be positive values. Check the height and margin configuration of this panel"
 
-    let xList = genes.sort((a, b)=>{
-         return parseInt(a.tss) - parseInt(b.tss)
-    });
+    let xList = _findNeighbors(par.data.genes, par);
     let scale = scaleBand()
         .domain(xList.map((d)=>d.geneSymbol))
         .range([0, inWidth])
@@ -145,17 +172,26 @@ function renderGeneLabels(queryGene, genes, mainSvg, panel, par){
  * @param genePosTable {Dict} gene TSS indexed by gencodeId
  * @param par {Object} the configuration object of the overall visualization
  */
-function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, par = DefaultConfig){
+function renderGeneVisualComponents(par = DefaultConfig){
     // render the gene map as a heat map
     // const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
 
+    let genes = par.data.genes;
+    let gene = par.data.queryGene;
+    let mainSvg = par.svg;
+    // build a genePosTable
+
+    let genePosTable = {};
+    genes.forEach((g)=>{
+        genePosTable[g.gencodeId] = g.tss
+    });
     // render the gene list
-    const geneLabelScale = renderGeneLabels(gene, genes, mainSvg, par.panels.geneMap, par);
+    const geneLabelScale = renderGeneLabels(par);
 
     // render gene related genomic tracks
     const trackData = {
         tssTrack: genes,
-        exonTrack: data[0].collapsedGeneModelExon
+        exonTrack: par.data.geneModel.collapsedGeneModelExon
     };
     const tssTrackViz = renderGeneTracks(gene, mainSvg, par, trackData);
 
@@ -201,30 +237,26 @@ function renderGeneVisualComponents(gene, mainSvg, data, genes, genePosTable, pa
  * @param par
  * @param data
  */
-function renderVariantVisualComponents(queryGene, mainSvg, par=DefaultConfig, data){
+function renderVariantVisualComponents(par=DefaultConfig){
     // QTL tracks
     const qtlData = {
-        eqtl: data[0].singleTissueEqtl,
-        sqtl: data[1].singleTissueSqtl
+        eqtl: par.data.eqtl.singleTissueEqtl,
+        sqtl: par.data.sqtl.singleTissueSqtl
     };
-    const sqtlTrackViz = renderVariantTracks(queryGene, mainSvg, par, qtlData);
+    const sqtlTrackViz = renderVariantTracks(par.data.queryGene, par.svg, par, qtlData);
 
-    const bmap = renderQtlBubbleMap(queryGene, mainSvg, par, qtlData);
+    const bmap = renderQtlBubbleMap(par.data.queryGene, par.svg, par, qtlData);
     // QTL bubble map data
 
     // LD map
-    json(par.urls.ld + queryGene.gencodeId, {credentials: "include"})
-        .then((data)=>{
-            // LD map: parse the data and call the initial rendering
-            _ldMapDataParserHelper(data, bmap, par);
-            const ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
-             // initial rendering components
-            bmap.drawSvg(bmap.svg, {w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]), h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]), top: 0, left:0}); // initialize bubble heat map
-            renderGeneStartEndMarkers(bmap, bmap.svg); // initialize tss and tes markers
-            createBrush(queryGene, sqtlTrackViz, bmap, par, ldBrush);
 
-        });
-
+    // LD map: parse the data and call the initial rendering
+    _ldMapDataParserHelper(par.data.ld, bmap, par);
+    const ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
+     // initial rendering components
+    bmap.drawSvg(bmap.svg, {w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]), h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]), top: 0, left:0}); // initialize bubble heat map
+    renderGeneStartEndMarkers(bmap, bmap.svg); // initialize tss and tes markers
+    createBrush(par.data.queryGene, sqtlTrackViz, bmap, par, ldBrush);
 }
 
 /**
@@ -643,6 +675,7 @@ const DefaultConfig = {
     width: GlobalWidth,
     height: null, // should be dynamically calculated
     genomicWindow: 1e6,
+    data: data,
     urls: {
         queryGene: host + 'reference/gene?format=json&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&geneId=',
         genes: "../tempData/V8.genes.csv",
@@ -703,18 +736,7 @@ const DefaultConfig = {
             }
         }
     },
-    dataFilters: {
-        genes: (d, chr, lower, upper) => {
-            if (d.chromosome==chr && d.tss>lower && d.tss<upper){
-                return d.geneType == "protein coding" || d.geneType == "lincRNA"
-            } else {
-                return false
-            }
-        },
-        ld: (d, lookupTable)=>{
-            return lookupTable[d.x] && lookupTable[d.y];
-        }
-    },
+    dataFilters: dataFilters,
     dataSort: {
         genes: (a, b) => {
             return parseInt(a.tss) - parseInt(b.tss)
