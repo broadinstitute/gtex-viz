@@ -37,9 +37,6 @@ export const dataFilters = {
             return false
         }
     },
-    ld: (d, lookupTable)=>{
-        return lookupTable[d.x] && lookupTable[d.y];
-    },
     qtls: (d, gene, window) =>{
         const lower = gene.tss - window;
         const upper = gene.tss + window;
@@ -90,6 +87,7 @@ export function render(geneId, par=DefaultConfig){
             console.error(err)
         })
 }
+
 export function setUIEvents(geneId, par){
     select("#zoom-plus")
         .style("cursor", "pointer")
@@ -118,16 +116,16 @@ export function setUIEvents(geneId, par){
 
 function rerender(geneId, par){
     // clear all visualizations
-    par.svg.selectAll("*").remove();
-    select("#"+par.ldId).selectAll("*").remove();
+    Object.keys(par.panels).forEach((k)=>{
+        console.log(k)
+        let panel = par.panels[k]
+        if (panel.id == "qtl-map") return;
+        select(`#${panel.id}`).remove();
+    })
     select("#zoom-size").text(`genomic range: ${(2*par.genomicWindow).toLocaleString()} bases`)
-    zoom(geneId, par);
-}
-
-function zoom(geneId, par){
     renderGeneVisualComponents(par);
-    // renderVariantTracks(par);
-    renderVariantVisualComponents(par);
+    let sqtlTrackViz = renderVariantTracks(par);
+    createBrush(par.data.queryGene, sqtlTrackViz, par.bmap, par, par.ldBrush);
 }
 
 function renderGeneLabels(par){
@@ -146,7 +144,7 @@ function renderGeneLabels(par){
     let axis = axisBottom(scale).tickSize(0);
 
     // render the text labels
-    const axisG = mainSvg.append("g");
+    const axisG = mainSvg.append("g").attr("id", panel.id);
     axisG.attr("transform", `translate(${panel.margin.left}, ${panel.margin.top + inHeight})`)
         .call(axis)
         .selectAll("text")
@@ -257,18 +255,19 @@ function renderVariantVisualComponents(par=DefaultConfig){
         sqtl: par.genomicWindow==1e6?par.data.sqtl.singleTissueSqtl:par.data.sqtl.singleTissueSqtl.filter((d)=>{return par.dataFilters.qtls(d, par.data.queryGene, par.genomicWindow)}),
     };
     const sqtlTrackViz = renderVariantTracks(par, qtlData);
-    const bmap = renderQtlBubbleMap(par, qtlData);
+    let bmap = renderQtlBubbleMap(par, qtlData);
     // QTL bubble map data
 
     // LD map
 
     // LD map: parse the data and call the initial rendering
     if (par.ld.data.length == 0) _ldMapDataParserHelper(par.data.ld, bmap, par);
-    const ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
+    par.ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
      // initial rendering components
     bmap.drawSvg(bmap.svg, {w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]), h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]), top: 0, left:0}); // initialize bubble heat map
     renderGeneStartEndMarkers(bmap, bmap.svg); // initialize tss and tes markers
-    createBrush(par.data.queryGene, sqtlTrackViz, bmap, par, ldBrush);
+    createBrush(par.data.queryGene, sqtlTrackViz, bmap, par, par.ldBrush);
+    par.bmap = bmap;
 }
 
 /**
@@ -346,7 +345,7 @@ function renderQtlBubbleMap(par=DefaultConfig, qtlData){
     return bmap;
 }
 
-function renderVariantTracks(par=DefaultConfig, trackData){
+function renderVariantTracks(par=DefaultConfig, trackData=undefined){
     let gene = par.data.queryGene;
     let svg = par.svg;
     let eqtlPanel = par.panels.eqtlTrack;
@@ -406,7 +405,7 @@ function createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined)
     }; // this is the brush event
 
     let brushConfig = {
-        w: 10*bmap.xScale.bandwidth(), // roughly proportional to the total number of variants
+        w: 50 * (1e6/par.genomicWindow),
         h: Math.abs(par.panels.tssTrack.yPos + par.panels.tssTrack.margin.top - (par.panels.sqtlTrack.yPos + par.panels.sqtlTrack.height +20)) // the brush should cover all tracks
     };
 
@@ -425,11 +424,8 @@ function createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined)
  */
 function _ldMapDataParserHelper(data, bmap, par=DefaultConfig){
     let variantLookup = {};
-    bmap.xScale.domain().forEach((x)=>{variantLookup[x]=true})
-    let ldData = data.ld.map(par.parsers.ld)
-        // .filter((d)=>{
-        //     return par.dataFilters.ld(d, variantLookup)
-        // });
+    bmap.xScale.domain().forEach((x)=>{variantLookup[x]=true});
+    let ldData = data.ld.map(par.parsers.ld);
     const vList = {};
     ldData.forEach((d)=>{
         vList[d.x] = true;
