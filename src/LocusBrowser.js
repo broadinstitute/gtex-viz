@@ -92,7 +92,7 @@ export function setUIEvents(geneId, par){
     select("#zoom-plus")
         .style("cursor", "pointer")
         .on("click", ()=>{
-            par.genomicWindow = par.genomicWindow <= 1e4?1e4:par.genomicWindow/2;
+            par.genomicWindow = par.genomicWindow <= 5e4?5e4:par.genomicWindow/2;
             // console.log(par.genomicWindow)
             rerender(geneId, par)
         });
@@ -167,6 +167,8 @@ function renderGeneLabels(par){
             par.panels.eqtlTrack.data = null;
             par.panels.sqtlTrack.data = null;
             par.ld.data = [];
+            par.genomicWindow = 1e6;
+            select("#zoom-size").text(`genomic range: ${(2*par.genomicWindow).toLocaleString()} bases`)
             render(d, par);
         })
 
@@ -261,7 +263,7 @@ function renderVariantVisualComponents(par=DefaultConfig){
     // LD map
 
     // LD map: parse the data and call the initial rendering
-    if (par.ld.data.length == 0) _ldMapDataParserHelper(par.data.ld, bmap, par);
+    if (par.ld.data.length == 0) _ldMapDataParserHelper(par);
     par.ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
      // initial rendering components
     bmap.drawSvg(bmap.svg, {w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]), h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]), top: 0, left:0}); // initialize bubble heat map
@@ -405,7 +407,7 @@ function createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined)
     }; // this is the brush event
 
     let brushConfig = {
-        w: 50 * (1e6/par.genomicWindow),
+        w: 100,
         h: Math.abs(par.panels.tssTrack.yPos + par.panels.tssTrack.margin.top - (par.panels.sqtlTrack.yPos + par.panels.sqtlTrack.height +20)) // the brush should cover all tracks
     };
 
@@ -422,10 +424,8 @@ function createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined)
  * @param par {config object}
  * @private
  */
-function _ldMapDataParserHelper(data, bmap, par=DefaultConfig){
-    let variantLookup = {};
-    bmap.xScale.domain().forEach((x)=>{variantLookup[x]=true});
-    let ldData = data.ld.map(par.parsers.ld);
+function _ldMapDataParserHelper(par=DefaultConfig){
+    let ldData = par.data.ld.ld.map(par.parsers.ld);
     const vList = {};
     ldData.forEach((d)=>{
         vList[d.x] = true;
@@ -482,46 +482,47 @@ function renderLdMap(config, bmap){
  * @param filterTable {Dict} filter genes based on this lookup table
  * @returns {Heatmap}
  */
-function renderGeneHeatmap(gene, svg, data, par=DefaultConfig, filterTable){
-    let panel = par.panels.geneMap;
-    let dFilter = par.parsers.geneExpression;
-    let dSort = par.dataSort.geneExpression;
-    // parse gene map data
-    panel.data = data.filter((d)=>filterTable.hasOwnProperty(d.gencodeId)).map((d)=>{
-        d = dFilter(d); // Temporarily hard coded parser name
-        d.pos = filterTable[d.gencodeId];
-        return d;
-    });
-    panel.data.sort(dSort);
-
-    // calculate panel dimensions
-    let inWidth = panel.width - (panel.margin.left + panel.margin.right);
-    let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
-    if (inWidth * inHeight <= 0) throw "The inner height and width of the GWAS heatmap panel must be positive values. Check the height and margin configuration of this panel"
-
-    // create panel <g> root element
-    let mapG = svg.append("g")
-        .attr("id", panel.id)
-        .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top})`);
-
-    // instantiate a Heatmap object
-    let tooltipId = "locus-browser-tooltip";
-    let hViz = new Heatmap(panel.data, panel.useLog, 10, panel.colorScheme, panel.cornerRadius, tooltipId, tooltipId);
-
-    // render
-    hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
-    hViz.drawColorLegend(mapG, {x: 20, y:-20}, 5);
-
-    // CUSTOMIZATION: highlight the anchor gene
-    mapG.selectAll(".exp-map-xlabel")
-        .attr('fill', (d)=>d==gene.geneSymbol?"red":"#000000")
-        .style("cursor", "pointer")
-        .on("click", (d)=>{
-            rerender(d, par); // render data of the new gene
-        });
-    hViz.svg = mapG;
-    return hViz
-}
+// function renderGeneHeatmap(gene, svg, data, par=DefaultConfig, filterTable){
+//     let panel = par.panels.geneMap;
+//     let dFilter = par.parsers.geneExpression;
+//     let dSort = par.dataSort.geneExpression;
+//     // parse gene map data
+//     panel.data = data.filter((d)=>filterTable.hasOwnProperty(d.gencodeId)).map((d)=>{
+//         d = dFilter(d); // Temporarily hard coded parser name
+//         d.pos = filterTable[d.gencodeId];
+//         return d;
+//     });
+//     panel.data.sort(dSort);
+//
+//     // calculate panel dimensions
+//     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
+//     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
+//     if (inWidth * inHeight <= 0) throw "The inner height and width of the GWAS heatmap panel must be positive values. Check the height and margin configuration of this panel"
+//
+//     // create panel <g> root element
+//     let mapG = svg.append("g")
+//         .attr("id", panel.id)
+//         .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top})`);
+//
+//     // instantiate a Heatmap object
+//     let tooltipId = "locus-browser-tooltip";
+//     let hViz = new Heatmap(panel.data, panel.useLog, 10, panel.colorScheme, panel.cornerRadius, tooltipId, tooltipId);
+//
+//     // render
+//     hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
+//     hViz.drawColorLegend(mapG, {x: 20, y:-20}, 5);
+//
+//     // CUSTOMIZATION: highlight the anchor gene
+//     mapG.selectAll(".exp-map-xlabel")
+//         .attr('fill', (d)=>d==gene.geneSymbol?"red":"#000000")
+//         .style("cursor", "pointer")
+//         .on("click", (d)=>{
+//             par.genomicWindow = 1e6;
+//             rerender(d, par); // render data of the new gene
+//         });
+//     hViz.svg = mapG;
+//     return hViz
+// }
 
 /**
  * Render gene based genomic tracks: tss, exon
