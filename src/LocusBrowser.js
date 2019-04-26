@@ -12,7 +12,7 @@ import {select, selectAll} from "d3-selection";
 import {max} from "d3-array";
 import {axisBottom} from "d3-axis";
 import {scaleBand} from "d3-scale";
-import {symbol, symbolStar, symbolSquare} from "d3-shape";
+import {symbol, symbolDiamond, symbolSquare} from "d3-shape";
 
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
 import BubbleMap from "./modules/BubbleMap.js";
@@ -30,6 +30,23 @@ export let data = {
     geneModel: undefined,
     sqtl: undefined,
     eqtl: undefined
+};
+
+/**
+ * Data URLs or file sources
+ * @type {{queryGene: string, genes: string, geneExpression: string, geneModel: string, eqtls: string, sqtls: string, ld: string}}
+ */
+const host = "https://dev.gtexportal.org/rest/v1/";
+
+export let dataUrls = {
+    queryGene: host + 'reference/gene?format=json&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&geneId=',
+    genes: "../tempData/V8.genes.csv",
+    geneExpression: host + 'expression/medianGeneExpression?datasetId=gtex_v8&hcluster=true&pageSize=10000&gencodeId=',
+    geneModel:  host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=', // should use final collapsed gene model instead. correct this when switching to query data from the web service
+    eqtls: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v8&gencodeId=',
+    sqtls:  host + 'association/singleTissueSqtl?format=json&datasetId=gtex_v8&gencodeId=',
+    ld: host + 'dataset/ld?format=json&datasetId=gtex_v8&gencodeId=',
+    vep: "../tempData/chromosome11.sample.vep.txt" // currently only support VEP data for a small region of genes on Chr11
 };
 
 /**
@@ -72,7 +89,7 @@ export let dataParsers = {
     },
     qtlBubbles: (d, dataType)=>{
         d.x = d.variantId;
-        d.y = d.tissueSiteDetailId + "-" + dataType;
+        d.y = dataType + "-" + d.tissueSiteDetailId;
         d.value = parseFloat(d.nes);
         d.r = -Math.log10(parseFloat(d.pValue));
         return d;
@@ -137,7 +154,10 @@ export function render(geneId, par=DefaultConfig){
             par.data.queryGene = queryData[0].gene[0]; // grab the first gene in the query results
             par.data.genes = _findNeighbors(queryData[1], par)
 
-            const promises2 = ["geneModel", "eqtls", "sqtls"].map((d)=>{
+            const promises2 = ["geneModel", "eqtls", "sqtls", "vep"].map((d)=>{
+                if (d == "vep"){
+                    return tsv(par.urls[d])
+                }
                 const url = par.urls[d] + par.data.queryGene.gencodeId;
                 return json(url, {credentials: 'include'})
             });
@@ -152,7 +172,15 @@ export function render(geneId, par=DefaultConfig){
                     par.data.geneModel = args[0];
                     par.data.eqtl = args[1];
                     par.data.sqtl = args[2];
-                    par.data.ld = args[3];
+                    par.data.vep = args[3]===undefined?undefined:args[3].filter((d)=>{
+                        let id = par.data.queryGene.gencodeId.split(".")[0];
+                        return d.gencodeId==id;
+                    })
+                        .reduce((acc, d)=>{
+                            acc[d.variant] = d.vep;
+                            return acc;
+                        }, {});
+                    console.log(par.data.vep)
                     renderGeneVisualComponents(par);
                     // QTL tracks
                     const qtlData = {
@@ -462,6 +490,51 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
     return bmap;
 }
 
+function _modifyBubbleMapColumnLabels(bmap, par){
+    bmap.svg.selectAll(".bubble-map-xlabel").remove();
+
+    let labels = bmap.svg.selectAll('.bubble-map-xlabel').data(bmap.xScale.domain())
+        .enter()
+        .append("g")
+        .attr("class", (d, i) => `bubble-map-xlabel x${i}`)
+        .attr("x", 0)
+        .attr("y", 0)
+        .style("cursor", "default")
+        .attr("transform", (d) => {
+            let x = bmap.xScale(d);
+            let y = bmap.yScale.range()[1] + (bmap.yScale.bandwidth()*2); // allow space for VEP rendering
+            return `translate(${x}, ${y})`;
+        })
+
+    let size = Math.floor(bmap.xScale.bandwidth()/ 2)>12?12:Math.floor(bmap.xScale.bandwidth()/ 2);
+    labels.append("text")
+        .style("font-size", size)
+        .text((d) => d)
+        .attr("dx", 0)
+        .attr("dy", 3)
+        .attr("transform", "rotate(90)")
+
+    labels.append("rect")
+        .attr("x", -bmap.xScale.bandwidth()/2) // relative to its parent <g>
+        .attr("y", -bmap.yScale.bandwidth() - 5) // position is relative to its parent <g>
+        .attr("width", bmap.xScale.bandwidth())
+        .attr("height", bmap.yScale.bandwidth())
+        .style("fill", (d)=>{
+            if (par.data.vep===undefined) return "none";
+            return par.data.vep[d]===undefined?"none":"#eed084"
+        })
+        .style("stroke", "#ababab")
+        .style("stoke-width", 1);
+    labels.on("mouseover", (d)=>{
+        bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${par.data.vep[d]}`)
+        console.log(d, par.data.vep[d])
+    })
+    .on("mouseout", (d)=>{
+        bmap.tooltip.hide();
+    })
+
+
+}
 function _modifyBubbleMapRowLabels(bmap){
     bmap.svg.selectAll(".bubble-map-ylabel").remove();
     let labels = bmap.svg.selectAll(".bubble-map-ylabel")
@@ -470,7 +543,7 @@ function _modifyBubbleMapRowLabels(bmap){
         .append("g")
         .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
         .attr("x", 0)
-        .attr("y", 0)
+        .attr("y", 2)
         .attr("transform", (d) => {
             let x = bmap.xScale.range()[0] - 20;
             let y = bmap.yScale(d);
@@ -478,10 +551,11 @@ function _modifyBubbleMapRowLabels(bmap){
         });
     let size = Math.floor(bmap.yScale.bandwidth()/1.5)>11?11:Math.floor(bmap.yScale.bandwidth()/1.5)<8?8:Math.floor(bmap.yScale.bandwidth()/1.5);
 
+
     labels.append("text")
         .attr("text-anchor", "end")
         .style("font-size", size)
-        .text((d)=>d.replace(/-eQTL$/, "").replace(/-sQTL$/, ""))
+        .text((d)=>d)
         .attr("dx", -5)
         .attr("dy", 2)
 
@@ -489,12 +563,11 @@ function _modifyBubbleMapRowLabels(bmap){
 
     labels.append("path")
         .attr('d', (d)=>{
-            let type = d.endsWith("eQTL")?symbolSquare:symbolStar;
-            console.log(type)
+            let type = d.startsWith("eQTL")?symbolSquare:symbolDiamond;
             symbolGenerator.type(type)
             return symbolGenerator();
         })
-        .attr('fill', (d)=>d.endsWith("eQTL")?"#ababab":"#305162")
+        .attr('fill', "#ababab")
 
 
 }
@@ -573,6 +646,7 @@ function _createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined
         // refresh the gene's TSS and TES markers on the bubble map
         _renderGeneStartEndMarkers(bmap);
         _modifyBubbleMapRowLabels(bmap);
+        _modifyBubbleMapColumnLabels(bmap, par);
 
 
         // update the corresponding LD using the ldBrush
@@ -854,7 +928,6 @@ function _renderGeneStartEndMarkers(bmap){
 
 /*********************/
 const GlobalWidth = window.innerWidth;
-const host = "https://dev.gtexportal.org/rest/v1/";
 const DefaultConfig = {
     id: "locus-browser",
     ldId: "ld-browser",
@@ -862,15 +935,7 @@ const DefaultConfig = {
     height: null, // should be dynamically calculated
     genomicWindow: 1e6,
     data: data,
-    urls: {
-        queryGene: host + 'reference/gene?format=json&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&geneId=',
-        genes: "../tempData/V8.genes.csv",
-        geneExpression: host + 'expression/medianGeneExpression?datasetId=gtex_v8&hcluster=true&pageSize=10000&gencodeId=',
-        geneModel:  host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=', // should use final collapsed gene model instead. correct this when switching to query data from the web service
-        eqtls: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v8&gencodeId=',
-        sqtls:  host + 'association/singleTissueSqtl?format=json&datasetId=gtex_v8&gencodeId=',
-        ld: host + 'dataset/ld?format=json&datasetId=gtex_v8&gencodeId=',
-    },
+    urls: dataUrls,
     parsers: dataParsers,
     dataFilters: dataFilters,
     dataSort: dataSort,

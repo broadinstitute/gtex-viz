@@ -172,15 +172,7 @@
             width: GlobalWidth,
             height: null, // should be dynamically calculated
             genomicWindow: 1e6,
-            urls: {
-                queryGene: host + 'reference/gene?format=json&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&geneId=',
-                genes: "../tempData/V8.genes.csv",
-                geneExpression: host + 'expression/medianGeneExpression?datasetId=gtex_v8&hcluster=true&pageSize=10000&gencodeId=',
-                geneModel:  host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=', // should use final collapsed gene model instead. correct this when switching to query data from the web service
-                eqtls: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v8&gencodeId=',
-                sqtls:  host + 'association/singleTissueSqtl?format=json&datasetId=gtex_v8&gencodeId=',
-                ld: host + 'dataset/ld?format=json&datasetId=gtex_v8&gencodeId=',
-            },
+            urls: LocusBrowser.dataUrls,
             parsers: LocusBrowser.dataParsers,
             dataFilters: LocusBrowser.dataFilters,
             data: LocusBrowser.data,
