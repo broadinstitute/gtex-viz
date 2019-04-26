@@ -19,7 +19,11 @@ import Heatmap from "./modules/Heatmap.js";
 import HalfMap from "./modules/HalfMap.js";
 import {createSvg} from "./modules/utils";
 
-export const data = {
+/**
+ * Store the data for the visualization
+ * @type {{queryGene: undefined, genes: undefined, geneModel: undefined, sqtl: undefined, eqtl: undefined}}
+ */
+export let data = {
     queryGene: undefined,
     genes: undefined,
     geneModel: undefined,
@@ -27,6 +31,7 @@ export const data = {
     eqtl: undefined
 };
 
+/** Default filters for the data */
 export const dataFilters = {
     genes: (d, gene, window) => {
          const lower = gene.tss - window; // lower bound
@@ -44,17 +49,13 @@ export const dataFilters = {
     }
 };
 
-function _findNeighbors(data, par){
-    // fetch neighbor genes including the query gene itself
-    let genes = data.filter((d)=>{ // all genes within the genomic view range
-        return par.dataFilters.genes(d, par.data.queryGene, par.genomicWindow)
-    }).map(par.parsers.genes); // genes are filtered by gene types defined in the config object
-    genes.sort(par.dataSort.genes);
-    return genes
-}
-
+/**
+ * Render function
+ * @param geneId {String} gene ID
+ * @param par {Object} visualization config with required attributes
+ */
 export function render(geneId, par=DefaultConfig){
-    setDimensions(par);
+    _setDimensions(par);
     const promises1 = [
         json(par.urls.queryGene + geneId, {credentials: 'include'}),
         tsv(par.urls.genes)
@@ -88,19 +89,56 @@ export function render(geneId, par=DefaultConfig){
         })
 }
 
+/**
+ * Find all neighbor genes of the query gene
+ * Only searching for coding and lincRNA genes are
+ * @param data {List} of gene objects
+ * @param par {Object} of the viz config with required attributes: dataFilters.genes, data.queryGene, genomicWindow...
+ * @returns {List} of neighbor gene objects (including the query gene itself
+ * @private
+ */
+function _findNeighbors(data, par){
+    // fetch neighbor genes including the query gene itself
+    let genes = data.filter((d)=>{ // all genes within the genomic view range
+        return par.dataFilters.genes(d, par.data.queryGene, par.genomicWindow)
+    }).map(par.parsers.genes); // genes are filtered by gene types defined in the config object
+    genes.sort(par.dataSort.genes);
+    return genes
+}
+
+/**
+ * Calculate and sum the height of the root SVG based on the individual visual panels
+ * Calculate and determine the Y position of each individual visual panel in the root SVG
+ * @param par
+ */
+function _setDimensions(par=DefaultConfig){
+    par.height = Object.keys(par.panels)
+        .reduce((total, panelKey, i)=>{
+            let p = par.panels[panelKey];
+             // simultaneously calculate the panel's yPos
+            p.yPos = total;
+            return total + p.height // summing the height
+        }, 0);
+}
+
+/**
+ * Define UI mouse events
+ * @param geneId
+ * @param par
+ */
 export function setUIEvents(geneId, par){
     select("#zoom-plus")
         .style("cursor", "pointer")
         .on("click", ()=>{
             par.genomicWindow = par.genomicWindow <= 5e4?5e4:par.genomicWindow/2;
             // console.log(par.genomicWindow)
-            rerender(geneId, par)
+            rerender(par)
         });
     select("#zoom-minus")
         .style("cursor", "pointer")
         .on("click", ()=>{
             par.genomicWindow = par.genomicWindow >= 1e6?1e6:par.genomicWindow*2;
-            rerender(geneId, par)
+            rerender(par)
         });
     select("#zoom-reset")
         .style("cursor", "pointer")
@@ -108,13 +146,17 @@ export function setUIEvents(geneId, par){
             par.genomicWindow = 1e6;
             console.log(par.genomicWindow)
 
-            rerender(geneId, par)
+            rerender(par)
         })
     select("#zoom-size")
         .text(`genomic range: ${(2*par.genomicWindow).toLocaleString()} bases`)
 }
 
-function rerender(geneId, par){
+/**
+ * Re-render the visualization when the genomic window range is changed
+ * @param par {Object} visualization config
+ */
+function rerender(par){
     // clear all visualizations
     Object.keys(par.panels).forEach((k)=>{
         console.log(k)
@@ -124,11 +166,83 @@ function rerender(geneId, par){
     })
     select("#zoom-size").text(`genomic range: ${(2*par.genomicWindow).toLocaleString()} bases`)
     renderGeneVisualComponents(par);
-    let sqtlTrackViz = renderVariantTracks(par);
-    createBrush(par.data.queryGene, sqtlTrackViz, par.bmap, par, par.ldBrush);
+    let sqtlTrackViz = _renderVariantTracks(par);
+    _createBrush(par.data.queryGene, sqtlTrackViz, par.bmap, par, par.ldBrush);
 }
 
-function renderGeneLabels(par){
+/**
+ * Render the visual components related to genes: GWAS trait heatmap, gene position track
+ * @param gene {Object} the anchor gene
+ * @param mainSvg {d3 svg} the root svg
+ * @param data {List} web service results
+ * @param genes {List} a list of gene objects with attr: geneSymbol, strand, start, end, geneType
+ * @param genePosTable {Dict} gene TSS indexed by gencodeId
+ * @param par {Object} the configuration object of the overall visualization
+ */
+function renderGeneVisualComponents(par = DefaultConfig){
+    // render the gene map as a heat map
+    // const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
+
+    let genes = par.data.genes;
+    let gene = par.data.queryGene;
+    let mainSvg = par.svg;
+    // build a genePosTable
+
+    let genePosTable = {};
+    genes.forEach((g)=>{
+        genePosTable[g.gencodeId] = g.tss
+    });
+    // render the gene list
+    const geneLabelScale = _renderGeneLabels(par);
+
+    // render gene related genomic tracks
+    const trackData = {
+        tssTrack: genes,
+        exonTrack: par.data.geneModel.collapsedGeneModelExon
+    };
+    const tssTrackViz = _renderGeneTracks(gene, mainSvg, par, trackData);
+
+    //// visual customization: draw connecting lines between the gene heatmap column labels and tss positions on the tss track
+    let geneMapPanel = par.panels.geneMap;
+    let tssPanel = par.panels.tssTrack;
+
+    let xAdjust = geneMapPanel.margin.left - tssPanel.margin.left + (geneLabelScale.bandwidth()/2);
+    let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
+
+    tssTrackViz.svg.selectAll(".connect")
+        .data(genes.filter((d)=>geneLabelScale.domain().indexOf(d.geneSymbol)>=0))
+        .enter()
+        .append('line')
+        .attr("class", "connect")
+        .attr("x1", (d)=>geneLabelScale(d.geneSymbol) + xAdjust)
+        .attr("x2", (d)=>tssTrackViz.scale(d.tss))
+        .attr("y1", trackHeight/2-20)
+        .attr("y2", trackHeight/2)
+        .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
+        .attr("stroke-width", 0.5);
+
+    tssTrackViz.svg.selectAll(".connect2")
+        .data(genes.filter((d)=>geneLabelScale.domain().indexOf(d.geneSymbol)>=0))
+        .enter()
+        .append('line')
+        .attr("class", "connect2")
+        .attr("x1", (d)=>geneLabelScale(d.geneSymbol) + xAdjust)
+        .attr("x2", (d)=>geneLabelScale(d.geneSymbol) + xAdjust)
+        .attr("y1", trackHeight/2-20)
+        .attr("y2", trackHeight/2-50)
+        .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
+        .attr("stroke-width", 0.5);
+
+    return genes;
+}
+
+/**
+ * Rendering the list of gene labels using a scale
+ * This is used when the gene data table (heat map) is not displayed,
+ * @param par {Object} visualization config
+ * @returns {D3 scale object} of the gene labels
+ */
+function _renderGeneLabels(par){
     let queryGene = par.data.queryGene;
     let mainSvg = par.svg;
     let panel = par.panels.geneMap;
@@ -177,69 +291,28 @@ function renderGeneLabels(par){
 }
 
 /**
- * Render the visual components related to genes: GWAS trait heatmap, gene position track
- * @param gene {Object} the anchor gene
- * @param mainSvg {d3 svg} the root svg
- * @param data {List} web service results
- * @param genes {List} a list of gene objects with attr: geneSymbol, strand, start, end, geneType
- * @param genePosTable {Dict} gene TSS indexed by gencodeId
- * @param par {Object} the configuration object of the overall visualization
+ * Render gene based genomic tracks: tss, exon
+ * @param gene {Object} the query gene
+ * @param svg {D3 SVG} the root SVG object
+ * @param par {Object} the viz CONFIG
+ * @param data {Dictionary} data of each gene-based track
+ * @returns {MiniGenomeBrowser} of the tss track
  */
-function renderGeneVisualComponents(par = DefaultConfig){
-    // render the gene map as a heat map
-    // const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
+function _renderGeneTracks(gene, svg, par=DefaultConfig, data){
 
-    let genes = par.data.genes;
-    let gene = par.data.queryGene;
-    let mainSvg = par.svg;
-    // build a genePosTable
+    // tss track
+    let tssTrack = par.panels.tssTrack;
+    tssTrack.data = data.tssTrack;
+    const tssTrackViz = renderFeatureTrack(gene.tss, svg, par.genomicWindow, tssTrack, false);
 
-    let genePosTable = {};
-    genes.forEach((g)=>{
-        genePosTable[g.gencodeId] = g.tss
-    });
-    // render the gene list
-    const geneLabelScale = renderGeneLabels(par);
+    // gene model (exon) track
+    let modelParser = par.parsers.geneModel;
+    let gModel = data.exonTrack.map(modelParser);
+    let exonTrack = par.panels.geneModelTrack;
+    exonTrack.data = gModel;
+    renderFeatureTrack(gene.tss, svg, par.genomicWindow, exonTrack, true);
 
-    // render gene related genomic tracks
-    const trackData = {
-        tssTrack: genes,
-        exonTrack: par.data.geneModel.collapsedGeneModelExon
-    };
-    const tssTrackViz = renderGeneTracks(gene, mainSvg, par, trackData);
-
-    //// visual customization: draw connecting lines between the gene heatmap column labels and tss positions on the tss track
-    let geneMapPanel = par.panels.geneMap;
-    let tssPanel = par.panels.tssTrack;
-
-    let xAdjust = geneMapPanel.margin.left - tssPanel.margin.left + (geneLabelScale.bandwidth()/2);
-    let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
-
-    tssTrackViz.svg.selectAll(".connect")
-        .data(genes.filter((d)=>geneLabelScale.domain().indexOf(d.geneSymbol)>=0))
-        .enter()
-        .append('line')
-        .attr("class", "connect")
-        .attr("x1", (d)=>geneLabelScale(d.geneSymbol) + xAdjust)
-        .attr("x2", (d)=>tssTrackViz.scale(d.tss))
-        .attr("y1", trackHeight/2-20)
-        .attr("y2", trackHeight/2)
-        .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
-        .attr("stroke-width", 0.5);
-
-    tssTrackViz.svg.selectAll(".connect2")
-        .data(genes.filter((d)=>geneLabelScale.domain().indexOf(d.geneSymbol)>=0))
-        .enter()
-        .append('line')
-        .attr("class", "connect2")
-        .attr("x1", (d)=>geneLabelScale(d.geneSymbol) + xAdjust)
-        .attr("x2", (d)=>geneLabelScale(d.geneSymbol) + xAdjust)
-        .attr("y1", trackHeight/2-20)
-        .attr("y2", trackHeight/2-50)
-        .attr("stroke", (d)=>d.geneSymbol==gene.geneSymbol?"red":"#ababab")
-        .attr("stroke-width", 0.5);
-
-    return genes;
+    return tssTrackViz
 }
 
 /**
@@ -256,54 +329,20 @@ function renderVariantVisualComponents(par=DefaultConfig){
         eqtl: par.genomicWindow==1e6?par.data.eqtl.singleTissueEqtl:par.data.eqtl.singleTissueEqtl.filter((d)=>{return par.dataFilters.qtls(d, par.data.queryGene, par.genomicWindow)}),
         sqtl: par.genomicWindow==1e6?par.data.sqtl.singleTissueSqtl:par.data.sqtl.singleTissueSqtl.filter((d)=>{return par.dataFilters.qtls(d, par.data.queryGene, par.genomicWindow)}),
     };
-    const sqtlTrackViz = renderVariantTracks(par, qtlData);
-    let bmap = renderQtlBubbleMap(par, qtlData);
+    const sqtlTrackViz = _renderVariantTracks(par, qtlData);
+    let bmap = _renderQtlBubbleMap(par, qtlData);
     // QTL bubble map data
 
     // LD map
 
     // LD map: parse the data and call the initial rendering
     if (par.ld.data.length == 0) _ldMapDataParserHelper(par);
-    par.ldBrush = renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
+    par.ldBrush = _renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
      // initial rendering components
     bmap.drawSvg(bmap.svg, {w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]), h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]), top: 0, left:0}); // initialize bubble heat map
-    renderGeneStartEndMarkers(bmap, bmap.svg); // initialize tss and tes markers
-    createBrush(par.data.queryGene, sqtlTrackViz, bmap, par, par.ldBrush);
+    _renderGeneStartEndMarkers(bmap, bmap.svg); // initialize tss and tes markers
+    _createBrush(par.data.queryGene, sqtlTrackViz, bmap, par, par.ldBrush);
     par.bmap = bmap;
-}
-
-/**
- * Calculate and sum the height of the root SVG based on the individual visual panels
- * Calculate and determine the Y position of each individual visual panel in the root SVG
- * @param par
- */
-function setDimensions(par=DefaultConfig){
-    par.height = Object.keys(par.panels)
-        .reduce((total, panelKey, i)=>{
-            let p = par.panels[panelKey];
-             // simultaneously calculate the panel's yPos
-            p.yPos = total;
-            return total + p.height // summing the height
-        }, 0);
-}
-
-function aggregateQtlData(data, par=DefaultConfig){
-
-    //-- Define the collapse function
-    //   Collapse QTLs at each each locus, and report only the best (smallest) p-value.
-    const collapse = (acc, d)=>{
-        if (acc.hasOwnProperty(d.variantId)){
-            if (acc[d.variantId].pValue > d.pValue) acc[d.variantId] = d;
-        } else { acc[d.variantId] = d }
-        return acc;
-    };
-
-    const parser = par.parsers.qtlFeatures;
-    const qtlSort = par.dataSort.variants;
-    let uniqEqtlVariants = data.reduce(collapse, {});
-    let qtlFeatures = Object.values(uniqEqtlVariants).map(parser);
-    qtlFeatures.sort(qtlSort);
-    return qtlFeatures;
 }
 
 /**
@@ -314,7 +353,7 @@ function aggregateQtlData(data, par=DefaultConfig){
  * @param trackData {Dictionary} QTL data
  * @returns {MiniGenomeBrowser} sQTL's track object (or the object to apply the brush)
  */
-function renderQtlBubbleMap(par=DefaultConfig, qtlData){
+function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
     let gene = par.data.queryGene;
     let svg = par.svg;
 
@@ -343,28 +382,69 @@ function renderQtlBubbleMap(par=DefaultConfig, qtlData){
     bmap.svg = bmapG;
     // customization
     //-- TSS and TES markers
-    findVariantsClosestToGeneStartEnd(gene, bmap); // NOTE: bmap.fullDomain is required in this function and bmap.tss, bmap.tes are created by this function
+    _findVariantsClosestToGeneStartEnd(gene, bmap); // NOTE: bmap.fullDomain is required in this function and bmap.tss, bmap.tes are created by this function
     return bmap;
 }
 
-function renderVariantTracks(par=DefaultConfig, trackData=undefined){
+/**
+ * render variant related genomic tracks
+ * @param par
+ * @param trackData {Object} of data with attributes: eqtl and sqtl
+ * @param maxColorValue {Number} set the maximum color value for the color scale
+ * @returns {MiniGenomeBrowser}
+ */
+function _renderVariantTracks(par=DefaultConfig, trackData=undefined, maxColorValue=30){
     let gene = par.data.queryGene;
     let svg = par.svg;
     let eqtlPanel = par.panels.eqtlTrack;
     let sqtlPanel = par.panels.sqtlTrack;
     if (eqtlPanel.data === null || sqtlPanel.data === null){
-        eqtlPanel.data = aggregateQtlData(trackData.eqtl, par)
-        sqtlPanel.data = aggregateQtlData(trackData.sqtl, par)
+        eqtlPanel.data = _aggregateQtlData(trackData.eqtl, par)
+        sqtlPanel.data = _aggregateQtlData(trackData.sqtl, par)
     }
 
     // QTL tracks rendering
-    const maxColorValue = 30; // TODO: define a universal max value for the QTLs, so that it's comparable?
     renderFeatureTrack(gene.tss, svg, par.genomicWindow, eqtlPanel, false, true, maxColorValue);
     const sqtlTrackViz = renderFeatureTrack(gene.tss, svg, par.genomicWindow, sqtlPanel, false, true, maxColorValue);
     return sqtlTrackViz;
 }
 
-function createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined){
+/**
+ * Collapsed QTL data for the summary genome browser tracks
+ * QTLs are clustered by position
+ * @param data {List} of QTL objects
+ * @param par
+ * @returns {List} of collapsed QTL objects sorted by genomic position
+ */
+function _aggregateQtlData(data, par=DefaultConfig){
+
+    //-- Define the collapse function
+    //   Collapse QTLs at each each locus, and report only the best (smallest) p-value.
+    const collapse = (acc, d)=>{
+        if (acc.hasOwnProperty(d.variantId)){
+            if (acc[d.variantId].pValue > d.pValue) acc[d.variantId] = d;
+        } else { acc[d.variantId] = d }
+        return acc;
+    };
+
+    const parser = par.parsers.qtlFeatures;
+    const qtlSort = par.dataSort.variants;
+    let uniqEqtlVariants = data.reduce(collapse, {});
+    let qtlFeatures = Object.values(uniqEqtlVariants).map(parser);
+    qtlFeatures.sort(qtlSort);
+    return qtlFeatures;
+}
+
+/**
+ * Create the brush on the genomic tracks
+ * @param gene
+ * @param trackViz
+ * @param bmap
+ * @param par
+ * @param ldBrush
+ * @private
+ */
+function _createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined){
     const qtlMapPanel = par.panels.qtlMap;
     const brushPanel = par.panels.sqtlTrack; // TODO: the genomic track that the brush is on may not be the sqtl track
     // Brush definition: render the chromosome position axis and zoom brush
@@ -378,7 +458,7 @@ function createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined)
         bmap.renderWithNewDomain(bmap.svg, focusDomain);
 
         // refresh the gene's TSS and TES markers on the bubble map
-        renderGeneStartEndMarkers(bmap, bmap.svg);
+        _renderGeneStartEndMarkers(bmap, bmap.svg);
 
         // update the corresponding LD using the ldBrush
         if(ldBrush!==undefined) ldBrush();
@@ -442,7 +522,7 @@ function _ldMapDataParserHelper(par=DefaultConfig){
     }));
 }
 
-function renderLdMap(config, bmap){
+function _renderLdMap(config, bmap){
     let ldMap = new HalfMap(config.data, config.cutoff, false, undefined, config.colorScheme, [0,1]);
     ldMap.addTooltip('locus-browser');
 
@@ -525,31 +605,6 @@ function renderLdMap(config, bmap){
 // }
 
 /**
- * Render gene based genomic tracks: tss, exon
- * @param gene {Object} the query gene
- * @param svg {D3 SVG} the root SVG object
- * @param par {Object} the viz CONFIG
- * @param data {Dictionary} data of each gene-based track
- * @returns {MiniGenomeBrowser} of the tss track
- */
-function renderGeneTracks(gene, svg, par=DefaultConfig, data){
-
-    // tss track
-    let tssTrack = par.panels.tssTrack;
-    tssTrack.data = data.tssTrack;
-    const tssTrackViz = renderFeatureTrack(gene.tss, svg, par.genomicWindow, tssTrack, false);
-
-    // gene model (exon) track
-    let modelParser = par.parsers.geneModel;
-    let gModel = data.exonTrack.map(modelParser);
-    let exonTrack = par.panels.geneModelTrack;
-    exonTrack.data = gModel;
-    renderFeatureTrack(gene.tss, svg, par.genomicWindow, exonTrack, true);
-
-    return tssTrackViz
-}
-
-/**
  * Render a feature track
  * @param svg {D3 SVG}
  * @param window {Numeric} genomic window in view (one-sided)
@@ -584,27 +639,27 @@ function renderFeatureTrack(centerPos, svg, window, panel=DefaultConfig.panels.t
 
 }
 
-function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}, cols = []){
-    let range = n => Array.from(Array(n).keys());
-    let X = cols === undefined?range(par.x):cols; // generates a 1-based list.
-    let Y = range(par.y);
-    let data = [];
-    X.forEach((x)=>{
-        x = cols===undefined?'col ' + x.toString():x;
-        Y.forEach((y)=>{
-            y = 'trait ' + y.toString();
-            let v = Math.random()*par.scaleFactor;
-            let dataPoint = {
-                x: x,
-                y: y,
-                value: v,
-                displayValue: v.toPrecision(3)
-            };
-            data.push(dataPoint);
-        })
-    });
-    return data;
-}
+// function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}, cols = []){
+//     let range = n => Array.from(Array(n).keys());
+//     let X = cols === undefined?range(par.x):cols; // generates a 1-based list.
+//     let Y = range(par.y);
+//     let data = [];
+//     X.forEach((x)=>{
+//         x = cols===undefined?'col ' + x.toString():x;
+//         Y.forEach((y)=>{
+//             y = 'trait ' + y.toString();
+//             let v = Math.random()*par.scaleFactor;
+//             let dataPoint = {
+//                 x: x,
+//                 y: y,
+//                 value: v,
+//                 displayValue: v.toPrecision(3)
+//             };
+//             data.push(dataPoint);
+//         })
+//     });
+//     return data;
+// }
 
 /**
  * Find the closest left-side variant of the gene start and end sites (tss and tes)
@@ -612,7 +667,7 @@ function generateRandomMatrix(par={x:20, y:20, scaleFactor:1}, cols = []){
  * @param gene {Object} that has attributes start and end
  * @param bmap {BubbleMap}
  */
-function findVariantsClosestToGeneStartEnd(gene, bmap) {
+function _findVariantsClosestToGeneStartEnd(gene, bmap) {
     let tss = gene.strand == '+' ? gene.start : gene.end;
     let tes = gene.strand == '+' ? gene.end : gene.start;
     let variants = bmap.fullDomain;
@@ -641,7 +696,7 @@ function findVariantsClosestToGeneStartEnd(gene, bmap) {
  * @param bmap {BubbleMap}
  * @param bmapSvg {D3} the SVG object of the bubble map
  */
-function renderGeneStartEndMarkers(bmap, dom){
+function _renderGeneStartEndMarkers(bmap, dom){
     // rendering TSS
 
     select('#siteMarkers').selectAll("*").remove(); // clear previously rendered markers
