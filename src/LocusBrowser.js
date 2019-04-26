@@ -12,6 +12,7 @@ import {select, selectAll} from "d3-selection";
 import {max} from "d3-array";
 import {axisBottom} from "d3-axis";
 import {scaleBand} from "d3-scale";
+import {symbol, symbolStar, symbolSquare} from "d3-shape";
 
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
 import BubbleMap from "./modules/BubbleMap.js";
@@ -414,7 +415,7 @@ function renderGEV(par=DefaultConfig, qtlData, sqtlTrackViz){
     par.ldBrush = _renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
      // initial rendering components
     bmap.drawSvg(bmap.svg, {w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]), h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]), top: 0, left:0}); // initialize bubble heat map
-    _renderGeneStartEndMarkers(bmap, bmap.svg); // initialize tss and tes markers
+    _renderGeneStartEndMarkers(bmap); // initialize tss and tes markers
     _createBrush(par.data.queryGene, sqtlTrackViz, bmap, par, par.ldBrush);
     par.bmap = bmap;
 }
@@ -434,8 +435,8 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
     let qtlMapPanel = par.panels.qtlMap;
     let parser = par.parsers.qtlBubbles;
     qtlMapPanel.data = [];
-    qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.eqtl.map((d)=>{return parser(d, "E")}));
-    qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.sqtl.map((d)=>{return parser(d, "S")}));
+    qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.eqtl.map((d)=>{return parser(d, "eQTL")}));
+    qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.sqtl.map((d)=>{return parser(d, "sQTL")}));
 
     // prepare bubble map
     let bmap = new BubbleMap(qtlMapPanel.data, qtlMapPanel.useLog, qtlMapPanel.logBase, qtlMapPanel.colorScheme);
@@ -457,7 +458,45 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
     // customization
     //-- TSS and TES markers
     _findVariantsClosestToGeneStartEnd(gene, bmap); // NOTE: bmap.fullDomain is required in this function and bmap.tss, bmap.tes are created by this function
+
     return bmap;
+}
+
+function _modifyBubbleMapRowLabels(bmap){
+    bmap.svg.selectAll(".bubble-map-ylabel").remove();
+    let labels = bmap.svg.selectAll(".bubble-map-ylabel")
+        .data(bmap.yScale.domain())
+        .enter()
+        .append("g")
+        .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("transform", (d) => {
+            let x = bmap.xScale.range()[0] - 20;
+            let y = bmap.yScale(d);
+            return `translate(${x}, ${y})`;
+        });
+    let size = Math.floor(bmap.yScale.bandwidth()/1.5)>11?11:Math.floor(bmap.yScale.bandwidth()/1.5)<8?8:Math.floor(bmap.yScale.bandwidth()/1.5);
+
+    labels.append("text")
+        .attr("text-anchor", "end")
+        .style("font-size", size)
+        .text((d)=>d.replace(/-eQTL$/, "").replace(/-sQTL$/, ""))
+        .attr("dx", -5)
+        .attr("dy", 2)
+
+    let symbolGenerator = symbol().size(50);
+
+    labels.append("path")
+        .attr('d', (d)=>{
+            let type = d.endsWith("eQTL")?symbolSquare:symbolStar;
+            console.log(type)
+            symbolGenerator.type(type)
+            return symbolGenerator();
+        })
+        .attr('fill', (d)=>d.endsWith("eQTL")?"#ababab":"#305162")
+
+
 }
 
 /**
@@ -532,7 +571,9 @@ function _createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined
         bmap.renderWithNewDomain(bmap.svg, focusDomain);
 
         // refresh the gene's TSS and TES markers on the bubble map
-        _renderGeneStartEndMarkers(bmap, bmap.svg);
+        _renderGeneStartEndMarkers(bmap);
+        _modifyBubbleMapRowLabels(bmap);
+
 
         // update the corresponding LD using the ldBrush
         if(ldBrush!==undefined) ldBrush();
@@ -770,9 +811,9 @@ function _findVariantsClosestToGeneStartEnd(gene, bmap) {
  * @param bmap {BubbleMap}
  * @param bmapSvg {D3} the SVG object of the bubble map
  */
-function _renderGeneStartEndMarkers(bmap, dom){
+function _renderGeneStartEndMarkers(bmap){
     // rendering TSS
-
+    let dom = bmap.svg
     select('#siteMarkers').selectAll("*").remove(); // clear previously rendered markers
     select('#siteMarkers').remove();
     let g = dom.append('g')
