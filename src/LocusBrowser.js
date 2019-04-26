@@ -67,11 +67,15 @@ export function render(geneId, par=DefaultConfig){
             par.data.queryGene = queryData[0].gene[0]; // grab the first gene in the query results
             par.data.genes = _findNeighbors(queryData[1], par)
 
-
-            const promises2 = ["geneModel", "eqtls", "sqtls", "ld"].map((d)=>{
+            const promises2 = ["geneModel", "eqtls", "sqtls"].map((d)=>{
                 const url = par.urls[d] + par.data.queryGene.gencodeId;
                 return json(url, {credentials: 'include'})
             });
+
+            const promises3 = ["ld"].map((d)=>{
+                 const url = par.urls[d] + par.data.queryGene.gencodeId;
+                return json(url, {credentials: 'include'})
+            })
 
             Promise.all(promises2)
                 .then((args)=> {
@@ -80,9 +84,18 @@ export function render(geneId, par=DefaultConfig){
                     par.data.sqtl = args[2];
                     par.data.ld = args[3];
                     renderGeneVisualComponents(par);
-                    renderVariantVisualComponents(par);
+                    // QTL tracks
+                    const qtlData = {
+                        eqtl: par.data.eqtl.singleTissueEqtl,
+                        sqtl: par.data.sqtl.singleTissueSqtl
+                    };
+                    const sqtlTrackViz = _renderVariantTracks(par, qtlData);
+                    Promise.all(promises3)
+                        .then((ld)=>{
+                            par.data.ld = ld
+                            renderGEV(par, qtlData, sqtlTrackViz);
+                        });
                 })
-                .catch((err)=>{console.error(err)})
         })
         .catch((err)=>{
             console.error(err)
@@ -323,17 +336,9 @@ function _renderGeneTracks(gene, svg, par=DefaultConfig, data){
  * @param par
  * @param data
  */
-function renderVariantVisualComponents(par=DefaultConfig){
-    // QTL tracks
-    const qtlData = {
-        eqtl: par.genomicWindow==1e6?par.data.eqtl.singleTissueEqtl:par.data.eqtl.singleTissueEqtl.filter((d)=>{return par.dataFilters.qtls(d, par.data.queryGene, par.genomicWindow)}),
-        sqtl: par.genomicWindow==1e6?par.data.sqtl.singleTissueSqtl:par.data.sqtl.singleTissueSqtl.filter((d)=>{return par.dataFilters.qtls(d, par.data.queryGene, par.genomicWindow)}),
-    };
-    const sqtlTrackViz = _renderVariantTracks(par, qtlData);
-    let bmap = _renderQtlBubbleMap(par, qtlData);
-    // QTL bubble map data
+function renderGEV(par=DefaultConfig, qtlData, sqtlTrackViz){
 
-    // LD map
+    let bmap = _renderQtlBubbleMap(par, qtlData);
 
     // LD map: parse the data and call the initial rendering
     if (par.ld.data.length == 0) _ldMapDataParserHelper(par);
@@ -505,7 +510,7 @@ function _createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined
  * @private
  */
 function _ldMapDataParserHelper(par=DefaultConfig){
-    let ldData = par.data.ld.ld.map(par.parsers.ld);
+    let ldData = par.data.ld[0].ld.map(par.parsers.ld);
     const vList = {};
     ldData.forEach((d)=>{
         vList[d.x] = true;
