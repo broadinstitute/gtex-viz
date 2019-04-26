@@ -31,6 +31,62 @@ export let data = {
     eqtl: undefined
 };
 
+/**
+ * Default data parsers
+ * @type {{genes: (function(*): *), geneModel: (function(*): *), geneExpression: (function(*): *), qtlFeatures: (function(*): *), qtlBubbles: (function(*, *): *), ld: (function(*): {x: *, y: *, value: *, displayValue: string})}}
+ */
+export let dataParsers = {
+    genes: (d)=>{
+        d.start = parseInt(d.start);
+        d.end = parseInt(d.end);
+        d.pos = parseInt(d.tss);
+        d.featureLabel = d.geneSymbol;
+        d.featureType = d.geneType;
+        return d;
+    },
+    geneModel: (d)=>{
+        d.start = parseInt(d.start);
+        d.end = parseInt(d.end);
+        d.pos = d.start;
+        d.featureLabel = d.exonId;
+        return d;
+    },
+    geneExpression: (d)=>{
+        d.x = d.geneSymbol
+        d.y = d.tissueSiteDetailId
+        d.value = d.median
+        d.displayValue = d.value
+        return d;
+    },
+    qtlFeatures: (d)=>{
+        // let id = d.variantId;
+        d.chr = d.chromosome;
+        d.start = parseInt(d.pos);
+        d.end = d.start;
+        d.pos = parseInt(d.pos);
+        d.featureType = "variant";
+        d.featureLabel = d.snpId||d.variantId;
+        d.colorValue = -Math.log10(parseFloat(d.pValue));
+        return d;
+    },
+    qtlBubbles: (d, dataType)=>{
+        d.x = d.variantId;
+        d.y = d.tissueSiteDetailId + "-" + dataType;
+        d.value = parseFloat(d.nes);
+        d.r = -Math.log10(parseFloat(d.pValue));
+        return d;
+    },
+    ld: (d)=>{
+        let vars = d[0].split(",");
+        return {
+            x: vars[0],
+            y: vars[1],
+            value: d[1],
+            displayValue: d[1].toPrecision(3)
+        }
+    }
+};
+
 /** Default filters for the data */
 export const dataFilters = {
     genes: (d, gene, window) => {
@@ -47,6 +103,19 @@ export const dataFilters = {
         const upper = gene.tss + window;
         return d.pos>=lower && d.pos<=upper;
     }
+};
+
+/** Default data sort functions */
+export const dataSort = {
+    genes: (a, b) => {
+        return parseInt(a.tss) - parseInt(b.tss)
+    },
+    geneExpression: (a, b) => {
+        return parseInt(a.pos) - parseInt(b.pos)
+    },
+    variants: (a, b) => {
+        return parseInt(a.pos) - parseInt(b.pos)
+    },
 };
 
 /**
@@ -761,69 +830,9 @@ const DefaultConfig = {
         sqtls:  host + 'association/singleTissueSqtl?format=json&datasetId=gtex_v8&gencodeId=',
         ld: host + 'dataset/ld?format=json&datasetId=gtex_v8&gencodeId=',
     },
-    parsers: {
-        genes: (d)=>{
-            d.start = parseInt(d.start);
-            d.end = parseInt(d.end);
-            d.pos = parseInt(d.tss);
-            d.featureLabel = d.geneSymbol;
-            d.featureType = d.geneType;
-            return d;
-        },
-        geneModel: (d)=>{
-            d.start = parseInt(d.start);
-            d.end = parseInt(d.end);
-            d.pos = d.start;
-            d.featureLabel = d.exonId;
-            return d;
-        },
-        geneExpression: (d)=>{
-            d.x = d.geneSymbol
-            d.y = d.tissueSiteDetailId
-            d.value = d.median
-            d.displayValue = d.value
-            return d;
-        },
-        qtlFeatures: (d)=>{
-            // let id = d.variantId;
-            d.chr = d.chromosome;
-            d.start = parseInt(d.pos);
-            d.end = d.start;
-            d.pos = parseInt(d.pos);
-            d.featureType = "variant";
-            d.featureLabel = d.snpId||d.variantId;
-            d.colorValue = -Math.log10(parseFloat(d.pValue));
-            return d;
-        },
-        qtlBubbles: (d, dataType)=>{
-            d.x = d.variantId;
-            d.y = d.tissueSiteDetailId + "-" + dataType;
-            d.value = parseFloat(d.nes);
-            d.r = -Math.log10(parseFloat(d.pValue));
-            return d;
-        },
-        ld: (d)=>{
-            let vars = d[0].split(",");
-            return {
-                x: vars[0],
-                y: vars[1],
-                value: d[1],
-                displayValue: d[1].toPrecision(3)
-            }
-        }
-    },
+    parsers: dataParsers,
     dataFilters: dataFilters,
-    dataSort: {
-        genes: (a, b) => {
-            return parseInt(a.tss) - parseInt(b.tss)
-        },
-        geneExpression: (a, b) => {
-            return parseInt(a.pos) - parseInt(b.pos)
-        },
-        variants: (a, b) => {
-            return parseInt(a.pos) - parseInt(b.pos)
-        },
-    },
+    dataSort: dataSort,
     panels: {
         geneMap: {
             id: 'gene-map',
