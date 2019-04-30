@@ -180,7 +180,6 @@ export function render(geneId, par=DefaultConfig){
                             acc[d.variant] = d.vep;
                             return acc;
                         }, {});
-                    console.log(par.data.vep)
                     renderGeneVisualComponents(par);
                     // QTL tracks
                     const qtlData = {
@@ -521,9 +520,10 @@ function _modifyBubbleMapColumnLabels(bmap, par){
         .attr("height", bmap.yScale.bandwidth())
         .style("fill", (d)=>{
             if (par.data.vep===undefined) return "none";
-            return par.data.vep[d]===undefined?"none":"#eed084"
+            let vep = par.data.vep[d]
+            return vep===undefined?"none":vepColorKeys[vep]||"#ababab"
         })
-        .style("stroke", "#ababab")
+        .style("stroke", "#eeeeee")
         .style("stoke-width", 1);
     labels.on("mouseover", (d)=>{
         bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${par.data.vep[d]}`)
@@ -567,7 +567,9 @@ function _modifyBubbleMapRowLabels(bmap){
             symbolGenerator.type(type)
             return symbolGenerator();
         })
-        .attr('fill', "#ababab")
+        .attr('fill', (d)=>d.startsWith("eQTL")?"#efefef":"#2d54aa")
+        .attr('stroke', "#ababab")
+        .attr('stroke-width', 1)
 
 
 }
@@ -928,6 +930,20 @@ function _renderGeneStartEndMarkers(bmap){
 
 /*********************/
 const GlobalWidth = window.innerWidth;
+const vepColorKeys = {
+    "splice_acceptor_variant": "#910807",
+    "splice_donor_variant": "#910807",
+    "splice_region_variant": "#eed084",
+    "transcript_ablation": "#aa4588",
+    "stop_gained": "#aa4588",
+    "framshift_variant": "#aa4588",
+    "stop_lost": "#aa4588",
+    "start_lost": "#aa4588",
+    "inframe_insertion": "#305162",
+    "infram_deletion": "#305162",
+    "missense_variant": "#305162",
+    "protein_altering_variant": "#305162"
+};
 const DefaultConfig = {
     id: "locus-browser",
     ldId: "ld-browser",
