@@ -94,7 +94,7 @@ export function launch(formId, menuId, submitId, heatmapRootId, violinRootId, ur
                     $(`#${formId}`).removeClass("in"); // for boostrap 3
 
                 // get the input list of genes
-                let glist = $('#genes').val().replace(/ /g, '').toUpperCase().split(',').filter((d)=>d!='');
+                let glist = $('#genes').val().replace(/ /g, '').replace(/\n/g,'').toUpperCase().split(',').filter((d)=>d!='');
                 if (glist.length == 0){
                     alert('Input Error: At least one gene must be provided.');
                     throw('Gene input error');
@@ -133,7 +133,7 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
     $(`#${heatmapRootId}`).empty(); // clear the root DOM content
     $(`#${violinRootId}`).empty(); // clear the root DOM content
 
-    const MAX = 50;
+    const MAX = 100;
     const $message = $('<div/><br/>').attr('class', 'col-xs-12 col-md-12').css('color', 'firebrick').appendTo(`#${heatmapRootId}`);
     let message = "";
     if (glist.length > MAX) {
