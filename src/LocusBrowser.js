@@ -521,13 +521,13 @@ function _modifyBubbleMapColumnLabels(bmap, par){
         .style("fill", (d)=>{
             if (par.data.vep===undefined) return "none";
             let vep = par.data.vep[d]
-            return vep===undefined?"none":vepColorKeys[vep]||"#ababab"
+            return vep===undefined?"#ffffff":vepColorKeys[vep]||"#ababab"
         })
         .style("stroke", "#eeeeee")
         .style("stoke-width", 1);
     labels.on("mouseover", (d)=>{
-        bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${par.data.vep[d]}`)
-        console.log(d, par.data.vep[d])
+        let vep = par.data.vep[d] || "Not available";
+        bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${vep}`)
     })
     .on("mouseout", (d)=>{
         bmap.tooltip.hide();
@@ -933,16 +933,16 @@ const GlobalWidth = window.innerWidth;
 const vepColorKeys = {
     "splice_acceptor_variant": "#910807",
     "splice_donor_variant": "#910807",
-    "splice_region_variant": "#eed084",
-    "transcript_ablation": "#aa4588",
-    "stop_gained": "#aa4588",
-    "framshift_variant": "#aa4588",
-    "stop_lost": "#aa4588",
-    "start_lost": "#aa4588",
-    "inframe_insertion": "#305162",
-    "infram_deletion": "#305162",
-    "missense_variant": "#305162",
-    "protein_altering_variant": "#305162"
+    "splice_region_variant": "#ee974d",
+    "transcript_ablation": "#af6563",
+    "stop_gained": "#af6563",
+    "framshift_variant": "#af6563",
+    "stop_lost": "#af6563",
+    "start_lost": "#af6563",
+    "inframe_insertion": "#f9acb0",
+    "infram_deletion": "#f9acb0",
+    "missense_variant": "#f9acb0",
+    "protein_altering_variant": "#f9acb0"
 };
 const DefaultConfig = {
     id: "locus-browser",
