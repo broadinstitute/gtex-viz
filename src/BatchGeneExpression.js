@@ -133,7 +133,7 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
     $(`#${heatmapRootId}`).empty(); // clear the root DOM content
     $(`#${violinRootId}`).empty(); // clear the root DOM content
 
-    const MAX = 50;
+    const MAX = 100;
     const $message = $('<div/><br/>').attr('class', 'col-xs-12 col-md-12').css('color', 'firebrick').appendTo(`#${heatmapRootId}`);
     let message = "";
     if (glist.length > MAX) {
