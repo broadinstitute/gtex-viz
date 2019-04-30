@@ -94,7 +94,7 @@ export function launch(formId, menuId, submitId, heatmapRootId, violinRootId, ur
                     $(`#${formId}`).removeClass("in"); // for boostrap 3
 
                 // get the input list of genes
-                let glist = $('#genes').val().replace(/ /g, '').toUpperCase().split(',').filter((d)=>d!='');
+                let glist = $('#genes').val().replace(/ /g, '').replace(/\n/g,'').toUpperCase().split(',').filter((d)=>d!='');
                 if (glist.length == 0){
                     alert('Input Error: At least one gene must be provided.');
                     throw('Gene input error');
