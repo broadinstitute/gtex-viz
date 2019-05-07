@@ -29,7 +29,8 @@ export let data = {
     genes: undefined,
     geneModel: undefined,
     sqtl: undefined,
-    eqtl: undefined
+    eqtl: undefined,
+    gwasToGene: undefined
 };
 
 /**
@@ -43,6 +44,7 @@ export let dataUrls = {
     genes: "../tempData/V8.genes.csv",
     geneExpression: host + 'expression/medianGeneExpression?datasetId=gtex_v8&hcluster=true&pageSize=10000&gencodeId=',
     geneModel:  host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=', // should use final collapsed gene model instead. correct this when switching to query data from the web service
+    gwasToGene: "../tempData/GWASVar2Gene_r2_08_sample_file.chr11.tsv",
     eqtls: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v8&gencodeId=',
     sqtls:  host + 'association/singleTissueSqtl?format=json&datasetId=gtex_v8&gencodeId=',
     ld: host + 'dataset/ld?format=json&datasetId=gtex_v8&gencodeId=',
@@ -145,7 +147,8 @@ export function render(geneId, par=DefaultConfig){
     _setDimensions(par);
     const promises1 = [
         json(par.urls.queryGene + geneId, {credentials: 'include'}),
-        tsv(par.urls.genes)
+        tsv(par.urls.genes),
+        tsv(par.urls.gwasToGene)
     ];
     par.svg = createSvg(par.id, par.width, par.height, {left:0, top:0});
     Promise.all(promises1)
@@ -153,6 +156,7 @@ export function render(geneId, par=DefaultConfig){
             if (queryData[0].gene.length > 1) console.warn("More than one gene matching the query:", geneId);
             par.data.queryGene = queryData[0].gene[0]; // grab the first gene in the query results
             par.data.genes = _findNeighbors(queryData[1], par)
+            par.data.gwasToGene = _mapGenesToTraits(queryData[2], par);
 
             const promises2 = ["geneModel", "eqtls", "sqtls", "vep"].map((d)=>{
                 if (d == "vep"){
@@ -197,6 +201,36 @@ export function render(geneId, par=DefaultConfig){
         .catch((err)=>{
             console.error(err)
         })
+}
+
+function _mapGenesToTraits(data, par){
+    let neighbors = par.data.genes.reduce((arr, d)=>{
+        arr[d.geneSymbol] = d;
+        return arr;
+    }, {})
+    let g2t = data.filter((d)=>neighbors.hasOwnProperty(d.eGene_name))
+        .reduce((arr, d)=>{
+            if (!arr.hasOwnProperty(d.GWAS_trait)) arr[d.GWAS_trait] = {};
+            if (!arr[d.GWAS_trait].hasOwnProperty(d.eGene_name)) arr[d.GWAS_trait][d.eGene_name] = d.GWAS_p_value_mlog;
+            else {
+                arr[d.GWAS_trait][d.eGene_name] = arr[d.GWAS_trait][d.eGene_name]>d.GWAS_p_value_mlog?d.GWAS_p_value_mlog:arr[d.GWAS_trait][d.eGene_name];
+            }
+            return arr;
+        },{})
+    let dataReady = [];
+    console.log(g2t)
+    Object.keys(g2t).forEach((trait)=>{
+        Object.keys(neighbors).forEach((gSymbol)=>{
+            dataReady.push({
+                x: gSymbol,
+                y: trait,
+                value: g2t[trait][gSymbol]?g2t[trait][gSymbol]:0,
+                displayValue: g2t[trait][gSymbol]?g2t[trait][gSymbol]:0,
+                pos: neighbors[gSymbol].pos
+            })
+        })
+    });
+    return dataReady;
 }
 
 /**
@@ -291,19 +325,35 @@ function rerender(par){
  */
 function renderGeneVisualComponents(par = DefaultConfig){
     // render the gene map as a heat map
-    // const heatmapViz = renderGeneHeatmap(gene, mainSvg, data[0].medianGeneExpression, par, genePosTable);
+    const heatmapViz = renderGeneHeatmap(par);
 
     let genes = par.data.genes;
     let gene = par.data.queryGene;
     let mainSvg = par.svg;
+
     // build a genePosTable
 
     let genePosTable = {};
     genes.forEach((g)=>{
         genePosTable[g.gencodeId] = g.tss
     });
+
     // render the gene list
-    const geneLabelScale = _renderGeneLabels(par);
+    // const geneLabelScale = _renderGeneLabels(par);
+    let geneLabelScale = heatmapViz.xScale;
+    selectAll(".exp-map-xlabel").on("click", (d)=>{
+            // reset everything
+            select("#" + par.id).selectAll("*").remove();
+            select("#"+par.ldId).selectAll("*").remove();
+            par.data = data;
+            par.panels.eqtlTrack.data = null;
+            par.panels.sqtlTrack.data = null;
+            par.panels.geneMap.data = null;
+            par.ld.data = [];
+            par.genomicWindow = 1e6;
+            select("#zoom-size").text(`genomic range: ${(2*par.genomicWindow).toLocaleString()} bases`)
+            render(d, par);
+        })
 
     // render gene related genomic tracks
     const trackData = {
@@ -746,54 +796,49 @@ function _renderLdMap(config, bmap){
 
 /**
  * Render the Gene Heatmap
- * @param gene {Object}
- * @param svg {D3 SVG} the root SVG object
- * @param data {List} of data objects
  * @param par {Object} the viz DefaultConfig
- * @param filterTable {Dict} filter genes based on this lookup table
  * @returns {Heatmap}
  */
-// function renderGeneHeatmap(gene, svg, data, par=DefaultConfig, filterTable){
-//     let panel = par.panels.geneMap;
-//     let dFilter = par.parsers.geneExpression;
-//     let dSort = par.dataSort.geneExpression;
-//     // parse gene map data
-//     panel.data = data.filter((d)=>filterTable.hasOwnProperty(d.gencodeId)).map((d)=>{
-//         d = dFilter(d); // Temporarily hard coded parser name
-//         d.pos = filterTable[d.gencodeId];
-//         return d;
-//     });
-//     panel.data.sort(dSort);
-//
-//     // calculate panel dimensions
-//     let inWidth = panel.width - (panel.margin.left + panel.margin.right);
-//     let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
-//     if (inWidth * inHeight <= 0) throw "The inner height and width of the GWAS heatmap panel must be positive values. Check the height and margin configuration of this panel"
-//
-//     // create panel <g> root element
-//     let mapG = svg.append("g")
-//         .attr("id", panel.id)
-//         .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top})`);
-//
-//     // instantiate a Heatmap object
-//     let tooltipId = "locus-browser-tooltip";
-//     let hViz = new Heatmap(panel.data, panel.useLog, 10, panel.colorScheme, panel.cornerRadius, tooltipId, tooltipId);
-//
-//     // render
-//     hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
-//     hViz.drawColorLegend(mapG, {x: 20, y:-20}, 5);
-//
-//     // CUSTOMIZATION: highlight the anchor gene
-//     mapG.selectAll(".exp-map-xlabel")
-//         .attr('fill', (d)=>d==gene.geneSymbol?"red":"#000000")
-//         .style("cursor", "pointer")
-//         .on("click", (d)=>{
-//             par.genomicWindow = 1e6;
-//             rerender(d, par); // render data of the new gene
-//         });
-//     hViz.svg = mapG;
-//     return hViz
-// }
+function renderGeneHeatmap(par=DefaultConfig){
+    let panel = par.panels.geneMap;
+    let gene = par.data.queryGene;
+    let svg = par.svg;
+    let data = par.data.gwasToGene;
+    let dFilter = par.parsers.geneExpression;
+    let dSort = par.dataSort.geneExpression;
+    // parse gene map data
+    panel.data = data;
+    panel.data.sort((a,b)=>{return a.pos-b.pos});
+
+    // calculate panel dimensions
+    let inWidth = panel.width - (panel.margin.left + panel.margin.right);
+    let inHeight = panel.height - (panel.margin.top + panel.margin.bottom);
+    if (inWidth * inHeight <= 0) throw "The inner height and width of the GWAS heatmap panel must be positive values. Check the height and margin configuration of this panel"
+
+    // create panel <g> root element
+    let mapG = svg.append("g")
+        .attr("id", panel.id)
+        .attr("transform", `translate(${panel.margin.left}, ${panel.margin.top})`);
+
+    // instantiate a Heatmap object
+    let tooltipId = "locus-browser-tooltip";
+    let hViz = new Heatmap(panel.data, panel.useLog, 10, panel.colorScheme, panel.cornerRadius, tooltipId, tooltipId);
+
+    // render
+    hViz.draw(mapG, {w:inWidth, h:inHeight}, panel.columnLabel.angle, false, panel.columnLabel.adjust);
+    hViz.drawColorLegend(mapG, {x: 20, y:-20}, 5);
+
+    // CUSTOMIZATION: highlight the anchor gene
+    mapG.selectAll(".exp-map-xlabel")
+        .attr('fill', (d)=>d==gene.geneSymbol?"red":"#000000")
+        .style("cursor", "pointer")
+        .on("click", (d)=>{
+            par.genomicWindow = 1e6;
+            rerender(d, par); // render data of the new gene
+        });
+    hViz.svg = mapG;
+    return hViz
+}
 
 /**
  * Render a feature track
