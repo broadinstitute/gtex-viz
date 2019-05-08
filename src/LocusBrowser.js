@@ -30,7 +30,8 @@ export let data = {
     geneModel: undefined,
     sqtl: undefined,
     eqtl: undefined,
-    gwasToGene: undefined
+    gwasToGene: undefined,
+    gwasImputed: undefined
 };
 
 /**
@@ -45,6 +46,7 @@ export let dataUrls = {
     geneExpression: host + 'expression/medianGeneExpression?datasetId=gtex_v8&hcluster=true&pageSize=10000&gencodeId=',
     geneModel:  host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=', // should use final collapsed gene model instead. correct this when switching to query data from the web service
     gwasToGene: "../tempData/GWASVar2Gene_r2_08_sample_file.chr11.tsv",
+    gwasImputed: "../tempData/gwas-traits-v8/imputed_IBD.EUR.Crohns_Disease.chr11.txt",
     eqtls: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v8&gencodeId=',
     sqtls:  host + 'association/singleTissueSqtl?format=json&datasetId=gtex_v8&gencodeId=',
     ld: host + 'dataset/ld?format=json&datasetId=gtex_v8&gencodeId=',
@@ -158,8 +160,8 @@ export function render(geneId, par=DefaultConfig){
             par.data.genes = _findNeighbors(queryData[1], par)
             par.data.gwasToGene = _mapGenesToTraits(queryData[2], par);
 
-            const promises2 = ["geneModel", "eqtls", "sqtls", "vep"].map((d)=>{
-                if (d == "vep"){
+            const promises2 = ["geneModel", "eqtls", "sqtls", "vep", "gwasImputed"].map((d)=>{
+                if (d == "vep" || d=="gwasImputed"){
                     return tsv(par.urls[d])
                 }
                 const url = par.urls[d] + par.data.queryGene.gencodeId;
@@ -184,9 +186,22 @@ export function render(geneId, par=DefaultConfig){
                             acc[d.variant] = d.vep;
                             return acc;
                         }, {});
+                    par.data.gwasImputed = args[4].filter((d)=>{
+                        let pos = parseInt(d.panel_variant_id.split("_")[1]);
+                        return pos<=par.data.queryGene.tss + 1e6 && pos>=par.data.queryGene.tss - 1e6;
+                    }).map((d)=>{
+                        return {
+                            x: d.panel_variant_id,
+                            y: "GWAS-IBD-Crohn's Disease",
+                            value: parseFloat(d.effect_size) || 0,
+                            r: -Math.log10(parseFloat(d.pvalue))
+                        }
+                    })
+                    console.log(par.data.gwasImputed)
                     renderGeneVisualComponents(par);
                     // QTL tracks
                     const qtlData = {
+                        gwas: par.data.gwasImputed,
                         eqtl: par.data.eqtl.singleTissueEqtl,
                         sqtl: par.data.sqtl.singleTissueSqtl
                     };
@@ -511,7 +526,7 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
 
     let qtlMapPanel = par.panels.qtlMap;
     let parser = par.parsers.qtlBubbles;
-    qtlMapPanel.data = [];
+    qtlMapPanel.data = qtlData.gwas;
     qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.eqtl.map((d)=>{return parser(d, "eQTL")}));
     qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.sqtl.map((d)=>{return parser(d, "sQTL")}));
 
@@ -524,7 +539,7 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
 
     let bmapInWidth = qtlMapPanel.width-(qtlMapPanel.margin.left + qtlMapPanel.margin.right);
     let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
-    bmap.setScales({w:bmapInWidth, h:bmapInHeight, top: 0, left:0});
+    bmap.setScales({w:bmapInWidth, h:bmapInHeight, top: 0, left:0}, [-1.2, 1.2]); // hard setting for the color value range
     bmap.drawColorLegend(svg, {x: qtlMapPanel.margin.left + bmapInWidth + 20, y: qtlMapPanel.yPos + qtlMapPanel.margin.top}, 3, "NES", {h:15, w:10}, "v");
     bmap.drawBubbleLegend(svg, {x: qtlMapPanel.margin.left + bmapInWidth + 20, y:qtlMapPanel.yPos + qtlMapPanel.margin.top + 150, title: "-log10(p-value)"}, 5, "-log10(p-value)", "v");
 
