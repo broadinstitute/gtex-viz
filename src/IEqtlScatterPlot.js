@@ -15,6 +15,5 @@ export function launch(rootId, data, dimensions={w:window.innerWidth*.8, h:500},
                 .attr('height', dimensions.h + margins.top + margins.bottom)
                 .attr('width', dimensions.w + margins.left + margins.right)
                 .append('g').attr('transform', `translate(${margins.left}, ${margins.top})`);
-    let padding = 10;
-    splot.render(svg, dimensions.h, dimensions.w, padding);
+    splot.render(svg, dimensions.h, dimensions.w);
 }

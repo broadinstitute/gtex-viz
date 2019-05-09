@@ -24,10 +24,11 @@ import {max, min, extent} from 'd3-array';
 
 export default class Scatterplot {
     constructor(data) {
+        this._sanityCheck(data)
         this.data = data;
     }
 
-    render(dom, height, width, padding) {
+    render(dom, height, width) {
         let x = scaleLinear()
             .domain(extent(this.data, (d)=>d.x))
             .range([0, width]);
@@ -38,8 +39,16 @@ export default class Scatterplot {
 
         let xAxis = axisBottom(x);
         let yAxis = axisLeft(y);
-        dom.append('g').attr('transform', `translate(${padding * 2}, ${height + padding})`).call(xAxis);
-        dom.append('g').attr('transform', `translate(${padding},0)`).call(yAxis);
+        dom.append('g').attr('transform', `translate(0, ${height})`).call(xAxis);
+        dom.append('g').call(yAxis);
 
+    }
+
+    _sanityCheck(data) {
+        data.forEach(d => {
+            if (d.x === undefined || d.y === undefined) {
+                throw 'Scatterplot: Input data error.';
+            }
+        });
     }
 }
