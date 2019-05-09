@@ -37,10 +37,28 @@ export default class Scatterplot {
             .domain(extent(this.data, (d)=>d.y))
             .range([height, 0]);
 
-        let xAxis = axisBottom(x);
-        let yAxis = axisLeft(y);
-        dom.append('g').attr('transform', `translate(0, ${height})`).call(xAxis);
-        dom.append('g').call(yAxis);
+        this.xAxis = axisBottom(x);
+        this.yAxis = axisLeft(y);
+        dom.append('g')
+            .attr('id', 'scatter-x-axis')
+            .attr('transform', `translate(0, ${height})`)
+            .call(this.xAxis);
+        dom.append('g')
+            .attr('id', 'scatter-y-axis')
+            .call(this.yAxis);
+
+        dom.append('g')
+            .attr('class', 'scatter-points')
+            .selectAll('circle')
+            .data(this.data)
+            .enter()
+            .append('circle')
+            .attr('cx', d=>x(d.x))
+            .attr('cy', d=>y(d.y))
+            .attr('r', 2)
+            .classed('scatter-point', true);
+
+
 
     }
 
