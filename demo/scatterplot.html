@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3-random.v1.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+        <script src="/build/js/ieqtl-scatter-plot.bundle.min.js"></script>
+    </head>
+    <body>
+        <div id="scatterplot-demo"></div>
+        
+    </body>
+    <script>
+        function generateRandomData(n=50, min=0, max=100) {
+            let range = n => Array.from(Array(n).keys());
+            let N = range(n);
+            let data = [];
+            N.forEach(x=>{
+                let dataPoint = {
+                    x: Math.random() * (max+1) | min,
+                    y: Math.random() * (max+1) | min
+                };
+                data.push(dataPoint);
+            });
+            return data;
+        }
+
+        $(document).ready(function(){
+            let data = generateRandomData();
+            IEqtlScatterPlot.launch('scatterplot-demo', data);
+        })
+    </script>
+</html>
