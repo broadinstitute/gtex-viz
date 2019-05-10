@@ -117,7 +117,7 @@ export default class Heatmap {
             .attr("y", 0)
             .style("text-anchor", "start")
             .style("cursor", "default")
-            .style("font-size", this.xScale.bandwidth()>14?14:this.xScale.bandwidth())
+            .style("font-size", this.xScale.bandwidth()>12?12:this.xScale.bandwidth())
             .attr("transform", (d) => {
                 let x = this.xScale(d) + adjust;
                 let y = Y;

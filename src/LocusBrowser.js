@@ -11,7 +11,7 @@ import {tsv, json} from "d3-fetch";
 import {select, selectAll} from "d3-selection";
 import {max} from "d3-array";
 import {axisBottom} from "d3-axis";
-import {scaleBand} from "d3-scale";
+import {scaleBand, scaleLinear} from "d3-scale";
 import {symbol, symbolDiamond, symbolSquare} from "d3-shape";
 
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
@@ -31,7 +31,8 @@ export let data = {
     sqtl: undefined,
     eqtl: undefined,
     gwasToGene: undefined,
-    gwasImputed: undefined
+    gwasImputed: undefined,
+    vepDict: undefined
 };
 
 /**
@@ -106,6 +107,14 @@ export let dataParsers = {
             value: d[1],
             displayValue: d[1].toPrecision(3)
         }
+    },
+    gwas: (d)=>{
+        return {
+            x: d.panel_variant_id,
+            y: -Math.log10(parseFloat(d.pvalue)), // pvalue
+            z: parseFloat(parseFloat(d.effect_size).toPrecision(3)) || undefined, // effect size
+            pValue: parseFloat(d.pvalue).toPrecision(3)
+        }
     }
 };
 
@@ -124,6 +133,14 @@ export const dataFilters = {
         const lower = gene.tss - window;
         const upper = gene.tss + window;
         return d.pos>=lower && d.pos<=upper;
+    },
+    gwas: (d, tss)=>{
+        let pos = parseInt(d.panel_variant_id.split("_")[1]);
+        return pos<=tss + 1e6 && pos>=tss - 1e6;
+    },
+    vep: (d, gencodeId)=>{
+        let id = gencodeId.split(".")[0];
+        return d.gencodeId==id;
     }
 };
 
@@ -178,30 +195,23 @@ export function render(geneId, par=DefaultConfig){
                     par.data.geneModel = args[0];
                     par.data.eqtl = args[1];
                     par.data.sqtl = args[2];
-                    par.data.vep = args[3]===undefined?undefined:args[3].filter((d)=>{
-                        let id = par.data.queryGene.gencodeId.split(".")[0];
-                        return d.gencodeId==id;
-                    })
-                        .reduce((acc, d)=>{
-                            acc[d.variant] = d.vep;
-                            return acc;
-                        }, {});
-                    par.data.gwasImputed = args[4].filter((d)=>{
-                        let pos = parseInt(d.panel_variant_id.split("_")[1]);
-                        return pos<=par.data.queryGene.tss + 1e6 && pos>=par.data.queryGene.tss - 1e6;
-                    }).map((d)=>{
-                        return {
-                            x: d.panel_variant_id,
-                            y: "GWAS-IBD-Crohn's Disease",
-                            value: parseFloat(d.effect_size) || 0,
-                            r: -Math.log10(parseFloat(d.pvalue))
-                        }
-                    })
-                    console.log(par.data.gwasImputed)
+                    par.data.vepDict = args[3]===undefined?undefined:args[3].filter((d)=>{
+                        return par.dataFilters.vep(d, par.data.queryGene.gencodeId);
+                    }).reduce((acc, d)=>{
+                        acc[d.variant] = d.vep;
+                        return acc;
+                    }, {});
+                    par.data.gwasDict = args[4].filter((d)=>{
+                        return par.dataFilters.gwas(d, par.data.queryGene.tss)
+                    }).map(par.parsers.gwas)
+                    .reduce((acc, d)=>{
+                        acc[d.x] = d;
+                        return acc;
+                    }, {});
+
                     renderGeneVisualComponents(par);
                     // QTL tracks
                     const qtlData = {
-                        gwas: par.data.gwasImputed,
                         eqtl: par.data.eqtl.singleTissueEqtl,
                         sqtl: par.data.sqtl.singleTissueSqtl
                     };
@@ -413,7 +423,7 @@ function renderGeneVisualComponents(par = DefaultConfig){
 
 /**
  * Rendering the list of gene labels using a scale
- * This is used when the gene data table (heat map) is not displayed,
+ * Note: This function is only used when the gene data table (heat map) is not displayed,
  * @param par {Object} visualization config
  * @returns {D3 scale object} of the gene labels
  */
@@ -526,7 +536,7 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
 
     let qtlMapPanel = par.panels.qtlMap;
     let parser = par.parsers.qtlBubbles;
-    qtlMapPanel.data = qtlData.gwas;
+    qtlMapPanel.data = [];
     qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.eqtl.map((d)=>{return parser(d, "eQTL")}));
     qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.sqtl.map((d)=>{return parser(d, "sQTL")}));
 
@@ -539,7 +549,7 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
 
     let bmapInWidth = qtlMapPanel.width-(qtlMapPanel.margin.left + qtlMapPanel.margin.right);
     let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
-    bmap.setScales({w:bmapInWidth, h:bmapInHeight, top: 0, left:0}, [-1.2, 1.2]); // hard setting for the color value range
+    bmap.setScales({w:bmapInWidth, h:bmapInHeight, top: 0, left:0}, [-0.75, 0.75]); // hard setting for the color value range
     bmap.drawColorLegend(svg, {x: qtlMapPanel.margin.left + bmapInWidth + 20, y: qtlMapPanel.yPos + qtlMapPanel.margin.top}, 3, "NES", {h:15, w:10}, "v");
     bmap.drawBubbleLegend(svg, {x: qtlMapPanel.margin.left + bmapInWidth + 20, y:qtlMapPanel.yPos + qtlMapPanel.margin.top + 150, title: "-log10(p-value)"}, 5, "-log10(p-value)", "v");
 
@@ -555,7 +565,7 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
 }
 
 function _modifyBubbleMapColumnLabels(bmap, par){
-    bmap.svg.selectAll(".bubble-map-xlabel").remove();
+    bmap.svg.selectAll(".bubble-map-xlabel").remove(); // remove default xlabels of the bubble map
 
     let labels = bmap.svg.selectAll('.bubble-map-xlabel').data(bmap.xScale.domain())
         .enter()
@@ -566,33 +576,67 @@ function _modifyBubbleMapColumnLabels(bmap, par){
         .style("cursor", "default")
         .attr("transform", (d) => {
             let x = bmap.xScale(d);
-            let y = bmap.yScale.range()[1] + (bmap.yScale.bandwidth()*2); // allow space for VEP rendering
+            let y = bmap.yScale.range()[1] + (bmap.yScale.bandwidth()*7); // allow space for VEP rendering
             return `translate(${x}, ${y})`;
         })
 
     let size = Math.floor(bmap.xScale.bandwidth()/ 2)>12?12:Math.floor(bmap.xScale.bandwidth()/ 2);
-    labels.append("text")
+    labels.append("text") // text labels, variants
         .style("font-size", size)
         .text((d) => d)
         .attr("dx", 0)
-        .attr("dy", 3)
+        .attr("dy", 5)
         .attr("transform", "rotate(90)")
 
+    let gwasY = scaleLinear()
+        .domain([0, 3])
+        .range([0, bmap.yScale.bandwidth()*4])
+
+    let gwasC = scaleLinear()
+        .domain([-0.1, 0, 0.1]) // TODO: dynamically determine the range
+        .range(["#10b1b8", "#dddddd", "#cc67b1"])
     labels.append("rect")
+        .attr("class", "gwas-trait-box")
+        .attr("x", -bmap.xScale.bandwidth()/2) // relative to its parent <g>
+        .attr("y", (d)=> {
+            if (par.data.gwasDict === undefined) return 0;
+            if (!par.data.gwasDict.hasOwnProperty(d)) return 0;
+            return -gwasY(par.data.gwasDict[d].y)
+        })// this position is relative to its parent <g>
+        .attr("width", bmap.xScale.bandwidth())
+        .attr("height", (d)=> {
+            if (par.data.gwasDict === undefined) return 0;
+            if (!par.data.gwasDict.hasOwnProperty(d)) return 0;
+            return gwasY(par.data.gwasDict[d].y)
+        })
+        .style("fill", (d)=>{
+            if (par.data.gwasDict===undefined) return "#ffffff";
+            if (!par.data.gwasDict.hasOwnProperty(d)) return "#ffffff";
+            if (par.data.gwasDict[d].z===undefined) return "#ffffff"; // imputed
+            return gwasC(par.data.gwasDict[d].z)
+        })
+        .style("stroke", "#eeeeee")
+        .style("stoke-width", 1)
+        .attr("transform", `translate(0, ${-bmap.yScale.bandwidth()*2})`)
+
+    labels.append("rect")
+        .attr("class", "vep-box")
         .attr("x", -bmap.xScale.bandwidth()/2) // relative to its parent <g>
         .attr("y", -bmap.yScale.bandwidth() - 5) // position is relative to its parent <g>
         .attr("width", bmap.xScale.bandwidth())
         .attr("height", bmap.yScale.bandwidth())
         .style("fill", (d)=>{
-            if (par.data.vep===undefined) return "none";
-            let vep = par.data.vep[d]
+            if (par.data.vepDict===undefined) return "none";
+            let vep = par.data.vepDict[d]
             return vep===undefined?"#ffffff":vepColorKeys[vep]||"#ababab"
         })
         .style("stroke", "#eeeeee")
         .style("stoke-width", 1);
+
     labels.on("mouseover", (d)=>{
-        let vep = par.data.vep[d] || "Not available";
-        bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${vep}`)
+        let vep = par.data.vepDict[d] || "Not available";
+        let gwas = `${par.data.gwasDict[d].z||"Imputed"} (p-value=${par.data.gwasDict[d].pValue})` || "Not available"
+        bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${vep} <br/> GWAS: ${gwas}`)
     })
     .on("mouseout", (d)=>{
         bmap.tooltip.hide();
