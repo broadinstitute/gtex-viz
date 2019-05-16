@@ -23,50 +23,63 @@ import {axisBottom, axisLeft} from 'd3-axis';
 import {max, min, extent} from 'd3-array';
 
 export default class Scatterplot {
-    constructor(data) {
+    constructor(data, groupInfo={}) {
         this._sanityCheck(data)
         this.data = data;
+        this.groupInfo = groupInfo;
     }
 
     render(dom, height, width) {
-        let x = scaleLinear()
-            .domain(extent(this.data, (d)=>d.x))
-            .range([0, width]);
+        let scales = this._getScales(height, width);
+        let xAxis = axisBottom(scales.x);
+        let yAxis = axisLeft(scales.y);
 
-        let y = scaleLinear()
-            .domain(extent(this.data, (d)=>d.y))
-            .range([height, 0]);
-
-        this.xAxis = axisBottom(x);
-        this.yAxis = axisLeft(y);
+        // drawing plot
         dom.append('g')
             .attr('id', 'scatter-x-axis')
+            .attr('class', 'scatter-axis')
             .attr('transform', `translate(0, ${height})`)
-            .call(this.xAxis);
+            .call(xAxis);
         dom.append('g')
             .attr('id', 'scatter-y-axis')
-            .call(this.yAxis);
-
+            .attr('class', 'scatter-axis')
+            .call(yAxis);
         dom.append('g')
             .attr('class', 'scatter-points')
             .selectAll('circle')
             .data(this.data)
             .enter()
             .append('circle')
-            .attr('cx', d=>x(d.x))
-            .attr('cy', d=>y(d.y))
-            .attr('r', 2)
-            .classed('scatter-point', true);
+            .attr('cx', d=>scales.x(d.x))
+            .attr('cy', d=>scales.y(d.y))
+            .attr('r', 3)
+            .attr('fill', 'steelblue');
 
 
 
     }
 
+    _getScales(height, width) {
+        let xScale = scaleLinear()
+            .domain(extent(this.data, (d)=>d.x))
+            .range([0, width]);
+        let yScale = scaleLinear()
+            .domain(extent(this.data, (d)=>d.y))
+            .range([height, 0]);
+        return {
+            x: xScale,
+            y: yScale
+        };
+    }
+
     _sanityCheck(data) {
+        let requiredAttr = ['x', 'y', 'group'];
         data.forEach(d => {
-            if (d.x === undefined || d.y === undefined) {
-                throw 'Scatterplot: Input data error.';
-            }
+            requiredAttr.forEach(i => {
+                if (d[i] === undefined) {
+                    throw `Scatterplot: Input data error. Data missing attribute ${i}`;
+                }
+            });
         });
     }
 }
