@@ -10,12 +10,13 @@
 import {tsv, json} from "d3-fetch";
 import {select, selectAll} from "d3-selection";
 import {max} from "d3-array";
-import {axisBottom} from "d3-axis";
+import {axisBottom, axisLeft} from "d3-axis";
 import {scaleBand, scaleLinear} from "d3-scale";
 import {symbol, symbolDiamond, symbolSquare} from "d3-shape";
 
 import MiniGenomeBrowser from "./modules/MiniGenomeBrowser.js";
 import BubbleMap from "./modules/BubbleMap.js";
+import BarMap from "./modules/BarMap.js";
 import Heatmap from "./modules/Heatmap.js";
 import HalfMap from "./modules/HalfMap.js";
 import {createSvg} from "./modules/utils";
@@ -111,9 +112,9 @@ export let dataParsers = {
     gwas: (d)=>{
         return {
             x: d.panel_variant_id,
-            y: -Math.log10(parseFloat(d.pvalue)), // pvalue
-            z: parseFloat(parseFloat(d.effect_size).toPrecision(3)) || undefined, // effect size
-            pValue: parseFloat(d.pvalue).toPrecision(3)
+            y: "GWAS Crohn's disease",
+            value:  parseFloat(parseFloat(d.effect_size).toPrecision(3)),
+            r: -Math.log10(parseFloat(d.pvalue))
         }
     }
 };
@@ -208,15 +209,19 @@ export function render(geneId, par=DefaultConfig){
                         acc[d.x] = d;
                         return acc;
                     }, {});
+                    par.data.gwasImputed = args[4].filter((d)=>{
+                        return par.dataFilters.gwas(d, par.data.queryGene.tss)
+                    }).map(par.parsers.gwas);
 
                     renderGeneVisualComponents(par);
                     // QTL tracks
                     const qtlData = {
                         eqtl: par.data.eqtl.singleTissueEqtl,
-                        sqtl: par.data.sqtl.singleTissueSqtl
+                        sqtl: par.data.sqtl.singleTissueSqtl,
+                        gwasImputed: par.data.gwasImputed
                     };
                     const sqtlTrackViz = _renderVariantTracks(par, qtlData);
-                    Promise.all(promises3)
+                    Promise.all(promises3) // fetch LD data last so that partial visualization components are visible right away
                         .then((ld)=>{
                             par.data.ld = ld
                             renderGEV(par, qtlData, sqtlTrackViz);
@@ -501,25 +506,73 @@ function _renderGeneTracks(gene, svg, par=DefaultConfig, data){
 }
 
 /**
- * Rendering all variant related visualization components
- * TODO: break this function into smaller functions
+ * Rendering variant related visualization components in zoom view
  * @param queryGene
  * @param mainSvg
  * @param par
  * @param data
  */
-function renderGEV(par=DefaultConfig, qtlData, sqtlTrackViz){
+function renderGEV(par=DefaultConfig, qtlData, sqtlTrackViz, mapType="bars"){
 
-    let bmap = _renderQtlBubbleMap(par, qtlData);
-
+    let bmap = undefined;
     // LD map: parse the data and call the initial rendering
     if (par.ld.data.length == 0) _ldMapDataParserHelper(par);
+
+    switch(mapType){
+        case "bubbles":
+            bmap = _renderQtlBubbleMap(par, qtlData);
+            break;
+        case "bars":
+            bmap = _renderQtlBarMap(par, qtlData);
+            break;
+        default:
+            console.error("unrecognized type")
+    }
     par.ldBrush = _renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
-     // initial rendering components
-    bmap.drawSvg(bmap.svg, {w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]), h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]), top: 0, left:0}); // initialize bubble heat map
+    // initial rendering components
+    let dim = {
+        w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]),
+        h:Math.abs(bmap.yScale.range()[1]-bmap.yScale.range()[0]),
+        top: 0,
+        left:0
+    };
+    bmap.drawSvg(bmap.svg, dim); // initialize bubble heat map
     _renderGeneStartEndMarkers(bmap); // initialize tss and tes markers
     _createBrush(par.data.queryGene, sqtlTrackViz, bmap, par, par.ldBrush);
     par.bmap = bmap;
+}
+
+
+function _renderQtlMapHelper(par=DefaultConfig, qtlData){
+    let qtlMapPanel = par.panels.qtlMap;
+    let parser = par.parsers.qtlBubbles;
+    qtlMapPanel.data = qtlData.gwasImputed;
+    qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.eqtl.map((d)=>{return parser(d, "eQTL")}));
+    qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.sqtl.map((d)=>{return parser(d, "sQTL")}));
+    return qtlMapPanel;
+}
+
+function _renderQtlBarMap(par=DefaultConfig, qtlData){
+    // TODO: refactoring
+    let qtlMapPanel = _renderQtlMapHelper(par, qtlData);
+    let bmapInWidth = qtlMapPanel.width-(qtlMapPanel.margin.left + qtlMapPanel.margin.right);
+    let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
+
+    let bmap = new BarMap(qtlMapPanel.data, qtlMapPanel.colorScheme);
+    bmap.svg = par.svg.append("g") // TODO: refactoring?
+        .attr("id", qtlMapPanel.id)
+        .attr("class", "focus")
+        .attr("transform", `translate(${qtlMapPanel.margin.left}, ${qtlMapPanel.margin.top + qtlMapPanel.yPos})`);
+
+    bmap.setScales({width:bmapInWidth, height:bmapInHeight, top: 0, left:0}, [-0.75, 0.75]); // hard setting for the color value range
+    bmap.addTooltip("locus-browser", "locus-browser");
+    bmap.fullDomain = bmap.xScale.domain(); // save initial x domain as the full domain in bmap
+
+     //-- TSS and TES markers
+    let gene = par.data.queryGene;
+    _findVariantsClosestToGeneStartEnd(gene, bmap); // NOTE: bmap.fullDomain is required in this function and bmap.tss, bmap.tes are created by this function
+
+    return bmap;
 }
 
 /**
@@ -533,13 +586,7 @@ function renderGEV(par=DefaultConfig, qtlData, sqtlTrackViz){
 function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
     let gene = par.data.queryGene;
     let svg = par.svg;
-
-    let qtlMapPanel = par.panels.qtlMap;
-    let parser = par.parsers.qtlBubbles;
-    qtlMapPanel.data = [];
-    qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.eqtl.map((d)=>{return parser(d, "eQTL")}));
-    qtlMapPanel.data = qtlMapPanel.data.concat(qtlData.sqtl.map((d)=>{return parser(d, "sQTL")}));
-
+    let qtlMapPanel = _renderQtlMapHelper(par, qtlData);
     // prepare bubble map
     let bmap = new BubbleMap(qtlMapPanel.data, qtlMapPanel.useLog, qtlMapPanel.logBase, qtlMapPanel.colorScheme);
     let bmapG = svg.append("g")
@@ -555,7 +602,7 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
 
 
     bmap.fullDomain = bmap.xScale.domain(); // save the full domain as a new attribute of bmap
-    bmap.addTooltip("locus-browser", "locus-browser-tooltip");
+    bmap.addTooltip("locus-browser", "locus-browser");
     bmap.svg = bmapG;
     // customization
     //-- TSS and TES markers
@@ -564,62 +611,60 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
     return bmap;
 }
 
-function _modifyBubbleMapColumnLabels(bmap, par){
+function _customizeMapColumnLabels(bmap, par){
     bmap.svg.selectAll(".bubble-map-xlabel").remove(); // remove default xlabels of the bubble map
+    bmap.svg.selectAll(".bar-map-x-axis").remove(); // remove default xlabels of the bubble map
+    bmap.svg.selectAll(".custom-map-x-axis").remove(); // remove default xlabels of the bubble map
 
-    let labels = bmap.svg.selectAll('.bubble-map-xlabel').data(bmap.xScale.domain())
-        .enter()
-        .append("g")
-        .attr("class", (d, i) => `bubble-map-xlabel x${i}`)
-        .attr("x", 0)
+    let axis = axisBottom(bmap.xScale).tickSize(0);
+    let Y = bmap.yScale.range()[1] + bmap.yScale.step();
+    let axisG = bmap.svg.append("g")
+         .attr("class", "custom-map-x-axis")
+            .attr("transform", `translate(${-bmap.xScale.bandwidth()/2}, ${Y})`)
+            .call(axis);
+
+    axisG.selectAll("text")
         .attr("y", 0)
-        .style("cursor", "default")
-        .attr("transform", (d) => {
-            let x = bmap.xScale(d);
-            let y = bmap.yScale.range()[1] + (bmap.yScale.bandwidth()*7); // allow space for VEP rendering
-            return `translate(${x}, ${y})`;
-        })
-
-    let size = Math.floor(bmap.xScale.bandwidth()/ 2)>12?12:Math.floor(bmap.xScale.bandwidth()/ 2);
-    labels.append("text") // text labels, variants
-        .style("font-size", size)
-        .text((d) => d)
-        .attr("dx", 0)
-        .attr("dy", 5)
+        .attr("x", 9)
+        .attr("class", "custom-map-x-label")
+        .attr("dy", ".35em")
         .attr("transform", "rotate(90)")
+        .style("text-anchor", "start");
 
-    let gwasY = scaleLinear()
-        .domain([0, 3])
-        .range([0, bmap.yScale.bandwidth()*4])
+    // TODO: add more data
 
-    let gwasC = scaleLinear()
-        .domain([-0.1, 0, 0.1]) // TODO: dynamically determine the range
-        .range(["#10b1b8", "#dddddd", "#cc67b1"])
-    labels.append("rect")
-        .attr("class", "gwas-trait-box")
-        .attr("x", -bmap.xScale.bandwidth()/2) // relative to its parent <g>
-        .attr("y", (d)=> {
-            if (par.data.gwasDict === undefined) return 0;
-            if (!par.data.gwasDict.hasOwnProperty(d)) return 0;
-            return -gwasY(par.data.gwasDict[d].y)
-        })// this position is relative to its parent <g>
-        .attr("width", bmap.xScale.bandwidth())
-        .attr("height", (d)=> {
-            if (par.data.gwasDict === undefined) return 0;
-            if (!par.data.gwasDict.hasOwnProperty(d)) return 0;
-            return gwasY(par.data.gwasDict[d].y)
-        })
-        .style("fill", (d)=>{
-            if (par.data.gwasDict===undefined) return "#ffffff";
-            if (!par.data.gwasDict.hasOwnProperty(d)) return "#ffffff";
-            if (par.data.gwasDict[d].z===undefined) return "#ffffff"; // imputed
-            return gwasC(par.data.gwasDict[d].z)
-        })
-        .style("stroke", "#eeeeee")
-        .style("stoke-width", 1)
-        .attr("transform", `translate(0, ${-bmap.yScale.bandwidth()*2})`)
-
-    labels.append("rect")
+    // let gwasY = scaleLinear()
+    //     .domain([0, 3])
+    //     .range([0, bmap.yScale.bandwidth()*4])
+    //
+    // let gwasC = scaleLinear()
+    //     .domain([-0.1, 0, 0.1]) // TODO: dynamically determine the range
+    //     .range(["#10b1b8", "#dddddd", "#cc67b1"])
+    // labels.append("rect")
+    //     .attr("class", "gwas-trait-box")
+    //     .attr("x", -bmap.xScale.bandwidth()/2) // relative to its parent <g>
+    //     .attr("y", (d)=> {
+    //         if (par.data.gwasDict === undefined) return 0;
+    //         if (!par.data.gwasDict.hasOwnProperty(d)) return 0;
+    //         return -gwasY(par.data.gwasDict[d].y)
+    //     })// this position is relative to its parent <g>
+    //     .attr("width", bmap.xScale.bandwidth())
+    //     .attr("height", (d)=> {
+    //         if (par.data.gwasDict === undefined) return 0;
+    //         if (!par.data.gwasDict.hasOwnProperty(d)) return 0;
+    //         return gwasY(par.data.gwasDict[d].y)
+    //     })
+    //     .style("fill", (d)=>{
+    //         if (par.data.gwasDict===undefined) return "#ffffff";
+    //         if (!par.data.gwasDict.hasOwnProperty(d)) return "#ffffff";
+    //         if (par.data.gwasDict[d].z===undefined) return "#ffffff"; // imputed
+    //         return gwasC(par.data.gwasDict[d].z)
+    //     })
+    //     .style("stroke", "#eeeeee")
+    //     .style("stoke-width", 1)
+    //     .attr("transform", `translate(0, ${-bmap.yScale.bandwidth()*2})`)
+    //
+    axisG.selectAll(".tick").append("rect")
         .attr("class", "vep-box")
         .attr("x", -bmap.xScale.bandwidth()/2) // relative to its parent <g>
         .attr("y", -bmap.yScale.bandwidth() - 5) // position is relative to its parent <g>
@@ -631,56 +676,35 @@ function _modifyBubbleMapColumnLabels(bmap, par){
             return vep===undefined?"#ffffff":vepColorKeys[vep]||"#ababab"
         })
         .style("stroke", "#eeeeee")
-        .style("stoke-width", 1);
-
-    labels.on("mouseover", (d)=>{
-        let vep = par.data.vepDict[d] || "Not available";
-        let gwas = `${par.data.gwasDict[d].z||"Imputed"} (p-value=${par.data.gwasDict[d].pValue})` || "Not available"
-        bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${vep} <br/> GWAS: ${gwas}`)
-    })
-    .on("mouseout", (d)=>{
-        bmap.tooltip.hide();
-    })
-
-
-}
-function _modifyBubbleMapRowLabels(bmap){
-    bmap.svg.selectAll(".bubble-map-ylabel").remove();
-    let labels = bmap.svg.selectAll(".bubble-map-ylabel")
-        .data(bmap.yScale.domain())
-        .enter()
-        .append("g")
-        .attr("class", (d, i) => `bubble-map-ylabel y${i}`)
-        .attr("x", 0)
-        .attr("y", 2)
-        .attr("transform", (d) => {
-            let x = bmap.xScale.range()[0] - 20;
-            let y = bmap.yScale(d);
-            return `translate(${x}, ${y})`;
-        });
-    let size = Math.floor(bmap.yScale.bandwidth()/1.5)>11?11:Math.floor(bmap.yScale.bandwidth()/1.5)<8?8:Math.floor(bmap.yScale.bandwidth()/1.5);
-
-
-    labels.append("text")
-        .attr("text-anchor", "end")
-        .style("font-size", size)
-        .text((d)=>d)
-        .attr("dx", -5)
-        .attr("dy", 2)
-
-    let symbolGenerator = symbol().size(50);
-
-    labels.append("path")
-        .attr('d', (d)=>{
-            let type = d.startsWith("eQTL")?symbolSquare:symbolDiamond;
-            symbolGenerator.type(type)
-            return symbolGenerator();
+        .style("stoke-width", 1)
+        .on("mouseover", (d)=>{
+            let vep = par.data.vepDict[d] || "Not available";
+            let gwas = `${par.data.gwasDict[d].z||"Imputed"} (p-value=${par.data.gwasDict[d].pValue})` || "Not available"
+            bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${vep} <br/> GWAS: ${gwas}`)
         })
-        .attr('fill', (d)=>d.startsWith("eQTL")?"#efefef":"#2d54aa")
-        .attr('stroke', "#ababab")
-        .attr('stroke-width', 1)
+        .on("mouseout", (d)=>{
+            bmap.tooltip.hide();
+        })
+}
 
+function _customizeMapRowLabels(bmap){
+    bmap.svg.selectAll(".bubble-map-ylabel").remove();
+    bmap.svg.select(".bar-map-y-axis").remove();
+    bmap.svg.select(".custom-map-y-axis").remove();
 
+    let axis = axisLeft(bmap.yScale).tickSize(0);
+    bmap.svg.append("g")
+        .attr("class", "custom-map-y-axis")
+        .attr("transform", `translate(${-bmap.xScale.bandwidth()}, 0)`)
+        .call(axis)
+        .selectAll("text")
+        .attr("class", "custom-map-y-label")
+        .attr("fill", (d)=>{
+            if (d.startsWith("eQTL")) return "#10b1b8";
+            if (d.startsWith("sQTL")) return "#cc67b1";
+            return "#7f7f7f"
+        })
+        .attr("dy", 5)
 }
 
 /**
@@ -756,8 +780,8 @@ function _createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined
 
         // refresh the gene's TSS and TES markers on the bubble map
         _renderGeneStartEndMarkers(bmap);
-        _modifyBubbleMapRowLabels(bmap);
-        _modifyBubbleMapColumnLabels(bmap, par);
+        _customizeMapRowLabels(bmap);
+        _customizeMapColumnLabels(bmap, par);
 
 
         // update the corresponding LD using the ldBrush

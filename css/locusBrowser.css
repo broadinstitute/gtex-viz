@@ -1,5 +1,5 @@
 
-div.locus-browser-tooltip {
+div.locus-browser-tooltip, div.half-map-tooltip{
    min-width: 100px;
    display: none;
    background-color : rgba(32, 53, 73, 0.95);

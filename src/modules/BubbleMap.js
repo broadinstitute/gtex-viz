@@ -1,5 +1,5 @@
 /**
- * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
+ * Copyright © 2015 - 2019 The Broad Institute, Inc. All rights reserved.
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
 
@@ -115,26 +115,26 @@ export default class BubbleMap {
     }
 
     drawCombo(
-    miniDom,
-    focusDom,
-    dimensions={w:1000, h:600, top:0, left:0},
-    colorScaleDomain=undefined,
-    addBrush=true,
-    labelConfig = {
-        column: {
-            show: true,
-            angle: 30,
-            adjust: 0,
-            location: 'bottom',
-            textAlign: 'left'
-        },
-       row: {
-            show: true,
-            angle: 0,
-            adjust: 0,
-            location: 'left',
-            textAlign: 'right',
-       }
+        miniDom,
+        focusDom,
+        dimensions={w:1000, h:600, top:0, left:0},
+        colorScaleDomain=undefined,
+        addBrush=true,
+        labelConfig = {
+            column: {
+                show: true,
+                angle: 30,
+                adjust: 0,
+                location: 'bottom',
+                textAlign: 'left'
+            },
+           row: {
+                show: true,
+                angle: 0,
+                adjust: 0,
+                location: 'left',
+                textAlign: 'right',
+           }
     }) {
 
         let svgDim = {
