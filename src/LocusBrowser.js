@@ -5,12 +5,12 @@
 
 /**
  * TODO:
- * BarMap: hide column labels when bar width is too small
  * BarMap: row filtering
  * BarMap: auto adjustment of row height--when there are too few or too many rows, set a fix row heihgt?
  * BarMap: custom tooltip
  * BarMap: bar click events
  * BarMap: move styling to css
+ * BarMap: code review, turn this into a class?
  */
 "use strict";
 import {tsv, json} from "d3-fetch";
@@ -39,7 +39,8 @@ export let data = {
     eqtl: undefined,
     gwasToGene: undefined,
     gwasImputed: undefined,
-    vepDict: undefined
+    vepDict: undefined,
+    qtlData: undefined
 };
 
 /**
@@ -223,17 +224,20 @@ export function render(geneId, par=DefaultConfig){
 
                     renderGeneVisualComponents(par);
                     // QTL tracks
-                    const qtlData = {
+                    par.data.qtlData = {
                         eqtl: par.data.eqtl.singleTissueEqtl,
                         sqtl: par.data.sqtl.singleTissueSqtl,
                         gwasImputed: par.data.gwasImputed
                     };
-                    const sqtlTrackViz = _renderVariantTracks(par, qtlData);
-                    Promise.all(promises3) // fetch LD data last so that partial visualization components are visible right away
+                    par.sqtlTrackViz = _renderVariantTracks(par);
+                    if (par.data.ld) renderGEV(par);
+                    else {
+                        Promise.all(promises3) // fetch LD data last so that partial visualization components are visible right away
                         .then((ld)=>{
                             par.data.ld = ld
-                            renderGEV(par, qtlData, sqtlTrackViz);
+                            renderGEV(par, true);
                         });
+                    }
                 })
         })
         .catch((err)=>{
@@ -260,6 +264,21 @@ export function setUIEvents(geneId, par){
                 select("#show-v-id").text("Show Variant ID")
             }
             rerender(par)
+        });
+    select("#change-qtl-map")
+        .style("cursor", "pointer")
+        .on("click", ()=>{
+
+            if (par.panels.qtlMap.mapType=="barmap"){
+                par.panels.qtlMap.mapType = "bubblemap";
+                select("#change-qtl-map").text("Use Bar Map")
+            } else {
+                par.panels.qtlMap.mapType = "barmap";
+                select("#change-qtl-map").text("Use Bubble Map")
+            }
+            select("#"+par.id).selectAll("*").remove();
+            select("#"+ par.ldId).selectAll("*").remove();
+            render(par.data.queryGene.geneSymbol, par); // TODO: code review
         });
     select("#zoom-plus")
         .style("cursor", "pointer")
@@ -533,28 +552,29 @@ function _renderGeneTracks(gene, svg, par=DefaultConfig, data){
 
 /**
  * Rendering variant related visualization components in zoom view
- * @param queryGene
- * @param mainSvg
  * @param par
- * @param data
+ * TODO: code review
  */
-function renderGEV(par=DefaultConfig, qtlData, sqtlTrackViz, mapType="bars"){
+function renderGEV(par=DefaultConfig){
 
     let bmap = undefined;
+    let qtlData = par.data.qtlData;
+    let sqtlTrackViz = par.sqtlTrackViz;
     // LD map: parse the data and call the initial rendering
     if (par.ld.data.length == 0) _ldMapDataParserHelper(par);
 
-    switch(mapType){
-        case "bubbles":
+    switch(par.panels.qtlMap.mapType){
+        case "bubblemap":
             bmap = _renderQtlBubbleMap(par, qtlData);
             break;
-        case "bars":
+        case "barmap":
             bmap = _renderQtlBarMap(par, qtlData);
             break;
         default:
             console.error("unrecognized type")
     }
-    par.ldBrush = _renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
+    par.bmap = bmap;
+
     // initial rendering components
     let dim = {
         w:Math.abs(bmap.xScale.range()[1]-bmap.xScale.range()[0]),
@@ -563,9 +583,12 @@ function renderGEV(par=DefaultConfig, qtlData, sqtlTrackViz, mapType="bars"){
         left:0
     };
     bmap.drawSvg(bmap.svg, dim, true); // initialize bubble heat map
+
+    par.ldBrush = _renderLdMap(par.ld, bmap); // the rendering function returns a callback function for updating the LD map
     _renderGeneStartEndMarkers(bmap); // initialize tss and tes markers
     _createBrush(par.data.queryGene, sqtlTrackViz, bmap, par, par.ldBrush);
-    par.bmap = bmap;
+
+
 }
 
 
@@ -585,6 +608,8 @@ function _renderQtlBarMap(par=DefaultConfig, qtlData){
     let bmapInHeight = qtlMapPanel.height-(qtlMapPanel.margin.top + qtlMapPanel.margin.bottom);
 
     let bmap = new BarMap(qtlMapPanel.data, qtlMapPanel.colorScheme);
+    par.svg.select("#"+qtlMapPanel.id).remove(); // remove existing DOM with the same panel ID
+
     bmap.svg = par.svg.append("g") // TODO: refactoring?
         .attr("id", qtlMapPanel.id)
         .attr("class", "focus")
@@ -608,13 +633,17 @@ function _renderQtlBarMap(par=DefaultConfig, qtlData){
  * @param par {Object} the config of the visualization
  * @param trackData {Dictionary} QTL data
  * @returns {MiniGenomeBrowser} sQTL's track object (or the object to apply the brush)
+ * TODO: code refactoring with BarMap function
  */
 function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
     let gene = par.data.queryGene;
     let svg = par.svg;
     let qtlMapPanel = _renderQtlMapHelper(par, qtlData);
+    svg.select("#"+qtlMapPanel.id).remove(); // remove existing DOM with the same panel ID
+
     // prepare bubble map
     let bmap = new BubbleMap(qtlMapPanel.data, qtlMapPanel.useLog, qtlMapPanel.logBase, qtlMapPanel.colorScheme);
+
     let bmapG = svg.append("g")
         .attr("id", qtlMapPanel.id)
         .attr("class", "focus")
@@ -720,18 +749,17 @@ function _customizeMapRowLabels(bmap){
 /**
  * render variant related genomic tracks
  * @param par
- * @param trackData {Object} of data with attributes: eqtl and sqtl
  * @param maxColorValue {Number} set the maximum color value for the color scale
  * @returns {MiniGenomeBrowser}
  */
-function _renderVariantTracks(par=DefaultConfig, trackData=undefined, maxColorValue=30){
+function _renderVariantTracks(par=DefaultConfig, maxColorValue=30){
     let gene = par.data.queryGene;
     let svg = par.svg;
     let eqtlPanel = par.panels.eqtlTrack;
     let sqtlPanel = par.panels.sqtlTrack;
     if (eqtlPanel.data === null || sqtlPanel.data === null){
-        eqtlPanel.data = _aggregateQtlData(trackData.eqtl, par)
-        sqtlPanel.data = _aggregateQtlData(trackData.sqtl, par)
+        eqtlPanel.data = _aggregateQtlData(par.data.qtlData.eqtl, par)
+        sqtlPanel.data = _aggregateQtlData(par.data.qtlData.sqtl, par)
     }
 
     // QTL tracks rendering

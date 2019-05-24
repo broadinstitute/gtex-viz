@@ -16,7 +16,7 @@
     <div class="row">
         <div class="btn-group btn-group-sm col-lg-2 col-md-2 col-sm-3">
             <a id="show-v-id" class="btn btn-outline-info">Show Variant ID</a>
-            <a id="show-bubbles" class="btn btn-outline-info">Bubble Map</a>
+            <a id="change-qtl-map" class="btn btn-outline-info">Use Bubble Map</a>
         </div>
         <div class="btn-group btn-group-sm col-lg-1 col-md-2 col-sm-3">
             <span style="margin-right: 10px;">Zoom</span>
@@ -137,6 +137,7 @@
 
                 qtlMap: {
                     id: 'qtl-map', // the bubble heat map of QTLs
+                    mapType: "barmap",
                     width: GlobalWidth,
                     data: null,
                     yPos: null,
