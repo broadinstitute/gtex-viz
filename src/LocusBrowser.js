@@ -5,7 +5,6 @@
 
 /**
  * TODO:
- * BarMap: effect size color scale
  * BarMap: hide column labels when bar width is too small
  * BarMap: row filtering
  * BarMap: auto adjustment of row height--when there are too few or too many rows, set a fix row heihgt?
@@ -640,39 +639,6 @@ function _customizeMapColumnLabels(bmap, par){
         .attr("transform", "rotate(90)")
         .style("text-anchor", "start");
 
-    // TODO: add more data
-
-    // let gwasY = scaleLinear()
-    //     .domain([0, 3])
-    //     .range([0, bmap.yScale.bandwidth()*4])
-    //
-    // let gwasC = scaleLinear()
-    //     .domain([-0.1, 0, 0.1]) // TODO: dynamically determine the range
-    //     .range(["#10b1b8", "#dddddd", "#cc67b1"])
-    // labels.append("rect")
-    //     .attr("class", "gwas-trait-box")
-    //     .attr("x", -bmap.xScale.bandwidth()/2) // relative to its parent <g>
-    //     .attr("y", (d)=> {
-    //         if (par.data.gwasDict === undefined) return 0;
-    //         if (!par.data.gwasDict.hasOwnProperty(d)) return 0;
-    //         return -gwasY(par.data.gwasDict[d].y)
-    //     })// this position is relative to its parent <g>
-    //     .attr("width", bmap.xScale.bandwidth())
-    //     .attr("height", (d)=> {
-    //         if (par.data.gwasDict === undefined) return 0;
-    //         if (!par.data.gwasDict.hasOwnProperty(d)) return 0;
-    //         return gwasY(par.data.gwasDict[d].y)
-    //     })
-    //     .style("fill", (d)=>{
-    //         if (par.data.gwasDict===undefined) return "#ffffff";
-    //         if (!par.data.gwasDict.hasOwnProperty(d)) return "#ffffff";
-    //         if (par.data.gwasDict[d].z===undefined) return "#ffffff"; // imputed
-    //         return gwasC(par.data.gwasDict[d].z)
-    //     })
-    //     .style("stroke", "#eeeeee")
-    //     .style("stoke-width", 1)
-    //     .attr("transform", `translate(0, ${-bmap.yScale.bandwidth()*2})`)
-    //
     axisG.selectAll(".tick").append("rect")
         .attr("class", "vep-box")
         .attr("x", -bmap.xScale.bandwidth()/2) // relative to its parent <g>
@@ -688,8 +654,7 @@ function _customizeMapColumnLabels(bmap, par){
         .style("stoke-width", 1)
         .on("mouseover", (d)=>{
             let vep = par.data.vepDict[d] || "Not available";
-            let gwas = `${par.data.gwasDict[d].z||"Imputed"} (p-value=${par.data.gwasDict[d].pValue})` || "Not available"
-            bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${vep} <br/> GWAS: ${gwas}`)
+            bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${vep}`)
         })
         .on("mouseout", (d)=>{
             bmap.tooltip.hide();
