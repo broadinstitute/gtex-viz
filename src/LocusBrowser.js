@@ -689,6 +689,11 @@ function _customizeMapColumnLabels(bmap, par){
         })
 }
 
+/**
+ * Customize the barmap or bubblemap row text labels
+ * @param bmap {BarMap or BubbleMap}
+ * @private
+ */
 function _customizeMapRowLabels(bmap){
     bmap.svg.selectAll(".bubble-map-ylabel").remove();
     bmap.svg.select(".bar-map-y-axis").remove();
