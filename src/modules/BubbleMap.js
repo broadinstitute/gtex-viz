@@ -416,26 +416,12 @@ export default class BubbleMap {
      * @returns {*}
      */
     brushed(focusDom, labelConfig){ // TODO: code review and refactoring
-
         let selection = event.selection;
         let brushLeft = Math.round(selection[0] / this.xScaleMini.step());
         let brushRight = Math.round(selection[1] / this.xScaleMini.step());
         let domain = this.xScaleMini.domain().slice(brushLeft, brushRight);
         this.renderWithNewDomain(focusDom, domain, labelConfig.column)
         return domain;
-        // // update the column labels
-        // focusDom.selectAll(".bubble-map-xlabel")
-        //     .attr("transform", (d) => {
-        //         let x = this.xScale(d) + 5 || 0; // TODO: remove hard-coded value
-        //         let y = this.yScale.range()[1] + labelConfig.column.adjust;
-        //         return `translate(${x}, ${y}) rotate(${labelConfig.column.angle})`;
-        //
-        //     })
-        //     .style("display", (d) => {
-        //         let x = this.xScale(d); // TODO: remove hard-coded value
-        //         return x === undefined ? "none" : "block";
-        //     });
-
     }
 
     // private methods

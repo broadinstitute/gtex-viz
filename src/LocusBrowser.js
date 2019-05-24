@@ -98,6 +98,7 @@ export let dataParsers = {
         d.y = dataType + "-" + d.tissueSiteDetailId;
         d.value = parseFloat(d.nes);
         d.r = -Math.log10(parseFloat(d.pValue));
+        d.dataType=dataType;
         return d;
     },
     ld: (d)=>{
@@ -112,9 +113,10 @@ export let dataParsers = {
     gwas: (d)=>{
         return {
             x: d.panel_variant_id,
-            y: "GWAS Crohn's disease",
+            y: "GWAS Crohn's disease", // TODO: remove hard-coded values
             value:  parseFloat(parseFloat(d.effect_size).toPrecision(3)),
-            r: -Math.log10(parseFloat(d.pvalue))
+            r: -Math.log10(parseFloat(d.pvalue)),
+            dataType: "GWAS"
         }
     }
 };
@@ -536,7 +538,7 @@ function renderGEV(par=DefaultConfig, qtlData, sqtlTrackViz, mapType="bars"){
         top: 0,
         left:0
     };
-    bmap.drawSvg(bmap.svg, dim); // initialize bubble heat map
+    bmap.drawSvg(bmap.svg, dim, true); // initialize bubble heat map
     _renderGeneStartEndMarkers(bmap); // initialize tss and tes markers
     _createBrush(par.data.queryGene, sqtlTrackViz, bmap, par, par.ldBrush);
     par.bmap = bmap;
@@ -794,8 +796,8 @@ function _createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined
             .classed("brushLine", true)
             .attr("x1", left)
             .attr("x2", bmap.xScale.range()[0] + qtlMapPanel.margin.left - brushPanel.margin.left)
-            .attr("y1", 20)
-            .attr("y2", 60)
+            .attr("y1",5)
+            .attr("y2", par.panels.qtlMap.margin.top-40)
             .style("stroke-width", 1)
             .style("stroke", "#ababab");
         select(".brush")
@@ -803,8 +805,8 @@ function _createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined
             .classed("brushLine", true)
             .attr("x1", right)
             .attr("x2", bmap.xScale.range()[1]+ qtlMapPanel.margin.left - brushPanel.margin.left)
-            .attr("y1", 20)
-            .attr("y2", 60)
+            .attr("y1", 5)
+            .attr("y2", par.panels.qtlMap.margin.top-40)
             .style("stroke-width", 1)
             .style("stroke", "#ababab")
 

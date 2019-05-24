@@ -43,10 +43,10 @@ export default class BarMap {
             })
     }
 
-    drawSvg(dom, dimensions={w:1000, h: 600, top:0, left: 0}){
+    drawSvg(dom, dimensions={w:1000, h: 600, top:0, left: 0}, setGroupHScale=false){
         if (this.xScale=== undefined || this.yScale===undefined) this.setScales(dimensions)
         this._renderAxes(dom);
-        this._renderBars(dom);
+        this._renderBars(dom, setGroupHScale);
     }
 
     setScales(dimensions, colorRange=undefined){
@@ -81,7 +81,7 @@ export default class BarMap {
      * @param dim
      * @param xlist {List} of x. optional. User-defined list of x.
      */
-    _setYScale(dim={height:600, top:20}, ylist = undefined, padding=0.2){
+    _setYScale(dim={height:600, top:20}, ylist = undefined, padding=0.3){
         if (ylist === undefined) {
             ylist = nest()
                 .key((d) => d.y) // group by d.x
@@ -127,17 +127,30 @@ export default class BarMap {
             .attr("class", "bar-map-y-label")
     }
 
-    _renderBars(g){
+    _renderBars(g, groupHScale=false){
         let nest_data = nest()
             .key((d)=>d.y)
             .entries(this.data);
         let tooltip = this.tooltip;
+
+        let grouped_data = nest()
+            .key((d)=>d.dataType)
+            .entries(this.data);
+
         nest_data.forEach((row, i)=> {
-            console.log(row)
-            let dMax = max(row.values, (d) => d.r);
-            let hScale = scaleLinear()
-                .domain([0, dMax])
-                .rangeRound([0, -this.yScale.bandwidth()]);
+            // console.log(row)
+            let hScale = scaleLinear().rangeRound([0, -this.yScale.bandwidth()]);
+            let dMax = max(row.values, (d) => d.r); // find the maximum value in the row
+
+            if (groupHScale) {
+                // when groupHScale is true indicates that the hScale should be set based on all data from the same data type
+                let type = row.values[0].dataType;
+                console.log(type);
+                dMax = max(grouped_data.filter((g)=>g.key==type)[0].values.map((d)=>d.r));
+                console.log(dMax);
+            }
+
+            hScale.domain([0, dMax])
 
             let rowG = g.append("g")
                 .classed("bar-row", true)
@@ -149,7 +162,6 @@ export default class BarMap {
                     .call(hAxis)
                     .selectAll("text")
                     .attr("font-size", 6)
-
 
             rowG.selectAll("rect")
                 .data(row.values)

@@ -116,8 +116,8 @@ export default class MiniGenomeBrowser{
 
             const brush = brushX()
                 .extent([
-                    [0,-brushConfig.h],
-                    [scale.range()[1], 20]
+                    [0,-brushConfig.h-5],
+                    [scale.range()[1], 5]
                 ])
                 .on("brush", brushEvent);
             axisG.append("g")
