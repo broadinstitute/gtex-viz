@@ -697,16 +697,15 @@ function _customizeMapRowLabels(bmap){
     let axis = axisLeft(bmap.yScale).tickSize(0);
     bmap.svg.append("g")
         .attr("class", "custom-map-y-axis")
-        .attr("transform", `translate(${-bmap.xScale.bandwidth()}, 0)`)
+        .attr("transform", `translate(${-bmap.xScale.bandwidth()}, ${bmap.yScale.bandwidth()/3})`)
         .call(axis)
         .selectAll("text")
         .attr("class", "custom-map-y-label")
         .attr("fill", (d)=>{
-            if (d.startsWith("eQTL")) return "#10b1b8";
+            if (d.startsWith("GWAS")) return "#10b1b8";
             if (d.startsWith("sQTL")) return "#cc67b1";
             return "#7f7f7f"
         })
-        .attr("dy", 5)
 }
 
 /**
