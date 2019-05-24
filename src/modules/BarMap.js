@@ -32,15 +32,12 @@ export default class BarMap {
         select(`#${tooltipId}`).classed(tooltipCssClass, true);
     }
 
-    renderWithNewDomain(dom, domain){
+    renderWithNewDomain(dom, domain, renderAxis=false){
         this.xScale.domain(domain);
-        this._renderXAxis(dom);
+        if(renderAxis) this._renderXAxis(dom);
         dom.selectAll(".bar-row").selectAll("rect")
             .attr("x", (d)=>this.xScale(d.x)-this.xScale.bandwidth()/2||0)
-            .attr("width", (d)=>{
-                if (this.xScale(d.x)===undefined) return 0;
-                return this.xScale.bandwidth()
-            })
+            .attr("width", (d)=>this.xScale(d.x)===undefined?0:this.xScale.bandwidth())
     }
 
     drawSvg(dom, dimensions={w:1000, h: 600, top:0, left: 0}, setGroupHScale=false){
