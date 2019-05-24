@@ -407,8 +407,10 @@ function renderGeneVisualComponents(par = DefaultConfig){
     let xAdjust = geneMapPanel.margin.left - tssPanel.margin.left + (geneLabelScale.bandwidth()/2);
     let trackHeight = tssPanel.height - (tssPanel.margin.top + tssPanel.margin.bottom);
 
+    let genesInWindow = _findNeighbors(par.data.genes, par)
+    tssTrackViz.svg.selectAll(".connect").remove();
     tssTrackViz.svg.selectAll(".connect")
-        .data(genes.filter((d)=>geneLabelScale.domain().indexOf(d.geneSymbol)>=0))
+        .data(genesInWindow)
         .enter()
         .append('line')
         .attr("class", "connect")
@@ -420,7 +422,7 @@ function renderGeneVisualComponents(par = DefaultConfig){
         .attr("stroke-width", 0.5);
 
     tssTrackViz.svg.selectAll(".connect2")
-        .data(genes.filter((d)=>geneLabelScale.domain().indexOf(d.geneSymbol)>=0))
+        .data(genesInWindow)
         .enter()
         .append('line')
         .attr("class", "connect2")
