@@ -137,16 +137,17 @@
                     data: null,
                     yPos: null,
                     margin: {
-                        top: 70, // at least 50, provide space for the genome position scale
-                        right: 100,
-                        bottom: 120, // provide space for the column labels
-                        left: 200
+                        top: 70, // at least 70, provide space for the genome position scale and brush lines
+                        right: 100, // at least 50 for axis
+                        bottom: 20, // at least 20
+                        left: 200, // at least 200 for text labels
                     },
-                    height: 900,
-                    colorScheme: "RdBu",
+                    height: 700,
+                    colorScheme: "RdBu", // TODO: review these plot options
                     colorScaleDomain: [-1, 1],
                     useLog: false,
                     logBase: null,
+                    showRowLabel: false,
                     label: {
                         column: {
                             show: true,

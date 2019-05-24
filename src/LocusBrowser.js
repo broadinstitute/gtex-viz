@@ -630,14 +630,24 @@ function _customizeMapColumnLabels(bmap, par){
          .attr("class", "custom-map-x-axis")
             .attr("transform", `translate(${-bmap.xScale.bandwidth()/2}, ${Y})`)
             .call(axis);
+    axisG.select("path").remove(); // remove the axis line
 
-    axisG.selectAll("text")
-        .attr("y", 0)
-        .attr("x", 9)
-        .attr("class", "custom-map-x-label")
-        .attr("dy", ".35em")
-        .attr("transform", "rotate(90)")
-        .style("text-anchor", "start");
+    if (par.panels.qtlMap.showRowLabel){
+        axisG.selectAll("text")
+            .attr("y", 0)
+            .attr("x", 9)
+            .attr("class", (d, i)=>`custom-map-x-label x${i}`)
+            .attr("dy", ".35em")
+            .attr("transform", "rotate(90)")
+            .style("text-anchor", "start")
+             .text((d)=>{
+                 d=d.replace("chr", "")
+                 let t = d.split("_")
+                 return t.splice(0, 2).join("_")
+             })
+    } else {
+        axisG.selectAll("text").remove();
+    }
 
     axisG.selectAll(".tick").append("rect")
         .attr("class", "vep-box")
@@ -652,12 +662,15 @@ function _customizeMapColumnLabels(bmap, par){
         })
         .style("stroke", "#eeeeee")
         .style("stoke-width", 1)
-        .on("mouseover", (d)=>{
+        .on("mouseover", function(d){
             let vep = par.data.vepDict[d] || "Not available";
-            bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${vep}`)
+            bmap.tooltip.show(`Variant: ${d} <br/> VEP: ${vep}`);
+            select(this).style("stroke", "#f53956");
         })
-        .on("mouseout", (d)=>{
+        .on("mouseout", function(){
             bmap.tooltip.hide();
+            select(this).style("stroke", "#eeeeee");
+
         })
 }
 
@@ -672,11 +685,12 @@ function _customizeMapRowLabels(bmap){
     bmap.svg.select(".custom-map-y-axis").remove();
 
     let axis = axisLeft(bmap.yScale).tickSize(0);
-    bmap.svg.append("g")
+    let axisG = bmap.svg.append("g")
         .attr("class", "custom-map-y-axis")
         .attr("transform", `translate(${-bmap.xScale.bandwidth()}, ${bmap.yScale.bandwidth()/3})`)
-        .call(axis)
-        .selectAll("text")
+        .call(axis);
+    axisG.select("path").remove(); // remove the axis line
+    axisG.selectAll("text")
         .attr("class", "custom-map-y-label")
         .attr("fill", (d)=>{
             if (d.startsWith("GWAS")) return "#10b1b8";
