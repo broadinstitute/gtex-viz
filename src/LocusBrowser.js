@@ -3,9 +3,16 @@
  * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
  */
 
-//TODO: code review on setting configurations
-// TODO: unify QTL tracks' pvalue scale
-
+/**
+ * TODO:
+ * BarMap: effect size color scale
+ * BarMap: hide column labels when bar width is too small
+ * BarMap: row filtering
+ * BarMap: auto adjustment of row height--when there are too few or too many rows, set a fix row heihgt?
+ * BarMap: custom tooltip
+ * BarMap: bar click events
+ * BarMap: move styling to css
+ */
 "use strict";
 import {tsv, json} from "d3-fetch";
 import {select, selectAll} from "d3-selection";
@@ -852,6 +859,13 @@ function _ldMapDataParserHelper(par=DefaultConfig){
     }));
 }
 
+/**
+ * Render the LD halfmap
+ * @param config {Locus Browser Config}
+ * @param bmap {BarMap or BubbleMap}
+ * @returns {ldBrush}
+ * @private
+ */
 function _renderLdMap(config, bmap){
     let ldMap = new HalfMap(config.data, config.cutoff, false, undefined, config.colorScheme, [0,1]);
     ldMap.addTooltip('locus-browser');
