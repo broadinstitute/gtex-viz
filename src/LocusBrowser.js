@@ -241,6 +241,51 @@ export function render(geneId, par=DefaultConfig){
         })
 }
 
+/**
+ * Define UI mouse events
+ * @param geneId
+ * @param par
+ */
+export function setUIEvents(geneId, par){
+    select("#show-v-id")
+        .style("cursor", "pointer")
+        .on("click", ()=>{
+            par.panels.qtlMap.showRowLabel = !par.panels.qtlMap.showRowLabel;
+            if (par.panels.qtlMap.showRowLabel) {
+                select("#"+par.id).select("svg").attr("height", par.height + 80);
+                select("#show-v-id").text("Hide Variant ID")
+            } // make room for text labels
+            else {
+                select("#"+par.id).select("svg").attr("height", par.height);
+                select("#show-v-id").text("Show Variant ID")
+            }
+            rerender(par)
+        });
+    select("#zoom-plus")
+        .style("cursor", "pointer")
+        .on("click", ()=>{
+            par.genomicWindow = par.genomicWindow <= 5e4?5e4:par.genomicWindow/2;
+            // console.log(par.genomicWindow)
+            rerender(par)
+        });
+    select("#zoom-minus")
+        .style("cursor", "pointer")
+        .on("click", ()=>{
+            par.genomicWindow = par.genomicWindow >= 1e6?1e6:par.genomicWindow*2;
+            rerender(par)
+        });
+    select("#zoom-reset")
+        .style("cursor", "pointer")
+        .on("click", ()=>{
+            par.genomicWindow = 1e6;
+            console.log(par.genomicWindow)
+
+            rerender(par)
+        })
+    select("#zoom-size")
+        .text(`genomic range: ${(2*par.genomicWindow).toLocaleString()} bases`)
+}
+
 function _mapGenesToTraits(data, par){
     let neighbors = par.data.genes.reduce((arr, d)=>{
         arr[d.geneSymbol] = d;
@@ -303,36 +348,7 @@ function _setDimensions(par=DefaultConfig){
         }, 0);
 }
 
-/**
- * Define UI mouse events
- * @param geneId
- * @param par
- */
-export function setUIEvents(geneId, par){
-    select("#zoom-plus")
-        .style("cursor", "pointer")
-        .on("click", ()=>{
-            par.genomicWindow = par.genomicWindow <= 5e4?5e4:par.genomicWindow/2;
-            // console.log(par.genomicWindow)
-            rerender(par)
-        });
-    select("#zoom-minus")
-        .style("cursor", "pointer")
-        .on("click", ()=>{
-            par.genomicWindow = par.genomicWindow >= 1e6?1e6:par.genomicWindow*2;
-            rerender(par)
-        });
-    select("#zoom-reset")
-        .style("cursor", "pointer")
-        .on("click", ()=>{
-            par.genomicWindow = 1e6;
-            console.log(par.genomicWindow)
 
-            rerender(par)
-        })
-    select("#zoom-size")
-        .text(`genomic range: ${(2*par.genomicWindow).toLocaleString()} bases`)
-}
 
 /**
  * Re-render the visualization when the genomic window range is changed
