@@ -5,6 +5,7 @@
 
 /**
  * TODO:
+ * BarMap: toggle bar/bubble: rewrite the bubble map code: just use alternative shapes in BarMap
  * BarMap: row filtering
  * BarMap: auto adjustment of row height--when there are too few or too many rows, set a fix row heihgt?
  * BarMap: custom tooltip
@@ -263,7 +264,7 @@ export function setUIEvents(geneId, par){
                 select("#"+par.id).select("svg").attr("height", par.height);
                 select("#show-v-id").text("Show Variant ID")
             }
-            rerender(par)
+            _customizeMapColumnLabels(par)
         });
     select("#change-qtl-map")
         .style("cursor", "pointer")
@@ -666,7 +667,8 @@ function _renderQtlBubbleMap(par=DefaultConfig, qtlData){
     return bmap;
 }
 
-function _customizeMapColumnLabels(bmap, par){
+function _customizeMapColumnLabels(par){
+    let bmap = par.bmap;
     bmap.svg.selectAll(".bubble-map-xlabel").remove(); // remove default xlabels of the bubble map
     bmap.svg.selectAll(".bar-map-x-axis").remove(); // remove default xlabels of the bubble map
     bmap.svg.selectAll(".custom-map-x-axis").remove(); // remove default xlabels of the bubble map
@@ -819,7 +821,7 @@ function _createBrush(gene, trackViz, bmap, par=DefaultConfig, ldBrush=undefined
         // refresh the gene's TSS and TES markers on the bubble map
         _renderGeneStartEndMarkers(bmap);
         _customizeMapRowLabels(bmap);
-        _customizeMapColumnLabels(bmap, par);
+        _customizeMapColumnLabels(par);
 
 
         // update the corresponding LD using the ldBrush
