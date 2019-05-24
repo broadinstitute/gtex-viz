@@ -127,11 +127,14 @@ export default class BarMap {
             .attr("class", "bar-map-y-label")
     }
 
-    _renderBars(g, groupHScale=false){
+    _renderBars(g, groupHScale=false, domain=[-0.5, 0, 0.5]){
+        let cScale = scaleLinear()
+            .domain(domain)
+            .range(["#129cff", "#ffffff", "#f53956"]);
+
         let nest_data = nest()
             .key((d)=>d.y)
             .entries(this.data);
-        let tooltip = this.tooltip;
 
         let grouped_data = nest()
             .key((d)=>d.dataType)
@@ -145,25 +148,32 @@ export default class BarMap {
             if (groupHScale) {
                 // when groupHScale is true indicates that the hScale should be set based on all data from the same data type
                 let type = row.values[0].dataType;
-                console.log(type);
                 dMax = max(grouped_data.filter((g)=>g.key==type)[0].values.map((d)=>d.r));
-                console.log(dMax);
             }
 
             hScale.domain([0, dMax])
 
             let rowG = g.append("g")
-                .classed("bar-row", true)
+                .classed("bar-row", true);
 
-                let hAxis = axisRight(hScale).ticks(2);
-                let hAxisG = rowG.append("g")
-                    .attr("class", "h-axis")
-                    .attr("transform", `translate(${this.xScale.range()[1]}, ${this.yScale(row.key)+this.yScale.bandwidth()})`)
-                    .call(hAxis)
-                    .selectAll("text")
-                    .attr("font-size", 6)
+            // add a row baseline to help visual alignment
+            rowG.append("line")
+                .attr("x1", this.xScale.range()[0])
+                .attr("x2", this.xScale.range()[1])
+                .attr("y1", 0)
+                .attr("y2", 0)
+                .attr("transform", `translate(0, ${this.yScale(row.key)+this.yScale.bandwidth()})`)
+                .style("stroke", "#efefef");
 
-            rowG.selectAll("rect")
+            let hAxis = axisRight(hScale).ticks(2);
+            let hAxisG = rowG.append("g")
+                .attr("class", "h-axis")
+                .attr("transform", `translate(${this.xScale.range()[1]}, ${this.yScale(row.key)+this.yScale.bandwidth()})`)
+                .call(hAxis)
+                .selectAll("text")
+                .attr("font-size", 6);
+
+            let bars = rowG.selectAll("rect")
                 .data(row.values)
                 .enter()
                 .append("rect")
@@ -175,10 +185,13 @@ export default class BarMap {
                 })
                 .attr("fill", (d)=>{
                     if (isNaN(d.value)) return "darkgrey";
-                    return d.value>0?"#f53956":(d.value==0)?"darkgrey":"#129cff"
+                    return cScale(d.value)
                 })
                 .attr("stroke-width", 0)
-                .on("mouseover", (d)=>{
+                .attr("cursor", "pointer");
+
+            let tooltip = this.tooltip;
+            bars.on("mouseover", (d)=>{
                     tooltip.show(`Row: ${d.y}<br/> Column: ${d.x} <br/> Value: ${d.value}<br/> Height: ${d.r}`);
                 })
                 .on("mouseout", (d)=>{
