@@ -5,12 +5,11 @@
 "use strict";
 export function getGtexUrls(){
     const host = 'https://gtexportal.org/rest/v1/';
-    // const host = 'local.gtexportal.org/rest/v1/'
+    // const host = 'https://dev.gtexportal.org/rest/v1/';
     return {
         // gene-eqtl visualizer specific
-        singleTissueEqtl: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v7&gencodeId=',
-        ld: host + 'dataset/ld?format=json&datasetId=gtex_v7&gencodeId=',
-        tissueSummary: host + 'dataset/tissueSummary?datasetId=gtex_v7',
+        singleTissueEqtl: host + 'association/singleTissueEqtl?format=json&datasetId=gtex_v8&gencodeId=',
+        ld: host + 'dataset/ld?format=json&datasetId=gtex_v8&gencodeId=',
 
         // eqtl Dashboard specific
         dyneqtl: host + 'association/dyneqtl',
@@ -18,33 +17,31 @@ export function getGtexUrls(){
         variantId: host + 'dataset/variant?format=json&variantId=',
 
         // transcript, exon, junction expression specific
-        exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
-        transcriptExp: host + 'expression/medianTranscriptExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
-        junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v7&hcluster=true&gencodeId=',
-        transcript: host + 'reference/transcript?datasetId=gtex_v7&gencodeId=',
-        exon: host + 'reference/exon?datasetId=gtex_v7&gencodeId=',
-        geneModel: host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
-        geneModelUnfiltered: host + 'dataset/fullCollapsedGeneModelExon?datasetId=gtex_v7&gencodeId=',
+        exonExp: host + 'expression/medianExonExpression?datasetId=gtex_v8&hcluster=true&gencodeId=',
+        transcriptExp: host + 'expression/medianTranscriptExpression?datasetId=gtex_v8&hcluster=true&gencodeId=',
+        junctionExp: host + 'expression/medianJunctionExpression?datasetId=gtex_v8&hcluster=true&gencodeId=',
+        transcript: host + 'reference/transcript?datasetId=gtex_v8&gencodeId=',
+        exon: host + 'reference/exon?datasetId=gtex_v8&gencodeId=',
+        geneModel: host + 'dataset/collapsedGeneModelExon?datasetId=gtex_v8&gencodeId=',
+        geneModelUnfiltered: host + 'dataset/fullCollapsedGeneModelExon?datasetId=gtex_v8&gencodeId=',
 
         // gene expression violin plot specific
-        geneExp: host + 'expression/geneExpression?datasetId=gtex_v7&gencodeId=',
+        geneExp: host + 'expression/geneExpression?datasetId=gtex_v8&gencodeId=',
 
         // gene expression heat map specific
-        medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v7&hcluster=true&pageSize=10000',
+        medGeneExp: host + 'expression/medianGeneExpression?datasetId=gtex_v8&hcluster=true&pageSize=10000',
 
         // gene expression boxplot specific
-        geneExpBoxplot: host + 'expression/geneExpression?datasetId=gtex_v7&boxplotDetail=full&gencodeId=',
+        geneExpBoxplot: host + 'expression/geneExpression?datasetId=gtex_v8&boxplotDetail=full&gencodeId=',
 
         // top expressed gene expression specific
-        topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v7&filterMtGene=true&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
-        topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v7&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
+        topInTissueFiltered: host + 'expression/topExpressedGene?datasetId=gtex_v8&filterMtGene=true&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
+        topInTissue: host + 'expression/topExpressedGene?datasetId=gtex_v8&sortBy=median&sortDirection=desc&pageSize=50&tissueSiteDetailId=',
 
-        geneId: host + 'reference/gene?format=json&gencodeVersion=v19&genomeBuild=GRCh37%2Fhg19&geneId=',
+        geneId: host + 'reference/gene?format=json&gencodeVersion=v26&genomeBuild=GRCh38%2Fhg38&geneId=',
 
         // tissue menu specific
-        // TODO: remove redundant URLs
-        tissue:  host + 'metadata/tissueSiteDetail?format=json',
-        tissueSites: host + 'metadata/tissueSiteDetail?format=json',
+        tissue:  host + 'dataset/tissueInfo?format=json&datasetId=gtex_v8',
 
         // local static files
         sample: 'tmpSummaryData/gtex.Sample.csv',
@@ -165,7 +162,7 @@ export function parseGenes(data, single=false, geneId=null){
  * @returns {List} of tissues
  */
 export function parseTissues(json){
-    const attr = 'tissueSiteDetail';
+    const attr = 'tissueInfo';
     if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attr is missing: ' + attr;
     const tissues = json[attr];
 
@@ -183,7 +180,7 @@ export function parseTissues(json){
  * @returns {*}
  */
 export function parseTissueDict(json){
-    const attr = 'tissueSiteDetail';
+    const attr = 'tissueInfo';
     if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attr is missing: ' + attr;
     const tissues = json[attr];
     // sanity check
@@ -195,10 +192,10 @@ export function parseTissueDict(json){
 
 /**
  * Parse the tissues sample counts, GTEx release specific
- * @param json from web service tissueSummary
+ * @param json from web service tissueInfo
  */
 export function parseTissueSampleCounts(json){
-    const attr = 'tissueSummary';
+    const attr = 'tissueInfo';
     if(!json.hasOwnProperty(attr)) throw 'Parsing Error: required json attr is missing: ' + attr;
     const tissues = json[attr];
 
@@ -216,11 +213,11 @@ export function parseTissueSampleCounts(json){
  * @returns {Dictionary} of lists of tissues indexed by the tissue group name
  */
 export function parseTissueSites(data, forEqtl=false){
-    // the list of invalide eqtl tissues due to sample size < 70
+    // the list of invalid eqtl tissues due to sample size < 70
     // a hard-coded list because the sample size is not easy to retrieve
     const invalidTissues = ['Bladder', 'Cervix_Ectocervix', 'Cervix_Endocervix', 'Fallopian_Tube', 'Kidney_Cortex'];
 
-    const attr = 'tissueSiteDetail';
+    const attr = 'tissueInfo';
     if(!data.hasOwnProperty(attr)) throw 'Parsing Error: required json attribute is missing: ' + attr;
     let tissues = data[attr];
     ['tissueSite','tissueSiteDetailId','tissueSiteDetail'].forEach((d)=>{
@@ -256,11 +253,11 @@ export function parseTissueSites(data, forEqtl=false){
 /**
  * parse the exons
  * @param data {Json}
- * @param full {Boolean}
+ * @param isFull {Boolean}
  * @returns {List} of exons
  */
-export function parseModelExons(json){
-    const attr = 'collapsedGeneModelExon';
+export function parseModelExons(json, isFull){
+    const attr = isFull?'fullCollapsedGeneModelExon':'collapsedGeneModelExon';
     if(!json.hasOwnProperty(attr)){
         console.error(json);
         throw 'Parsing Error: Required json attribute is missing: ' + attr;
@@ -294,7 +291,7 @@ export function parseJunctions(json){
     // check required json attributes
     ['tissueSiteDetailId', 'junctionId'].forEach((d)=>{
         // use the first element in the json objects as a test case
-        if(!json[attr][0].hasOwnProperty(d)){
+        if(json[attr].length && !json[attr][0].hasOwnProperty(d)){
             console.error(json[attr][0]);
             throw 'Parsing Error: required junction attribute is missing: ' + d;
         }

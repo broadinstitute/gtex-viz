@@ -35,7 +35,7 @@ import {
 export function build(dashboardId, menuId, pairId, submitId, formId, messageBoxId, urls=getGtexUrls()){
     let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
 
-    json(urls.tissueSites)
+    json(urls.tissue, {credentials: 'include'})
         .then(function(data){ // retrieve all tissue (sub)sites
             const forEqtl = true;
             let tissueGroups = parseTissueSites(data, forEqtl);
@@ -227,7 +227,7 @@ function _submit(tissueGroups, dashboardId, menuId, pairId, submitId, formId, me
             const geneUrl = urls.geneId + gid;
             const variantUrl = vid.toLowerCase().startsWith('rs')?urls.snp+vid:urls.variantId+vid;
 
-            Promise.all([json(geneUrl), json(variantUrl)])
+            Promise.all([json(geneUrl, {credentials: 'include'}), json(variantUrl, {credentials: 'include'})])
                 .then(function(args){
                     const gene = _parseGene(args[0], gid);
                     const variant = _parseVariant(args[1]);
@@ -415,7 +415,7 @@ function _renderEqtlPlot(tissueDict, dashboardId, gene, variant, tissues, i, url
 function _apiCall(url, tissue){
     // reference: http://adampaxton.com/handling-multiple-javascript-promises-even-if-some-fail/
     return new Promise(function(resolve, reject){
-        json(url)
+        json(url, {credentials: 'include'})
             .then(function(request) {
                 resolve(request);
             })

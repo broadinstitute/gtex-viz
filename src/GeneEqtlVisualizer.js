@@ -29,32 +29,31 @@ import {render as eqtlViolinPlotRender} from "./EqtlViolinPlot";
 export function render(par, geneId, urls = getGtexUrls()){
     $(`#${par.divSpinner}`).show();
 
-    json(urls.geneId + geneId) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
+    json(urls.geneId + geneId, {credentials: 'include'}) // query the gene by geneId which could be gene name or gencode ID with or withour versioning
         .then((data)=> {
             let gene = parseGenes(data, true, geneId);
             // report the gene info
             $(`#${par.divGeneInfo}`).empty();
             $("<span/>")
-                .html(`<span>${gene.geneSymbol} (${gene.gencodeId}), Chr${gene.chromosome}:${gene.start} - ${gene.end} (${gene.strand}), ${gene.description}`)
+                .html(`<span>${gene.geneSymbol} (${gene.gencodeId}), ${gene.chromosome}:${gene.start} - ${gene.end} (${gene.strand}), ${gene.description}`)
                 .appendTo($(`#${par.divGeneInfo}`));
 
             let promises = [
-                json(urls.tissueSummary),
-                json(urls.tissueSites),
-                json(urls.exon + gene.gencodeId),
-                json(urls.singleTissueEqtl + gene.gencodeId)
+                json(urls.tissue, {credentials: 'include'}),
+                json(urls.exon + gene.gencodeId, {credentials: 'include'}),
+                json(urls.singleTissueEqtl + gene.gencodeId, {credentials: 'include'})
             ];
             Promise.all(promises)
                 .then(function(results){
                     let tissues = parseTissueSampleCounts(results[0]);
-                    let tissueSiteTable = parseTissueDict(results[1]);
-                    let exons = parseExonsToList(results[2]);
-                    let eqtls = parseSingleTissueEqtls(results[3], tissueSiteTable);
+                    let tissueSiteTable = parseTissueDict(results[0]);
+                    let exons = parseExonsToList(results[1]);
+                    let eqtls = parseSingleTissueEqtls(results[2], tissueSiteTable);
                     par.data = eqtls;
                     par = setDimensions(par);
                     let bmap = renderBubbleMap(par, gene, tissues, exons, tissueSiteTable, urls);
                     // fetch LD data, this query is slow, so it's not included in the promises.
-                    json(urls.ld + gene.gencodeId)
+                    json(urls.ld + gene.gencodeId, {credentials: 'include'})
                         .then((ldJson) => {
                             let ld = parseLD(ldJson);
                             par.ldData = ld.filter((d)=>d.value>=par.ldCutoff); // filter unused data
@@ -119,7 +118,6 @@ function setDimensions(par){
     let hMin = 10;
     if (h < hMin) par.height = hMin*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
     else if (h > hMax) par.height = hMax*yList.length + par.margin.top + par.margin.bottom + par.miniPanelHeight + par.legendHeight;
-    console.log(par.height)
     par.inWidth = par.width - (par.margin.left + par.margin.right);
     par.inHeight = par.height - (par.margin.top + par.margin.bottom);
 
@@ -341,7 +339,7 @@ function updateFocusView(par, bmap, bmapSvg){
     let bubbleMax = bmap._setBubbleMax();
     bmap.bubbleScale.range([2, bubbleMax]); // TODO: change hard-coded min radius
 
-    bmap.drawBubbleLegend(bmapSvg, {x: par.width/2, y:par.focusPanelMargin.top-50, title: "-log10(p-value)"}, 5, "-log10(p-value)");
+    bmap.drawBubbleLegend(bmapSvg, {x: par.width/2 * 1.1, y:par.focusPanelMargin.top-50, title: "-log10(p-value)"}, 5, "-log10(p-value)");
 
     // update the focus bubbles
     bmapSvg.select("#focusG").selectAll(".bubble-map-cell")
@@ -695,16 +693,18 @@ function renderBmapFilters(id, infoId, modalId, bmap, bmapSvg, tissueSiteTable){
     if($(`#${modalId}`).find(":input").length == 0){
         // if the menu is empty
         bmap.yScale.domain().forEach((y)=>{ // create a menu item for each tissue
+            let x = $('<label/>');
             $('<input/>')
                 .attr('value', y)
                 .attr('type', 'checkbox')
                 .prop('checked', true)
-                .appendTo(modalBody);
-            $('<label/>')
+                .appendTo(x);
+            $('<span/>')
                 .css('font-size', '12px')
                 .css('margin-left', '2px')
                 .html(tissueSiteTable[y].tissueSiteDetail)
-                .appendTo(modalBody);
+                .appendTo(x);
+            x.appendTo(modalBody);
             $('<br/>').appendTo(modalBody);
         });
     }

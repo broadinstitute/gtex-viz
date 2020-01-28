@@ -212,7 +212,7 @@ export function drawColorLegend(title, dom, scale, config, useLog, ticks=10, bas
 
         g.append("text")
             .attr("class", "color-legend")
-            .text((d) => useLog?(Math.pow(base, d)).toPrecision(2):d.toPrecision(2))
+            .text((d) => useLog?(Math.pow(base, d)-1).toPrecision(2):d.toPrecision(2)) // assuming that raw value had been adjusted by +1 to deal with log transforming zeros
             .attr("x", (d, i) => cell.w * i)
             .attr("y", 0);
     } else {

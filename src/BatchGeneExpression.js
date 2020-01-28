@@ -51,7 +51,7 @@ export function launchTopExpressed(tissueId, heatmapRootId, violinRootId, urls=g
     if(filterGenes) $filterInfoDiv.html("Mitochondrial genes are excluded.<br/>");
     else $filterInfoDiv.html("Mitochondrial genes are included.<br/>");
 
-    json(url+ tissueId)
+    json(url+ tissueId, {credentials: 'include'})
         .then(function(results){ // top 50 expressed genes in tissueId
             const attr = 'topExpressedGene';
             if(!results.hasOwnProperty(attr)){
@@ -79,7 +79,7 @@ export function launchTopExpressed(tissueId, heatmapRootId, violinRootId, urls=g
 export function launch(formId, menuId, submitId, heatmapRootId, violinRootId, urls=getGtexUrls(), callback=undefined){
     let tissueGroups = {}; // a dictionary of lists of tissue sites indexed by tissue groups
 
-    json(urls.tissueSites)
+    json(urls.tissue, {credentials: 'include'})
         .then(function(data){ // retrieve all tissue (sub)sites
             const forEqtl = false;
             let tissueGroups = parseTissueSites(data, forEqtl);
@@ -94,7 +94,7 @@ export function launch(formId, menuId, submitId, heatmapRootId, violinRootId, ur
                     $(`#${formId}`).removeClass("in"); // for boostrap 3
 
                 // get the input list of genes
-                let glist = $('#genes').val().replace(/ /g, '').toUpperCase().split(',').filter((d)=>d!='');
+                let glist = $('#genes').val().replace(/ /g, '').replace(/\n/g,'').toUpperCase().split(',').filter((d)=>d!='');
                 if (glist.length == 0){
                     alert('Input Error: At least one gene must be provided.');
                     throw('Gene input error');
@@ -133,14 +133,14 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
     $(`#${heatmapRootId}`).empty(); // clear the root DOM content
     $(`#${violinRootId}`).empty(); // clear the root DOM content
 
-    const MAX = 50;
+    const MAX = 100;
     const $message = $('<div/><br/>').attr('class', 'col-xs-12 col-md-12').css('color', 'firebrick').appendTo(`#${heatmapRootId}`);
     let message = "";
     if (glist.length > MAX) {
         message = `Warning: Too many genes. Input list truncated to the first ${MAX}. <br/>`;
         glist = glist.slice(0, MAX);
     }
-    Promise.all([json(urls.tissue), json(urls.geneId+glist.join(","))])
+    Promise.all([json(urls.tissue, {credentials: 'include'}), json(urls.geneId+glist.join(","), {credentials: 'include'})])
        .then(function(args){
            const tissues = parseTissues(args[0]);
 
@@ -154,7 +154,7 @@ export function searchById(heatmapRootId, violinRootId, glist, tlist=undefined, 
            const gQuery = genes.map((g)=>g.gencodeId).join(",");
            const tQuery = tlist===undefined?undefined:tlist.join(",");
            const fetchUrl = tQuery === undefined? urls.medGeneExp + "&gencodeId=" + gQuery: urls.medGeneExp + "&gencodeId=" + gQuery + "&tissueSiteDetailId=" + tQuery;
-           json(fetchUrl)
+           json(fetchUrl, {credentials: 'include'})
                .then(function(eData){
                    $('#spinner').hide();
                    const dataMessage = _validateExpressionData(eData);
@@ -405,7 +405,7 @@ function _renderViolinPlot(action, gene, geneDict, tissueDict, dmap, urls=getGte
             const colors = {};
             colors[gene] = geneDict[gene].color;
             const tlist = dmap.objects.heatmap.xScale.domain();
-            json(url)
+            json(url, {credentials: 'include'})
                 .then(function (d) {
                     if (dmap.data.external === undefined) dmap.data.external = [];
                     dmap.data.external = dmap.data.external

@@ -13,9 +13,9 @@ import GroupedViolin from './modules/GroupedViolin';
 
 export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Expression Violin Plot", urls=getGtexUrls(), margins=_setViolinPlotMargins(50,75,250,60), dimensions={w: window.innerWidth*0.8, h:250}) {
     const promises = [
-        json(urls.tissue),
-        json(urls.geneExp + gencodeId),
-        json(urls.geneExp + gencodeId + '&attributeSubset=sex')
+        json(urls.tissue, {credentials: 'include'}),
+        json(urls.geneExp + gencodeId, {credentials: 'include'}),
+        json(urls.geneExp + gencodeId + '&attributeSubset=sex', {credentials: 'include'})
     ];
 
     const ids = {
@@ -81,6 +81,12 @@ export function launch(rootId, tooltipRootId, gencodeId, plotTitle="Gene Express
             });
 
             const violinPlotData = _parseGeneExpressionForViolin(args[1], tissueIdNameMap, groupColorDict, false);
+            if (!violinPlotData.length) {
+                $(`#${ids.toolbar}`).remove();
+                $(`<div id="gene-exp-vplot">No gene expression data found for ${gencodeId}</div>`).appendTo(`#${ids.root}`);
+                $(`#${ids.root} #${ids.spinner}`).hide();
+                return;
+            }
             let violinPlot = new GroupedViolin(violinPlotData);
             let tooltip = violinPlot.createTooltip(ids.tooltip);
 
@@ -206,8 +212,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .attr('class', 'btn-group btn-group-sm')
         .attr('id', `${ids.plotOptionGroups.sort}-alpha`);
     let alphaSortButtonGroup = $(`#${ids.plotOptionGroups.sort}-alpha.btn-group`);
-    $(`<button class="btn btn-default fa fa-sort-alpha-down" id="${ids.buttons.ascAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
-    $(`<button class="btn btn-default fa fa-sort-alpha-up" id="${ids.buttons.descAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-caret-up" id="${ids.buttons.ascAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-caret-down" id="${ids.buttons.descAlphaSort}"></button>`).appendTo(alphaSortButtonGroup);
 
 
     // sort options -- median sorts
@@ -221,8 +227,8 @@ function _addToolbar(vplot, tooltip, ids, urls) {
         .attr('class', 'btn-group btn-group-sm')
         .attr('id', `${ids.plotOptionGroups.sort}-num`);
     let numSortButtonGroup = $(`#${ids.plotOptionGroups.sort}-num.btn-group`);
-    $(`<button class="btn btn-default fa fa-sort-numeric-down" id="${ids.buttons.ascSort}"></button>`).appendTo(numSortButtonGroup);
-    $(`<button class="btn btn-default fa fa-sort-numeric-up" id="${ids.buttons.descSort}"></button>`).appendTo(numSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-caret-up" id="${ids.buttons.ascSort}"></button>`).appendTo(numSortButtonGroup);
+    $(`<button class="btn btn-default fa fa-caret-down" id="${ids.buttons.descSort}"></button>`).appendTo(numSortButtonGroup);
 
     // outlier display options
     $('<div/>').appendTo(plotOptions)
@@ -331,7 +337,7 @@ function _parseGeneExpressionForViolin(data, idNameMap=undefined, colors=undefin
         });
         d.group = idNameMap===undefined?d.tissueSiteDetailId:idNameMap[d.tissueSiteDetailId];
         d.label = d.subsetGroup===undefined?d.geneSymbol:d.subsetGroup;
-        d.color = colors===undefined?'#90c1c1':d.subsetGroup===undefined?`#${colors[d.tissueSiteDetailId]}`:colors[d.subsetGroup];
+        d.color = colors===undefined?'#90c1c1':d.subsetGroup=='allData'?`#${colors[d.tissueSiteDetailId]}`:colors[d.subsetGroup];
     });
     _calcViolinPlotValues(data[attr], useLog);
     return data[attr];

@@ -37,7 +37,7 @@ import IsoformTrackViewer from "./modules/IsoformTrackViewer";
  * @param urls {Object} of the GTEx web service urls with attr: geneId, tissue, geneModelUnfiltered, geneModel, junctionExp, exonExp
  */
 export function render(type, geneId, rootId, urls=getGtexUrls()){
-    json(urls.geneId + geneId) // query the gene by geneId--gene name or gencode ID with or without versioning
+    json(urls.geneId + geneId, {credentials: 'include'}) // query the gene by geneId--gene name or gencode ID with or without versioning
         .then(function(data){
              // get the gene object and its gencode Id
              const gene = parseGenes(data, true, geneId);
@@ -45,21 +45,21 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
 
              // build the promises
              const promises = [
-                json(urls.tissue),
-                json(urls.geneModelUnfiltered + gencodeId),
-                json(urls.geneModel + gencodeId),
-                json(urls.transcript + gencodeId),
-                json(urls.junctionExp + gencodeId),
-                json(urls.exonExp + gencodeId),
-                json(urls.transcriptExp + gencodeId),
-                json(urls.exon + gencodeId)
+                json(urls.tissue, {credentials: 'include'}),
+                json(urls.geneModelUnfiltered + gencodeId, {credentials: 'include'}),
+                json(urls.geneModel + gencodeId, {credentials: 'include'}),
+                json(urls.transcript + gencodeId, {credentials: 'include'}),
+                json(urls.junctionExp + gencodeId, {credentials: 'include'}),
+                json(urls.exonExp + gencodeId, {credentials: 'include'}),
+                json(urls.transcriptExp + gencodeId, {credentials: 'include'}),
+                json(urls.exon + gencodeId, {credentials: 'include'})
              ];
 
              Promise.all(promises)
                  .then(function(args){
                     const tissues = parseTissues(args[0]),
-                        exons = parseModelExons(args[1]), // exons of the full gene model
-                        exonsCurated = parseModelExons(args[2]), // exons of the curated final gene model
+                        exons = parseModelExons(args[1], true), // exons of the full gene model
+                        exonsCurated = parseModelExons(args[2], false), // exons of the curated final gene model
                         isoforms = parseTranscripts(args[3]), // by default, the parser sorts the isoforms in descending order by length
                         isoformExons = parseExons(args[7]), // exons of the individual isoforms
                         junctions = parseJunctions(args[4]),
@@ -68,7 +68,7 @@ export function render(type, geneId, rootId, urls=getGtexUrls()){
                     let isoformExpress = parseTranscriptExpression(args[6]);
 
                     // error checking
-                    let exonColorScale, isoformColorScale, junctionColorScale;
+                    let exonColorScale, isoformColorScale, junctionColorScale; // in log
                     if (junctions.length >= 0){
                         // scenario1: not a single-exon gene
                         if (junctionExpress !== undefined){
@@ -411,7 +411,12 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
             dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.x] === undefined?d.x:tissueDict[d.x].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.id}<br/> ${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Isoform: ${d.transcriptId}<br/> ${d.unit}: ${value}`);
+
+            // highlight the isoform track
+            const id = d.transcriptId.replace(".", "_"); // dot is not an allowable character, so it has been replaced with an underscore
+            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the confusing class name
+            mapSvg.select(`#${id}`).selectAll(".intron").classed("highlighted", true);
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -425,7 +430,7 @@ function _customizeIsoformTransposedMap(tissues, dmap, isoTrackViewer, junctionS
 
             // highlight the isoform track
             const id = d.replace(".", "_"); // dot is not an allowable character, so it has been replaced with an underscore
-            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the class name?
+            mapSvg.select(`#${id}`).selectAll(".exon-curated").classed("highlighted", true); // TODO: perhaps change the confusing class name
             mapSvg.select(`#${id}`).selectAll(".intron").classed("highlighted", true);
         })
         .on("mouseout", function(){
@@ -460,7 +465,11 @@ function _customizeExonMap(tissues, geneModel, dmap){
             dmap.objects.heatmap.cellMouseover(d, mapSvg, selected);
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd)-Number(d.chromStart) + 1}bp) <br/>${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Exon: ${d.exonId}<br/> ${d.chromStart} - ${d.chromEnd} (${Number(d.chromEnd)-Number(d.chromStart) + 1}bp) <br/>${d.unit}: ${value}`)
+
+             // highlight the exon on the gene model
+            const exonNumber = d.exonId.split("_")[1];
+            mapSvg.selectAll(`.exon-curated${exonNumber}`).classed("highlighted", true);
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -508,7 +517,14 @@ function _customizeJunctionMap(tissues, geneModel, dmap){
             const tissue = tissueDict[d.y] === undefined?d.x:tissueDict[d.y].tissueSiteDetail; // get tissue name or ID
             const junc = geneModel.junctions.filter((j)=>j.junctionId == d.x && !j.filtered)[0]; // get the junction display name
             const value = parseFloat(d.displayValue.toExponential()).toPrecision(3);
-            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName} (${Number(junc.chromEnd) - Number(junc.chromStart)} bp)<br/> ${d.unit}: ${value==0?'NA':value}`)
+            tooltip.show(`Tissue: ${tissue}<br/> Junction: ${junc.displayName} (${Number(junc.chromEnd) - Number(junc.chromStart)} bp)<br/> ${d.unit}: ${value}`)
+
+            // highlight the junction and its exons on the gene model
+            mapSvg.selectAll(`.junc${junc.junctionId}`).classed("highlighted", true);
+            if (junc !== undefined) {
+                mapSvg.selectAll(`.exon${junc.startExon.exonNumber}`).classed("highlighted", true);
+                mapSvg.selectAll(`.exon${junc.endExon.exonNumber}`).classed("highlighted", true);
+            }
         })
         .on("mouseout", function(d){
             mapSvg.selectAll("*").classed('highlighted', false);
@@ -560,7 +576,6 @@ function _customizeGeneModel(tissues, geneModel, dmap){
         .on("mouseover", function(d){
             selectAll(`.junc${d.junctionId}`).classed("highlighted", true);
             tooltip.show(`${d.displayName}<br/>Junction ${d.junctionId} (${Number(d.chromEnd) - Number(d.chromStart) + 1} bp)`);
-            console.log(d);
 
             if (d.startExon !== undefined){
                 model.selectAll(".exon").filter(`.exon${d.startExon.exonNumber}`).classed("highlighted", true);

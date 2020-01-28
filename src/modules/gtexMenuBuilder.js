@@ -15,7 +15,7 @@ import {getGtexUrls, parseTissues} from "./gtexDataParser";
  * dependency: select2
  */
 export function createTissueMenu(domId, url = getGtexUrls().tissue){
-    json(url)
+    json(url, {credentials: 'include'})
         .then(function(results){
             let tissues = parseTissues(results);
             tissues.forEach((d) => {
@@ -96,17 +96,18 @@ export function createTissueGroupMenu(groups, domId, forEqtl=false, checkAll=fal
     let groupNames = Object.keys(groups).sort((a, b) => {
         // regular sorting, except that 'Brain' group will always be first
         if (a == 'Brain') return -1;
-        else if (b == 'Brain') return 1;
-        else if (a < b) return -1;
-        else if (a > b) return 1;
+        if (b == 'Brain') return 1;
+        if (a < b) return -1;
+        if (a > b) return 1;
     });
 
-    // total number of rows that will be generated
+    // determine the total number of rows (main tissue sites and subsites)
     let rows = Object.keys(groups).reduce((a,b)=>{
         if (groups[b].length>1) return a+1+groups[b].length;
         else return a+groups[b].length;
     }, 0);
-    let rowsPerSection = Math.floor(rows/sections);
+
+    let rowsPerSection = Math.ceil(rows/sections);
     let rowsRemain = rows % sections;
     let colSize = Math.floor(12/sections); // for bootstrap grid
     const $sections = range(0, sections).map(d=>{
@@ -119,7 +120,7 @@ export function createTissueGroupMenu(groups, domId, forEqtl=false, checkAll=fal
         let sites = groups[gname]; // a list of site objects with attr: name and id
         const gId = gname.replace(/ /g, "_"); // replace the spaces with dashes to create a group <DOM> id
         // figure out which dom section to append this tissue site
-        let groupLen = groups[gname].length;
+        let groupLen = sites.length;
         groupLen = groupLen == 1 ? groupLen : groupLen+1; // +1 to account for site name
         // move to new section if enough rows are in the current section
         if (counter != 0 && groupLen + counter > rowsPerSection + rowsRemain) {

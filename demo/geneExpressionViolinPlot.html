@@ -34,10 +34,11 @@
         <h3>GTEx Expression Violin Plot</h3>
         <hr>
         <span>
-            <span class="test-gene" id="ENSG00000248746.1">ACTN3</span> |
-            <span class="test-gene" id="ENSG00000171862.5">PTEN</span> |
+            <span class="test-gene" id="ENSG00000248746.5">ACTN3</span> |
+            <span class="test-gene" id="ENSG00000248746.5">PTEN</span> |
             <span class="test-gene" id="ENSG00000225972.1">MTND1P23</span> |
-            <span class="test-gene" id="ENSG00000137675.4">MMP27</span>
+            <span class="test-gene" id="ENSG00000137675.4">MMP27</span> |
+            <span class="test-gene" id="ENSG00000271880.1">AGAP11</span>
         </span>
 
         <!-- expression boxplot div -->
@@ -62,8 +63,8 @@
     </body>
     <script>
         $(document).ready(function(){
-            let plotTitle = "ACTN3 (ENSG00000248746.1)";
-            GeneExpressionViolinPlot.launch('gene-expr-vplot', 'gene-expr-vplot-tooltip', 'ENSG00000248746.1', plotTitle);
+            let plotTitle = "ACTN3 (ENSG00000248746.5)";
+            GeneExpressionViolinPlot.launch('gene-expr-vplot', 'gene-expr-vplot-tooltip', 'ENSG00000248746.5', plotTitle);
         });
         $('.test-gene').click(function(e) {
             $('#gene-expr-vplot').empty();
