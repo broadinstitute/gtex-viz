@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="icon" href="favicon.ico">
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">        
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+              integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+              crossorigin="anonymous">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Franklin:300,400" >
+        <link rel="stylesheet" type="text/css" href="css/locusBrowserVC.css">
+
+    </head>
+    <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
+        <h3>GTEx Locus Browser VC</h3>
+        <hr>
+        
+        <div class="row">
+            <div class="col-sm-12 col-lg-4">
+                <form id="geneSearchForm" style="padding: 5px;">
+                    <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
+                        <b>Browse association by Variant</b> 
+                        <small>
+                            <a data-toggle="modal" data-target="#helpModal" style="cursor: pointer;">
+                                <i class="fas fa-info-circle"></i> Help
+                            </a>       
+                        </small>     
+                        <input id="variantInput" type="text" class="form-control" placeholder="Enter a variant ID (e.g. chr11_65592772_G_A_b38) or rs ID (e.g. rs34278912 from v151) " style="font-size:12px;"></input>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div id="variant-info" class="col-sm-12" style="font-size: 0.75em;">
+                Some examples:
+                <a href="javascript:LocusBrowserVC.init('chr11_65592772_G_A_b38')">chr11_65592772_G_A_b38</a> | 
+                <a href="javascript:LocusBrowserVC.init('chr11_66545555_A_G_b38')">chr11_66545555_A_G_b38</a> 
+            </div>
+        </div>
+        <hr>
+        <section>
+            <div class="row">
+                <!-- error message block -->
+                <div class="col-sm-12 col-lg-4">
+                    <div id="browser-error" style="color:brown"></div>
+                    <!-- spinner -->
+                    <div id="locus-browser-spinner" style="display: none">
+                        <i class="fa fa-spin"><img src="/images/gtex-logo.png"  style="margin:0.5em;" width="20"></i> Fetching data 
+                        <i class="fa fa-blink">...</i>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="toolbar" style="padding: 0 15px;">
+            <div class="row">
+                <div>
+                    <b style="margin-right: 10px;">You are currently viewing: </b> <span id="q-variant"></span>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <b style="margin-right: 10px; margin-left: 0px; ">Data filtering options</b>
+                <div class="btn-group btn-group-sm" style="margin-right: 10px; padding-right: 10px; border-right: 1px solid black;">
+                    <a id="show-data-menu" class="btn btn-outline-secondary" data-toggle="modal" data-target="#qtl-modal">
+                        <i class="fas fa-filter"></i> Filter Menu
+                    </a>
+                </div>
+                <b style="margin-right: 10px;">Variant view mode</b>
+                <div class="btn-group btn-group-sm">
+                    <a id="ld-mode" class="btn btn-outline-secondary active">
+                        LD only
+                    </a>
+                    <a id="win-mode" class="btn btn-outline-secondary">
+                        Genomic window
+                    </a>
+                </div>
+                <div id="ld-cutoff-ui" style="padding-right: 10px; border-right: 1px solid black;">
+                    <em style="margin-right: 10px; margin-left: 10px; ">LD R<sup>2</sup> cutoff</em>
+                    <input id="ld-slider" type="range" min="0.1" max="1" value="0.20" step="0.01" style="width: 200px;">
+                    <input id="ld-cutoff" type="text" value="0.20" style="width: 45px; ">
+                </div>
+                <div id="win-size-ui" style="display: none; padding-right: 10px; border-right: 1px solid black;">
+                    <em style="margin-right: 10px; margin-left: 10px;">Window size</em>
+                    <input id="win-slider" type="range" min="10" max="100" value="10" step="1" style="width: 200px;">
+                    <input id="win-size" type="text" value="10" style="width: 50px"> kb
+                </div>
+                <b style="margin-right: 10px; margin-left: 10px; ">Fine-mapping</b>
+                <div class="btn-group btn-group-sm">
+                    <a id="fine-mapping-off" class="btn btn-outline-secondary active">
+                        Off
+                    </a>
+                    <a id="fine-mapping-on" class="btn btn-outline-secondary">
+                        On
+                    </a>
+                </div>
+                <b style="margin-right: 10px; margin-left: 10px;">Dim QTL bubbles</b>
+                <div class="btn-group btn-group-sm">
+                    <a id="qtl-view-on" class="btn btn-outline-secondary active">
+                        No
+                    </a>
+                    <a id="qtl-view-off" class="btn btn-outline-secondary">
+                        Yes
+                    </a>
+                </div>
+                
+            </div>           
+            <hr>
+        </section>
+        <div class="row" id="browser-toolbar" style="font-size: 0.75em; display:none;">
+        </div>
+       
+        <div id="locus-browser">
+           
+            <!-- Root DOM for the SVG -->
+        </div>
+
+        <!-- QTL data filter menu modal -->
+        <!-- Modal. reference: https://getbootstrap.com/docs/4.0/components/modal/ -->
+        <div class="modal fade" id="qtl-modal" tabindex="-1" role="dialog" aria-labelledby="qtlFilterModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="qtlFilterModalTitle">QTL Data Filter Menu</h5>
+                  <button id="modal-close-btn" type="button" class="btn btn-outline-info" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i class="fas fa-filter"></i> Update</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-3">
+                            <h5>QTL Type</h5>
+                            <form id="data-type-menu">
+                                <input type="checkbox" name="dataType" value="eQTL" checked="true">eQTL<br>
+                                <input type="checkbox" name="dataType" value="sQTL">sQTL<br>
+  
+                            </form>
+                        </div>
+                        <div class="col-sm-9">
+                            <h6>GTEx tissues with association data</h6>
+                            <div class="btn-group btn-group-sm">
+                                <a id="modal-clear-tissues-btn" type="button" class="btn btn-sm btn-outline-secondary">Deselect All</a>
+                                <a id="modal-all-tissues-btn" type="button" class="btn btn-sm btn-outline-secondary">Select All</a>
+                            </div>            
+                            <form id="tissue-menu"><!--programmatically generated GTEx tissues--></form>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                  <button id="modal-filter-btn" type="button" class="btn btn-outline-info" data-dismiss="modal"><i class="fas fa-filter"></i> Update</button>
+                </div>
+              </div>
+            </div>
+          </div>
+    </body>
+
+    <!-- required external libraries for modals-->
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script
+        src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="build/js/locus-browser-vc.webpack.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let defaultVariant = "chr11_66545555_A_G_b38";
+            run(defaultVariant);
+            $("#variantInput").keypress(function(e){
+                if(e.keyCode == 13){
+                    // bind the enter key
+                    $("#locus-browser").html("");
+                    e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
+                    const queryVariant = $("#variantInput").val();
+                    if (queryVariant.startsWith("rs")){
+                        d3.json("https://gtexportal.org/rest/v1/dataset/variant?snpId=" + queryVariant)
+                            .then((data)=>{
+                                if (data.variant.length == 0) {
+                                    $("#locus-browser").text("Not a valid variant ID");
+                                } else {
+                                    run(data.variant[0].variantId);
+                                }
+                            }).catch((err)=>{
+                                console.error(err);
+                                $("#locus-browser").text("Web service has returned an error " + err);
+                            })
+                    } else if (queryVariant.startsWith("chr") && queryVariant.endsWith("_b38")) {
+                        run(queryVariant);
+                    } else if (queryVariant.startsWith("chr")) {
+                        let input = queryVariant.split("_");
+                        let url = `https://gtexportal.org/rest/v1/dataset/variant?chromosome=${input[0]}&pos=${input[1]}`;
+                        console.log(url);
+                        d3.json(url)
+                            .then((data)=>{
+                                if (data.variant.length == 0) {
+                                    $("#locus-browser").text("Not a valid variant ID");
+                                } else {
+                                    run(data.variant[0].variantId);
+                                }
+                            }).catch((err)=>{
+                                console.error(err);
+                                $("#locus-browser").text("Web service has returned an error " + err);
+                            })
+                    }
+                    else {
+                        $("#locus-browser").text("Not a valid variant ID");
+                    }
+                }
+            });
+            
+        });
+        function run(varId) {
+            const domId = "locus-browser";
+            LocusBrowserVC.init(varId, domId, "LD");
+        }        
+        
+    </script>
+
+</html>

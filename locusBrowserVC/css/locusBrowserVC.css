@@ -1,0 +1,89 @@
+
+div.locus-browser-tooltip, div.half-map-tooltip, div.heatmap-tooltip{
+   min-width: 100px;
+   display: none;
+   background-color : rgba(32, 53, 73, 0.95);
+   padding: 10px;
+   text-align:left;
+   color: #ffffff;
+   position:absolute;
+   font-size:12px;
+   z-index:4000;
+   border-radius:5px;
+}
+
+g.tick text.highlighted {
+    text-decoration: underline;
+}
+
+text.color-legend {
+    font-size: 12px;
+}
+
+.btn-outline-info {
+   cursor: pointer;
+}
+
+circle.map-bubble {
+   cursor: pointer;
+   stroke-width: 0;
+}
+
+.tissue-menu-item{
+   font-size: 10px;
+   margin: 0;
+}
+
+
+circle.map-bubble.hover {
+   stroke-width: 1px;
+}
+
+@keyframes fa-blink {
+   0% { opacity: 1; }
+   25% { opacity: 0.25; }
+   50% { opacity: 0.5; }
+   75% { opacity: 0.75; }
+   100% { opacity: 0; }
+}
+.fa-blink {
+ -webkit-animation: fa-blink .75s linear infinite;
+ -moz-animation: fa-blink .75s linear infinite;
+ -ms-animation: fa-blink .75s linear infinite;
+ -o-animation: fa-blink .75s linear infinite;
+ animation: fa-blink .75s linear infinite;
+}
+
+/* Specify brush styling */
+.brush rect.selection {
+   fill: rgba(176, 217, 247, 1);
+}
+
+.brush rect.handle {
+   fill: rgba(176, 217, 247, 0.6);
+}
+
+/* toolbar */
+a.inactive {
+   background-color: #b3d7ff;
+   /* border: 1px solid #6c757d; */
+   cursor: default;
+}
+
+/* data colors */
+
+rect.eQTL, text.eQTL {
+   fill: #70c5d8;
+}
+
+line.eQTL {
+   stroke: #70c5d8;
+}
+
+rect.sQTL, text.sQTL {
+   fill: #f6b26b;
+}
+
+line.sQTL {
+   stroke: #f6b26b;
+}
