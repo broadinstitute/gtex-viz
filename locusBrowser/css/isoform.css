@@ -1,0 +1,85 @@
+/**
+ * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
+ * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
+ */
+/*#iso-menu.a {*/
+    /*color: #239db8*/
+/*}*/
+/*#isomenu.item {*/
+    /*!*color: #239db8 !important;*!*/
+    /*cursor: pointer;*/
+/*}*/
+
+.nav-link{
+    cursor: pointer;
+}
+.junc {
+    /*cursor: pointer;*/
+}
+
+.junc.highlighted {
+    stroke: rgb(201, 2, 13);
+    stroke-width: 5px;
+}
+
+.junc-curve {
+    stroke-width: 1px;
+    fill: none;
+}
+
+.junc-curve.highlighted {
+    stroke: rgb(239, 59, 44);
+    stroke-width: 2px;
+    fill: none;
+}
+
+.intron {
+    stroke: rgb(85, 95, 102);
+    stroke-width: 1px;
+    /*stroke-dasharray: 10,5;*/
+}
+
+.exon {
+    stroke: rgb(75, 134, 153);
+    fill: none;
+    stroke-width: 1px;
+    stroke-dasharray: 0.9;
+}
+
+.exon.highlighted {
+    stroke: rgb(239, 59, 44);
+    stroke-width: 5px;
+    fill: none;
+    stroke-dasharray: none;
+}
+
+.exon-curated {
+    cursor: pointer;
+    stroke-width: 2px;
+    stroke: rgb(85, 95, 102);
+}
+
+.exon-curated.highlighted, .intron.highlighted{
+    stroke: rgb(210, 17, 27);
+    stroke-width: 2px;
+}
+
+/*temporary solution*/
+#modelLabel, #lolliLabel {
+    font-family: "Open Sans", "Helvetica", sans-serif;
+    font-size: 9px;
+}
+#modelInfo {
+    font-family: "Open Sans", "Helvetica", sans-serif;
+}
+
+.lollipop-axis line, .lollipop-axis path{
+  fill: none;
+  stroke: #a9a9a9;
+  shape-rendering: crispEdges;
+}
+
+.lollipop-axis text {
+    fill: #a9a9a9;
+}
+
