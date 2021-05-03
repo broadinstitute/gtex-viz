@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"
+              integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"
+              crossorigin="anonymous">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Franklin:300,400" >
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+        <link rel="stylesheet" type="text/css" href="/css/violin.css">
+        <link rel="stylesheet" type="text/css" href="/css/locusBrowser.css">
+    </head>
+    <body class="container-fluid" style="margin-top:20px; margin-left: 20px;">
+        <h3>GTEx Locus Browser</h3>
+        <hr>
+        <div class="row">
+            <div class="col-sm-12 col-lg-4">
+                <form id="geneSearchForm" style="padding: 5px;">
+                    <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
+                        <b>Search a Gene</b> 
+                        <small>
+                            <a data-toggle="modal" data-target="#helpModal" style="cursor: pointer;">
+                                <i class="fas fa-info-circle"></i> Help
+                            </a>       
+                        </small>     
+                        <input id="geneInput" type="text" class="form-control" placeholder="Enter a gene name or Gencode ID" style="font-size:12px; text-transform:uppercase;"></input>
+                    </div>
+                </form>
+            </div>
+            <div class="col-sm-12 col-lg-4">
+               
+                <!-- animated spinner for data loading -->
+                <div id="locus-browser-spinner" style="opacity: 0">
+                    <i class="fa fa-spin"><img src="/images/gtex-logo.png"  style="margin:0.5em;" width="20"></i> Fetching data 
+                    <i class="fa fa-blink">...</i>
+                </div>
+                <div id="locus-browser-error" style="color:brown"></div>
+            </div>
+        </div>
+        <hr>
+        <div class="row show-if-success" style="opacity: 0; font-size: 0.75em;">
+            <div id="variant-form" class="col-sm-12 col-md-6 col-lg-4">
+                <b>Locate variants in the current plot</b><br>
+                <small>Variant ID, RS ID and position (e.g. chr16_58499352, chr16_58510847) are supported</small>
+                <form id="variantSearchForm" style="padding: 5px;">
+                    <div class="form-group"> <!-- form-group for optimum spacing between the label and its associated form input element -->
+                        <input id="variantInput" type="text" class="form-control" placeholder="Enter IDs in a comma separated format" style="font-size:12px;"></input>
+                    </div>
+                </form>
+            </div>
+            <div id="gene-info" class="col-sm-12 col-md-6 col-lg-4"></div>
+            <div class="col-sm-12"><hr></div>
+        </div>
+        <div class="row" id="locus-browser-toolbar" style="font-size: 0.75em; display:none;">
+            <span style="margin-right: 10px;"><b>View Options</b></span>
+            <div class="btn-group btn-group-sm col-sm-12 col-md-6 col-lg-3">
+                <a id="show-v-id" class="btn btn-outline-secondary">Show Variant Labels</a>
+                <a id="change-qtl-map" class="btn btn-outline-secondary">Use Bubble Map</a>
+                <a id="show-data-menu" class="btn btn-outline-secondary" data-toggle="modal" data-target="#qtl-modal">
+                    <i class="fas fa-filter"></i> Filter Menu
+                </a>
+            </div>
+            <b><span id="zoom-size" style="margin-right: 20px;"></span></b>
+            <div class="btn-group btn-group-sm col-sm-12 col-md-6 col-lg-3">
+                <a id="zoom-minus" class="btn btn-outline-secondary"><i class="fa fa-search-minus"></i> Zoom Out</a>
+                <a id="zoom-plus" class="btn btn-outline-secondary"><i class="fa fa-search-plus"></i> Zoom In</a>
+                <a id="zoom-reset" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </div>
+       
+        <div id="locus-browser">
+            <!-- Root DOM for the SVG -->
+        </div>
+        <div id="ld-browser"><!-- Root DOM for the LD map--></div>
+        
+        <!-- QTL data filter menu modal -->
+        <!-- Modal. reference: https://getbootstrap.com/docs/4.0/components/modal/ -->
+        <div class="modal fade" id="qtl-modal" tabindex="-1" role="dialog" aria-labelledby="qtlFilterModalTitle" aria-hidden="true">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="qtlFilterModalTitle">QTL Data Filter Menu</h5>
+                <button id="modal-close-btn" type="button" class="btn btn-outline-info" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true"><i class="fas fa-filter"></i> Filter</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                  <div class="row">
+                      <div class="col-sm-3">
+                          <h6>QTL Type</h6>
+                          <form id="data-type-menu">
+                              <input type="checkbox" name="dataType" value="eQTL" checked="true">eQTL<br>
+                              <input type="checkbox" name="dataType" value="sQTL" checked="true">sQTL<br>
+
+                          </form>
+                      </div>
+                      <div class="col-sm-9">
+                        <bTissues</b>
+                        <div class="btn-group btn-group-sm">
+                            <a id="modal-clear-tissues-btn" type="button" class="btn btn-sm btn-outline-secondary">Deselect All</a>
+                            <a id="modal-all-tissues-btn" type="button" class="btn btn-sm btn-outline-secondary">Select All</a>
+                        </div>         
+                        <form id="tissue-menu">
+                        </form>
+                      </div>
+                  </div>
+              </div>
+              <div class="modal-footer">
+                <button id="modal-filter-btn" type="button" class="btn btn-outline-info" data-dismiss="modal"><i class="fas fa-filter"></i> Filter</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Help Page Modal -->
+        <div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpTitle" aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title" id="helpTitle">GTEx Locus Browser</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body">
+                <p>GTEx Locus Browser provides single-tissue QTL results for a given query gene in a summary visualization. </p>
+                <p>
+                    Mini genome Browser: <br>
+                    The top section of the GTEx Locus Browser is a mini genome browser that shows the location of the query gene and its neiboring coding genes and linc RNAs within 1 Mb distance by default. 
+
+                </p>
+                </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+            </div>
+        </div>
+        <!-- Violin Plot div for the jQuery dialog window-->
+        <div id="qtl-violin-div"></div>
+    </body>
+
+    <!-- required external libraries for modals-->
+    <script
+        src="https://code.jquery.com/jquery-3.2.1.min.js"
+        integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+        crossorigin="anonymous">
+    </script>    
+    <script
+        src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+        integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+        crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="/build/js/locus-browser.webpack.min.js"></script>
+    <script>
+        const GlobalWidth = window.innerWidth;
+        const panels = {
+                geneMap: {
+                    id: "gene-map",
+                    useLog: true,
+                    logBase: null,
+                    margin: {
+                        top: 10, // provide enough space for the color legend
+                        right: 100, // provide enough space for the row labels
+                        bottom: 50, // provide enough space for the column labels
+                        left: 80
+                    },
+                    width: GlobalWidth,
+                    height: 50, // outer height: this includes top and bottom margins + inner height
+                    colorScheme: "Blues",
+                    cornerRadius: 2,
+                    columnLabel: {
+                        angle: 90,
+                        adjust: 10
+                    },
+                    rowLabel: {
+                        width: 100
+                    }
+                },
+                tssTrack: {
+                    id: "tss-track",
+                    label: "Gene locations",
+                    data: null,
+                    yPos: null, // where the panel should be placed to be calculated based on the panel layout
+                    margin: {
+                        top: 30,
+                        right: 50,
+                        bottom: 0,
+                        left: 80
+                    },
+                    width: GlobalWidth,
+                    height: 70, // outer height=inner height + top margin + bottom margin
+                    color: {
+                        background: "#ffffff",
+                        feature: "#ababab"
+                    }
+                },
+                geneModelTrack: {
+                    id: "gene-model-track",
+                    label: "Gene exons",
+                    yPos: null,
+                    margin: {
+                        top: 0,
+                        right: 50,
+                        bottom: 10,
+                        left: 80
+                    },
+                    width: GlobalWidth,
+                    height: 30,
+                    color: {
+                        background: "#ffffff",
+                        feature: "#910807"
+                    }
+                },
+                eqtlTrack: {
+                    id: "eqtl-track",
+                    label: "eQTL p-values",
+                    yPos: null,
+                    margin: {
+                        top: 0,
+                        right: 50,
+                        bottom: 0,
+                        left: 80
+                    },
+                    width: GlobalWidth,
+                    height: 20, // outer height. outer height=inner height + top margin + bottom margin.
+                    color: {
+                        background: "#ffffff",
+                        feature: "#ababab"
+                    }
+
+                },
+                sqtlTrack: {
+                    id: "sqtl-track",
+                    label: "sQTL p-values",
+                    data: null,
+                    yPos: null,
+                    margin: {
+                        top: 0,
+                        right: 50,
+                        bottom: 0,
+                        left: 80
+                    },
+                    width: GlobalWidth,
+                    height: 20, // outer height. outer height=inner height + top margin + bottom margin.
+                    color: {
+                        background: "#ffffff",
+                        feature: "#ababab"
+                    }
+                },
+                qtlMap: {
+                    id: "qtl-map", // the bubble heat map of QTLs
+                    mapType: "barmap",
+                    width: GlobalWidth,
+                    data: null,
+                    yPos: null,
+                    margin: {
+                        top: 150, // at least 50, provide space for the genome position scale and brush lines
+                        right: 100, // at least 50 for axis
+                        bottom: 20, // at least 20 for annotations
+                        left: 150, // at least 150 for text labels
+                    },
+                    height: 500, // determined programatically
+                    rowHeight: 20, // define a fixed row height
+                    colorScheme: "RdBu", // TODO: review these plot options
+                    colorScaleDomain: [-1, 1],
+                    useLog: false,
+                    logBase: null,
+                    showColumnLabel: false,
+                    label: {
+                        column: {
+                            show: true,
+                            angle: 90,
+                            adjust: 10,
+                            location: "bottom",
+                            textAlign: "left"
+                        },
+                        row: {
+                            show: true,
+                            width: 150,
+                            angle: 0,
+                            adjust: 0,
+                            location: "left",
+                            textAlign: "right"
+                        }
+                    }
+                }
+            };
+        const ldPanel = { // LD configuration is separate from the panels because it's in its own DIV and is rendered using canvas.
+            id: "ld-browser",
+            cutoff: 0.1,
+            width: GlobalWidth,
+            margin: {
+                top: 10,
+                right: 100,
+                bottom: 0,
+                left: 150 // must be consistent with the QTL map
+            },
+            colorScheme: "Greys"
+        }
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            let defaultGene = "NDRG4";
+            run(defaultGene);
+            $("#geneInput").keypress(function(e){
+                if(e.keyCode == 13){
+                    // bind the enter key
+                    e.preventDefault(); // Note: prevent the default behavior of the enter key, which is refreshing the page
+                    const queryGene = $("#geneInput").val();
+                    run(queryGene);
+
+                }
+            });
+            
+        });
+
+        function run(queryGene){
+            $("#locus-browser-spinner").css("opacity: 1"); // show the spinner
+            $("#locus-browser").empty();
+            $("#ld-browser").empty();
+            
+            let config = {
+                id: "locus-browser",
+                ldId: "ld-browser",
+                infoId: "gene-info",
+                spinnerId: "locus-browser-spinner",
+                width: GlobalWidth,
+                height: null, // should be dynamically calculated
+                genomicWindow: 1e6,
+                urls: LocusBrowser.dataUrls,
+                parsers: LocusBrowser.dataParsers,
+                dataFilters: LocusBrowser.dataFilters,
+                data: LocusBrowser.data,
+                viz: LocusBrowser.vizComponents,
+                dataSort: LocusBrowser.dataSort,
+                panels: panels,
+                ld: ldPanel
+            };
+            LocusBrowser.init(queryGene, config);
+        }
+
+    </script>
+
+</html>

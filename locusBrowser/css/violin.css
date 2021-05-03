@@ -1,0 +1,131 @@
+/**
+ * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
+ * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
+ */
+.violin-x-axis line, .violin-y-axis line, .violin-x-axis path, .violin-y-axis path{
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    fill: none;
+    stroke: Silver;
+    stroke-width: 1px;
+    shape-rendering: crispEdges;
+}
+
+.violin-x-axis text, .violin-y-axis text, .violin-x-axis-hide text {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    fill: #2a718b;
+}
+
+.violin-size-axis text {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    fill: #239db8;
+    font-size: 8px;
+}
+
+.violin-size-axis-hide text {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    fill: #239db8;
+    font-size: 11px;
+}
+
+.violin-x-axis-hide line, .violin-x-axis-hide path{
+    fill: none;
+    stroke: Silver;
+    stroke-width: 0;
+    shape-rendering: crispEdges;
+}
+
+.violin-size-axis-hide line, .violin-size-axis-hide path{
+    fill: none;
+    stroke: Silver;
+    stroke-width: 0;
+    shape-rendering: crispEdges;
+}
+
+.violin-sub-axis line, .violin-sub-axis path{
+    stroke-width: 1px;
+    stroke: Silver;
+    shape-rendering: crispEdges;
+}
+
+.violin-sub-axis-hide line, .violin-sub-axis-hide path{
+    stroke-width: 0;
+    stroke: Silver;
+    shape-rendering: crispEdges;
+}
+
+.violin-sub-axis text, .violin-sub-axis-hide text {
+    fill: SlateGray;
+    font-size: 12px;
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+
+}
+
+.violin-axis-label {
+    fill: SlateGray;
+    font-size: 8px;
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+}
+.violin-group-label {
+    font-size: 12px;
+    text-anchor: middle;
+}
+
+div.violin-tooltip {
+   min-width: 50px;
+   display: none;
+   background-color : rgba(32, 53, 73, 0.95);
+   padding: 10px;
+   text-align:left;
+   color: #ffffff;
+   position:absolute;
+   font-size:12px;
+   z-index:4000;
+   border-radius:5px;
+}
+
+path.violin {
+    stroke-width: 0.5px;
+    opacity: 0.5;
+}
+
+path.violin.highlighted {
+    stroke-width: 2px;
+    /* stroke: #555f66; */
+}
+
+line.violin-median {
+    stroke-width: 2px;
+    stroke: #fff;
+}
+
+/* rect.violin-ir {
+    fill: #555f66;
+    stroke-width: 0.2;
+} */
+
+text.violin-legend-text {
+    fill: SlateGray;
+    font-size: 9px;
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+
+}
+
+.violin-outliers circle {
+    stroke: rgba(200, 200, 190, 0.3);
+    stroke-width: 1; 
+    fill: rgba(200, 200, 190, 0.3);
+}
+
+.violin-points circle {
+    stroke: rgba(200, 200, 190, 0.3);
+    /* fill: rgba(200, 200, 190, 0.3); */
+}
+
+.violin-title {
+    font-size: 16px;
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+}
+
+a.btn.highlight{
+    color: rgb(83, 187, 206) !important;
+}

@@ -1,0 +1,34 @@
+/**
+ * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
+ * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
+ */
+text.color-legend {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    font-size: 10px;
+}
+
+text.half-map-label {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    font-size: 10px;
+}
+text.half-map-label.highlighted {
+    font-weight: 400;
+    font-size: 12px;
+    text-decoration: underline;
+}
+
+div.half-map-tooltip {
+   min-width: 100px;
+   display: none;
+   background-color : rgba(32, 53, 73, 0.95);
+   padding: 10px;
+   text-align:left;
+   color: #ffffff;
+   position:absolute;
+   font-size:12px;
+   z-index:4000;
+   border-radius:5px;
+}
+
+
+

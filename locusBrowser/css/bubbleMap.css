@@ -1,0 +1,128 @@
+/**
+ * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
+ * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
+ */
+text.color-legend {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    font-size: 10px;
+}
+
+text.bubble-map-xlabel {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    /*font-size: 10px;*/
+}
+text.bubble-map-xlabel.highlighted {
+    font-weight: 400;
+    /*font-size: 12px;*/
+    text-decoration: underline;
+}
+text.bubble-map-xlabel.query {
+    font-weight: 600;
+    /*font-size:11px;*/
+    fill: #d2111b;
+}
+
+text.bubble-map-ylabel {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    /*font-size: 10px;*/
+}
+text.bubble-map-ylabel.highlighted {
+    font-weight: 400;
+    /*font-size: 12px;*/
+    text-decoration: underline;
+}
+text.bubble-map-ylabel.clicked, text.bubble-map-xlabel.clicked {
+    fill: #D25C43;
+}
+
+circle.bubble-map-cell {
+    stroke-width:0px;
+}
+circle.bubble-map-cell.highlighted {
+    stroke: #D25C43;
+    stroke-width:2px;
+}
+
+rect.mini-marker {
+    fill: none;
+}
+
+rect.mini-marker.highlighted {
+    fill: #D25C43;
+}
+
+div.bubblemap-tooltip {
+   min-width: 100px;
+   display: none;
+   background-color : rgba(32, 53, 73, 0.95);
+   padding: 10px;
+   text-align:left;
+   color: #ffffff;
+   position:absolute;
+   font-size:12px;
+   z-index:4000;
+   border-radius:5px;
+}
+
+rect.track.highlighted {
+    stroke: #D25C43;
+}
+
+/* eQTL box plot stuff */
+.closePlot {
+   cursor:pointer;
+   float:right;
+}
+
+.bbMap-canvas {
+    margin-top: 30px;
+    margin-left: 250px;
+}
+
+.bbMap-dialog .title {
+   text-align: center;
+   font-size: 12px;
+
+}
+
+/*#bbMap-dialog text.plotviz-label {*/
+   /*font-size: 12px;*/
+/*}*/
+
+/*#bbMap-dialog .plotviz-left-axis g.tick text {*/
+   /*font-size: 11px;*/
+/*}*/
+
+#bbMap-dialog {
+   font-size: 11px;
+}
+
+.violin-axis-label {
+    font-size: 10px;
+}
+
+.bbMap-clear {
+   color: #999;
+   font-size: 10px;
+   text-decoration: underline;
+   cursor: pointer;
+}
+
+/* jquery UI customization */
+.ui-dialog .ui-dialog-titlebar {
+   padding: 0.1em 0.2em;
+}
+
+.ui-dialog-content {
+   width: 100% !important; /* this is an important overwrite that ensures that the ui-dialog-content's width remains 100% of the ui-dialog after a resizing event */
+}
+
+.ui-widget-header {
+   border: 0px;
+}
+.ui-dialog {
+    z-index:2000;
+}
+
+
+
