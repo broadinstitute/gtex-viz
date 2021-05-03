@@ -1,0 +1,18 @@
+/**
+ * Copyright © 2015 - 2018 The Broad Institute, Inc. All rights reserved.
+ * Licensed under the BSD 3-clause license (https://github.com/broadinstitute/gtex-viz/blob/master/LICENSE.md)
+ */
+.tissue-group-main-level {
+    font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+    margin:0;
+    padding:0;
+    font-size: 12px;
+}
+.tissue-group-sub-level {
+    margin: 0 0 0 16px;
+    padding: 0;
+    font-size: 9px;
+}
+.last-site {
+    margin-bottom: 10px;
+}
