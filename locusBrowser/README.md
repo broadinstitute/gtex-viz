@@ -1,4 +1,6 @@
-To run the demo locally:
+LocusBrowser
+
+To run the demo of LocusBrowser locally:
 Start a light-weight http server in this directory
 <pre>python3 -m http.server</pre>
 
